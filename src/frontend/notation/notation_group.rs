@@ -23,6 +23,31 @@ impl NotationGroup {
     pub fn rules(&mut self) -> Vec<String> {
         self.rules.clone()
     }
+}
+
+
+#[derive(Clone, Debug)]
+pub struct NotationGroup {
+    name: String,
+    rules: Vec<String>,
+}
+
+impl NotationGroup {
+    pub fn new(name: &str, rules: &Vec<String>) -> Self {
+        assert!(!rules.is_empty(), "rules is empty");
+        NotationGroup {
+            name: name.to_string(),
+            rules: rules.clone(),
+        }
+    }
+
+    pub fn name(&mut self) -> String {
+        self.name.clone()
+    }
+
+    pub fn rules(&mut self) -> Vec<String> {
+        self.rules.clone()
+    }
 
     // fn parse_group_rule(env: NotationEnv, s: Span) -> IResult<String, NotationRule> {
     //     let s, rule_name = self.parse_name(s)?;
@@ -36,12 +61,24 @@ impl NotationGroup {
     // }
 }
 
+
+impl fmt::Display for NotationGroup {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, " {} :=", self.name);
+        for rule in self.rules.iter() {
+            write!(f, "\n\t {} \t(* {} *)", rule.rule(), rule.name())?;
+        }
+        Ok(())
+    }
+}
+
 /*
 * Notation group grammar:
 * <group>      := "Group" <name> ":=" <nota-group>
 * <rule>       := "Rule" ":" <rule-exp> ":=" <exp>
 */
-impl<'l> Parse<'l> for NotationGroup {
+
+impl<'a, 'l> Parse<'a, 'l> for NotationGroup {
     fn parse(lexer: &mut Lexer) -> TokenResult<Box<Self>> {
         lexer.next_token().tag("Group")?;
         let rules = vec!["test1".to_string()];
