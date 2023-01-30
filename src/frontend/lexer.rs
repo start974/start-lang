@@ -1,11 +1,21 @@
-mod token_content;
-mod position;
-mod simple_lexer;
-pub mod token;
-mod token_combinator;
-pub mod utils;
 
-pub type Lexer<'r> = simple_lexer::Lexer<'r>;
+// position 
+mod position;
 pub type FilePosition = position::FilePosition;
+pub type Position = position::Position;
+
+// rule
+mod rule;
+pub type Rule = rule::Rule;
+
+// token 
+mod token;
 pub type Token = token::Token;
-pub type TokenCont = token_content::Content;
+
+// error
+mod error;
+pub type Error = error::Error;
+
+// lexer
+mod lexer;
+pub type Lexer<'l> = lexer::Lexer<'l>;
