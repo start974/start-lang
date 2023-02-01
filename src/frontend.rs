@@ -5,4 +5,4 @@
 // pub mod error;
 pub mod lexer;
 // mod notation;
-// pub mod parser;
+pub mod parser;
