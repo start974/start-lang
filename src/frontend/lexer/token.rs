@@ -3,7 +3,6 @@ use std::rc::Rc;
 
 use super::{FilePosition, Rule};
 
-
 #[derive(Debug, Clone)]
 pub struct Token {
     rule: Rc<Rule>,
@@ -32,7 +31,7 @@ impl Token {
                 "test len equal position length - 
                 token: \"{content}\", {position:?} -- (w_len: {word_len:?}) != (p_len: {pos_len:?})\n",
             );
-        } 
+        }
         Self::init(rule, content, Some(position))
     }
 
@@ -47,11 +46,9 @@ impl Token {
     // pub fn error<T>(&self, kind: ErrorKind) -> TokenResult<T> {
     //     ParsingErr::result(kind, self.clone())
     // }
-
 }
 
 impl fmt::Display for Token {
-
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}({})", self.rule.name(), self.content)
     }
@@ -59,8 +56,8 @@ impl fmt::Display for Token {
 
 impl PartialEq for Token {
     fn eq(&self, other: &Token) -> bool {
-        self.pos == other.pos &&
-        self.content == other.content &&
-        self.rule.name() == self.rule.name()
+        self.pos == other.pos
+            && self.content == other.content
+            && self.rule.name() == self.rule.name()
     }
 }

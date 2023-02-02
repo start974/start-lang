@@ -1,5 +1,4 @@
-
-// position 
+// position
 mod position;
 pub type FilePosition = position::FilePosition;
 pub type Position = position::Position;
@@ -8,7 +7,7 @@ pub type Position = position::Position;
 mod rule;
 pub type Rule = rule::Rule;
 
-// token 
+// token
 mod token;
 pub type Token = token::Token;
 

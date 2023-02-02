@@ -1,1 +1,1 @@
-mod grammar;
+pub mod grammar;

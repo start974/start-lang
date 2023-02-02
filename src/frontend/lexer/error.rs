@@ -1,7 +1,7 @@
 use core::fmt;
 use std::{io, str};
 
-use super::{Position};
+use super::Position;
 
 #[derive(Debug)]
 pub enum Error {
@@ -22,18 +22,23 @@ impl fmt::Display for Error {
             Error::IoError(err) => err.fmt(f),
             Error::UTf8error(err) => err.fmt(f),
             Error::Unkown(path, pos, c) => {
-                write!(f, "{path}::{}::{}\n unknow\"{c}\"", pos.line(), pos.offset())
-            },
+                write!(
+                    f,
+                    "{path}::{}::{}\n unknow\"{c}\"",
+                    pos.line(),
+                    pos.offset()
+                )
+            }
         }
     }
 }
 
 impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error +'static)>{
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Error::IoError(err) => err.source(),
             Error::UTf8error(err) => err.source(),
-            Error::Unkown(_, _, _) => None
+            Error::Unkown(_, _, _) => None,
         }
     }
 }
