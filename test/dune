@@ -1,0 +1,8 @@
+(test
+ (name tests_start_lang)
+ (libraries alcotest parsing))
+
+(rule
+ (alias runtest)
+ (action
+  (run ./tests_start_lang.exe)))

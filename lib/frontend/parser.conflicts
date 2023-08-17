@@ -1,0 +1,32 @@
+
+** Conflict (shift/reduce) in state 10.
+** Tokens involved: LPAR IDENT
+** The following explanations concentrate on token LPAR.
+** This state is reached from program after reading:
+
+IDENT EQUAL_DEF factor factor
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+list(definition) EOF 
+definition list(definition) 
+IDENT EQUAL_DEF expr DOT 
+                factor 
+                (?)
+
+** In state 10, looking ahead at LPAR, shifting is permitted
+** because of the following sub-derivation:
+
+factor factor 
+       factor factor 
+              atom 
+              . LPAR expr RPAR 
+
+** In state 10, looking ahead at LPAR, reducing production
+** factor -> factor factor
+** is permitted because of the following sub-derivation:
+
+factor factor // lookahead token appears because factor can begin with LPAR
+factor factor . 
