@@ -1,5 +1,7 @@
+open InputUtils
+
 type pattern = Var of Ident.t
-type t = pattern Location.node_loc
+type t = pattern Location.node_location
 
 let make_var ?loc x = Location.make_node_loc ?loc (Var x)
 

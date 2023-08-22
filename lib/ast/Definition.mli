@@ -1,7 +1,9 @@
-type def = Ident.t * Expr.t
-type t = def Location.node_loc
+open InputUtils
 
-val make : ?loc:Location.loc -> Ident.t -> Expr.t -> t
+type definition = Ident.t * Expr.t
+type t = definition Location.node_location
+
+val make : ?loc:Location.t -> Ident.t -> Expr.t -> t
 (** make a defintion *)
 
 val equal : t -> t -> bool

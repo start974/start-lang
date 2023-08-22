@@ -1,7 +1,9 @@
-type pattern = Var of Ident.t
-type t = pattern Location.node_loc
+open InputUtils
 
-val make_var : ?loc:Location.loc -> Ident.t -> t
+type pattern = Var of Ident.t
+type t = pattern Location.node_location
+
+val make_var : ?loc:Location.t -> Ident.t -> t
 (** make variable pattern *)
 
 val equal : t -> t -> bool

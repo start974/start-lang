@@ -1,4 +1,5 @@
 open Frontend
+open InputUtils
 
 let usage = Printf.sprintf "Usage: %s <options> [filename]\n" Sys.argv.(0)
 let verbose = ref false
@@ -22,16 +23,26 @@ let file =
   Arg.parse spec set_file usage;
   !file_ref
 
+let input =
+  match file with
+  | None -> Inputs.std_in
+  | Some file -> Inputs.register_files file
+
+let reset_ppf = Spectrum.prepare_ppf Format.std_formatter
+
+let exit n =
+  reset_ppf ();
+  Stdlib.exit n
+
 let () =
-  let program_ast_res =
-    match file with
-    | None -> Parse.from_stdin ()
-    | Some file -> Parse.from_file file
-  in
   try
-    let program_ast = Parse.get_program program_ast_res in
+    let program_ast = Parse.program input in
     if !verbose then Format.printf "%a@." Ast.Program.pp_print program_ast;
     if !parse_only then exit 0
-  with Parse.ParsingError msg ->
-    prerr_endline msg;
-    exit 1
+  with
+  | Error.Parsing.Err e ->
+      Format.printf "%a" Error.Parsing.pp_print e;
+      exit 1
+  | Error.Lexing.Err e ->
+      Format.printf "%a" Error.Lexing.pp_print e;
+      exit 1

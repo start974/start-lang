@@ -1,0 +1,34 @@
+type input
+
+val to_string : input -> string
+(** input to string *)
+
+val from_string : string -> input
+(** input get by string *)
+
+val register_string : string -> input
+(** register a string *)
+
+val register_files : string -> input
+(** register a file *)
+
+val std_in : input
+(** get stdin *)
+
+val remove_input : input -> unit
+(** remove input in table *)
+
+val get_last_line : input -> string
+(** get last line of input *)
+
+val get_all : input -> string
+(** get all text of input *)
+
+val get_line : input -> int -> string
+(** [get_line input l] get line [l] of input *)
+
+val get_lines : input -> int -> int -> string list
+(** [get_lines input l_start l_end] get list of lines beetween [l_start] and [l_end]*)
+
+val clean : unit -> unit
+(** clean the table *)

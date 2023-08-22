@@ -1,8 +1,12 @@
 open Frontend
+open InputUtils
 open Ast
 
 let get_str_ast program = Format.asprintf "%a" Program.pp_print program
-let parse_program text = Parse.from_string text |> Parse.get_program
+
+let parse_program text =
+  let input = Inputs.register_string text in
+  Parse.program input
 
 let test_var () =
   let text = "x := y." in

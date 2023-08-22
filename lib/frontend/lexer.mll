@@ -1,8 +1,6 @@
 {
     open Lexing
     open Parser
-
-    exception Lexical_error of string
 }
 
 let alpha = ['a' - 'z' 'A' - 'Z']
@@ -13,15 +11,14 @@ let ident = ['a' - 'z'] (alpha | '_' | digit)*
 
 rule token = parse
   | '\n'
-      { new_line lexbuf; token lexbuf }
+      { MenhirLib.LexerUtil.newline lexbuf ; token lexbuf }
   | [' ' '\t' '\r']+
       { token lexbuf }
-  | eof
-      { EOF }
   | "--" [^ '\n']* ['\n']
-      { new_line lexbuf; token lexbuf }
+      { MenhirLib.LexerUtil.newline lexbuf ; token lexbuf }
   | "(*"
-      { comment lexbuf; token lexbuf }
+      {  let position = Lexing.lexeme_start_p lexbuf in
+         comment position lexbuf; token lexbuf }
   | "fn"
       { FN }
   | '.'
@@ -34,13 +31,16 @@ rule token = parse
       { LPAR }
   | ")"
       { RPAR }
-  | ident
-      { IDENT (lexeme lexbuf) }
-  | _
-      { raise (Lexical_error (lexeme lexbuf)) }
+  | ident as id
+      { IDENT id }
+  | _ as c
+      { let position = Lexing.lexeme_start_p lexbuf in
+        Error.Lexing.fail_char position c }
+  | eof
+      { EOF }
 
-and comment = parse
+and comment start_pos = parse
   | "*)" { () }
-  | '\n' { new_line lexbuf; comment lexbuf }
-  | _    { comment lexbuf }
-  | eof  { raise (Lexical_error "unterminated comment") }
+  | '\n' { new_line lexbuf; comment start_pos lexbuf }
+  | _    { comment start_pos lexbuf }
+  | eof  { Error.Lexing.fail_comment start_pos }

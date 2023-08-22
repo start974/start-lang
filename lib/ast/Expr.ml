@@ -1,5 +1,7 @@
+open InputUtils
+
 type expr = Var of Ident.t | App of t * t | Abs of Pattern.t * t
-and t = expr Location.node_loc
+and t = expr Location.node_location
 
 let make_var ?loc x = Location.make_node_loc ?loc (Var x)
 let make_app ?loc e1 e2 = Location.make_node_loc ?loc (App (e1, e2))
@@ -16,7 +18,7 @@ let rec pp_expr fmt (e : t) =
   match e.node with
   | App (el, er) -> Format.fprintf fmt "@[%a %a@]" pp_expr el pp_term er
   | Abs (pat, e) ->
-          Format.fprintf fmt "@[λ %a => %a@]" Pattern.pp_print pat pp_expr e
+      Format.fprintf fmt "@[λ %a => %a@]" Pattern.pp_print pat pp_expr e
   | _ -> pp_term fmt e
 
 and pp_term fmt (e : t) =
