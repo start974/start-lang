@@ -1,3 +1,3 @@
 open InputUtils
 
-val program : Inputs.input -> Ast.Program.t
+val program : Inputs.input -> Ast.program

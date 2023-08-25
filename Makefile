@@ -7,3 +7,6 @@ test:
 format:
 	dune fmt
 	dune format
+
+clean:
+	dune clean

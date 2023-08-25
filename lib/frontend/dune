@@ -1,6 +1,6 @@
 (library
  (name frontend)
- (libraries ast menhirLib InputUtils error))
+ (libraries menhirLib InputUtils error zarith))
 
 (ocamllex lexer)
 

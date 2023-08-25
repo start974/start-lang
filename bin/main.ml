@@ -36,8 +36,8 @@ let exit n =
 
 let () =
   try
-    let program_ast = Parse.program input in
-    if !verbose then Format.printf "%a@." Ast.Program.pp_print program_ast;
+    let program = Parse.program input in
+    if !verbose then Format.printf "%a@." Ast.pp_program program;
     if !parse_only then exit 0
   with
   | Error.Parsing.Err e ->
