@@ -5,6 +5,7 @@ type ident = string
 
 (* cons expr and type *)
 type expr_value =
+  | E_Type
   | E_Var of ident
   | E_Unit
   | E_Bool of bool
@@ -14,44 +15,35 @@ type expr_value =
 
 (* expression *)
 type expr =
-  | E_Cons of expr_value
+  | E_Value of expr_value
   | E_App of expr_loc * expr_loc
   | E_Abs of patt_loc * expr_loc
   | E_Prod of expr_loc list
-  | E_Type of ty_loc
+  | E_Ty_Arrow of expr_loc * expr_loc
 
 and expr_loc = expr Location.node_location
 
 (* pattern *)
-and patt = P_Var of ident * ty_loc option
+and patt = P_Var of ident * expr_loc option
 and patt_loc = patt Location.node_location
 
-(* type *)
-and ty =
-  | T_Type
-  | T_Expr of expr_loc
-  | T_Arrow of ty_loc * ty_loc
-  | T_Prod of ty_loc list
-
-(*| T_Union of ty_loc * ty_loc*)
-and ty_loc = ty Location.node_location
-
 (* definition *)
-type definition = ident * expr_loc
-type definition_pos = definition Location.node_location
+type def = ident * expr_loc
+type def_pos = def Location.node_location
 
 (* program *)
-type program = definition_pos list
+type program = def_pos list
 
 (* builders *)
 (* - expression *)
-let make_expr_cons ?loc c = Location.make_node_loc ?loc (E_Cons c)
-let make_expr_var ?loc x = make_expr_cons ?loc (E_Var x)
-let make_expr_unit ?loc () = make_expr_cons ?loc E_Unit
-let make_expr_bool ?loc b = make_expr_cons ?loc (E_Bool b)
-let make_expr_int ?loc i = make_expr_cons ?loc (E_Int i)
-let make_expr_char ?loc c = make_expr_cons ?loc (E_Char c)
-let make_expr_string ?loc s = make_expr_cons ?loc (E_String s)
+let make_expr_value ?loc c = Location.make_node_loc ?loc (E_Value c)
+let make_expr_type ?loc () = make_expr_value ?loc E_Type
+let make_expr_var ?loc x = make_expr_value ?loc (E_Var x)
+let make_expr_unit ?loc () = make_expr_value ?loc E_Unit
+let make_expr_bool ?loc b = make_expr_value ?loc (E_Bool b)
+let make_expr_int ?loc i = make_expr_value ?loc (E_Int i)
+let make_expr_char ?loc c = make_expr_value ?loc (E_Char c)
+let make_expr_string ?loc s = make_expr_value ?loc (E_String s)
 let make_expr_app ?loc e1 e2 = Location.make_node_loc ?loc (E_App (e1, e2))
 let make_expr_abs ?loc p e = Location.make_node_loc ?loc (E_Abs (p, e))
 
@@ -59,25 +51,19 @@ let make_expr_product ?loc el =
   assert (List.length el >= 2);
   Location.make_node_loc ?loc (E_Prod el)
 
-let make_expr_type ?loc t = Location.make_node_loc ?loc (E_Type t)
+let make_expr_arrow_ty ?loc e1 e2 =
+  Location.make_node_loc ?loc (E_Ty_Arrow (e1, e2))
 
 (* - pattern *)
-let make_patt_var ?loc ?ty x = Location.make_node_loc ?loc (P_Var (x, ty))
-
-(* - type *)
-let make_type_type ?loc () = Location.make_node_loc ?loc T_Type
-let make_type_expr ?loc e = Location.make_node_loc ?loc (T_Expr e)
-let make_type_arrow ?loc t1 t2 = Location.make_node_loc ?loc (T_Arrow (t1, t2))
-
-let make_type_product ?loc tl =
-  assert (List.length tl >= 2);
-  Location.make_node_loc ?loc (T_Prod tl)
+let make_patt_var ?loc ?ty_expr x =
+  Location.make_node_loc ?loc (P_Var (x, ty_expr))
 
 (* - definition *)
 let make_definition ?loc id e = Location.make_node_loc ?loc (id, e)
 
 (* pretty printing *)
 let pp_expr_value fmt = function
+  | E_Type -> Format.pp_print_string fmt "type"
   | E_Var x -> Format.pp_print_string fmt x
   | E_Unit -> Format.pp_print_string fmt "()"
   | E_Bool true -> Format.pp_print_string fmt "⊤"
@@ -107,6 +93,13 @@ let rec pp_expr fmt (e : expr_loc) =
         Format.pp_print_list ~pp_sep pp_application fmt el
       in
       Format.fprintf fmt "@[%a@]" pp_content el
+  | _ -> pp_arrow_ty fmt e
+
+and pp_arrow_ty fmt (e : expr_loc) =
+  match e.node with
+  | E_Ty_Arrow (e1, e2) ->
+      Format.fprintf fmt "@[@[%a@] -> @[%a@]@]" pp_arrow_ty e1 pp_application
+        e2
   | _ -> pp_application fmt e
 
 and pp_application fmt (e : expr_loc) =
@@ -117,26 +110,15 @@ and pp_application fmt (e : expr_loc) =
 
 and pp_value fmt (e : expr_loc) =
   match e.node with
-  | E_Cons e -> pp_expr_value fmt e
-  | E_Type t -> pp_ty fmt t
+  | E_Value e -> pp_expr_value fmt e
   | _ -> Format.fprintf fmt "(@[%a@])" pp_expr e
 
 and pp_pattern fmt (p : patt_loc) =
   match p.node with
   | P_Var (x, None) -> Format.pp_print_string fmt x
-  | P_Var (x, Some t) -> Format.fprintf fmt "(@[%s : %a@])" x pp_ty t
+  | P_Var (x, Some et) -> Format.fprintf fmt "(@[%s : %a@])" x pp_expr et
 
-and pp_ty fmt (t : ty_loc) =
-  match t.node with
-  | T_Type -> Format.pp_print_string fmt "type"
-  | T_Expr e -> pp_expr fmt e
-  | T_Arrow (t1, t2) ->
-      Format.fprintf fmt "@[@[%a@] -> @[%a@]@]" pp_ty t1 pp_ty t2
-  | T_Prod tl ->
-      let pp_sep fmt () = Format.fprintf fmt " * " in
-      Format.pp_print_list ~pp_sep pp_ty fmt tl
-
-let pp_definition fmt (d : definition_pos) =
+let pp_definition fmt (d : def_pos) =
   let id, expr = d.node in
   Format.fprintf fmt "@[%s@ := @[%a@].@]" id pp_expr expr
 

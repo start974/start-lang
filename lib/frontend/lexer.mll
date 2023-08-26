@@ -65,8 +65,8 @@ rule token = parse
         { ARROW_FN }
   | ":="
         { EQUAL_DEF }
-  | "*"
-        { STAR }
+(*  | "*"*)
+        (*{ STAR }*)
 (*  | "|"*)
       (*{ PIPE }*)
   | ","

@@ -2,7 +2,7 @@ type id_string = int
 type input = I_String of id_string | I_File of string | I_Std_in
 
 let to_string = function
-  | I_String id -> Format.sprintf "<string-%id>" id
+  | I_String id -> Format.sprintf "<string-%i>" id
   | I_File fname -> fname
   | I_Std_in -> "<stdin>"
 
