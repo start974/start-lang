@@ -1,6 +1,8 @@
 (library
  (name frontend)
- (libraries menhirLib InputUtils error zarith))
+ (libraries menhirLib InputUtils error zarith)
+ (instrumentation
+  (backend bisect_ppx)))
 
 (ocamllex lexer)
 

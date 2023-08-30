@@ -1,2 +1,4 @@
 (library
- (name InputUtils))
+ (name InputUtils)
+ (instrumentation
+  (backend bisect_ppx)))

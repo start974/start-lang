@@ -5,4 +5,4 @@
 (rule
  (alias runtest)
  (action
-  (run ./tests_start_lang.exe)))
+  (run %{exe:./tests_start_lang.exe})))

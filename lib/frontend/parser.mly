@@ -13,12 +13,13 @@
        TYPE "type"
        ARROW_TY "->"
        SEMI ":"
+       UNDERSCORE "_"
+       UNIT "()"
        (*PIPE "|"*)
        (*STAR "*"*)
        EOF
 
 (* expression constant *)
-%token E_UNIT
 %token<bool> E_BOOL
 %token<Z.t> E_INT
 %token<char> E_CHAR
@@ -31,18 +32,25 @@
 
 %%
 (* helpers *)
-let separated_list(sep, X) ==
-| x = X; xl = preceded(sep, X)+;
+let rev_separated_list(sep, X) :=
+| xl = rev_separated_list(sep, X); sep; x = X;
     { x :: xl }
+| x1 = X; sep; x2 = X;
+    { [ x2; x1 ] }
+
+let separated_list(sep, X) ==
+| l = rev_separated_list(sep, X);
+    { List.rev l }
 
 (* rules *)
 let program :=
 | defs = definition*; EOF;
     { defs }
 
+(* definition *)
 let definition ==
-| id = IDENT; ":="; e = expr; ".";
-    { Ast.make_definition ~loc:$loc id e }
+| name = IDENT; p = pattern?; ":="; body = expr; ".";
+    { Ast.make_definition ~loc:$loc name p body }
 
 
 (* expression *)
@@ -55,11 +63,9 @@ let abstraction ==
     { Ast.make_expr_abs ~loc:$loc p e }
 
 let product_expr :=
-| el = separated_nonempty_list(",", arrow_type);
-    { match el with
-      | [] -> assert false
-      | [e] -> e
-      | el -> Ast.make_expr_product ~loc:$loc el }
+| arrow_type
+| el = separated_list(",", arrow_type);
+    { Ast.make_expr_product ~loc:$loc el }
 
 let arrow_type :=
 | application_expr
@@ -72,9 +78,9 @@ let application_expr :=
     { Ast.make_expr_app ~loc:$loc e1 e2 }
 
 let value ==
-| TYPE;
+| "type";
     { Ast.make_expr_type ~loc:$loc () }
-| E_UNIT;
+| "()";
     { Ast.make_expr_unit ~loc:$loc () }
 | x = IDENT;
     { Ast.make_expr_var ~loc:$loc x }
@@ -91,7 +97,31 @@ let value ==
 
 (* pattern *)
 let pattern ==
-| x = IDENT;
-    { Ast.make_patt_var ~loc:$loc x }
-| "("; x = IDENT; ":"; ty_expr = expr; ")";
-    { Ast.make_patt_var ~loc:$loc ~ty_expr x }
+| args = pattern_arg_typed+; ret = pattern_type?;
+    { Ast.make_patt ~loc:$loc args ret }
+
+let pattern_type ==
+| ":"; ty = expr;
+    { ty }
+
+let pattern_arg_typed ==
+| p = pattern_arg;
+    { Ast.make_patt_arg_typed ~loc:$loc p None }
+| "("; p = pattern_arg ; ty = pattern_type?; ")";
+    { Ast.make_patt_arg_typed ~loc:$loc p ty }
+
+let pattern_arg ==
+| pattern_prod
+
+let pattern_prod ==
+| pattern_value
+| "("; args = separated_list(",", pattern_arg); ")";
+    { Ast.make_patt_arg_prod ~loc:$loc args }
+
+let pattern_value ==
+| v = IDENT;
+    { Ast.make_patt_arg_var ~loc:$loc v }
+| "()";
+    { Ast.make_patt_arg_unit ~loc:$loc () }
+| "_";
+    { Ast.make_patt_arg_wildcard ~loc:$loc () }

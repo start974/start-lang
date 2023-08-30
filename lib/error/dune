@@ -1,3 +1,6 @@
 (library
  (name error)
- (libraries InputUtils spectrum))
+ (libraries InputUtils spectrum)
+(instrumentation
+  (backend bisect_ppx))
+ )

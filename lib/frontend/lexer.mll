@@ -43,7 +43,7 @@ rule token = parse
           comment position lexbuf; token lexbuf }
 (* constant expr *)
   | '(' white_space* ')'
-        { E_UNIT }
+        { UNIT }
   | "true"
         { E_BOOL true }
   | "false"
@@ -81,6 +81,8 @@ rule token = parse
         { TYPE }
   | ":"
         { SEMI }
+  | "_"
+        { UNDERSCORE }
   | ident as id
         { IDENT id }
   | _ as c

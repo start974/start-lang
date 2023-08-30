@@ -24,11 +24,20 @@ type expr =
 and expr_loc = expr Location.node_location
 
 (* pattern *)
-and patt = P_Var of ident * expr_loc option
+and patt_arg =
+  | P_Unit
+  | P_Wildcard
+  | P_Var of ident
+  | P_Prod of patt_arg_loc list
+
+and patt_arg_loc = patt_arg Location.node_location
+and patt_arg_typed = { patt_arg : patt_arg_loc; patt_ty : expr_loc option }
+and patt_arg_typed_loc = patt_arg_typed Location.node_location
+and patt = { patt_args : patt_arg_typed_loc list; patt_ret : expr_loc option }
 and patt_loc = patt Location.node_location
 
 (* definition *)
-type def = ident * expr_loc
+type def = { name : ident; patt : patt_loc option; body : expr_loc }
 type def_pos = def Location.node_location
 
 (* program *)
@@ -55,11 +64,21 @@ let make_expr_arrow_ty ?loc e1 e2 =
   Location.make_node_loc ?loc (E_Ty_Arrow (e1, e2))
 
 (* - pattern *)
-let make_patt_var ?loc ?ty_expr x =
-  Location.make_node_loc ?loc (P_Var (x, ty_expr))
+let make_patt_arg ?loc arg = Location.make_node_loc ?loc arg
+let make_patt_arg_var ?loc x = make_patt_arg ?loc (P_Var x)
+let make_patt_arg_wildcard ?loc () = make_patt_arg ?loc P_Wildcard
+let make_patt_arg_unit ?loc () = make_patt_arg ?loc P_Unit
+let make_patt_arg_prod ?loc pl = make_patt_arg ?loc (P_Prod pl)
+
+let make_patt_arg_typed ?loc patt_arg patt_ty =
+  Location.make_node_loc ?loc { patt_arg; patt_ty }
+
+let make_patt ?loc patt_args patt_ret =
+  Location.make_node_loc ?loc { patt_args; patt_ret }
 
 (* - definition *)
-let make_definition ?loc id e = Location.make_node_loc ?loc (id, e)
+let make_definition ?loc name patt body =
+  Location.make_node_loc ?loc { name; patt; body }
 
 (* pretty printing *)
 let pp_expr_value fmt = function
@@ -85,8 +104,7 @@ let pp_expr_value fmt = function
 
 let rec pp_expr fmt (e : expr_loc) =
   match e.node with
-  | E_Abs (pat, e) ->
-      Format.fprintf fmt "@[λ %a => %a@]" pp_pattern pat pp_expr e
+  | E_Abs (pat, e) -> Format.fprintf fmt "@[λ %a => %a@]" pp_patt pat pp_expr e
   | E_Prod el ->
       let pp_content fmt el =
         let pp_sep fmt () = Format.fprintf fmt ",@ " in
@@ -98,8 +116,7 @@ let rec pp_expr fmt (e : expr_loc) =
 and pp_arrow_ty fmt (e : expr_loc) =
   match e.node with
   | E_Ty_Arrow (e1, e2) ->
-      Format.fprintf fmt "@[@[%a@] -> @[%a@]@]" pp_arrow_ty e1 pp_application
-        e2
+      Format.fprintf fmt "@[@[%a@] -> @[%a@]@]" pp_arrow_ty e1 pp_application e2
   | _ -> pp_application fmt e
 
 and pp_application fmt (e : expr_loc) =
@@ -113,14 +130,43 @@ and pp_value fmt (e : expr_loc) =
   | E_Value e -> pp_expr_value fmt e
   | _ -> Format.fprintf fmt "(@[%a@])" pp_expr e
 
-and pp_pattern fmt (p : patt_loc) =
+and pp_patt_arg fmt (p : patt_arg_loc) =
   match p.node with
-  | P_Var (x, None) -> Format.pp_print_string fmt x
-  | P_Var (x, Some et) -> Format.fprintf fmt "(@[%s : %a@])" x pp_expr et
+  | P_Prod xl ->
+      let pp_content fmt xl =
+        let pp_sep fmt () = Format.fprintf fmt ",@ " in
+        Format.pp_print_list ~pp_sep pp_patt_value fmt xl
+      in
+      Format.fprintf fmt "(@[%a@])" pp_content xl
+  | _ -> pp_patt_value fmt p
+
+and pp_patt_value fmt (p : patt_arg_loc) =
+  match p.node with
+  | P_Var x -> Format.pp_print_string fmt x
+  | P_Unit -> Format.pp_print_string fmt "()"
+  | P_Wildcard -> Format.pp_print_string fmt "_"
+  | _ -> pp_patt_arg fmt p
+
+and pp_patt_arg_typed fmt (p : patt_arg_typed_loc) =
+  let { patt_arg; patt_ty } = p.node in
+  match patt_ty with
+  | None -> pp_patt_arg fmt patt_arg
+  | Some t ->
+      Format.fprintf fmt "(@[%a@ :@ %a@])" pp_patt_arg patt_arg pp_expr t
+
+and pp_patt fmt (p : patt_loc) =
+  let { patt_args; patt_ret } = p.node in
+  let pp_sep fmt () = Format.fprintf fmt "@ " in
+  Format.pp_print_list ~pp_sep pp_patt_arg_typed fmt patt_args;
+  Option.iter (fun ty -> Format.fprintf fmt " : %a" pp_expr ty) patt_ret
 
 let pp_definition fmt (d : def_pos) =
-  let id, expr = d.node in
-  Format.fprintf fmt "@[%s@ := @[%a@].@]" id pp_expr expr
+  let { name; patt; body } = d.node in
+  match patt with
+  | Some patt ->
+      Format.fprintf fmt "@[%s@ @[%a@] := @[%a@].@]" name pp_patt patt pp_expr
+        body
+  | None -> Format.fprintf fmt "@[%s@ := @[%a@].@]" name pp_expr body
 
 let pp_program =
   Format.pp_print_list

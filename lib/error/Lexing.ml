@@ -27,7 +27,8 @@ module LexingError = PositionError.Make (struct
         Format.sprintf "illegal string character '%c'" c
     | ReadCharTerm -> "unterminated char."
     | ReadCharEmpty -> "char is empty."
-    | ReadCharFinish c -> Format.sprintf "char is terminate, expected \"'\" not '%c'" c
+    | ReadCharFinish c ->
+        Format.sprintf "char is terminate, expected \"'\" not '%c'" c
 
   let position { position; _ } = position
   let hint _ = None
@@ -38,9 +39,7 @@ include LexingError
 
 let fail_comment (position : Position.t) = fail { position; msg_type = Comment }
 let fail_char position c = fail { position; msg_type = Char c }
-
-let fail_escape_char position  c =
-  fail { position; msg_type = EscapeChar c }
+let fail_escape_char position c = fail { position; msg_type = EscapeChar c }
 
 let fail_readstring_terminate position =
   fail { position; msg_type = ReadStringTerm }
@@ -51,8 +50,7 @@ let fail_readstring_unexpected_char position c =
 let fail_readchar_terminate position =
   fail { position; msg_type = ReadCharTerm }
 
-let fail_readchar_empty position =
-  fail { position; msg_type = ReadCharEmpty }
+let fail_readchar_empty position = fail { position; msg_type = ReadCharEmpty }
 
-let fail_readchar_finish position  c =
+let fail_readchar_finish position c =
   fail { position; msg_type = ReadCharFinish c }

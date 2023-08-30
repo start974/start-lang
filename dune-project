@@ -21,7 +21,13 @@
  (name start_lang)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune)
+ (depends
+   ocaml
+   dune
+   zarith
+   (alcotest :dev)
+   (bisect_ppx :dev)
+  )
  (tags
   (topics "to describe" your project)))
 

@@ -18,4 +18,3 @@ val fail_readstring_unexpected_char : Position.t -> char -> 'a
 val fail_readchar_terminate : Position.t -> 'a
 val fail_readchar_empty : Position.t -> 'a
 val fail_readchar_finish : Position.t -> char -> 'a
-
