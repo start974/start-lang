@@ -1,8 +1,5 @@
-open Parsing
-open Alcotest
-
 let () =
-  run "Parsing"
+  Alcotest.run "Parsing"
     [
       ("expression", Expression.tests_cases);
       ("type", Type.tests_cases);

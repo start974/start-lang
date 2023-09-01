@@ -12,7 +12,6 @@ val fail_escape_char : Position.t -> char -> 'a
 
 (* fail on string char *)
 val fail_readstring_terminate : Position.t -> 'a
-val fail_readstring_unexpected_char : Position.t -> char -> 'a
 
 (* fail on read char *)
 val fail_readchar_terminate : Position.t -> 'a

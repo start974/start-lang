@@ -1,6 +1,5 @@
 (library
  (name error)
  (libraries InputUtils spectrum)
-(instrumentation
-  (backend bisect_ppx))
- )
+ (instrumentation
+  (backend bisect_ppx)))

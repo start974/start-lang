@@ -44,7 +44,7 @@ let register_string =
     incr id_string_count;
     input
 
-let register_files file_name =
+let register_file file_name =
   let input = I_File file_name and channel = open_in file_name in
   let rec get_lines lines =
     match In_channel.input_line channel with

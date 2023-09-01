@@ -6,7 +6,7 @@ let parse_handle ~msg text_to_parse =
   match Parse.program input with
   | prgm -> prgm
   | exception Error.Lexing.Err e ->
-      Alcotest.fail (Format.asprintf "%s@. %a" msg Error.Lexing.pp_print e)
+      Alcotest.fail (Format.asprintf "%s@.%a" msg Error.Lexing.pp_print e)
   | exception Error.Parsing.Err e ->
       Alcotest.fail (Format.asprintf "%s@.%a" msg Error.Parsing.pp_print e)
 

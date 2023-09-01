@@ -4,10 +4,12 @@ open InputUtils
 let usage = Printf.sprintf "Usage: %s <options> [filename]\n" Sys.argv.(0)
 let verbose = ref false
 let parse_only = ref false
+let no_color = ref false
 
 let spec =
   [
     ("--parse-only", Arg.Set parse_only, " parse only");
+    ("--no-color", Arg.Set no_color, " no color printing");
     ("--verbose", Arg.Set verbose, " show processing messages");
   ]
 
@@ -26,9 +28,10 @@ let file =
 let input =
   match file with
   | None -> Inputs.std_in
-  | Some file -> Inputs.register_files file
+  | Some file -> Inputs.register_file file
 
-let reset_ppf = Spectrum.prepare_ppf Format.std_formatter
+let reset_ppf =
+  if !no_color then fun () -> () else Spectrum.prepare_ppf Format.std_formatter
 
 let exit n =
   reset_ppf ();

@@ -22,4 +22,4 @@ format:
 .PHONY: clean
 clean:
 	dune clean
-	rm _coverage
+	rm -rf _coverage

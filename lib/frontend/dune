@@ -8,5 +8,5 @@
 
 (menhir
  (modules parser)
- (flags --explain --strict --table)
+ (flags --explain --strict)
  (infer true))

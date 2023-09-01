@@ -51,6 +51,8 @@ let program :=
 let definition ==
 | name = IDENT; p = pattern?; ":="; body = expr; ".";
     { Ast.make_definition ~loc:$loc name p body }
+(*| error; pattern?; ":="; expr; ".";*)
+    (*{ Error.Parsing.fail_definition_ident $loc }*)
 
 
 (* expression *)

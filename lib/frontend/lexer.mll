@@ -146,7 +146,8 @@ and read_char start_pos = parse
   | '\\'
         { let c = escaped_char lexbuf in finish_read_char c lexbuf }
   | '\''
-        { Error.Lexing.fail_readchar_empty start_pos }
+        {  let position = Lexing.lexeme_start_p lexbuf in
+            Error.Lexing.fail_readchar_empty position }
   | ([^ '\'' '\\'] as c )
         { finish_read_char c lexbuf }
   | eof

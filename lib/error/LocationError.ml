@@ -16,26 +16,13 @@ module type LocationErr = sig
   (** Cathegory of error *)
 end
 
-module type S = sig
-  include LocationErr
+module type S = LinesError.S
 
-  exception Err of t
-
-  val pp_print : Format.formatter -> t -> unit
-  (** pretty printing of error *)
-
-  val pp_color_cat :
-    (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a -> unit
-  (** pretty print with error_cathegory color *)
-end
-
-module Make (LE : LocationErr) : S with type t = LE.t = struct
+module Make (LE : LocationErr) : S with type t = LE.t = LinesError.Make (struct
   include LE
 
-  exception Err of t
-
+  let pp_header fmt err = Location.pp_print fmt (location err)
   let pp_color_cat f fmt x = ErrorCat.pp_color err_cathegory fmt f x
-  let pp_location fmt err = Location.pp_print fmt (location err)
 
   let pp_lines fmt err =
     let location = location err in
@@ -63,17 +50,4 @@ module Make (LE : LocationErr) : S with type t = LE.t = struct
          Format.fprintf fmt "@{<bold>%a@}"
            (pp_color_cat Format.pp_print_string)
            line_indication
-
-  let pp_message fmt err =
-    Format.fprintf fmt "@{<bold>%a: %s@}" ErrorCat.pp_print err_cathegory
-      (message err)
-
-  let pp_hint fmt err =
-    hint err
-    |> Option.iter @@ fun hint ->
-       Format.fprintf fmt "@{<aqua>%s@}: %s" "Hint" hint
-
-  let pp_print fmt err =
-    Format.fprintf fmt "@{<yellow>%a@}\n%a\n%a%a\n" pp_location err pp_lines err
-      pp_message err pp_hint err
-end
+end)

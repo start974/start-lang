@@ -16,29 +16,15 @@ module type PositionErr = sig
   (** Cathegory of error *)
 end
 
-module type S = sig
-  include PositionErr
+module type S = LinesError.S
 
-  exception Err of t
-
-  val fail : t -> 'a
-  val pp_print : Format.formatter -> t -> unit
-
-  val pp_color_cat :
-    (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a -> unit
-  (** pretty print with error_cathegory color *)
-end
-
-module Make (PE : PositionErr) : S with type t = PE.t = struct
+module Make (PE : PositionErr) : S with type t = PE.t = LinesError.Make (struct
   include PE
 
-  exception Err of t
-
-  let fail x = raise (Err x)
   let pp_color_cat f fmt x = ErrorCat.pp_color err_cathegory fmt f x
-  let pp_position fmt err = Position.pp_print fmt (position err)
+  let pp_header fmt err = Position.pp_print fmt (position err)
 
-  let pp_line fmt err =
+  let pp_lines fmt err =
     let position = position err in
     Position.file position
     |> Option.iter @@ fun fname ->
@@ -56,13 +42,4 @@ module Make (PE : PositionErr) : S with type t = PE.t = struct
        Format.fprintf fmt "@{<bold>%a@}"
          (pp_color_cat Format.pp_print_string)
          line_indication
-
-  let pp_message fmt err =
-    Format.fprintf fmt "%a : %s" ErrorCat.pp_print err_cathegory (message err)
-
-  let pp_hint fmt err = Option.iter (Format.pp_print_string fmt) (hint err)
-
-  let pp_print fmt err =
-    Format.fprintf fmt "@{<yellow>%a@}\n%a\n%a%a" pp_position err pp_line err
-      pp_message err pp_hint err
-end
+end)

@@ -9,7 +9,7 @@ val from_string : string -> input
 val register_string : string -> input
 (** register a string *)
 
-val register_files : string -> input
+val register_file : string -> input
 (** register a file *)
 
 val std_in : input
