@@ -17,6 +17,9 @@ let from_string = function
       I_String id
   | fname -> I_File fname
 
+let from_location loc = Location.file loc |> Option.map from_string
+let from_position pos = Position.file pos |> Option.map from_string
+
 module Input = struct
   type t = input
 
@@ -111,5 +114,24 @@ let get_lines input l_start l_end =
     else lines
   in
   get_lines_aux [] (l_end - 1)
+
+let extract location =
+  let input = Option.get (from_location location) in
+  let l_start, l_end = Location.lines location
+  and c_start, c_end = Location.chars location in
+  let s, e = (c_start - 1, c_end - 1) in
+  let buffer = Buffer.create c_end in
+  let rec make_string i =
+    let line = get_line input i in
+    if i = l_start then
+      let len = if i == l_end then e else String.length line in
+      Buffer.add_substring buffer line s (len - s)
+    else if i = l_end then Buffer.add_substring buffer line 0 e
+    else (
+      Buffer.add_string buffer line;
+      make_string (succ i))
+  in
+  make_string l_start;
+  Buffer.contents buffer
 
 let clean () = InputTable.clear table

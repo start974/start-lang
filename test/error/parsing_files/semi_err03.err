@@ -1,0 +1,5 @@
+File "parsing_files/semi_err03.st", line 1, characters 14-15:
+1 | f := fn x => : int.
+                 ^
+Error: Syntax error.
+Hint: Cannot have ':' after "=>".

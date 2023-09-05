@@ -2,13 +2,9 @@ type t = Lexing.position
 
 let unknown = Lexing.dummy_pos
 let is_unknown x = x == unknown
-
-let file (pos : Lexing.position) =
-  let res = pos.pos_fname in
-  if res == "" then None else Some res
-
-let line (pos : Lexing.position) = pos.pos_lnum
-let char (pos : Lexing.position) = pos.pos_cnum - pos.pos_bol + 1
+let file pos = if is_unknown pos then None else Some pos.pos_fname
+let line (pos : t) = pos.pos_lnum
+let char (pos : t) = pos.pos_cnum - pos.pos_bol + 1
 
 let pp_file fmt pos =
   Option.iter (Format.fprintf fmt "File \"%s\", ") (file pos)

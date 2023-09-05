@@ -1,0 +1,5 @@
+File "parsing_files/type_as_binding03.st", line 1, characters 5-9:
+1 | f ((type, x), y) := g ().
+        ^^^^
+Error: Syntax error.
+Hint: Is not a correct binding.

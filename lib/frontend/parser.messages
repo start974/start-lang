@@ -1,0 +1,319 @@
+program: UNIT
+##
+## Ends in an error in state: 0.
+##
+## program' -> . program [ # ]
+##
+## The known suffix of the stack is as follows:
+##
+##
+
+A program is a succession of definition.
+Not expected "$0", is not a correct identifier to make a definition.
+
+program: IDENT TYPE
+##
+## Ends in an error in state: 1.
+##
+## list(definition) -> IDENT . option(pattern) EQUAL_DEF expr DOT list(definition) [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## IDENT
+##
+program: IDENT LPAR TYPE
+##
+## Ends in an error in state: 4.
+##
+## pattern_arg_typed -> LPAR . pattern_prod option(pattern_type) RPAR [ UNIT UNDERSCORE SEMI LPAR IDENT EQUAL_DEF ARROW_FN ]
+## pattern_prod -> LPAR . rev_separated_list(COMMA,pattern_arg) RPAR [ UNIT UNDERSCORE SEMI LPAR IDENT EQUAL_DEF ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## LPAR
+##
+program: IDENT LPAR LPAR TYPE
+##
+## Ends in an error in state: 5.
+##
+## pattern_prod -> LPAR . rev_separated_list(COMMA,pattern_arg) RPAR [ SEMI RPAR COMMA ]
+##
+## The known suffix of the stack is as follows:
+## LPAR
+##
+program: IDENT LPAR IDENT COMMA IDENT COMMA TYPE
+##
+## Ends in an error in state: 9.
+##
+## rev_separated_list(COMMA,pattern_arg) -> rev_separated_list(COMMA,pattern_arg) COMMA . pattern_prod [ RPAR COMMA ]
+##
+## The known suffix of the stack is as follows:
+## rev_separated_list(COMMA,pattern_arg) COMMA
+##
+program: IDENT LPAR IDENT COMMA TYPE
+##
+## Ends in an error in state: 12.
+##
+## rev_separated_list(COMMA,pattern_arg) -> pattern_prod COMMA . pattern_prod [ RPAR COMMA ]
+##
+## The known suffix of the stack is as follows:
+## pattern_prod COMMA
+##
+program: IDENT EQUAL_DEF FN TYPE
+##
+## Ends in an error in state: 21.
+##
+## expr -> FN . pattern ARROW_FN expr [ RPAR EQUAL_DEF DOT ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## FN
+##
+program: IDENT IDENT TYPE
+##
+## Ends in an error in state: 23.
+##
+## nonempty_list(pattern_arg_typed) -> pattern_arg_typed . [ SEMI EQUAL_DEF ARROW_FN ]
+## nonempty_list(pattern_arg_typed) -> pattern_arg_typed . nonempty_list(pattern_arg_typed) [ SEMI EQUAL_DEF ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## pattern_arg_typed
+##
+
+Is not a correct binding.
+
+program: IDENT LPAR IDENT COMMA IDENT UNIT
+##
+## Ends in an error in state: 7.
+##
+## pattern_prod -> LPAR rev_separated_list(COMMA,pattern_arg) . RPAR [ UNIT UNDERSCORE SEMI RPAR LPAR IDENT EQUAL_DEF COMMA ARROW_FN ]
+## rev_separated_list(COMMA,pattern_arg) -> rev_separated_list(COMMA,pattern_arg) . COMMA pattern_prod [ RPAR COMMA ]
+##
+## The known suffix of the stack is as follows:
+## LPAR rev_separated_list(COMMA,pattern_arg)
+##
+program: IDENT LPAR LPAR IDENT UNIT
+##
+## Ends in an error in state: 11.
+##
+## rev_separated_list(COMMA,pattern_arg) -> pattern_prod . COMMA pattern_prod [ RPAR COMMA ]
+##
+## The known suffix of the stack is as follows:
+## pattern_prod
+##
+program: IDENT LPAR IDENT UNIT
+##
+## Ends in an error in state: 14.
+##
+## pattern_arg_typed -> LPAR pattern_prod . option(pattern_type) RPAR [ UNIT UNDERSCORE SEMI LPAR IDENT EQUAL_DEF ARROW_FN ]
+## rev_separated_list(COMMA,pattern_arg) -> pattern_prod . COMMA pattern_prod [ RPAR COMMA ]
+##
+## The known suffix of the stack is as follows:
+## LPAR pattern_prod
+##
+
+Product has a ',' to separated element.
+
+program: IDENT IDENT SEMI SEMI
+##
+## Ends in an error in state: 15.
+##
+## option(pattern_type) -> SEMI . expr [ RPAR EQUAL_DEF ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## SEMI
+##
+
+':' is followed by a type.
+
+program: IDENT EQUAL_DEF LPAR SEMI
+##
+## Ends in an error in state: 19.
+##
+## value -> LPAR . expr RPAR [ UNIT UNDERSCORE TYPE RPAR LPAR IDENT E_STRING E_INT E_CHAR E_BOOL EQUAL_DEF DOT COMMA ARROW_TY ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## LPAR
+##
+program: IDENT EQUAL_DEF FN IDENT ARROW_FN SEMI
+##
+## Ends in an error in state: 26.
+##
+## expr -> FN pattern ARROW_FN . expr [ RPAR EQUAL_DEF DOT ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## FN pattern ARROW_FN
+##
+program: IDENT EQUAL_DEF E_BOOL COMMA E_BOOL COMMA SEMI
+##
+## Ends in an error in state: 33.
+##
+## rev_separated_list(COMMA,arrow_type) -> rev_separated_list(COMMA,arrow_type) COMMA . arrow_type [ RPAR EQUAL_DEF DOT COMMA ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## rev_separated_list(COMMA,arrow_type) COMMA
+##
+program: IDENT EQUAL_DEF E_BOOL ARROW_TY SEMI
+##
+## Ends in an error in state: 35.
+##
+## arrow_type -> arrow_type ARROW_TY . application_expr [ RPAR EQUAL_DEF DOT COMMA ARROW_TY ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## arrow_type ARROW_TY
+##
+program: IDENT EQUAL_DEF E_BOOL ARROW_TY E_BOOL SEMI
+##
+## Ends in an error in state: 36.
+##
+## application_expr -> application_expr . value [ UNIT UNDERSCORE TYPE RPAR LPAR IDENT E_STRING E_INT E_CHAR E_BOOL EQUAL_DEF DOT COMMA ARROW_TY ARROW_FN ]
+## arrow_type -> arrow_type ARROW_TY application_expr . [ RPAR EQUAL_DEF DOT COMMA ARROW_TY ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## arrow_type ARROW_TY application_expr
+##
+program: IDENT EQUAL_DEF E_BOOL SEMI
+##
+## Ends in an error in state: 38.
+##
+## application_expr -> application_expr . value [ UNIT UNDERSCORE TYPE RPAR LPAR IDENT E_STRING E_INT E_CHAR E_BOOL EQUAL_DEF DOT COMMA ARROW_TY ARROW_FN ]
+## arrow_type -> application_expr . [ RPAR EQUAL_DEF DOT COMMA ARROW_TY ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## application_expr
+##
+program: IDENT EQUAL_DEF E_BOOL COMMA SEMI
+##
+## Ends in an error in state: 42.
+##
+## rev_separated_list(COMMA,arrow_type) -> arrow_type COMMA . arrow_type [ RPAR EQUAL_DEF DOT COMMA ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## arrow_type COMMA
+##
+program: IDENT EQUAL_DEF SEMI
+##
+## Ends in an error in state: 53.
+##
+## list(definition) -> IDENT option(pattern) EQUAL_DEF . expr DOT list(definition) [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## IDENT option(pattern) EQUAL_DEF
+##
+
+Cannot have ':' after "$0".
+
+program: IDENT EQUAL_DEF FN IDENT EQUAL_DEF
+##
+## Ends in an error in state: 25.
+##
+## expr -> FN pattern . ARROW_FN expr [ RPAR EQUAL_DEF DOT ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## FN pattern
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 23, spurious reduction of production nonempty_list(pattern_arg_typed) -> pattern_arg_typed
+## In state 44, spurious reduction of production option(pattern_type) ->
+## In state 45, spurious reduction of production pattern -> nonempty_list(pattern_arg_typed) option(pattern_type)
+##
+
+Incorect lambda function, after binders use separator '=>'.
+Please write:
+fn $0 => ...
+
+program: IDENT EQUAL_DEF LPAR E_BOOL EQUAL_DEF
+##
+## Ends in an error in state: 46.
+##
+## value -> LPAR expr . RPAR [ UNIT UNDERSCORE TYPE RPAR LPAR IDENT E_STRING E_INT E_CHAR E_BOOL EQUAL_DEF DOT COMMA ARROW_TY ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## LPAR expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 38, spurious reduction of production arrow_type -> application_expr
+## In state 41, spurious reduction of production product_expr -> arrow_type
+## In state 39, spurious reduction of production expr -> product_expr
+##
+
+Definition of "$5" not end by '.'.
+
+program: IDENT LPAR IDENT SEMI E_BOOL EQUAL_DEF
+##
+## Ends in an error in state: 49.
+##
+## pattern_arg_typed -> LPAR pattern_prod option(pattern_type) . RPAR [ UNIT UNDERSCORE SEMI LPAR IDENT EQUAL_DEF ARROW_FN ]
+##
+## The known suffix of the stack is as follows:
+## LPAR pattern_prod option(pattern_type)
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 38, spurious reduction of production arrow_type -> application_expr
+## In state 41, spurious reduction of production product_expr -> arrow_type
+## In state 39, spurious reduction of production expr -> product_expr
+## In state 48, spurious reduction of production option(pattern_type) -> SEMI expr
+##
+
+Parenthesis not closed.
+
+program: IDENT IDENT ARROW_FN
+##
+## Ends in an error in state: 52.
+##
+## list(definition) -> IDENT option(pattern) . EQUAL_DEF expr DOT list(definition) [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## IDENT option(pattern)
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 23, spurious reduction of production nonempty_list(pattern_arg_typed) -> pattern_arg_typed
+## In state 44, spurious reduction of production option(pattern_type) ->
+## In state 45, spurious reduction of production pattern -> nonempty_list(pattern_arg_typed) option(pattern_type)
+## In state 51, spurious reduction of production option(pattern) -> pattern
+##
+
+Incorrect function definition, after binders use separator ':='.
+Please write:
+$1 $0 := ...
+
+program: IDENT EQUAL_DEF E_BOOL RPAR
+##
+## Ends in an error in state: 54.
+##
+## list(definition) -> IDENT option(pattern) EQUAL_DEF expr . DOT list(definition) [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## IDENT option(pattern) EQUAL_DEF expr
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 38, spurious reduction of production arrow_type -> application_expr
+## In state 41, spurious reduction of production product_expr -> arrow_type
+## In state 39, spurious reduction of production expr -> product_expr
+##
+
+Parenthesis not open in "$0".
+
+program: IDENT EQUAL_DEF E_BOOL DOT UNIT
+##
+## Ends in an error in state: 55.
+##
+## list(definition) -> IDENT option(pattern) EQUAL_DEF expr DOT . list(definition) [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## IDENT option(pattern) EQUAL_DEF expr DOT
+##
+
+'$1' is not a correct identifier for a definition.

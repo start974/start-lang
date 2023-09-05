@@ -1,6 +1,8 @@
 open Utils
 
-let test_error_char () = test_error_lexing ~msg:"error char" "char"
+let test_error_char () =
+  let msg = "error char" in
+  test_error_lexing ~msg "char"
 
 let test_comment () =
   let msg = "error comment unclosed" in
@@ -29,13 +31,11 @@ let test_char_too_long () =
 let tests_cases =
   Alcotest.
     [
-      test_case "test-err-lexing-char" `Quick test_error_char;
-      test_case "test-err-lexing-comment" `Quick test_comment;
-      test_case "test-err-lexing-escapechar" `Quick test_escapedchar;
-      test_case "test-err-lexing-string-unterminated" `Quick
-        test_string_unterminaded;
-      test_case "test-err-lexing-char-unterminated" `Quick
-        test_char_unterminaded;
-      test_case "test-err-lexing-char-is-empty" `Quick test_char_empty;
-      test_case "test-err-lexing-char-too-long" `Quick test_char_too_long;
+      test_case "err-lexing-char" `Quick test_error_char;
+      test_case "err-lexing-comment" `Quick test_comment;
+      test_case "err-lexing-escapechar" `Quick test_escapedchar;
+      test_case "err-lexing-string-unterminated" `Quick test_string_unterminaded;
+      test_case "err-lexing-char-unterminated" `Quick test_char_unterminaded;
+      test_case "err-lexing-char-is-empty" `Quick test_char_empty;
+      test_case "err-lexing-char-too-long" `Quick test_char_too_long;
     ]

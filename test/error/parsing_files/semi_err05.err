@@ -1,0 +1,5 @@
+File "parsing_files/semi_err05.st", line 1, characters 13-14:
+1 | f := int -> : int.
+                ^
+Error: Syntax error.
+Hint: Cannot have ':' after "->".

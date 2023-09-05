@@ -1,0 +1,5 @@
+File "parsing_files/unit_def2.st", line 2, characters 1-3:
+2 | () := x.
+    ^^
+Error: Syntax error.
+Hint: '()' is not a correct identifier for a definition.

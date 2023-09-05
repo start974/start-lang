@@ -1,21 +1,14 @@
 open InputUtils
 
-type msg_type = Basic_Error | DefinitionName
-type u = { location : Location.t; msg_type : msg_type }
+type u = { location : Location.t; hint : string option }
 
 include LocationError.Make (struct
   type t = u
 
   let message _ = "Syntax error."
   let location { location; _ } = location
-
-  let hint { msg_type; _ } =
-    match msg_type with
-    | Basic_Error -> None
-    | DefinitionName -> Some ", this definition has not name."
-
+  let hint { hint; _ } = hint
   let err_cathegory = ErrorCat.Error
 end)
 
-let fail_syntax location = fail { location; msg_type = Basic_Error }
-let fail_definition_name location = fail { location; msg_type = DefinitionName }
+let fail_hint location hint = fail { location; hint = Some hint }

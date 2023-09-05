@@ -4,20 +4,20 @@
 %token <string> IDENT
 
 %token EQUAL_DEF ":="
-       FN "fn"
-       ARROW_FN "=>"
-       LPAR "("
-       RPAR ")"
-       COMMA ","
-       DOT "."
-       TYPE "type"
-       ARROW_TY "->"
-       SEMI ":"
-       UNDERSCORE "_"
-       UNIT "()"
-       (*PIPE "|"*)
-       (*STAR "*"*)
-       EOF
+%token FN "fn"
+%token ARROW_FN "=>"
+%token LPAR "("
+%token RPAR ")"
+%token COMMA ","
+%token DOT "."
+%token TYPE "type"
+%token ARROW_TY "->"
+%token SEMI ":"
+%token UNDERSCORE "_"
+%token UNIT "()"
+(*%token PIPE "|"*)
+(*%token STAR "*"*)
+%token EOF
 
 (* expression constant *)
 %token<bool> E_BOOL
@@ -48,11 +48,9 @@ let program :=
     { defs }
 
 (* definition *)
-let definition ==
+let definition :=
 | name = IDENT; p = pattern?; ":="; body = expr; ".";
     { Ast.make_definition ~loc:$loc name p body }
-(*| error; pattern?; ":="; expr; ".";*)
-    (*{ Error.Parsing.fail_definition_ident $loc }*)
 
 
 (* expression *)
@@ -60,7 +58,7 @@ let expr :=
 | abstraction
 | product_expr
 
-let abstraction ==
+let abstraction :=
 | "fn"; p = pattern; "=>"; e = expr;
     { Ast.make_expr_abs ~loc:$loc p e }
 
@@ -79,13 +77,18 @@ let application_expr :=
 | e1 = application_expr; e2 = value;
     { Ast.make_expr_app ~loc:$loc e1 e2 }
 
-let value ==
+let var ==
+| UNDERSCORE;
+    { Ast.make_expr_var ~loc:$loc "_" }
+| x = IDENT;
+    { Ast.make_expr_var ~loc:$loc x }
+
+let value :=
+| var
 | "type";
     { Ast.make_expr_type ~loc:$loc () }
 | "()";
     { Ast.make_expr_unit ~loc:$loc () }
-| x = IDENT;
-    { Ast.make_expr_var ~loc:$loc x }
 | b = E_BOOL;
     { Ast.make_expr_bool ~loc:$loc b }
 | i = E_INT;
@@ -98,15 +101,15 @@ let value ==
     { e }
 
 (* pattern *)
-let pattern ==
+let pattern :=
 | args = pattern_arg_typed+; ret = pattern_type?;
     { Ast.make_patt ~loc:$loc args ret }
 
-let pattern_type ==
+let pattern_type :=
 | ":"; ty = expr;
     { ty }
 
-let pattern_arg_typed ==
+let pattern_arg_typed :=
 | p = pattern_arg;
     { Ast.make_patt_arg_typed ~loc:$loc p None }
 | "("; p = pattern_arg ; ty = pattern_type?; ")";
@@ -115,12 +118,12 @@ let pattern_arg_typed ==
 let pattern_arg ==
 | pattern_prod
 
-let pattern_prod ==
+let pattern_prod :=
 | pattern_value
 | "("; args = separated_list(",", pattern_arg); ")";
     { Ast.make_patt_arg_prod ~loc:$loc args }
 
-let pattern_value ==
+let pattern_value :=
 | v = IDENT;
     { Ast.make_patt_arg_var ~loc:$loc v }
 | "()";

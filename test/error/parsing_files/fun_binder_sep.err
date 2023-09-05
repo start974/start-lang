@@ -1,0 +1,7 @@
+File "parsing_files/fun_binder_sep.st", line 1, characters 11-13:
+1 | f := fn x := x.
+              ^^
+Error: Syntax error.
+Hint: Incorect lambda function, after binders use separator '=>'.
+      Please write:
+      fn x => ...

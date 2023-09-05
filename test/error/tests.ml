@@ -1,5 +1,3 @@
 let () =
   Alcotest.run "Error"
-    [
-      ("lexing", Lexing.tests_cases);
-    ]
+    [ ("Lexing", Lexing.tests_cases); ("Parsing", Parsing.tests_cases) ]

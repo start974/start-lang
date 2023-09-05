@@ -16,6 +16,7 @@ module LexingError = PositionError.Make (struct
 
   let message _ = "Lexing error."
   let position { position; _ } = position
+  let err_cathegory = ErrorCat.Error
 
   let hint { msg_type; _ } =
     Some
@@ -28,8 +29,6 @@ module LexingError = PositionError.Make (struct
       | ReadCharEmpty -> "Char is empty."
       | ReadCharFinish c ->
           Format.sprintf "Char is one character, expected \"'\" not '%c'." c)
-
-  let err_cathegory = ErrorCat.Error
 end)
 
 include LexingError

@@ -1,0 +1,6 @@
+File "parsing_files/unit_def1.st", line 1, characters 1-3:
+1 | () := 3.
+    ^^
+Error: Syntax error.
+Hint: A program is a succession of definition.
+      Not expected "()", is not a correct identifier to make a definition.

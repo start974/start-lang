@@ -7,7 +7,11 @@ let make_node_loc ?(loc = unknown) node = { location = loc; node }
 let is_unknown (p_start, p_end) =
   Position.is_unknown p_start || Position.is_unknown p_end
 
-let file (p_start, _) = Position.file p_start
+let file (p_start, p_end) =
+  let file_start = Position.file p_start and file_end = Position.file p_end in
+  assert (file_start = file_end);
+  file_start
+
 let lines (p_start, p_end) = (Position.line p_start, Position.line p_end)
 
 let chars ((p_start, p_end) : Lexing.position * Lexing.position) =
