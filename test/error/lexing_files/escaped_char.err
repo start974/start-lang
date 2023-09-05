@@ -1,5 +1,5 @@
-File "lexing_files/escaped_char.st", line 1, character 9:
-1 | x := '\\z'.
-            ^
+File "lexing_files/escaped_char.st", line 1, character 8:
+1 | x := '\z'.
+           ^
 Error: Lexing error.
-Hint: Char is one character, expected "'" not 'z'.
+Hint: Cannot escape char '\z'.
