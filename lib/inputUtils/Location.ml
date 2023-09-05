@@ -32,8 +32,9 @@ let pp_print_chars fmt loc =
   let char_start, char_end = chars loc in
   Format.fprintf fmt "characters %d-%d" char_start char_end
 
-let pp_print fmt loc =
-  if is_unknown loc then Format.fprintf fmt "At an unknown location:\n"
+let pp_print fmt ((p_start, p_end) as loc) =
+  if p_start = p_end then Position.pp_print fmt p_start
+  else if is_unknown loc then Format.fprintf fmt "At an unknown location:\n"
   else
     Format.fprintf fmt "%a%a%a:" pp_print_file loc pp_print_lines loc
       pp_print_chars loc
