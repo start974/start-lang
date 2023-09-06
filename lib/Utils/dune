@@ -1,5 +1,5 @@
 (library
- (name start_lang)
- (libraries frontend error ast)
+ (name utils)
+ (libraries )
  (instrumentation
   (backend bisect_ppx)))

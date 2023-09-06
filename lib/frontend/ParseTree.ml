@@ -38,10 +38,10 @@ and patt_loc = patt Location.node_location
 
 (* definition *)
 type def = { name : ident; patt : patt_loc option; body : expr_loc }
-type def_pos = def Location.node_location
+type def_loc = def Location.node_location
 
 (* program *)
-type program = def_pos list
+type program = def_loc list
 
 (* builders *)
 (* - expression *)
@@ -85,22 +85,10 @@ let pp_expr_value fmt = function
   | E_Type -> Format.pp_print_string fmt "type"
   | E_Var x -> Format.pp_print_string fmt x
   | E_Unit -> Format.pp_print_string fmt "()"
-  | E_Bool true -> Format.pp_print_string fmt "⊤"
-  | E_Bool false -> Format.pp_print_string fmt "⊥"
+  | E_Bool b -> Utils.Pretty.pp_const_bool fmt b
   | E_Int i -> Z.pp_print fmt i
-  | E_Char c ->
-      let s = if c = '\'' then "\\'" else Char.escaped c in
-      Format.fprintf fmt "'%s'" s
-  | E_String s ->
-      let buffer = Buffer.create 17 in
-      let update_buffer first s =
-        let es = String.escaped s in
-        if not first then Buffer.add_string buffer "\\\"";
-        Buffer.add_string buffer es;
-        false
-      in
-      ignore @@ List.fold_left update_buffer true (String.split_on_char '"' s);
-      Format.fprintf fmt "\"%s\"" (Buffer.contents buffer)
+  | E_Char c -> Utils.Pretty.pp_const_char fmt c
+  | E_String s -> Utils.Pretty.pp_const_string fmt s
 
 let rec pp_expr fmt (e : expr_loc) =
   match e.node with
@@ -160,7 +148,7 @@ and pp_patt fmt (p : patt_loc) =
   Format.pp_print_list ~pp_sep pp_patt_arg_typed fmt patt_args;
   Option.iter (fun ty -> Format.fprintf fmt " : %a" pp_expr ty) patt_ret
 
-let pp_definition fmt (d : def_pos) =
+let pp_definition fmt (d : def_loc) =
   let { name; patt; body } = d.node in
   match patt with
   | Some patt ->

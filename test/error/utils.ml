@@ -18,7 +18,7 @@ let test_error_lexing ~msg file_name =
   match Parse.program input with
   | prgm ->
       Alcotest.fail
-        (Format.asprintf "%s@.%s@.%a" msg "is correctly parsed." Ast.pp_program
+        (Format.asprintf "%s@.%s@.%a" msg "is correctly parsed." ParseTree.pp_program
            prgm)
   | exception Error.Parsing.Err e ->
       Alcotest.fail
@@ -33,7 +33,7 @@ let test_error_parsing ~msg file_name =
   match Parse.program input with
   | prgm ->
       Alcotest.fail
-        (Format.asprintf "%s@.%s@.%a" msg "is correctly parsed." Ast.pp_program
+        (Format.asprintf "%s@.%s@.%a" msg "is correctly parsed." ParseTree.pp_program
            prgm)
   | exception Error.Lexing.Err e ->
       Alcotest.fail

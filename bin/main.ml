@@ -35,12 +35,13 @@ let reset_ppf =
 
 let exit n =
   reset_ppf ();
+  Inputs.clean ();
   Stdlib.exit n
 
 let () =
   try
     let program = Parse.program input in
-    if !verbose then Format.printf "%a@." Ast.pp_program program;
+    if !verbose then Format.printf "%a@." ParseTree.pp_program program;
     if !parse_only then exit 0
   with
   | Error.Parsing.Err e ->

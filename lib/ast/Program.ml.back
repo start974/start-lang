@@ -1,0 +1,9 @@
+type t = Definition.t list
+
+let from_parse_tree =
+    List.map Definition.from_parse_tree
+
+let pp_program =
+  Format.pp_print_list
+    ~pp_sep:(fun fmt () -> Format.fprintf fmt "@.")
+    (Definition.pp_print ~show_type)

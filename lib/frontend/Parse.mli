@@ -1,3 +1,3 @@
 open InputUtils
 
-val program : Inputs.input -> Ast.program
+val program : Inputs.input -> ParseTree.program

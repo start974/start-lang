@@ -28,7 +28,7 @@
 
 %start program
 
-%type <Ast.program> program
+%type <ParseTree.program> program
 
 %%
 (* helpers *)
@@ -50,7 +50,7 @@ let program :=
 (* definition *)
 let definition :=
 | name = IDENT; p = pattern?; ":="; body = expr; ".";
-    { Ast.make_definition ~loc:$loc name p body }
+    { ParseTree.make_definition ~loc:$loc name p body }
 
 
 (* expression *)
@@ -60,50 +60,50 @@ let expr :=
 
 let abstraction :=
 | "fn"; p = pattern; "=>"; e = expr;
-    { Ast.make_expr_abs ~loc:$loc p e }
+    { ParseTree.make_expr_abs ~loc:$loc p e }
 
 let product_expr :=
 | arrow_type
 | el = separated_list(",", arrow_type);
-    { Ast.make_expr_product ~loc:$loc el }
+    { ParseTree.make_expr_product ~loc:$loc el }
 
 let arrow_type :=
 | application_expr
 | t1 = arrow_type; "->"; t2 = application_expr;
-    { Ast.make_expr_arrow_ty ~loc:$loc t1 t2 }
+    { ParseTree.make_expr_arrow_ty ~loc:$loc t1 t2 }
 
 let application_expr :=
 | value
 | e1 = application_expr; e2 = value;
-    { Ast.make_expr_app ~loc:$loc e1 e2 }
+    { ParseTree.make_expr_app ~loc:$loc e1 e2 }
 
 let var ==
 | UNDERSCORE;
-    { Ast.make_expr_var ~loc:$loc "_" }
+    { ParseTree.make_expr_var ~loc:$loc "_" }
 | x = IDENT;
-    { Ast.make_expr_var ~loc:$loc x }
+    { ParseTree.make_expr_var ~loc:$loc x }
 
 let value :=
 | var
 | "type";
-    { Ast.make_expr_type ~loc:$loc () }
+    { ParseTree.make_expr_type ~loc:$loc () }
 | "()";
-    { Ast.make_expr_unit ~loc:$loc () }
+    { ParseTree.make_expr_unit ~loc:$loc () }
 | b = E_BOOL;
-    { Ast.make_expr_bool ~loc:$loc b }
+    { ParseTree.make_expr_bool ~loc:$loc b }
 | i = E_INT;
-    { Ast.make_expr_int ~loc:$loc i }
+    { ParseTree.make_expr_int ~loc:$loc i }
 | c = E_CHAR;
-    { Ast.make_expr_char ~loc:$loc c }
+    { ParseTree.make_expr_char ~loc:$loc c }
 | s = E_STRING;
-    { Ast.make_expr_string ~loc:$loc s }
+    { ParseTree.make_expr_string ~loc:$loc s }
 | "("; e = expr; ")";
     { e }
 
 (* pattern *)
 let pattern :=
 | args = pattern_arg_typed+; ret = pattern_type?;
-    { Ast.make_patt ~loc:$loc args ret }
+    { ParseTree.make_patt ~loc:$loc args ret }
 
 let pattern_type :=
 | ":"; ty = expr;
@@ -111,9 +111,9 @@ let pattern_type :=
 
 let pattern_arg_typed :=
 | p = pattern_arg;
-    { Ast.make_patt_arg_typed ~loc:$loc p None }
+    { ParseTree.make_patt_arg_typed ~loc:$loc p None }
 | "("; p = pattern_arg ; ty = pattern_type?; ")";
-    { Ast.make_patt_arg_typed ~loc:$loc p ty }
+    { ParseTree.make_patt_arg_typed ~loc:$loc p ty }
 
 let pattern_arg ==
 | pattern_prod
@@ -121,12 +121,12 @@ let pattern_arg ==
 let pattern_prod :=
 | pattern_value
 | "("; args = separated_list(",", pattern_arg); ")";
-    { Ast.make_patt_arg_prod ~loc:$loc args }
+    { ParseTree.make_patt_arg_prod ~loc:$loc args }
 
 let pattern_value :=
 | v = IDENT;
-    { Ast.make_patt_arg_var ~loc:$loc v }
+    { ParseTree.make_patt_arg_var ~loc:$loc v }
 | "()";
-    { Ast.make_patt_arg_unit ~loc:$loc () }
+    { ParseTree.make_patt_arg_unit ~loc:$loc () }
 | "_";
-    { Ast.make_patt_arg_wildcard ~loc:$loc () }
+    { ParseTree.make_patt_arg_wildcard ~loc:$loc () }
