@@ -1,5 +1,5 @@
 (library
- (name utils)
- (libraries )
+ (name typing)
+ (libraries zarith error)
  (instrumentation
   (backend bisect_ppx)))

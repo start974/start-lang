@@ -1,0 +1,11 @@
+a : type.
+a := int.
+
+b : type.
+b := a.
+
+c : int.
+c := 1.
+
+d : int.
+d := c.

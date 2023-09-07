@@ -12,7 +12,7 @@ module type LocationErr = sig
   val hint : t -> string option
   (** Hint message *)
 
-  val err_cathegory : ErrorCat.t
+  val err_cathegory : Cathegory.t
   (** Cathegory of error *)
 end
 
@@ -40,7 +40,7 @@ module Make (LE : LocationErr) : S with type t = LE.t = struct
 
   let fail x = raise (Err x)
   let pp_header fmt err = Location.pp_print fmt (location err)
-  let pp_color_cat f fmt x = ErrorCat.pp_color err_cathegory fmt f x
+  let pp_color_cat f fmt x = Cathegory.pp_color err_cathegory fmt f x
 
   let pp_lines fmt err =
     let location = location err in
@@ -71,7 +71,7 @@ module Make (LE : LocationErr) : S with type t = LE.t = struct
            line_indication
 
   let pp_message fmt err =
-    Format.fprintf fmt "@{<bold>%a: %s@}" ErrorCat.pp_print err_cathegory
+    Format.fprintf fmt "@{<bold>%a: %s@}" Cathegory.pp_print err_cathegory
       (message err)
 
   let pp_hint fmt err =

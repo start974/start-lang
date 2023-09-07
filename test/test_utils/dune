@@ -1,0 +1,4 @@
+(library
+  (name TestUtils)
+  (libraries alcotest start_lang)
+)

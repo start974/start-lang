@@ -1,11 +1,12 @@
 open InputUtils
+open St_Stdlib
 
 type const =
   | C_Unit
-  | C_Bool of bool
-  | C_Int of Z.t
-  | C_Char of char
-  | C_String of string
+  | C_Bool of St_Bool.t
+  | C_Int of St_Int.t
+  | C_Char of St_Char.t
+  | C_String of St_String.t
 
 type t = { loc : Location.t; const : const }
 
@@ -18,21 +19,21 @@ let const { const; _ } = const
 
 let ty { const; _ } =
   match const with
-  | C_Unit -> Type.t_unit
-  | C_Bool _ -> Type.t_bool
-  | C_Int _ -> Type.t_int
-  | C_Char _ -> Type.t_char
-  | C_String _ -> Type.t_string
+  | C_Unit -> St_Unit.ty
+  | C_Bool _ -> St_Bool.ty
+  | C_Int _ -> St_Int.ty
+  | C_Char _ -> St_Char.ty
+  | C_String _ -> St_String.ty
 
 let loc { loc; _ } = loc
 
 let pp_print fmt { const; _ } =
   match const with
-  | C_Unit -> Format.pp_print_string fmt "()"
-  | C_Bool b -> Utils.Pretty.pp_const_bool fmt b
-  | C_Int i -> Z.pp_print fmt i
-  | C_Char c -> Utils.Pretty.pp_const_char fmt c
-  | C_String s -> Utils.Pretty.pp_const_string fmt s
+  | C_Unit -> St_Unit.pp_print fmt ()
+  | C_Bool b -> St_Bool.pp_print fmt b
+  | C_Int i -> St_Int.pp_print fmt i
+  | C_Char c -> St_Char.pp_print fmt c
+  | C_String s -> St_String.pp_print fmt s
 
 let equal c1 c2 =
   match (const c1, const c2) with

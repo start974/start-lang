@@ -1,20 +1,16 @@
 type t = T_Type | T_Var of Ident.t
+type env = t Env.t
 
 let t_type = T_Type
 let t_var x = T_Var x
-let t_unit = t_var "unit"
-let t_bool = t_var "bool"
-let t_int = t_var "int"
-let t_char = t_var "char"
-let t_string = t_var "string"
-
 let ty _ = T_Type
 
 let equal t1 t2 =
-    match t1, t2 with
-    | T_Type, T_Type -> true
-    | T_Var x1, T_Var x2 -> x1 = x2
-    | _ -> false
+  match (t1, t2) with
+  | T_Type, T_Type -> true
+  | T_Var x1, T_Var x2 -> x1 = x2
+  | _ -> false
+
 (*
 let rec pp_product fmt = function
   | T_Prod tl ->

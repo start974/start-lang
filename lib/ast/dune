@@ -1,5 +1,5 @@
 (library
  (name ast)
- (libraries frontend zarith error utils)
+ (libraries frontend error typing St_Stdlib)
  (instrumentation
   (backend bisect_ppx)))

@@ -1,6 +1,6 @@
 (test
  (name tests)
- (libraries alcotest start_lang)
+ (libraries alcotest start_lang TestUtils)
  (deps
   (glob_files lexing_files/*.*)
   (glob_files parsing_files/*.*)))

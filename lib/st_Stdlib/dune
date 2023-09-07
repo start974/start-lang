@@ -1,0 +1,5 @@
+(library
+ (name St_Stdlib)
+ (libraries typing zarith)
+ (instrumentation
+  (backend bisect_ppx)))

@@ -16,7 +16,7 @@ module LexingError = PositionError.Make (struct
 
   let message _ = "Lexing error."
   let position { position; _ } = position
-  let err_cathegory = ErrorCat.Error
+  let err_cathegory = Cathegory.Error
 
   let hint { msg_type; _ } =
     Some

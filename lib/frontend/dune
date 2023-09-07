@@ -1,6 +1,6 @@
 (library
  (name frontend)
- (libraries menhirLib InputUtils error zarith utils)
+ (libraries menhirLib InputUtils error zarith St_Stdlib)
  (instrumentation
   (backend bisect_ppx)))
 

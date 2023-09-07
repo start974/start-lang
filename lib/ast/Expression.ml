@@ -1,34 +1,40 @@
 open InputUtils
-module PTree = Frontend.ParseTree
+open Typing
 
-type expr = E_Const of Constant.t | E_Type of Type.t
+type expr = E_Const of Constant.t | E_Type of Type.t | E_Var of Ident.t
 and t = { loc : Location.t; expr : expr; ty : Type.t }
 
-let make_ty = function E_Const c -> Constant.ty c | E_Type t -> Type.ty t
-
-let make_expr ~loc expr =
-  let ty = make_ty expr in
+let e_const ?(loc = Location.unknown) c =
+  let ty = Constant.ty c in
+  let expr = E_Const c in
   { loc; expr; ty }
 
-let e_const ?(loc = Location.unknown) c = make_expr ~loc (E_Const c)
-let e_type ?(loc = Location.unknown) t = make_expr ~loc (E_Type t)
+let e_type ?(loc = Location.unknown) t =
+  let ty = Type.ty t in
+  let expr = E_Type t in
+  { loc; expr; ty }
 
-let from_parse_tree_expr_val ~loc =
+let e_var ?(loc = Location.unknown) ~ty_env x =
+  let ty = Env.find x ty_env in
+  let expr = if Type.t_type = ty then E_Type (Type.t_var x) else E_Var x in
+  { loc; expr; ty }
+
+let from_parse_tree_expr_val ~ty_env ~loc =
   let open Frontend.ParseTree in
   function
   | E_Type -> e_type ~loc Type.t_type
-  | E_Var _v -> failwith "WIP"
+  | E_Var v -> e_var ~loc ~ty_env v
   | E_Unit -> e_const ~loc (Constant.c_unit ~loc ())
   | E_Bool b -> e_const ~loc (Constant.c_bool ~loc b)
   | E_Int i -> e_const ~loc (Constant.c_int ~loc i)
   | E_Char c -> e_const ~loc (Constant.c_char ~loc c)
   | E_String s -> e_const ~loc (Constant.c_string ~loc s)
 
-let from_parse_tree
+let from_parse_tree ~ty_env
     ({ location = loc; node = expr } : Frontend.ParseTree.expr_loc) =
   let open Frontend.ParseTree in
   match expr with
-  | E_Value v -> from_parse_tree_expr_val ~loc v
+  | E_Value v -> from_parse_tree_expr_val ~loc ~ty_env v
   | _ -> failwith "WIP"
 
 let ty { ty; _ } = ty
@@ -39,14 +45,7 @@ let pp_print fmt ({ expr; _ } : t) =
   match expr with
   | E_Const c -> Constant.pp_print fmt c
   | E_Type t -> Type.pp_print fmt t
-
-(*let loc_unknown = Location.unknown*)
-
-(*let make_value ~loc v =*)
-(*make_expr ~loc ~ty_env:Env.empty (E_Value v)*)
-
-(*let e_var ?(loc=loc_unknown) ~ty_env x =*)
-(*make_expr ~loc ~ty_env (E_Var x)*)
+  | E_Var x -> Ident.pp_print fmt x
 
 (*let e_app ?(loc=loc_unknown) ~ty_env e1 e2 =*)
 (*make_expr ~loc ~ty_env (E_App (e1, e2))*)

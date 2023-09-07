@@ -8,7 +8,7 @@ include LocationError.Make (struct
   let message _ = "Syntax error."
   let location { location; _ } = location
   let hint { hint; _ } = hint
-  let err_cathegory = ErrorCat.Error
+  let err_cathegory = Cathegory.Error
 end)
 
 let fail_hint location hint = fail { location; hint = Some hint }

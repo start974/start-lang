@@ -1,3 +1,3 @@
 (test
  (name tests)
- (libraries alcotest start_lang))
+ (libraries alcotest start_lang TestUtils))

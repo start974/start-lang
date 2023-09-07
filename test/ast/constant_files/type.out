@@ -1,0 +1,17 @@
+t : type.
+t := type.
+
+b : type.
+b := bool.
+
+c : type.
+c := char.
+
+i : type.
+i := int.
+
+s : type.
+s := string.
+
+u : type.
+u := unit.

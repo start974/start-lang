@@ -1,4 +1,5 @@
 open InputUtils
+open St_Stdlib
 
 (* identifier *)
 type ident = string
@@ -8,10 +9,10 @@ type expr_value =
   | E_Type
   | E_Var of ident
   | E_Unit
-  | E_Bool of bool
-  | E_Int of Z.t
-  | E_Char of char
-  | E_String of string
+  | E_Bool of St_Bool.t
+  | E_Int of St_Int.t
+  | E_Char of St_Char.t
+  | E_String of St_String.t
 
 (* expression *)
 type expr =
@@ -84,11 +85,11 @@ let make_definition ?loc name patt body =
 let pp_expr_value fmt = function
   | E_Type -> Format.pp_print_string fmt "type"
   | E_Var x -> Format.pp_print_string fmt x
-  | E_Unit -> Format.pp_print_string fmt "()"
-  | E_Bool b -> Utils.Pretty.pp_const_bool fmt b
-  | E_Int i -> Z.pp_print fmt i
-  | E_Char c -> Utils.Pretty.pp_const_char fmt c
-  | E_String s -> Utils.Pretty.pp_const_string fmt s
+  | E_Unit -> St_Unit.pp_print fmt ()
+  | E_Bool b -> St_Bool.pp_print fmt b
+  | E_Int i -> St_Int.pp_print fmt i
+  | E_Char c -> St_Char.pp_print fmt c
+  | E_String s -> St_String.pp_print fmt s
 
 let rec pp_expr fmt (e : expr_loc) =
   match e.node with

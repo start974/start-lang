@@ -12,7 +12,7 @@ module type PositionErr = sig
   val hint : t -> string option
   (** Hint message *)
 
-  val err_cathegory : ErrorCat.t
+  val err_cathegory : Cathegory.t
   (** Cathegory of error *)
 end
 
