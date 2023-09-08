@@ -1,0 +1,11 @@
+open InputUtils
+open Typing
+
+type strong = { pos : Position.t;  ret_ty : Type.t }
+
+type weak = { pos : Postiont.t; ret_ty_opt : Type.t option }
+
+type t = strong
+let to_strong
+
+let from_parse_tree ~ty_env ({no}

@@ -1,5 +1,0 @@
-File "parsing_files/parenthesis2.st", line 1, characters 9-10:
-1 | f x := x).
-            ^
-Error: Syntax error.
-Hint: Parenthesis not open in "x".

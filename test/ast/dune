@@ -3,5 +3,4 @@
  (libraries alcotest start_lang TestUtils)
  (deps
   (glob_files constant_files/*.*)
-  (glob_files variable_files/*.*)
- ))
+  (glob_files variable_files/*.*)))

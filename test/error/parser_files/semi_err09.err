@@ -1,0 +1,5 @@
+File "parser_files/semi_err09.st", line 1, characters 6-7:
+1 | f := : int.
+         ^
+Error: Syntax error.
+Hint: Cannot have ':' after ":=".

@@ -1,6 +1,7 @@
 {
     open Lexing
     open Parser
+    module Error = Error.Frontend.Lexer
 }
 
 let eol = '\n'
@@ -87,7 +88,7 @@ rule token = parse
         { IDENT id }
   | _ as c
         { let position = Lexing.lexeme_start_p lexbuf in
-          Error.Lexing.fail_char position c }
+          Error.fail_char position c }
   | eof
         { EOF }
 
@@ -99,7 +100,7 @@ and comment start_pos = parse
   | _
         { comment start_pos lexbuf }
   | eof
-        { Error.Lexing.fail_comment start_pos }
+        { Error.fail_comment start_pos }
 
 and escaped_char = parse
   | '"'
@@ -120,7 +121,7 @@ and escaped_char = parse
         { Char.chr (int_of_string ("0" ^ ascii_n)) }
   | _  as c
         { let position = Lexing.lexeme_start_p lexbuf in
-          Error.Lexing.fail_escape_char position c }
+          Error.fail_escape_char position c }
 
 and read_string start_pos buf = parse
   | '"'
@@ -133,22 +134,22 @@ and read_string start_pos buf = parse
         { Buffer.add_char buf c;
           read_string start_pos buf lexbuf }
   | eof
-        { Error.Lexing.fail_readstring_terminate start_pos }
+        { Error.fail_readstring_terminate start_pos }
 
 and finish_read_char c = parse
   | '\''
         { E_CHAR c }
   | _ as c
         { let position = Lexing.lexeme_start_p lexbuf in
-          Error.Lexing.fail_readchar_finish position c }
+          Error.fail_readchar_finish position c }
 
 and read_char start_pos = parse
   | '\\'
         { let c = escaped_char lexbuf in finish_read_char c lexbuf }
   | '\''
         {  let position = Lexing.lexeme_start_p lexbuf in
-            Error.Lexing.fail_readchar_empty position }
+            Error.fail_readchar_empty position }
   | ([^ '\'' '\\'] as c )
         { finish_read_char c lexbuf }
   | eof
-        { Error.Lexing.fail_readchar_terminate start_pos }
+        { Error.fail_readchar_terminate start_pos }

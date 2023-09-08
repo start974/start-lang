@@ -1,5 +1,0 @@
-File "lexing_files/escaped_char.st", line 1, character 8:
-1 | x := '\z'.
-           ^
-Error: Lexing error.
-Hint: Cannot escape char '\z'.

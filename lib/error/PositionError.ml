@@ -17,20 +17,19 @@ module type PositionErr = sig
 end
 
 module type S = sig
-  include PositionErr
+  include ErrorBuilder.S
 
-  exception Err of t
+  val message : t -> string
+  (** Message to display with error *)
 
-  val fail : t -> 'a
+  val position : t -> Position.t
+  (** Position of error *)
 
-  val pp_message : Format.formatter -> t -> unit
-  (** pretty print of message *)
+  val hint : t -> string option
+  (** Hint message *)
 
-  val pp_hint : Format.formatter -> t -> unit
-  (** pretty print of hint *)
-
-  val pp_print : Format.formatter -> t -> unit
-  (** pretty print of error *)
+  val err_cathegory : Cathegory.t
+  (** Cathegory of error *)
 end
 
 module Make (PE : PositionErr) : S with type t = PE.t = struct

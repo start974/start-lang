@@ -31,6 +31,7 @@ module Parsing :
     with type t_in = InputUtils.Inputs.input
      and type t_out = Frontend.ParseTree.program = struct
   open Frontend
+  module Error = Error.Frontend.Parse
 
   type t_in = InputUtils.Inputs.input
   type t_out = ParseTree.program
@@ -45,15 +46,12 @@ module Parsing :
 
   let run input =
     match Parse.program input with
-    | prgm ->
+    | Ok prgm ->
         parse_print prgm;
         if Options.parse_only then exit 0;
         prgm
-    | exception Error.Parsing.Err e ->
-        Format.printf "%a" Error.Parsing.pp_print e;
-        exit 1
-    | exception Error.Lexing.Err e ->
-        Format.printf "%a" Error.Lexing.pp_print e;
+    | Error e ->
+        Format.printf "%a" Error.pp_print e;
         exit 1
 end
 
@@ -63,6 +61,8 @@ struct
   type t_in = Frontend.ParseTree.program
   type t_out = Ast.Program.t
 
+  module Error = Error.Ast.Program
+
   let typing_print ast =
     Printing.verbose "%a" Printing.head_1 "TYPING";
     let pp fmt =
@@ -71,7 +71,13 @@ struct
     pp "%a@." (Ast.Program.pp_print ~show_type:true) ast
 
   let run parse_tree =
-    let ast = Ast.Program.from_parse_tree parse_tree in
+    let ast =
+      match Ast.Program.from_parse_tree parse_tree with
+      | Ok prgm -> prgm
+      | Error e ->
+          Format.printf "%a" Error.pp_print e;
+          exit 1
+    in
     typing_print ast;
     ast
 end

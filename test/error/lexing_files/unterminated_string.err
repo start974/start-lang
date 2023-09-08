@@ -1,5 +1,0 @@
-File "lexing_files/unterminated_string.st", line 1, character 6:
-1 | x := "this string not finish.
-         ^
-Error: Lexing error.
-Hint: Unterminated string.

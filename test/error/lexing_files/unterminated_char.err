@@ -1,5 +1,0 @@
-File "lexing_files/unterminated_char.st", line 1, character 6:
-1 | x := '
-         ^
-Error: Lexing error.
-Hint: Unterminated char.

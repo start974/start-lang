@@ -1,5 +1,0 @@
-File "lexing_files/unterminated_comment.st", line 1, character 9:
-1 | x := 1. (* this is an unterminated comment
-            ^
-Error: Lexing error.
-Hint: Unterminated comment.

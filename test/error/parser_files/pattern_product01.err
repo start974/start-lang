@@ -1,0 +1,5 @@
+File "parser_files/pattern_product01.st", line 1, characters 11-13:
+1 | f x (x, y ()) := ().
+              ^^
+Error: Syntax error.
+Hint: Product has a ',' to separated element.

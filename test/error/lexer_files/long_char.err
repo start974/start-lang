@@ -1,0 +1,5 @@
+File "lexer_files/long_char.st", line 1, character 8:
+1 | x := 'too long'.
+           ^
+Error: Lexing error.
+Hint: Char is one character, expected "'" not 'o'.

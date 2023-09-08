@@ -1,0 +1,5 @@
+File "lexer_files/empty_char.st", line 1, character 7:
+1 | x := ''.
+          ^
+Error: Lexing error.
+Hint: Char is empty.

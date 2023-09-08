@@ -1,0 +1,19 @@
+open InputUtils
+open Typing
+
+type arg = P_Unit | P_Wildcard | P_Var of Ident.t
+type strong
+type weak
+type t = strong
+
+val from_weak: weak -> strong
+(** transform wear to strong pattern argument *)
+
+val p_unit : ?loc:Location.t -> unit -> t
+(** make unit pattern argument *)
+
+val p_wildcard : ?loc:Location.t -> Type.t -> t
+(** make wilcard pattern argument *)
+
+val p_var : ?pos:Position.t -> Ident.t -> Type.t -> t
+(** make a variable pattern *)

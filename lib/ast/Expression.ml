@@ -1,5 +1,6 @@
 open InputUtils
 open Typing
+module Error = Error.Ast.Expression
 
 type expr = E_Const of Constant.t | E_Type of Type.t | E_Var of Ident.t
 and t = { loc : Location.t; expr : expr; ty : Type.t }
@@ -14,21 +15,27 @@ let e_type ?(loc = Location.unknown) t =
   let expr = E_Type t in
   { loc; expr; ty }
 
+type res_var = t Error.ErrorVar.res
+type res = res_var
+
 let e_var ?(loc = Location.unknown) ~ty_env x =
-  let ty = Env.find x ty_env in
-  let expr = if Type.t_type = ty then E_Type (Type.t_var x) else E_Var x in
-  { loc; expr; ty }
+  match Env.find_opt x ty_env with
+  | None -> Error.error_unknown_var loc x
+  | Some ty ->
+      let expr = if Type.t_type = ty then E_Type (Type.t_var x) else E_Var x in
+      Result.ok { loc; expr; ty }
 
 let from_parse_tree_expr_val ~ty_env ~loc =
   let open Frontend.ParseTree in
   function
-  | E_Type -> e_type ~loc Type.t_type
+  | E_Type ->
+      let e = e_type ~loc Type.t_type in
+      Result.ok e
   | E_Var v -> e_var ~loc ~ty_env v
-  | E_Unit -> e_const ~loc (Constant.c_unit ~loc ())
-  | E_Bool b -> e_const ~loc (Constant.c_bool ~loc b)
-  | E_Int i -> e_const ~loc (Constant.c_int ~loc i)
-  | E_Char c -> e_const ~loc (Constant.c_char ~loc c)
-  | E_String s -> e_const ~loc (Constant.c_string ~loc s)
+  | (E_Unit | E_Bool _ | E_Int _ | E_Char _ | E_String _) as c ->
+      let c' = Constant.from_parse_tree c in
+      let e = e_const ~loc c' in
+      Result.ok e
 
 let from_parse_tree ~ty_env
     ({ location = loc; node = expr } : Frontend.ParseTree.expr_loc) =

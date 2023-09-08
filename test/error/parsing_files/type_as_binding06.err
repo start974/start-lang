@@ -1,5 +1,0 @@
-File "parsing_files/type_as_binding06.st", line 1, characters 9-13:
-1 | f := fn type => g ().
-            ^^^^
-Error: Syntax error.
-Hint: Is not a correct binding.

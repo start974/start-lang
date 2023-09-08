@@ -1,0 +1,7 @@
+open Typing
+
+type weak
+type strong
+type t = weak
+
+val from_parse_tree: ~ty_env: TypeEnv.t -> Frontend.ParseTree.def_loc -> t

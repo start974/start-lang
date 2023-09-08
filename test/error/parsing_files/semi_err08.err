@@ -1,5 +1,0 @@
-File "parsing_files/semi_err08.st", line 1, characters 9-10:
-1 | f := 1, : t.
-            ^
-Error: Syntax error.
-Hint: Cannot have ':' after ",".

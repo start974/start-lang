@@ -1,0 +1,9 @@
+File "ast_files/variable_def.st", line 9, characters 6-11:
+9 | z := b_var.
+         ^^^^^
+Error: Variable "b_var" is not define.
+
+File "ast_files/variable_def.st", line 5, characters 6-11:
+5 | z := a_var.
+         ^^^^^
+Error: Variable "a_var" is not define.

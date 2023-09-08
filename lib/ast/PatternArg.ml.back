@@ -1,0 +1,33 @@
+open InputUtils
+open Typing
+open St_Stdlib
+
+type arg = P_Unit | P_Wildcard | P_Var of Ident.t
+type strong  = { loc : Location.t; arg : arg; ty : Type.t }
+
+type weak = { loc : Location.t; arg: arg; ty_opt : Type.t option }
+
+type t = strong
+
+let from_weak {loc; arg; ty_opt} =
+    Option.map (fun ty -> {loc; arg; ty}) ty_opt
+
+let pw_unit  ?(loc = Location.unknown) () =
+    {loc; arg = P_Unit; ty_opt = Some(St_Unit.ty)}
+
+let pw_wilcard ?(loc = Position.unknown) ty_opt =
+    {loc; arg = P_Unit; ty_opt}
+
+let pw_var ?(pos = Location.unknown) x =
+    {loc; arg = P_Var x; ty_opt}
+
+let p_unit ?(pos = Position.unknown) () =
+     {loc; arg = P_Unit; ty = (St_Unit.ty)}
+
+
+
+let from_parse_tree ~ty_env ({location=loc; node={patt_arg; patt_ty} }: Frontend.ParseTree.patt_arg_loc) =
+    let open Frontend.ParseTree in
+    match patt_arg  with
+    | P_Unit -> pw_unit ~loc ()
+    | P_Wildcard, ->

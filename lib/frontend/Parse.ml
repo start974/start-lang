@@ -2,6 +2,11 @@ open Lexing
 open InputUtils
 open MenhirLib
 module I = Parser.MenhirInterpreter
+module ErrorParser = Error.Frontend.Parser
+module ErrorLexer = Error.Frontend.Lexer
+module Error = Error.Frontend.Parse
+
+type 'a res = 'a Error.res
 
 let get_lexbuf input =
   let text = Inputs.get_all input in
@@ -26,13 +31,19 @@ let remove_last_eol s =
 
 let get_parse_error = function
   | I.HandlingError env ->
-      let state_num = I.current_state_number env
-      and location = I.positions env in
-      let message = ParserMessages.message state_num in
-      let hint =
-        ErrorReports.expand (get_token env) message |> remove_last_eol
-      in
-      Error.Parsing.fail_hint location hint
+      (* name num *)
+      I.current_state_number env
+      (* message *)
+      |> ParserMessages.message
+      (* message expand *)
+      |> ErrorReports.expand (get_token env)
+      (* message exand without eol *)
+      |> remove_last_eol
+      (* error parsing *)
+      |> ErrorParser.error_hint (I.positions env)
+      |> Result.get_error
+      (* error parse *)
+      |> Error.error_parser
   | _ -> assert false
 
 let parse input f_incr_parse =
@@ -40,8 +51,10 @@ let parse input f_incr_parse =
   let position = lexeme_start_p lexbuf in
   let supplier = I.lexer_lexbuf_to_supplier Lexer.token lexbuf
   and checkpoint = f_incr_parse position
-  and succed = Fun.id
+  and succed = Result.ok
   and fail = get_parse_error in
-  I.loop_handle succed fail supplier checkpoint
+  match I.loop_handle succed fail supplier checkpoint with
+  | x -> x
+  | exception ErrorLexer.Err e -> Error.error_lexer e
 
 let program input = parse input Parser.Incremental.program

@@ -1,5 +1,0 @@
-File "parsing_files/definition_not_end.st", line 2, characters 3-5:
-2 | h := 3.
-      ^^
-Error: Syntax error.
-Hint: Definition of "f" not end by '.'.

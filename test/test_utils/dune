@@ -1,4 +1,3 @@
 (library
-  (name TestUtils)
-  (libraries alcotest start_lang)
-)
+ (name TestUtils)
+ (libraries alcotest start_lang))
