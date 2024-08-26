@@ -7,7 +7,13 @@ prgm :
     definition*
 
 definition :
-    "def" ident (":" type)? := expr
+    expr_def
+
+expr_def :
+    "def" ident (type_restr)? := expr
+
+type_restr :
+    ":" type
 
 ident :
     [a-z-A-Z_(unicode)]+
@@ -150,7 +156,10 @@ def b : Z := -10
 ### Grammar
 ```
 definition :
-    | "type" ident ":=" ty
+    type_def
+
+type_def :
+    type" ident ":=" ty
     ...
 ```
 
@@ -199,7 +208,7 @@ expr :
 
 pattern :
     | ident
-    | "(" pattern ":" type)
+    | "(" pattern type_restr ")"
 ```
 
 ### Ast
@@ -346,9 +355,11 @@ def f : t -> N :=
 
 ### Grammar
 ```
-definition :
-      "def" ident ("<" (ident)+ ">"? (":" type)? := expr
-    | "type" ident pattern+ ":=" ty
+expr_def :
+    "def" ident ("<" (ident)+ ">"? (":" type)? := expr
+
+type_def :
+    "type" ident pattern+ ":=" ty
 
 type :
     | type type (* type application *) (* assoc left *)
