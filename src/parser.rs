@@ -1,17 +1,23 @@
 use tree_sitter::{Parser, Tree};
 
+use super::ast::program::Program;
+
 pub struct ParseTree {
     tree: Tree,
     file_name: String,
 }
 
 impl ParseTree {
-    pub fn file_name(&self) -> &str {
-        &self.file_name
+    pub fn file_name(&self) -> String {
+        self.file_name.clone()
     }
 
     pub fn to_sexp(&self) -> String {
         self.tree.root_node().to_sexp()
+    }
+
+    pub fn to_program(&self) -> Program {
+        std::todo!()
     }
 }
 
