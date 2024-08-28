@@ -1,3 +1,5 @@
+use super::super::location::{Located, Location};
+
 use super::ident::Ident;
 use std::fmt;
 /*use super::expression::Expr;*/
@@ -6,25 +8,30 @@ use std::fmt;
 
 /// expression definition
 pub struct ExprDef {
-    pub ident: Ident,
+    pub name: Ident,
     //expr: Expr,
     //ty: Ty,
-    //loc: OptLoc,
+    location: Option<Location>,
 }
 
 impl ExprDef {
-    pub fn make(ident: Ident) -> Self {
-        ExprDef { ident }
+    pub fn new(name: &Ident, location: &Option<Location>) -> Self {
+        ExprDef {
+            name: name.clone(),
+            location: location.clone(),
+        }
     }
+}
 
-    pub fn to_string(&self) -> String {
-        format!("{}", self.ident)
+impl Located for ExprDef {
+    fn location(&self) -> &Option<Location> {
+        &self.location
     }
 }
 
 impl fmt::Display for ExprDef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string())
+        write!(f, "def {} : := ", self.name)
     }
 }
 
@@ -35,32 +42,29 @@ pub enum Definition {
 
 impl Definition {
     /// make expression definition
-    pub fn make_expr_def(ident: Ident) -> Self {
-        let expr_def = ExprDef::make(ident);
-        Definition::ExprDef(expr_def)
+    pub fn new_expr_def(ident: &Ident, location: &Option<Location>) -> Self {
+        Definition::ExprDef(ExprDef::new(ident, location))
     }
 
-    pub fn to_string(&self) -> String {
+    pub fn get_name(&self) -> &Ident {
         match self {
-            Definition::ExprDef(expr_def) => expr_def.to_string(),
+            Definition::ExprDef(expr_def) => &expr_def.name,
         }
     }
+}
 
-    pub fn get_name(&self) -> &String {
+impl Located for Definition {
+    fn location(&self) -> &Option<Location> {
         match self {
-            Definition::ExprDef(expr_def) => &expr_def.ident.name,
-        }
-    }
-
-    pub fn get_ident(&self) -> &Ident {
-        match self {
-            Definition::ExprDef(expr_def) => &expr_def.ident,
+            Definition::ExprDef(expr_def) => expr_def.location(),
         }
     }
 }
 
 impl fmt::Display for Definition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.to_string())
+        match self {
+            Definition::ExprDef(expr_def) => write!(f, "{}", expr_def),
+        }
     }
 }

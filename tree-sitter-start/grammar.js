@@ -11,7 +11,7 @@ module.exports = grammar({
     ),
 
     expr_def: $ =>seq("def",
-      field("id", $.ident),
+      field("name", $.ident),
       field("type", optional($._ty_restr)),
       ":=",
       field("body", $._expr)
@@ -21,9 +21,16 @@ module.exports = grammar({
       seq(":", $._ty),
 
     _ty: $ => choice(
+      $._ty_const,
       seq("(", $._ty, ")"),
       // TODO: other types
     ),
+
+    _ty_const : $ => choice(
+      $.ty_nat
+    ),
+
+    ty_nat : $ => "N",
 
     _expr: $ => choice(
       seq ("(", $._expr , ")"),

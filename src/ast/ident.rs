@@ -1,3 +1,4 @@
+use super::super::location::{Located, Location};
 use std::collections::HashMap;
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -5,31 +6,29 @@ use std::hash::{Hash, Hasher};
 // TODO add location
 pub struct Ident {
     pub name: String,
+    location: Option<Location>,
     id: u32,
 }
 
 impl Ident {
-    fn make(name: &String, id: u32) -> Self {
+    fn new(name: &str, id: u32, location: &Option<Location>) -> Self {
         Ident {
-            name: name.clone(),
+            name: name.to_string(),
             id,
+            location: location.clone(),
         }
-    }
-
-    /// ident to string
-    pub fn to_string(&self) -> String {
-        self.name.clone()
-    }
-
-    /// ident debug string (with id)
-    pub fn debug_string(&self) -> String {
-        format!("{}_{}", self.name, self.id)
     }
 }
 
 impl fmt::Display for Ident {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string())
+        write!(f, "{}", self.name)
+    }
+}
+
+impl fmt::Debug for Ident {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}_{}", self.name, self.id)
     }
 }
 
@@ -52,11 +51,18 @@ impl Clone for Ident {
         Ident {
             name: self.name.clone(),
             id: self.id,
+            location: self.location.clone(),
         }
     }
 }
 
-struct Env {
+impl Located for Ident {
+    fn location(&self) -> &Option<Location> {
+        &self.location
+    }
+}
+
+pub struct Env {
     counter: u32,
     map: HashMap<String, Ident>,
 }
@@ -64,40 +70,41 @@ struct Env {
 impl Env {
     /// make
     pub fn empty() -> Self {
-        let map: HashMap<String, Ident> = HashMap::new();
-        let counter = 0;
-        Env { counter, map }
+        Env {
+            counter: 0,
+            map: HashMap::new(),
+        }
     }
 
-    /// make variable
-    pub fn make_var(&mut self, var: &String) -> &Ident {
+    /// make identifier with variable name
+    pub fn make_ident(&mut self, name: &String, location: &Option<Location>) -> &Ident {
         let id = self.counter;
         self.counter += 1;
-        let ident = Ident::make(var, id);
-        self.map.insert(var.clone(), ident);
-        self.map.get(var).unwrap()
+        self.map
+            .insert(name.clone(), Ident::new(name, id, location));
+        self.map.get(name).unwrap()
     }
 
-    /// get identifier with variable
-    pub fn fresh(&mut self) -> &Ident {
-        let var = "_x".to_string();
-        self.make_var(&var)
-    }
+    // get identifier with variable
+    //pub fn fresh(&mut self, location: &Option<Location>) -> &Ident {
+    //let name = "_x".to_string();
+    //self.make_ident(&name, location)
+    //}
 
-    /// get variable
-    pub fn get_var(&self, var: &String) -> Option<&Ident> {
-        self.map.get(var)
-    }
+    // get variable
+    //pub fn get_var(&self, var: &String) -> Option<&Ident> {
+    //self.map.get(var)
+    //}
 }
 
-impl fmt::Display for Env {
+impl fmt::Debug for Env {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.map.is_empty() {
             f.write_str("{ }")
         } else {
-            f.write_str("{\n");
+            f.write_str("{\n")?;
             for (k, v) in &self.map {
-                write!(f, "  {} -> {}\n", k, v);
+                writeln!(f, "  {} -> {}", k, v)?;
             }
             f.write_str("}")
         }

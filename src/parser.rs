@@ -1,36 +1,5 @@
-use tree_sitter::{Parser, Tree};
+mod error;
+mod parse;
+mod parse_tree;
 
-use super::ast::program::Program;
-
-pub struct ParseTree {
-    tree: Tree,
-    file_name: String,
-}
-
-impl ParseTree {
-    pub fn file_name(&self) -> String {
-        self.file_name.clone()
-    }
-
-    pub fn to_sexp(&self) -> String {
-        self.tree.root_node().to_sexp()
-    }
-
-    pub fn to_program(&self) -> Program {
-        std::todo!()
-    }
-}
-
-pub fn parse(file_name: String, input: String) -> ParseTree {
-    let mut parser = Parser::new();
-    parser
-        .set_language(&tree_sitter_start::language())
-        .expect("Error loading start grammar.");
-    let tree = parser.parse(input, None).expect("Parsing error.");
-    return ParseTree { tree, file_name };
-}
-
-pub fn parse_file(file_name: String) -> ParseTree {
-    let file_content = std::fs::read_to_string(file_name.clone()).expect("Failed to read file");
-    parse(file_name, file_content)
-}
+pub type ParseTree = parse_tree::ParseTree;
