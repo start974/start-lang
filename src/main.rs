@@ -1,5 +1,6 @@
-mod parser;
 mod ast;
+mod location;
+mod parser;
 
 use std::env;
 
@@ -15,6 +16,14 @@ fn get_file_name() -> String {
 
 fn main() {
     let file_name = get_file_name();
-    let parse_tree = parser::parse_file(file_name);
-    println!("{:?}",parse_tree.to_sexp());
+    let parse_tree = parser::ParseTree::from_file(file_name);
+    println!("parse tree: {:?}", parse_tree.to_sexp());
+    let program = match parse_tree.to_program() {
+        Ok(program) => program,
+        Err(errors) => {
+            println!("{errors:?}");
+            return;
+        }
+    };
+    println!("--\n{}", program);
 }
