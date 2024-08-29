@@ -6,49 +6,26 @@ use std::fmt;
 /*use super::location::OptLoc;*/
 /*use super::Ty::Ty;*/
 
-/// expression definition
-pub struct ExprDef {
-    pub name: Ident,
-    //expr: Expr,
-    //ty: Ty,
-    location: Option<Location>,
-}
-
-impl ExprDef {
-    pub fn new(name: &Ident, location: &Option<Location>) -> Self {
-        ExprDef {
-            name: name.clone(),
-            location: location.clone(),
-        }
-    }
-}
-
-impl Located for ExprDef {
-    fn location(&self) -> &Option<Location> {
-        &self.location
-    }
-}
-
-impl fmt::Display for ExprDef {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "def {} : := ", self.name)
-    }
-}
-
 /// definition
 pub enum Definition {
-    ExprDef(ExprDef),
+    ExprDef {
+        name: Ident,
+        //expr: Expr,
+        //ty: Ty,
+        location: Option<Location>,
+    },
 }
 
 impl Definition {
     /// make expression definition
-    pub fn new_expr_def(ident: &Ident, location: &Option<Location>) -> Self {
-        Definition::ExprDef(ExprDef::new(ident, location))
+    pub fn make_expr_def(name: Ident, location: Option<Location>) -> Self {
+        Self::ExprDef { name, location }
     }
 
+    /// get identifier name of definition
     pub fn get_name(&self) -> &Ident {
         match self {
-            Definition::ExprDef(expr_def) => &expr_def.name,
+            Definition::ExprDef { name, .. } => name,
         }
     }
 }
@@ -56,7 +33,7 @@ impl Definition {
 impl Located for Definition {
     fn location(&self) -> &Option<Location> {
         match self {
-            Definition::ExprDef(expr_def) => expr_def.location(),
+            Definition::ExprDef { location, .. } => location,
         }
     }
 }
@@ -64,7 +41,7 @@ impl Located for Definition {
 impl fmt::Display for Definition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Definition::ExprDef(expr_def) => write!(f, "{}", expr_def),
+            Definition::ExprDef { name, .. } => write!(f, "def {name} : := "),
         }
     }
 }
