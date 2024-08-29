@@ -11,7 +11,7 @@ use std::fmt;
 pub enum Definition<TyT> {
     ExprDef {
         name: Ident,
-        body: Expression,
+        body: Expression<TyT>,
         ty: TyT,
         location: Option<Location>,
     },
@@ -43,7 +43,7 @@ impl<TyT> Located for Definition<TyT> {
 
 impl Definition<Option<Ty>> {
     /// make expression definition
-    pub fn make_expr_def(name: Ident, body: Expression) -> Self {
+    pub fn make_expr_def(name: Ident, body: Expression<Option<Ty>>) -> Self {
         Self::ExprDef {
             name,
             ty: None,
@@ -87,7 +87,7 @@ impl fmt::Display for Definition<Option<Ty>> {
 
 impl Definition<Ty> {
     /// make expression definition
-    pub fn make_expr_def(name: Ident, ty: Ty, body: Expression) -> Self {
+    pub fn make_expr_def(name: Ident, ty: Ty, body: Expression<Ty>) -> Self {
         Self::ExprDef {
             name,
             ty,
