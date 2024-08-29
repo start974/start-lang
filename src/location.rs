@@ -39,6 +39,11 @@ impl Location {
         }
         res
     }
+
+    /// text at location
+    pub fn text(&self, lines: &[String]) -> String {
+        self.content(lines).join("\n")
+    }
 }
 
 impl std::fmt::Display for Location {
@@ -59,7 +64,10 @@ impl std::fmt::Debug for Location {
 
 pub trait Located {
     /// location of a node
-    fn location(&self) -> &Option<Location>;
+    fn get_location(&self) -> &Option<Location>;
+
+    /// set location
+    fn set_location(self, location: Location) -> Self;
 }
 
 impl Clone for Location {

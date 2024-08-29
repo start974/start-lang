@@ -21,7 +21,7 @@ impl<'a, T1, U1> IterNode<'a, T1, U1> {
             Some(mut actual_cursor) => {
                 let node = actual_cursor.node();
                 let (acc, res) = f1(self.acc, &node);
-                let cursor = if actual_cursor.goto_first_child() {
+                let cursor = if actual_cursor.goto_next_sibling() {
                     Some(actual_cursor)
                 } else {
                     None
@@ -44,7 +44,7 @@ impl<'a, T1, U1> IterNode<'a, T1, U1> {
                     },
                 }
             }
-            None => panic!("Node has no children"),
+            None => panic!("No more node is present"),
         }
     }
 }
@@ -86,6 +86,7 @@ impl<'a, T, U> IterNode<'a, T, U> {
         }
     }
 
+    /*
     /// map accumulator
     pub fn map_acc<T2>(self, f: impl FnOnce(T) -> T2) -> IterNode<'a, T2, U> {
         IterNode {
@@ -104,6 +105,7 @@ impl<'a, T, U> IterNode<'a, T, U> {
     pub fn acc(self) -> T {
         self.acc
     }
+    */
 
     // get result and accumulator
     pub fn acc_result(self) -> (T, ErrorsResult<U>) {

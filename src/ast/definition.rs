@@ -1,8 +1,8 @@
 use super::super::location::{Located, Location};
 
+use super::expression::Expression;
 use super::ident::Ident;
 use std::fmt;
-/*use super::expression::Expr;*/
 /*use super::location::OptLoc;*/
 /*use super::Ty::Ty;*/
 
@@ -10,7 +10,7 @@ use std::fmt;
 pub enum Definition {
     ExprDef {
         name: Ident,
-        //expr: Expr,
+        body: Expression,
         //ty: Ty,
         location: Option<Location>,
     },
@@ -18,8 +18,12 @@ pub enum Definition {
 
 impl Definition {
     /// make expression definition
-    pub fn make_expr_def(name: Ident, location: Option<Location>) -> Self {
-        Self::ExprDef { name, location }
+    pub fn make_expr_def(name: Ident, body: Expression) -> Self {
+        Self::ExprDef {
+            name,
+            location: None,
+            body,
+        }
     }
 
     /// get identifier name of definition
@@ -31,17 +35,24 @@ impl Definition {
 }
 
 impl Located for Definition {
-    fn location(&self) -> &Option<Location> {
+    fn get_location(&self) -> &Option<Location> {
         match self {
             Definition::ExprDef { location, .. } => location,
         }
+    }
+
+    fn set_location(mut self, location: Location) -> Self {
+        match &mut self {
+            Definition::ExprDef { location: loc, .. } => *loc = Some(location),
+        }
+        self
     }
 }
 
 impl fmt::Display for Definition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Definition::ExprDef { name, .. } => write!(f, "def {name} : := "),
+            Definition::ExprDef { name, body, .. } => write!(f, "def {name} := {body}"),
         }
     }
 }
