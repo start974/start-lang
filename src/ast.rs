@@ -26,7 +26,7 @@ pub mod untyped {
 
     pub type Definition = definition::Definition<Option<Ty>>;
     pub type Program = program::Program<Option<Ty>>;
-    pub type Expression = expression::Expression;
+    pub type Expression = expression::Expression<Option<Ty>>;
     pub type Constant = expression::Constant;
 }
 

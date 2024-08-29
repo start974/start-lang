@@ -1,5 +1,6 @@
 use super::super::location::{Located, Location};
 use super::constant;
+use super::ty::{Ty, Typed};
 
 type NConst = u32;
 
@@ -45,21 +46,43 @@ pub enum Kind {
     Const(Constant),
 }
 
-pub struct Expression {
+pub struct Expression<TyT> {
     kind: Kind,
+    ty: TyT,
     location: Option<Location>,
 }
 
-impl Expression {
-    pub fn make_constant(c: Constant) -> Self {
-        Expression {
-            kind: Kind::Const(c),
-            location: None,
-        }
+impl<TyT> Located for Expression<TyT> {
+    fn get_location(&self) -> &Option<Location> {
+        &self.location
+    }
+
+    fn set_location(mut self, location: Location) -> Self {
+        self.location = Some(location);
+        self
     }
 }
 
-impl std::fmt::Display for Expression {
+impl Expression<Option<Ty>> {
+    pub fn make_constant(c: Constant) -> Self {
+        Self {
+            kind: Kind::Const(c),
+            ty: None,
+            location: None,
+        }
+    }
+
+    pub fn set_opt_ty(mut self, ty: Option<Ty>) -> Self {
+        self.ty = ty;
+        self
+    }
+
+    pub fn get_ty(&self) -> &Option<Ty> {
+        &self.ty
+    }
+}
+
+impl std::fmt::Display for Expression<Option<Ty>> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match &self.kind {
             Kind::Const(c) => write!(f, "{c}"),
@@ -67,12 +90,26 @@ impl std::fmt::Display for Expression {
     }
 }
 
-impl Located for Expression {
-    fn get_location(&self) -> &Option<Location> {
-        &self.location
+impl Expression<Ty> {
+    pub fn make_constant(c: Constant, ty: Ty) -> Self {
+        Self {
+            kind: Kind::Const(c),
+            ty,
+            location: None,
+        }
     }
-    fn set_location(mut self, location: Location) -> Self {
-        self.location = Some(location);
-        self
+}
+
+impl Typed for Expression<Ty> {
+    fn get_ty(&self) -> &Ty {
+        &self.ty
+    }
+}
+
+impl std::fmt::Display for Expression<Ty> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match &self.kind {
+            Kind::Const(c) => write!(f, "{c}"),
+        }
     }
 }
