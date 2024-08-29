@@ -1,8 +1,8 @@
 use super::super::ast::{
-    untyped::{Definition, Program},
+    untyped::{Constant, Definition, Expression, Program},
     Env, Ident,
 };
-use super::super::location::{Location, Position};
+use super::super::location::{Located, Location, Position};
 use super::error::{Errors, ErrorsResult};
 use super::iter_node::IterNode;
 
@@ -13,25 +13,6 @@ pub struct Parser {
     content: Vec<String>,
     env: Env,
 }
-
-fn repeat<F, T>(node: &Node, mut result: T, mut f: F) -> T
-where
-    F: FnMut(T, &Node, usize) -> T,
-{
-    let mut cursor = node.walk();
-    let mut i = 0;
-    if cursor.goto_first_child() {
-        loop {
-            result = f(result, &cursor.node(), i);
-            i += 1;
-            if !cursor.goto_next_sibling() {
-                break;
-            }
-        }
-    }
-    result
-}
-
 type ParserResult<T> = (Parser, ErrorsResult<T>);
 
 impl Parser {
@@ -73,38 +54,67 @@ impl Parser {
         }
     }
 
+    fn text(&self, &node: &Node) -> String {
+        let location = self.location(&node);
+        location.text(&self.content)
+    }
 
-    fn parse_ident(self, node: &Node) -> ParserResult<Ident> {
-        todo!()
-        /*        self.check_kind(node, "ident")?;*/
-        /*let location = self.location(node);*/
-        /*let name_content = location.content(&self.content);*/
-        /*let name = if name_content.len() == 1 {*/
-        /*name_content[0].clone()*/
-        /*} else {*/
-        /*panic!("Name content has more than one line.")*/
-        /*};*/
-        /*let (env, ident) = self.env.make_ident(&name, &Some(location));*/
-        /*self.env = env;*/
-        /*(self, Ok(ident))*/
+    fn parse_ident(mut self, node: &Node) -> ParserResult<Ident> {
+        match node.kind() {
+            "ident" => {
+                let location = self.location(node);
+                let name = self.text(node);
+                let (env, ident) = self.env.make_ident(name);
+                self.env = env;
+                (self, Ok(ident.set_location(location)))
+            }
+
+            _ => self.self_error(node, "identifier"),
+        }
+    }
+
+    fn parse_n(self, node: &Node) -> ParserResult<Expression> {
+        match node.kind() {
+            "number_N" => {
+                let location = self.location(node);
+                let text = self.text(node);
+                let val = text.parse::<u32>().unwrap();
+                let constant = Constant::make_n(val).set_location(location);
+                let expr = Expression::make_constant(constant);
+                (self, Ok(expr))
+            }
+            _ => self.self_error(node, "number"),
+        }
+    }
+
+    fn parse_expression(self, node: &Node) -> ParserResult<Expression> {
+        match node.kind() {
+            "number_N" => self.parse_n(node),
+            _ => self.self_error(node, "expression"),
+        }
     }
 
     fn parse_expr_def(self, node: &Node) -> ParserResult<Definition> {
         let loc = self.location(node);
         IterNode::new(node, self, ())
             .next(
-                &mut |parser, node_def| {
-                    parser.check_keyword(node_def, "def")
-                },
+                &mut |parser, node_def| parser.check_keyword(node_def, "def"),
                 &mut |(), ()| (),
             )
             .next(
-                &mut |parser, node_ident| {
-                    parser.parse_ident(node_ident)
-                },
+                &mut |parser, node_ident| parser.parse_ident(node_ident),
                 &mut |(), ident| ident,
             )
-            .map_result(|ident| Definition::make_expr_def(ident, Some(loc)))
+            // TODO : add ty
+            .next(
+                &mut |parser, node_eq_def| parser.check_keyword(node_eq_def, ":="),
+                &mut |ident, ()| ident,
+            )
+            .next(
+                &mut |parser, node_expr| parser.parse_expression(node_expr),
+                &mut |ident, expr| (ident, expr),
+            )
+            .map_result(|(ident, expr)| Definition::make_expr_def(ident, expr).set_location(loc))
             .acc_result()
     }
 

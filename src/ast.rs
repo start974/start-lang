@@ -1,4 +1,6 @@
+mod constant;
 mod definition;
+mod expression;
 mod ident;
 mod program;
 
@@ -15,10 +17,13 @@ pub type Env = ident::Env;
 
 pub mod untyped {
     use super::definition;
+    use super::expression;
     use super::program;
 
     pub type Definition = definition::Definition;
     pub type Program = program::Program;
+    pub type Expression = expression::Expression;
+    pub type Constant = expression::Constant;
 }
 
 /*

@@ -10,16 +10,6 @@ pub struct Ident {
     id: u32,
 }
 
-impl Ident {
-    fn new(name: &str, id: u32, location: &Option<Location>) -> Self {
-        Ident {
-            name: name.to_string(),
-            id,
-            location: location.clone(),
-        }
-    }
-}
-
 impl fmt::Display for Ident {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name)
@@ -57,8 +47,13 @@ impl Clone for Ident {
 }
 
 impl Located for Ident {
-    fn location(&self) -> &Option<Location> {
+    fn get_location(&self) -> &Option<Location> {
         &self.location
+    }
+
+    fn set_location(mut self, location: Location) -> Self {
+        self.location = Some(location);
+        self
     }
 }
 
@@ -77,13 +72,16 @@ impl Env {
     }
 
     /// make identifier with variable name
-    pub fn make_ident(mut self, name: &String, location: &Option<Location>) -> (Self, Ident) {
+    pub fn make_ident(mut self, name: String) -> (Self, Ident) {
         let id = self.counter;
         self.counter += 1;
-        let _ = self
-            .map
-            .insert(name.clone(), Ident::new(name, id, location));
-        let ident = self.map.get(name).unwrap().clone();
+        let ident = Ident {
+            name: name.clone(),
+            id,
+            location: None,
+        };
+        let _ = self.map.insert(name.clone(), ident);
+        let ident = self.map.get(&name).unwrap().clone();
         (self, ident)
     }
 
