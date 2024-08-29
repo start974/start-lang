@@ -12,25 +12,23 @@ module.exports = grammar({
 
     expr_def: $ =>seq("def",
       field("name", $.ident),
-      field("type", optional($._ty_restr)),
+      field("type", optional($.ty_restr)),
       ":=",
       field("body", $._expr)
     ),
 
-    _ty_restr: $ =>
+    ty_restr: $ =>
       seq(":", $._ty),
 
     _ty: $ => choice(
-      $._ty_const,
+      $._ty_var,
       seq("(", $._ty, ")"),
       // TODO: other types
     ),
 
-    _ty_const : $ => choice(
-      $.ty_nat
+    _ty_var : $ => choice(
+      $.ident
     ),
-
-    ty_nat : $ => "N",
 
     _expr: $ => choice(
       seq ("(", $._expr , ")"),
@@ -51,7 +49,7 @@ module.exports = grammar({
     // TODO: add bin / oct / hex
 
     ident : $ => /[a-zA-Z_][a-zA-Z0-9_]*/
-      // TODO: add unicode chars
+      // TODO: add unicode chars add finish by '
     ,
   }
 });

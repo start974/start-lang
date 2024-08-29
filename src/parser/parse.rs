@@ -1,6 +1,6 @@
 use super::super::ast::{
     untyped::{Constant, Definition, Expression, Program},
-    Env, Ident,
+    Env, Ident, Ty,
 };
 use super::super::location::{Located, Location, Position};
 use super::error::{Errors, ErrorsResult};
@@ -94,9 +94,47 @@ impl Parser {
         }
     }
 
+    fn parse_ty_var(self, node: &Node) -> ParserResult<Ty> {
+        match node.kind() {
+            "ident" => IterNode::new(node, self, ())
+                .next(
+                    &mut |parser, node_ident| parser.parse_ident(node_ident),
+                    &mut |(), ident| ident,
+                )
+                .map_result(|ident| Ty::make_var(ident))
+                .acc_result(),
+            _ => self.self_error(node, "ident"),
+        }
+    }
+
+    fn parse_ty(self, node: &Node) -> ParserResult<Ty> {
+        match node.kind() {
+            "ident" => self.parse_ty_var(node),
+            _ => self.self_error(node, "type"),
+        }
+    }
+
+    fn parse_ty_restr(self, node: &Node) -> ParserResult<Ty> {
+        match node.kind() {
+            "ty_restr" => IterNode::new(node, self, ())
+                .first_child()
+                .next(
+                    &mut |parser, node_semi_col| parser.check_keyword(node_semi_col, ":"),
+                    &mut |(), ()| (),
+                )
+                .next(
+                    &mut |parser, node_ty| parser.parse_ty(node_ty),
+                    &mut |(), ty| ty,
+                )
+                .acc_result(),
+            _ => self.self_error(node, "type restriction"),
+        }
+    }
+
     fn parse_expr_def(self, node: &Node) -> ParserResult<Definition> {
         let loc = self.location(node);
         IterNode::new(node, self, ())
+            .first_child()
             .next(
                 &mut |parser, node_def| parser.check_keyword(node_def, "def"),
                 &mut |(), ()| (),
@@ -105,16 +143,24 @@ impl Parser {
                 &mut |parser, node_ident| parser.parse_ident(node_ident),
                 &mut |(), ident| ident,
             )
+            .opt(
+                &mut |parser, node_ty| parser.parse_ty_restr(node_ty),
+                &mut |ident, opt_ty| (ident, opt_ty),
+            )
             // TODO : add ty
             .next(
                 &mut |parser, node_eq_def| parser.check_keyword(node_eq_def, ":="),
-                &mut |ident, ()| ident,
+                &mut |ident_opt_ty, ()| ident_opt_ty,
             )
             .next(
                 &mut |parser, node_expr| parser.parse_expression(node_expr),
-                &mut |ident, expr| (ident, expr),
+                &mut |(ident, opt_ty), expr| (ident, opt_ty, expr),
             )
-            .map_result(|(ident, expr)| Definition::make_expr_def(ident, expr).set_location(loc))
+            .map_result(|(ident, opt_ty, expr)| {
+                Definition::make_expr_def(ident, expr)
+                    .set_opt_ty(opt_ty)
+                    .set_location(loc)
+            })
             .acc_result()
     }
 
@@ -129,6 +175,7 @@ impl Parser {
     pub fn parse_program(self, node: &Node) -> ParserResult<Program> {
         match node.kind() {
             "program" => IterNode::new(node, self, Program::empty())
+                .first_child()
                 .repeat(
                     &mut |parser, node_def| parser.parse_definition(node_def),
                     &mut |program1, definition| {

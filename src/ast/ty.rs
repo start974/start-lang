@@ -1,51 +1,54 @@
-use super::location::{OptLoc, Located};
-
-/// primitive types
-pub enum TyPrim {
-    TyN(OptLoc)
-}
-
-impl TyPrim {
-    /// pretty print
-    pub fn pretty(&self) -> String {
-        match self {
-            TyPrim::TyN(_) => String::from("N"),
-        }
-    }
-}
-
-impl Located for TyPrim {
-    pub fn localisation(&self) -> OptLoc {
-        match self {
-            TyPrim::TyN(loc) => loc.clone(),
-        }
-    }
-}
+use super::super::location::{Located, Location};
+use super::ident::Ident;
 
 /// constant types
-pub enum Ty {
-    Prim(TyPrim)
+pub enum Kind {
+    Var(Ident),
 }
 
-pub impl Ty {
+pub struct Ty {
+    kind: Kind,
+    location: Option<Location>,
+}
 
-    /// make natural type
-    pub fn nat<T>(extra : T, loc: OptLoc) -> Ty {
-        Ty::Prim(TyPrim::TyN(loc))
-    }
-
-    /// pretty print
-    pub fn pretty(&self) -> String {
-        match self {
-            Ty::Prim(p_ty) => p_ty.pretty(),
+impl Ty {
+    /// make variable type
+    pub fn make_var(ident: Ident) -> Self {
+        Self {
+            kind: Kind::Var(ident),
+            location: None,
         }
     }
 }
 
-trait Typed {
-    /// get type
-    pub fn type(&self) -> Ty;
+impl std::fmt::Display for Ty {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match &self.kind {
+            Kind::Var(ident) => write!(f, "{}", ident),
+        }
+    }
+}
 
-    /// pretty print without type
-    pub fn pretty_without_type(&self) -> String;
+impl Located for Ty {
+    fn get_location(&self) -> &Option<Location> {
+        &self.location
+    }
+
+    fn set_location(mut self, location: Location) -> Self {
+        self.location = Some(location);
+        self
+    }
+}
+
+pub trait Typed {
+    /// get type
+    fn get_ty(&self) -> &Ty;
+}
+
+pub trait WeakTyped {
+    /// get type
+    fn get_opt_ty(&self) -> &Option<Ty>;
+
+    /// set type
+    fn set_ty(self, ty: Ty) -> Self;
 }
