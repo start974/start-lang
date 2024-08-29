@@ -5,7 +5,7 @@ use super::super::ast::{
 use super::super::location::{Location, Position};
 use super::error::{Error, Errors};
 
-use tree_sitter::Node;
+use tree_sitter::{Node, TreeCursor};
 
 pub struct Parser {
     file_name: String,
@@ -13,12 +13,68 @@ pub struct Parser {
     env: Env,
 }
 
+type ParserResult<T> = Result<T, Errors>;
+
+/*struct IterNode<T, U> {*/
+/*cursor: TreeCursor,*/
+/*acc : T,*/
+/*res : Result<U>,*/
+/*}*/
+
+/*impl IterNode<T, U> {*/
+/*fn new<>(node: &Node, init : T) -> Self<T, ()> {*/
+/*let cursor = node.walk();*/
+/*if cursor.goto_first_child() {*/
+/*Self {*/
+/*cursor,*/
+/*acc: init,*/
+/*res: Ok(())*/
+/*}*/
+/*} else {*/
+/*panic!("Node has no children");*/
+/*}*/
+/*}*/
+/*}*/
+
+fn repeat<F, T>(node: &Node, mut result: T, mut f: F) -> T
+where
+    F: FnMut(T, &Node, usize) -> T,
+{
+    let mut cursor = node.walk();
+    let mut i = 0;
+    if cursor.goto_first_child() {
+        loop {
+            result = f(result, &cursor.node(), i);
+            i += 1;
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    result
+}
+
+fn seq<F, T>(node: &Node, mut result: T, mut f: [F]) -> T
+where
+    F: FnMut(T, &Node) -> T,
+{
+    let mut cursor = node.walk();
+    if cursor.goto_first_child() {
+        loop {
+            result = f(result, &cursor.node());
+            if !cursor.goto_next_sibling() {
+                break;
+            }
+        }
+    }
+    result
+}
+
 impl Parser {
-    //TODO: add reference to parser with lifetime
-    pub fn new(file_name: String, content: Vec<String>) -> Self {
+    pub fn make(file_name: &String, content: &[String]) -> Self {
         Parser {
-            file_name,
-            content,
+            file_name: file_name.to_owned(),
+            content: content.to_vec(),
             env: Env::empty(),
         }
     }
@@ -39,89 +95,65 @@ impl Parser {
         }
     }
 
-    fn error(&self, node: &Node, expect: &str) -> Error {
-        Error::new(expect, &self.content, &self.location(node))
+    fn error<T>(&self, node: &Node, expect: &str) -> ParserResult<T> {
+        let err = Errors::error(expect, &self.content, &self.location(node));
+        Err(err)
     }
 
-    fn check_kind(&self, node: &Node, expect: &str) -> Result<(), Error> {
-        if node.kind() != expect {
-            Err(self.error(node, expect))
-        } else {
-            Ok(())
-        }
+    fn self_error<T>(self, node: &Node, expect: &str) -> (Self, ParserResult<T>) {
+        let error = self.error(node, expect);
+        (self, error)
     }
 
-    fn parse_ident(&mut self, node: &Node) -> Result<Ident, Error> {
-        self.check_kind(node, "ident")?;
-        let location = self.location(node);
-        let name_content = location.content(&self.content);
-        let name = if name_content.len() == 1 {
-            name_content[0].clone()
-        } else {
-            panic!("Name content has more than one line.")
-        };
-        let ident = self.env.make_ident(&name, &Some(location));
-        Result::Ok(ident.clone())
+    fn parse_ident(mut self, node: &Node) -> (Self, ParserResult<Ident>) {
+        todo!()
+        /*        self.check_kind(node, "ident")?;*/
+        /*let location = self.location(node);*/
+        /*let name_content = location.content(&self.content);*/
+        /*let name = if name_content.len() == 1 {*/
+        /*name_content[0].clone()*/
+        /*} else {*/
+        /*panic!("Name content has more than one line.")*/
+        /*};*/
+        /*let (env, ident) = self.env.make_ident(&name, &Some(location));*/
+        /*self.env = env;*/
+        /*(self, Ok(ident))*/
     }
 
-    fn parse_expr_def(&mut self, node: &Node) -> Result<Definition, Error> {
-        self.check_kind(node, "expr_def")?;
-        /*        let loc = self.location(node);*/
-        /*let mut children = node.children();*/
-        let name = node
-            .child_by_field_name("name")
-            .ok_or_else(|| self.error(node, "name"))
-            .and_then(|node| self.parse_ident(&node))?;
-        /*let expr = children.next().unwrap();*/
-        //let name = self.to_identifier(name)?;
-        //let expr = self.to_expr(expr)?;
-        let location = self.location(node);
-        let def = Definition::new_expr_def(&name, &Some(location));
-        Result::Ok(def)
+    fn parse_expr_def(mut self, node: &Node) -> (Self, ParserResult<Definition>) {
+        //self.check_kind(node, "expr_def")?;
+        todo!()
     }
 
-    fn parse_definition(&mut self, node: &Node) -> Result<Definition, Error> {
+    fn parse_definition(mut self, node: &Node) -> (Self, ParserResult<Definition>) {
         match node.kind() {
             "expr_def" => self.parse_expr_def(node),
-            _ => Err(self.error(node, "definition")),
+            _ => self.self_error(node, "definition"),
         }
     }
 
-    pub fn parse_program(&mut self, node: &Node) -> Result<Program, Errors> {
+    /// parse program
+    pub fn parse_program(mut self, node: &Node) -> (Self, ParserResult<Program>) {
         match node.kind() {
-            "program" => {
-                let mut program = Program::empty();
-                let mut errors = Errors::new();
-
-                let mut cursor = node.walk();
-                if cursor.goto_first_child() {
-                    loop {
-                        match self.parse_definition(&cursor.node()) {
-                            Ok(def) => {
-                                if errors.is_empty() && program.add_definition(def).is_some() {
-                                    panic!("Definition already exist.");
-                                }
-                            }
-                            Err(err) => {
-                                errors.add(err);
-                            }
+            "program" => repeat(
+                node,
+                (self, Ok(Program::empty())),
+                |(mut parser, mut res_prog), node, _| {
+                    let (parser2, opt_def) = parser.parse_definition(node);
+                    let parser = parser2;
+                    match (opt_def, res_prog) {
+                        (Ok(new_def), Ok(program1)) => {
+                            let (program2, old_def) = program1.add_definition(new_def);
+                            assert!(old_def.is_none());
+                            (parser, Ok(program2))
                         }
-                        if !cursor.goto_next_sibling() {
-                            break;
-                        }
+                        (Ok(_), Err(errors)) => (parser, Err(errors)),
+                        (Err(errors), Ok(_)) => (parser, Err(errors)),
+                        (Err(errors1), Err(errors2)) => (parser, Err(errors2.concat(errors1))),
                     }
-                }
-                if errors.is_empty() {
-                    Result::Ok(program)
-                } else {
-                    Result::Err(errors)
-                }
-            }
-            _ => {
-                let mut errors = Errors::new();
-                errors.add(self.error(node, "program"));
-                Result::Err(errors)
-            }
+                },
+            ),
+            _ => self.self_error(node, "program"),
         }
     }
 }

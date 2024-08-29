@@ -46,17 +46,25 @@ pub struct Errors {
 }
 
 impl Errors {
-    pub fn new() -> Self {
+    fn new() -> Self {
         Errors { errors: Vec::new() }
     }
 
-    pub fn add(&mut self, error: Error) {
-        self.errors.push(error);
+    pub fn error(expect: &str, lines: &[String], location: &Location) -> Self {
+        let error = Error::new(expect, lines, location);
+        let mut errors = Errors::new();
+        errors.errors.push(error);
+        errors
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.errors.is_empty()
+    pub fn concat(mut self, errors: Errors) -> Self {
+        self.errors.extend(errors.errors);
+        self
     }
+
+    //pub fn is_empty(&self) -> bool {
+    //self.errors.is_empty()
+    //}
 }
 
 impl std::fmt::Debug for Errors {
