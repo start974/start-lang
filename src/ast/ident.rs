@@ -77,12 +77,14 @@ impl Env {
     }
 
     /// make identifier with variable name
-    pub fn make_ident(&mut self, name: &String, location: &Option<Location>) -> &Ident {
+    pub fn make_ident(mut self, name: &String, location: &Option<Location>) -> (Self, Ident) {
         let id = self.counter;
         self.counter += 1;
-        self.map
+        let _ = self
+            .map
             .insert(name.clone(), Ident::new(name, id, location));
-        self.map.get(name).unwrap()
+        let ident = self.map.get(name).unwrap().clone();
+        (self, ident)
     }
 
     // get identifier with variable

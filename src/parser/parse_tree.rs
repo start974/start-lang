@@ -47,7 +47,8 @@ impl ParseTree {
     // make a parseTree
     pub fn to_program(&self) -> Result<Program, Errors> {
         let root = self.tree.root_node();
-        let mut parser = Parser::new(self.file_name.clone(), self.content.clone());
-        parser.parse_program(&root)
+        let parser = Parser::make(&self.file_name, &self.content);
+        let (_, res) = parser.parse_program(&root);
+        res
     }
 }
