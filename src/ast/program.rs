@@ -1,26 +1,34 @@
 use super::definition::Definition;
 use super::ident::Ident;
+use super::ty::Ty;
 
-use std::collections::HashMap;
 use std::fmt;
 
 pub struct Program<TyT> {
-    map: HashMap<Ident, Definition<TyT>>,
+    data: Vec<Definition<TyT>>,
 }
 
 impl<TyT> Program<TyT> {
     /// make an empty program
     pub fn empty() -> Self {
-        Program {
-            map: HashMap::new(),
-        }
+        Program { data: Vec::new() }
     }
 
     /// add definition to program
     /// return [Some definition] if [definition] already exists
-    pub fn add_definition(mut self, def: Definition<TyT>) -> (Self, Option<Definition<TyT>>) {
-        let def_opt = self.map.insert(def.get_name().clone(), def);
-        (self, def_opt)
+    pub fn add_definition(mut self, def: Definition<TyT>) -> Self {
+        self.data.push(def);
+        self
+    }
+
+    /// len of program
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    /// iterator over definitions
+    pub fn iter(&self) -> impl Iterator<Item = &Definition<TyT>> {
+        self.data.iter()
     }
 }
 
@@ -29,8 +37,8 @@ where
     Definition<TyT>: std::fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for def in self.map.values() {
-            writeln!(f, "{}", def)?
+        for def in &self.data {
+            writeln!(f, "{}", def)?;
         }
         Ok(())
     }

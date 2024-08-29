@@ -25,5 +25,5 @@ fn main() {
             return;
         }
     };
-    println!("--\n{}", program);
+    println!("{}", program);
 }

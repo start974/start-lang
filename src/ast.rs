@@ -7,7 +7,6 @@ mod ty;
 
 pub type Ident = ident::Ident;
 pub type Env = ident::Env;
-
 pub type Ty = ty::Ty;
 
 /*pub mod typed {*/

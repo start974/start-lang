@@ -4,3 +4,4 @@ mod parse;
 mod parse_tree;
 
 pub type ParseTree = parse_tree::ParseTree;
+pub type Errors = error::Errors;
