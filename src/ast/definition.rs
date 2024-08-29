@@ -24,6 +24,13 @@ impl<TyT> Definition<TyT> {
             Definition::ExprDef { name, .. } => name,
         }
     }
+    /*
+    pub fn get_body(&self) -> &Expression<TyT> {
+        match self {
+            Definition::ExprDef { body, .. } => body,
+        }
+    }
+    */
 }
 
 impl<TyT> Located for Definition<TyT> {
@@ -59,7 +66,7 @@ impl Definition<Option<Ty>> {
         self
     }
 
-/*
+    /*
     /// set type
     pub fn set_ty(mut self, ty: Ty) -> Self {
         self.set_opt_ty(Some(ty))
@@ -73,7 +80,6 @@ impl Definition<Option<Ty>> {
     }
     */
 }
-
 impl fmt::Display for Definition<Option<Ty>> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -85,6 +91,7 @@ impl fmt::Display for Definition<Option<Ty>> {
     }
 }
 
+/*
 impl Definition<Ty> {
     /// make expression definition
     pub fn make_expr_def(name: Ident, ty: Ty, body: Expression<Ty>) -> Self {
@@ -112,3 +119,4 @@ impl fmt::Display for Definition<Ty> {
         }
     }
 }
+*/

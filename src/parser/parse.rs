@@ -178,11 +178,7 @@ impl Parser {
                 .first_child()
                 .repeat(
                     &mut |parser, node_def| parser.parse_definition(node_def),
-                    &mut |program1, definition| {
-                        let (program2, old_def) = program1.add_definition(definition);
-                        assert!(old_def.is_none());
-                        program2
-                    },
+                    &mut |program, definition| program.add_definition(definition),
                 )
                 .acc_result(),
             _ => self.self_error(node, "program"),
