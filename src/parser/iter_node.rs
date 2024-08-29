@@ -33,12 +33,54 @@ impl<'a, T1, U1> IterNode<'a, T1, U1> {
                         res: Ok(f2(x, y)),
                     },
                     (Ok(_), Err(errors)) | (Err(errors), Ok(_)) => IterNode {
-                        cursor: None,
+                        cursor,
                         acc,
                         res: Err(errors),
                     },
                     (Err(errors1), Err(errors2)) => IterNode {
-                        cursor: None,
+                        cursor,
+                        acc,
+                        res: Err(errors1.concat(errors2)),
+                    },
+                }
+            }
+            None => panic!("No more node is present"),
+        }
+    }
+
+    // apply [f1] to the current node and [f2] to combine result
+    // if error as occured in [f1] cusor not go to next
+    pub fn opt<F1, F2, T2, U2, U3>(self, f1: &mut F1, f2: &mut F2) -> IterNode<'a, T2, U3>
+    where
+        F1: FnMut(T1, &Node<'a>) -> (T2, ErrorsResult<U2>),
+        F2: FnMut(U1, Option<U2>) -> U3,
+    {
+        match self.cursor {
+            Some(mut cursor) => {
+                let node = cursor.node();
+                let (acc, res) = f1(self.acc, &node);
+                match (self.res, res) {
+                    (Ok(x), Ok(y)) => IterNode {
+                        cursor: if cursor.goto_next_sibling() {
+                            Some(cursor)
+                        } else {
+                            None
+                        },
+                        acc,
+                        res: Ok(f2(x, Some(y))),
+                    },
+                    (Ok(x), Err(_)) => IterNode {
+                        cursor: Some(cursor),
+                        acc,
+                        res: Ok(f2(x, None)),
+                    },
+                    (Err(errors), Ok(_)) => IterNode {
+                        cursor: Some(cursor),
+                        acc,
+                        res: Err(errors),
+                    },
+                    (Err(errors1), Err(errors2)) => IterNode {
+                        cursor: Some(cursor),
                         acc,
                         res: Err(errors1.concat(errors2)),
                     },
@@ -51,21 +93,28 @@ impl<'a, T1, U1> IterNode<'a, T1, U1> {
 
 impl<'a, T, U> IterNode<'a, T, U> {
     pub fn new(node: &Node<'a>, acc: T, init: U) -> Self {
-        let mut cursor = node.walk();
-        let opt_cursor = if cursor.goto_first_child() {
-            Some(cursor)
-        } else {
-            None
-        };
-
         Self {
-            cursor: opt_cursor,
+            cursor: Some(node.walk()),
             acc,
             res: Ok(init),
         }
     }
+
+    pub fn first_child(mut self) -> Self {
+        match self.cursor {
+            Some(mut cursor) => {
+                if !cursor.goto_first_child() {
+                    panic!("No child node")
+                };
+                self.cursor = Some(cursor);
+                self
+            }
+            None => panic!("No more node"),
+        }
+    }
+
     // apply [f1] to the until nodes and [f2] to combine results
-    pub fn repeat<F1, F2, U2>(self, f1: &mut F1, f2: &mut F2) -> IterNode<'a, T, U>
+    pub fn repeat<F1, F2, U2>(self, f1: &mut F1, f2: &mut F2) -> Self
     where
         F1: FnMut(T, &Node<'a>) -> (T, ErrorsResult<U2>),
         F2: FnMut(U, U2) -> U,
