@@ -35,8 +35,7 @@ impl ParseTree {
         };
 
         let mut input = String::new();
-        file.read_to_string(&mut input)
-            .expect("failed to read!");
+        file.read_to_string(&mut input).expect("failed to read!");
         Self::from_string(file_name, &input)
     }
 

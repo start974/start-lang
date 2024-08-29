@@ -75,3 +75,5 @@ impl std::fmt::Debug for Errors {
         Ok(())
     }
 }
+
+pub type ErrorsResult<T> = Result<T, Errors>;

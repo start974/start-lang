@@ -6,11 +6,11 @@ pub type Ident = ident::Ident;
 pub type Env = ident::Env;
 
 /*pub mod typed {*/
-    /*use super::definition;*/
-    /*use super::program;*/
+/*use super::definition;*/
+/*use super::program;*/
 
-    /*pub type Definition = definition::Definition;*/
-    /*pub type Program = program::Program;*/
+/*pub type Definition = definition::Definition;*/
+/*pub type Program = program::Program;*/
 /*}*/
 
 pub mod untyped {
