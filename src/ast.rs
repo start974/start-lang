@@ -5,33 +5,26 @@ mod ident;
 mod program;
 mod ty;
 
+/// identifer
 pub type Ident = ident::Ident;
+
+/// environment to make identifier
 pub type Env = ident::Env;
+
+/// types
 pub type Ty = ty::Ty;
 
-/*pub mod typed {*/
-/*use super::definition;*/
-/*use super::program;*/
+/// constant expression
+pub type Constant = expression::Constant;
 
-/*pub type Definition = definition::Definition;*/
-/*pub type Program = program::Program;*/
-/*}*/
+/// kind of expression
+pub type ExpressionKind = expression::Kind;
 
-pub mod untyped {
-    use super::definition;
-    use super::expression;
-    use super::program;
-    use super::Ty;
+/// expression
+pub type Expression<TyT> = expression::Expression<TyT>;
 
-    pub type Definition = definition::Definition<Option<Ty>>;
-    pub type Program = program::Program<Option<Ty>>;
-    pub type Expression = expression::Expression<Option<Ty>>;
-    pub type Constant = expression::Constant;
-}
+/// definition in program
+pub type Definition<TyT> = definition::Definition<TyT>;
 
-/*
-pub mod expression;
-pub mod ident;
-pub mod localised;
-pub mod ty;
-*/
+/// program
+pub type Program<TyT> = program::Program<TyT>;

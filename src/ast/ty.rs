@@ -40,15 +40,10 @@ impl Located for Ty {
     }
 }
 
+/*
 pub trait Typed {
     /// get type
     fn get_ty(&self) -> &Ty;
 }
+*/
 
-pub trait WeakTyped {
-    /// get type
-    fn get_opt_ty(&self) -> &Option<Ty>;
-
-    /// set type
-    fn set_ty(self, ty: Ty) -> Self;
-}

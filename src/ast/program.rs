@@ -1,6 +1,4 @@
 use super::definition::Definition;
-use super::ident::Ident;
-use super::ty::Ty;
 
 use std::fmt;
 
@@ -21,10 +19,10 @@ impl<TyT> Program<TyT> {
         self
     }
 
-    /// len of program
-    pub fn len(&self) -> usize {
-        self.data.len()
-    }
+/*    /// len of program*/
+    /*pub fn len(&self) -> usize {*/
+        /*self.data.len()*/
+    /*}*/
 
     /// iterator over definitions
     pub fn iter(&self) -> impl Iterator<Item = &Definition<TyT>> {

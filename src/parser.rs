@@ -1,7 +1,7 @@
-mod error;
 mod iter_node;
 mod parse;
 mod parse_tree;
+pub mod ast;
 
 pub type ParseTree = parse_tree::ParseTree;
-pub type Errors = error::Errors;
+

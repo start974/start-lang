@@ -1,8 +1,8 @@
-use startlang::ast::untyped::Program;
-use startlang::parser::{Errors, ParseTree};
+use startlang::error::Error;
+use startlang::parser::{ast::Program, ParseTree};
 
-fn test_parse(input: &str) -> Result<Program, Errors> {
-    ParseTree::from_string("test".to_string(), &input.to_string()).to_program()
+fn test_parse(input: &str) -> Result<Program, Error> {
+    ParseTree::of_string("test".to_string(), &input.to_string()).to_program()
 }
 
 #[test]
