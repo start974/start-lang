@@ -1,6 +1,5 @@
 use super::super::location::{Located, Location};
 use super::constant;
-use super::ty::{Ty, Typed};
 
 type NConst = u32;
 
@@ -47,9 +46,9 @@ pub enum Kind {
 }
 
 pub struct Expression<TyT> {
-    kind: Kind,
-    ty: TyT,
-    location: Option<Location>,
+    pub kind: Kind,
+    pub ty: TyT,
+    pub location: Option<Location>,
 }
 
 impl<TyT> Located for Expression<TyT> {
@@ -63,33 +62,7 @@ impl<TyT> Located for Expression<TyT> {
     }
 }
 
-impl Expression<Option<Ty>> {
-    pub fn make_constant(c: Constant) -> Self {
-        Self {
-            kind: Kind::Const(c),
-            ty: None,
-            location: None,
-        }
-    }
-
-    pub fn set_opt_ty(mut self, ty: Option<Ty>) -> Self {
-        self.ty = ty;
-        self
-    }
-
-    pub fn get_ty(&self) -> &Option<Ty> {
-        &self.ty
-    }
-}
-
-impl std::fmt::Display for Expression<Option<Ty>> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match &self.kind {
-            Kind::Const(c) => write!(f, "{c}"),
-        }
-    }
-}
-
+/*
 impl Expression<Ty> {
     pub fn make_constant(c: Constant, ty: Ty) -> Self {
         Self {
@@ -113,3 +86,4 @@ impl std::fmt::Display for Expression<Ty> {
         }
     }
 }
+*/

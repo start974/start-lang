@@ -72,7 +72,7 @@ impl Env {
     }
 
     /// make identifier with variable name
-    pub fn make_ident(mut self, name: String) -> (Self, Ident) {
+    pub fn of_string(mut self, name: String) -> (Self, Ident) {
         let id = self.counter;
         self.counter += 1;
         let ident = Ident {
@@ -83,6 +83,12 @@ impl Env {
         let _ = self.map.insert(name.clone(), ident);
         let ident = self.map.get(&name).unwrap().clone();
         (self, ident)
+    }
+
+    /// add identifier with location
+    pub fn of_location(self, location: &Location) -> (Self, Ident) {
+        let name = location.text();
+        self.of_string(name)
     }
 
     // get identifier with variable

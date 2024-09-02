@@ -21,13 +21,8 @@ module.exports = grammar({
       seq(":", $._ty),
 
     _ty: $ => choice(
-      $._ty_var,
-      seq("(", $._ty, ")"),
-      // TODO: other types
-    ),
-
-    _ty_var : $ => choice(
       $.ident
+      // TODO: other types
     ),
 
     _expr: $ => choice(

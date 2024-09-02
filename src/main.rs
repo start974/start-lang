@@ -1,29 +1,33 @@
 mod ast;
+mod error;
 mod location;
 mod parser;
+mod typing;
 
-use std::env;
-
-fn get_file_name() -> String {
-    let args: Vec<String> = env::args().collect();
+fn get_file_name() -> Result<String, error::Error> {
+    let args: Vec<String> = std::env::args().collect();
     if args.len() != 2 {
-        println!("Please provide a file name");
-        std::process::exit(1)
+        let err = error::Error::error_simple("Please provide a file name");
+        Err(err)
     } else {
-        args[1].clone()
+        Ok(args[1].clone())
     }
 }
 
 fn main() {
-    let file_name = get_file_name();
-    let parse_tree = parser::ParseTree::from_file(file_name);
-    println!("parse tree: {:?}", parse_tree.to_sexp());
-    let program = match parse_tree.to_program() {
-        Ok(program) => program,
-        Err(errors) => {
-            println!("{errors:?}");
-            return;
+    let res = get_file_name()
+        .and_then(parser::ParseTree::of_file)
+        .inspect(|parse_tree| println!("sexp: {}", parse_tree.to_sexp()))
+        .and_then(|parse_tree| parse_tree.to_program());
+
+    match res {
+        Ok(program) => {
+            println!("{program}");
+            std::process::exit(0)
         }
-    };
-    println!("{}", program);
+        Err(err) => {
+            eprintln!("{err}");
+            std::process::exit(1)
+        }
+    }
 }

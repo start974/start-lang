@@ -1,6 +1,13 @@
 pub struct Position {
-    pub row: usize,
-    pub column: usize,
+    row: usize,
+    column: usize,
+}
+
+impl Position {
+    /// make a new position
+    pub fn make(row: usize, column: usize) -> Self {
+        Position { row, column }
+    }
 }
 
 impl std::fmt::Display for Position {
@@ -19,46 +26,108 @@ impl Clone for Position {
 }
 
 pub struct Location {
-    pub file_name: String,
-    pub pos_start: Position,
-    pub pos_end: Position,
+    file_name: String,
+    lines: Vec<String>,
+    start: Position,
+    end: Position,
 }
 
 impl Location {
-    /// content of location
-    pub fn content(&self, lines: &[String]) -> Vec<String> {
-        let i = self.pos_start.row;
-        let j = self.pos_end.row;
-        let mut res = lines[i..j + 1].to_vec();
-        let n = j - i;
-        if n == 0 {
-            res[0] = res[0][self.pos_start.column..self.pos_end.column].to_string();
+    /// make a new location
+    pub fn make(file_name: String, lines: &[String], start: Position, end: Position) -> Self {
+        Self {
+            file_name,
+            lines: lines[start.row..end.row + 1].to_vec(),
+            start,
+            end,
+        }
+    }
+
+    /// content at location
+    pub fn content(&self) -> Vec<String> {
+        let mut res = self.lines.clone();
+        if res.len() == 1 {
+            res[0] = res[0][self.start.column..self.end.column].to_string();
         } else {
-            res[0] = res[0][self.pos_start.column..].to_string();
-            res[n] = res[n][..self.pos_end.column].to_string();
+            let n = res.len() - 1;
+            res[0] = res[0][self.start.column..].to_string();
+            res[n] = res[n][..self.end.column].to_string();
         }
         res
     }
-
     /// text at location
-    pub fn text(&self, lines: &[String]) -> String {
-        self.content(lines).join("\n")
+    pub fn text(&self) -> String {
+        self.content().join("\n")
+    }
+
+    /// number of digits
+    fn digits(&self) -> usize {
+        std::cmp::max(
+            (self.end.row + 1).to_string().len(),
+            (self.start.row + 1).to_string().len(),
+        )
+    }
+
+    /// location
+    fn fmt_location(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let start = self.start.row;
+        let end = self.end.row;
+        if start == end {
+            writeln!(f, "{}:{}", self.file_name, self.start)
+        } else {
+            writeln!(f, "{}:{}-{}", self.file_name, self.start, self.end)
+        }
+    }
+
+    /// content
+    fn fmt_content(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let digits = self.digits();
+        let mut i = self.start.row + 1;
+        for line in &self.lines {
+            writeln!(f, "{:width$} | {line}", i, width = digits, line = line)?;
+            i += 1;
+        }
+        Ok(())
+    }
+
+    /// indicator
+    fn fmt_indicator(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        if self.start.row == self.end.row {
+            writeln!(
+                f,
+                "   {:width$}{indicator}",
+                " ",
+                width = self.start.column + 1,
+                indicator = "^".repeat(self.end.column - self.start.column)
+            )
+        } else {
+            Ok(())
+        }
     }
 }
 
 impl std::fmt::Display for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        if self.pos_start.row == self.pos_end.row {
-            write!(f, "{}:{}", self.file_name, self.pos_start)
-        } else {
-            write!(f, "{}:{}-{}", self.file_name, self.pos_start, self.pos_end)
-        }
+        self.fmt_location(f)?;
+        self.fmt_content(f)?;
+        self.fmt_indicator(f)
     }
 }
 
 impl std::fmt::Debug for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}:{}-{}", self.file_name, self.pos_start, self.pos_end)
+        self.fmt_location(f)
+    }
+}
+
+impl Clone for Location {
+    fn clone(&self) -> Self {
+        Location {
+            file_name: self.file_name.clone(),
+            lines: self.lines.clone(),
+            start: self.start.clone(),
+            end: self.end.clone(),
+        }
     }
 }
 
@@ -68,14 +137,4 @@ pub trait Located {
 
     /// set location
     fn set_location(self, location: Location) -> Self;
-}
-
-impl Clone for Location {
-    fn clone(&self) -> Self {
-        Location {
-            file_name: self.file_name.clone(),
-            pos_start: self.pos_start.clone(),
-            pos_end: self.pos_end.clone(),
-        }
-    }
 }
