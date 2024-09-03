@@ -1,0 +1,4 @@
+tests/parser/error/expr_wrong.st:1:10
+1 | def a := ___
+             ^^^
+Error: Expected expression.
