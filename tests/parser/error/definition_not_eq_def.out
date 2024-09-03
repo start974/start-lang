@@ -1,0 +1,4 @@
+tests/parser/error/definition_not_eq_def.st:1:7
+1 | def a = 3
+          ^
+Error: Expected operator ':='.

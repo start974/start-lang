@@ -1,0 +1,4 @@
+tests/parser/error/definition_ident.st:1:5
+1 | def 12 := 3
+        ^^
+Error: Expected identifier.

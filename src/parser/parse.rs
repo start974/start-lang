@@ -41,7 +41,16 @@ impl Parser {
 
     fn check_keyword(self, node: &Node, expect: &str) -> ParserResult<()> {
         if node.kind() != expect {
-            let expect = format!("'{}' keyword", expect);
+            let expect = format!("keyword '{}'", expect);
+            self.self_error_res(node, &expect)
+        } else {
+            (self, Ok(()))
+        }
+    }
+
+    fn check_operator(self, node: &Node, expect: &str) -> ParserResult<()> {
+        if node.kind() != expect {
+            let expect = format!("operator '{}'", expect);
             self.self_error_res(node, &expect)
         } else {
             (self, Ok(()))
@@ -112,7 +121,7 @@ impl Parser {
             "ty_restr" => IterNode::new(node, self, ())
                 .first_child()
                 .apply_next(
-                    &mut |parser, node_semi_col| parser.check_keyword(node_semi_col, ":"),
+                    &mut |parser, node_semi_col| parser.check_operator(node_semi_col, ":"),
                     &mut |(), ()| (),
                 )
                 .apply(
@@ -141,7 +150,7 @@ impl Parser {
                 &mut |ident, opt_ty| (ident, opt_ty),
             )
             .apply_next(
-                &mut |parser, node_eq_def| parser.check_keyword(node_eq_def, ":="),
+                &mut |parser, node_eq_def| parser.check_operator(node_eq_def, ":="),
                 &mut |(ident, opt_ty), ()| (ident, opt_ty),
             )
             .apply(

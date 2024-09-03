@@ -10,9 +10,9 @@ pub struct IterNode<'a, T, U> {
 
 impl<'a, T> IterNode<'a, T, ()> {}
 
-impl<'a, T1, U1> IterNode<'a, T1, U1> {
+impl<'a, T, U1> IterNode<'a, T, U1> {
     /// new iterator
-    pub fn new(node: &Node<'a>, acc: T1, init: U1) -> Self {
+    pub fn new(node: &Node<'a>, acc: T, init: U1) -> Self {
         Self {
             cursor: node.walk(),
             acc,
@@ -41,72 +41,75 @@ impl<'a, T1, U1> IterNode<'a, T1, U1> {
     }
 
     /// apply [f1] to the current node and [f2] to combine result
-    pub fn apply<F1, F2, T2, U2, U3>(self, f1: &mut F1, f2: &mut F2) -> IterNode<'a, T2, U3>
+    pub fn apply<F1, F2, U2, U3>(self, f1: &mut F1, f2: &mut F2) -> IterNode<'a, T, U3>
     where
-        F1: FnMut(T1, &Node<'a>) -> (T2, Result<U2, Error>),
+        F1: FnMut(T, &Node<'a>) -> (T, Result<U2, Error>),
         F2: FnMut(U1, U2) -> U3,
     {
-        let node = self.cursor.node();
-        let (acc, res) = f1(self.acc, &node);
-        let cursor = self.cursor;
-        let res = match (self.res, res) {
-            (Ok(x), Ok(y)) =>
-                Ok(f2(x, y)),
-            (Ok(_), Err(errors)) | (Err(errors), Ok(_)) =>
-                 Err(errors),
-            (Err(errors1), Err(errors2)) =>
-                 Err(errors1.error_add(errors2))
-        };
-        IterNode {
-            cursor,
-            acc,
-            res,
+        match self.res {
+            Err(errors) => IterNode {
+                cursor: self.cursor,
+                acc: self.acc,
+                res: Err(errors),
+            },
+            Ok(x) => {
+                let node = self.cursor.node();
+                let (acc, res) = f1(self.acc, &node);
+                IterNode {
+                    cursor: self.cursor,
+                    acc,
+                    res: res.map(|y| f2(x, y)),
+                }
+            }
         }
     }
 
     /// apply on next
-    pub fn apply_next<F1, F2, T2, U2, U3>(self, f1: &mut F1, f2: &mut F2) -> IterNode<'a, T2, U3>
+    pub fn apply_next<F1, F2, U2, U3>(self, f1: &mut F1, f2: &mut F2) -> IterNode<'a, T, U3>
     where
-        F1: FnMut(T1, &Node<'a>) -> (T2, Result<U2, Error>),
+        F1: FnMut(T, &Node<'a>) -> (T, Result<U2, Error>),
         F2: FnMut(U1, U2) -> U3,
     {
-        self.apply(f1, f2).next()
+        let self2 = self.apply(f1, f2);
+        if self2.res.is_ok() {
+            self2.next()
+        } else {
+            self2
+        }
     }
 
     // apply [f1] to the current node and [f2] to combine result
     // if error as occured in [f1] cusor not go to next
-    pub fn apply_opt<F1, F2, T2, U2, U3>(self, f1: &mut F1, f2: &mut F2) -> IterNode<'a, T2, U3>
+    pub fn apply_opt<F1, F2, U2, U3>(self, f1: &mut F1, f2: &mut F2) -> IterNode<'a, T, U3>
     where
-        F1: FnMut(T1, &Node<'a>) -> (T2, Result<U2, Error>),
+        F1: FnMut(T, &Node<'a>) -> (T, Result<U2, Error>),
         F2: FnMut(U1, Option<U2>) -> U3,
     {
- let node = self.cursor.node();
-        let (acc, res) = f1(self.acc, &node);
-        let cursor = self.cursor;
-        let res = match (self.res, res) {
-            (Ok(x), Ok(y)) =>
-                Ok(f2(x, Some(y))),
-            (Ok(x), Err(_)) =>
-                Ok(f2(x, None)),
-            | (Err(errors), Ok(_)) =>
-                 Err(errors),
-            (Err(errors1), Err(errors2)) =>
-                 Err(errors1.error_add(errors2))
-        };
-        IterNode {
-            cursor,
-            acc,
-            res,
+        match self.res {
+            Err(errors) => IterNode {
+                cursor: self.cursor,
+                acc: self.acc,
+                res: Err(errors),
+            },
+            Ok(x) => {
+                let node = self.cursor.node();
+                let (acc, res) = f1(self.acc, &node);
+                let res = match res {
+                    Ok(y) => Ok(f2(x, Some(y))),
+                    Err(_) => Ok(f2(x, None)),
+                };
+                IterNode {
+                    cursor: self.cursor,
+                    acc,
+                    res,
+                }
+            }
         }
     }
 
-    pub fn apply_opt_next<F1, F2, T2, U2, U3>(
-        self,
-        f1: &mut F1,
-        f2: &mut F2,
-    ) -> IterNode<'a, T2, U3>
+    pub fn apply_opt_next<F1, F2, U2, U3>(self, f1: &mut F1, f2: &mut F2) -> IterNode<'a, T, U3>
     where
-        F1: FnMut(T1, &Node<'a>) -> (T2, Result<U2, Error>),
+        F1: FnMut(T, &Node<'a>) -> (T, Result<U2, Error>),
         F2: FnMut(U1, Option<U2>) -> U3,
     {
         let mut is_ok = false;
@@ -122,7 +125,7 @@ impl<'a, T1, U1> IterNode<'a, T1, U1> {
     }
 
     /// map result
-    pub fn map<F, U2>(self, f: F) -> IterNode<'a, T1, U2>
+    pub fn map<F, U2>(self, f: F) -> IterNode<'a, T, U2>
     where
         F: FnOnce(U1) -> U2,
     {
@@ -145,11 +148,19 @@ impl<'a, T1, U1> IterNode<'a, T1, U1> {
     // apply [f1] to the until nodes and [f2] to combine results
     pub fn repeat<F1, F2, U2>(mut self, f1: &mut F1, f2: &mut F2) -> Self
     where
-        F1: FnMut(T1, &Node<'a>) -> (T1, Result<U2, Error>),
+        F1: FnMut(T, &Node<'a>) -> (T, Result<U2, Error>),
         F2: FnMut(U1, U2) -> U1,
     {
         loop {
-            self = self.apply(f1, f2);
+            let node = self.cursor.node();
+            let (acc, res2) = f1(self.acc, &node);
+            self.acc = acc;
+            let res3 = match (self.res, res2) {
+                (Ok(x), Ok(y)) => Ok(f2(x, y)),
+                (Err(e), Ok(_)) | (Ok(_), Err(e)) => Err(e),
+                (Err(e1), Err(e2)) => Err(e1.error_add(e2)),
+            };
+            self.res = res3;
             if !self.cursor.goto_next_sibling() {
                 break;
             }
@@ -158,7 +169,7 @@ impl<'a, T1, U1> IterNode<'a, T1, U1> {
     }
 
     // get result and accumulator
-    pub fn acc_result(self) -> (T1, Result<U1, Error>) {
+    pub fn acc_result(self) -> (T, Result<U1, Error>) {
         (self.acc, self.res)
     }
 }
