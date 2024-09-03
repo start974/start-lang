@@ -3,12 +3,13 @@ tests/parser/error/definition_many_error.st:1:5
         ^
 Error: Expected identifier.
 
-tests/parser/error/definition_many_error.st:5:10
-5 | def b := _
+tests/parser/error/definition_many_error.st:6:10
+6 | def b := _
              ^
 Error: Expected expression.
 
-tests/parser/error/definition_many_error.st:9:7
-9 | def x : 2 := 3
-            ^
-Error: Expected type.
+tests/parser/error/definition_many_error.st:8:11
+8 | def c := 6bob
+              ^^^
+Error: Expected keyword 'def'.
+

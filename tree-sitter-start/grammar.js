@@ -11,10 +11,10 @@ module.exports = grammar({
     ),
 
     expr_def: $ =>seq("def",
-      field("name", $.ident),
-      field("type", optional($.ty_restr)),
+      $.ident,
+      optional($.ty_restr),
       ":=",
-      field("body", $._expr)
+      $._expr
     ),
 
     ty_restr: $ =>
@@ -27,11 +27,11 @@ module.exports = grammar({
 
     _expr: $ => choice(
       seq ("(", $._expr , ")"),
-      $._const
+      $.constant
       // TODO: other expression
     ),
 
-    _const: $ => choice(
+    constant: $ => choice(
       $._number
     ),
 

@@ -1,7 +1,7 @@
 use super::super::location::{Located, Location};
 use super::constant;
 
-type NConst = u32;
+pub type NConst = u32;
 
 pub enum Constant {
     N(constant::Constant<NConst>),

@@ -55,7 +55,7 @@ impl ParseTree {
     pub fn to_program(&self) -> Result<Program, Error> {
         let root = self.tree.root_node();
         let parser = Parser::make(&self.file_name, &self.content);
-        let (_, res) = parser.parse_program(&root);
-        res
+        let (_, prog) = parser.parse_program(&root)?;
+        Ok(prog)
     }
 }

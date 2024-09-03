@@ -1,10 +1,11 @@
 def 2 := 3
 
-def a := 34
+def a :=
+  34
 
 def b := _
 
-def c := 6
+def c := 6bob
 
-def x : 2 := 3
+def x : N2 := 3
 

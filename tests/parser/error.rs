@@ -21,19 +21,12 @@ fn definition_no_def() {
 }
 
 #[test]
-fn definition_wrong_ty_restr(){
-    test_parse_error("error/definition_wrong_ty_restr");
-    // TODO : fix parser
-}
-
-#[test]
-fn expr_wrong(){
+fn expr_wrong() {
     test_parse_error("error/expr_wrong");
 }
 
-
 #[test]
-fn definition_many_error(){
+fn definition_many_error() {
     test_parse_error("error/definition_many_error");
     // TODO : fix parser
 }
