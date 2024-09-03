@@ -1,7 +1,6 @@
 use super::super::error::Error;
 use super::super::location::{Located, Location, Position};
 use super::ast::{Constant, Definition, Env, Expression, Ident, Program, Ty};
-use super::iter_node::IterNode;
 
 use tree_sitter::Node;
 
@@ -10,7 +9,7 @@ pub struct Parser {
     content: Vec<String>,
     env: Env,
 }
-type ParserResult<T> = (Parser, Result<T, Error>);
+type ParserResult<T> = Result<(Parser, T), Error>;
 
 impl Parser {
     pub fn make(file_name: &String, content: &[String]) -> Self {
@@ -29,31 +28,26 @@ impl Parser {
         Location::make(self.file_name.clone(), &self.content, pos_start, pos_end)
     }
 
-    fn error(&self, node: &Node, expect: &str) -> Error {
+    fn error<T>(self, node: &Node, expect: &str) -> ParserResult<T> {
         let msg = format!("Expected {expect}");
-        Error::error_located(&msg, self.location(node))
-    }
-
-    fn self_error_res<T>(self, node: &Node, expect: &str) -> ParserResult<T> {
-        let error = self.error(node, expect);
-        (self, Err(error))
+        Err(Error::error_located(&msg, self.location(node)))
     }
 
     fn check_keyword(self, node: &Node, expect: &str) -> ParserResult<()> {
         if node.kind() != expect {
             let expect = format!("keyword '{}'", expect);
-            self.self_error_res(node, &expect)
+            self.error(node, &expect)
         } else {
-            (self, Ok(()))
+            Ok((self, ()))
         }
     }
 
     fn check_operator(self, node: &Node, expect: &str) -> ParserResult<()> {
         if node.kind() != expect {
             let expect = format!("operator '{}'", expect);
-            self.self_error_res(node, &expect)
+            self.error(node, &expect)
         } else {
-            (self, Ok(()))
+            Ok((self, ()))
         }
     }
 
@@ -63,9 +57,9 @@ impl Parser {
                 let location = self.location(node);
                 let (env, ident) = self.env.of_location(&location);
                 self.env = env;
-                (self, Ok(ident.set_location(location)))
+                Ok((self, ident.set_location(location)))
             }
-            _ => self.self_error_res(node, "identifier"),
+            _ => self.error(node, "identifier"),
         }
     }
 
@@ -74,95 +68,94 @@ impl Parser {
             "number_N" => {
                 let location = self.location(node);
                 let val = location.text().parse::<u32>().unwrap();
-                (self, Ok(val))
+                Ok((self, val))
             }
-            _ => self.self_error_res(node, "number"),
+            _ => self.error(node, "number"),
         }
     }
 
-    fn parse_const(self, node: &Node) -> ParserResult<Constant> {
-        let err = self.error(node, "constant");
-        IterNode::new(node, self, ())
-            .apply(
-                &mut |parser, node_n| parser.parse_number_n(node_n),
-                &mut |(), n| n,
-            )
-            .map(Constant::make_n)
-            .map_error(|_| err)
-            .acc_result()
+    fn parse_constant(mut self, node: &Node) -> ParserResult<Constant> {
+        let child = node.child(0).unwrap();
+        match child.kind() {
+            "number_N" => {
+                let n;
+                (self, n) = self.parse_number_n(&child)?;
+                Ok((self, Constant::make_n(n)))
+            }
+            _ => self.error(node, "constant"),
+        }
     }
 
-    fn parse_expression(self, node: &Node) -> ParserResult<Expression> {
-        let err = self.error(node, "expression");
-        IterNode::new(node, self, ())
-            .apply(
-                &mut |parser, node_n| parser.parse_const(node_n),
-                &mut |(), n| n,
-            )
-            .map(Expression::make_constant)
-            .map_error(|_| err)
-            .acc_result()
+    fn parse_expression(mut self, node: &Node) -> ParserResult<Expression> {
+        match node.kind() {
+            "constant" => {
+                let constant;
+                (self, constant) = self.parse_constant(node)?;
+                Ok((self, Expression::make_constant(constant)))
+            }
+            _ => self.error(node, "expression"),
+        }
     }
 
-    fn parse_ty(self, node: &Node) -> ParserResult<Ty> {
-        let err = self.error(node, "type");
-        IterNode::new(node, self, ())
-            .apply(
-                &mut |parser, node_ident| parser.parse_ident(node_ident),
-                &mut |(), ident| ident,
-            )
-            .map(Ty::make_var)
-            .map_error(|_| err)
-            .acc_result()
+    fn parse_ty(mut self, node: &Node) -> ParserResult<Ty> {
+        match node.kind() {
+            "ident" => {
+                let ident;
+                (self, ident) = self.parse_ident(node)?;
+                Ok((self, Ty::make_var(ident)))
+            }
+            _ => self.error(node, "type"),
+        }
     }
 
     fn parse_ty_restr(self, node: &Node) -> ParserResult<Ty> {
-        match node.kind() {
-            "ty_restr" => IterNode::new(node, self, ())
-                .first_child()
-                .apply_next(
-                    &mut |parser, node_semi_col| parser.check_operator(node_semi_col, ":"),
-                    &mut |(), ()| (),
-                )
-                .apply(
-                    &mut |parser, node_ty| parser.parse_ty(node_ty),
-                    &mut |(), ty| ty,
-                )
-                .acc_result(),
-            _ => self.self_error_res(node, "type restriction"),
-        }
+        let parser = self;
+
+        let mut node = node.child(0).unwrap();
+        // colon
+        let (parser, ()) = parser.check_operator(&node, ":")?;
+
+        // ty
+        node = node.next_sibling().unwrap();
+        parser.parse_ty(&node)
     }
 
     fn parse_expr_def(self, node: &Node) -> ParserResult<Definition> {
-        let loc = self.location(node);
-        IterNode::new(node, self, ())
-            .first_child()
-            .apply_next(
-                &mut |parser, node_def| parser.check_keyword(node_def, "def"),
-                &mut |(), ()| (),
-            )
-            .apply_next(
-                &mut |parser, node_ident| parser.parse_ident(node_ident),
-                &mut |(), ident| ident,
-            )
-            .apply_opt_next(
-                &mut |parser, node_ty| parser.parse_ty_restr(node_ty),
-                &mut |ident, opt_ty| (ident, opt_ty),
-            )
-            .apply_next(
-                &mut |parser, node_eq_def| parser.check_operator(node_eq_def, ":="),
-                &mut |(ident, opt_ty), ()| (ident, opt_ty),
-            )
-            .apply(
-                &mut |parser, node_expr| parser.parse_expression(node_expr),
-                &mut |(ident, opt_ty), expr| (ident, opt_ty, expr),
-            )
-            .map(|(ident, opt_ty, expr)| {
-                Definition::make_expr_def(ident, expr)
-                    .set_opt_ty(opt_ty)
-                    .set_location(loc)
-            })
-            .acc_result()
+        // get location
+        let location = self.location(node);
+
+        let parser = self;
+
+        // definition node
+        let mut node = node.child(0).unwrap();
+        let (parser, ()) = parser.check_keyword(&node, "def")?;
+
+        // identifier
+        node = node.next_sibling().unwrap();
+        let (parser, ident) = parser.parse_ident(&node)?;
+
+        // type restriction
+        node = node.next_sibling().unwrap();
+        let (parser, opt_ty) = if node.grammar_name() == "ty_restr" {
+            let (parser, ty) = parser.parse_ty_restr(&node)?;
+            node = node.next_sibling().unwrap();
+            (parser, Some(ty))
+        } else {
+            (parser, None)
+        };
+
+        // eq def
+        let (parser, ()) = parser.check_operator(&node, ":=")?;
+
+        // body
+        node = node.next_sibling().unwrap();
+        let (parser, body) = parser.parse_expression(&node)?;
+
+        // make definition
+        let def = Definition::make_expr_def(ident, body)
+            .set_opt_ty(opt_ty)
+            .set_location(location);
+        Ok((parser, def))
     }
 
     fn parse_definition(self, node: &Node) -> ParserResult<Definition> {
@@ -170,16 +163,33 @@ impl Parser {
     }
 
     /// parse program
-    pub fn parse_program(self, node: &Node) -> ParserResult<Program> {
+    pub fn parse_program(mut self, node: &Node) -> ParserResult<Program> {
         match node.kind() {
-            "program" => IterNode::new(node, self, Program::empty())
-                .first_child()
-                .repeat(
-                    &mut |parser, node_def| parser.parse_definition(node_def),
-                    &mut |program, definition| program.add_definition(definition),
-                )
-                .acc_result(),
-            _ => self.self_error_res(node, "program"),
+            "program" => {
+                let mut res = Ok(Program::empty());
+                let content = self.content.clone();
+                let file_name = self.file_name.clone();
+                for i in 0..node.child_count() {
+                    let child = node.child(i).unwrap();
+
+                    match (self.parse_definition(&child), res) {
+                        (Ok((self2, def)), Ok(program)) => {
+                            self = self2;
+                            res = Ok(program.add_definition(def));
+                        }
+                        (Err(e), Ok(_)) | (Ok(_), Err(e)) => {
+                            self = Self::make(&file_name, &content);
+                            res = Err(e);
+                        }
+                        (Err(e2), Err(e1)) => {
+                            self = Self::make(&file_name, &content);
+                            res = Err(e1.error_add(e2));
+                        }
+                    };
+                }
+                res.map(|prog| (self, prog))
+            }
+            _ => self.error(node, "program"),
         }
     }
 }

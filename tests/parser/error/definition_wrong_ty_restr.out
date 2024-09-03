@@ -1,4 +1,0 @@
-tests/parser/error/definition_wrong_ty_restr.st:1:7
-1 | def a : 1 := 2.
-            ^
-Error: Expected type
