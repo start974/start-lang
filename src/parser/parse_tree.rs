@@ -1,6 +1,4 @@
 use super::super::error::Error;
-use super::ast::Program;
-use super::parse::Parser;
 
 use std::fs::File;
 use std::io::Read;
@@ -47,15 +45,24 @@ impl ParseTree {
             .map(|input| Self::of_string(file_name, &input))
     }
 
-    pub fn to_sexp(&self) -> String {
-        self.tree.root_node().to_sexp()
+    /// root node of tree
+    pub fn root_node(&self) -> tree_sitter::Node {
+        self.tree.root_node()
     }
 
-    // make a parseTree
-    pub fn to_program(&self) -> Result<Program, Error> {
-        let root = self.tree.root_node();
-        let parser = Parser::make(&self.file_name, &self.content);
-        let (_, prog) = parser.parse_program(&root)?;
-        Ok(prog)
+    /// get file_name
+    pub fn file_name(&self) -> &String {
+        &self.file_name
+    }
+
+    /// get content
+    pub fn content(&self) -> &Vec<String> {
+        &self.content
+    }
+}
+
+impl std::fmt::Display for ParseTree {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.root_node().to_sexp())
     }
 }

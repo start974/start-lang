@@ -2,6 +2,7 @@ mod ast;
 mod error;
 mod location;
 mod parser;
+mod stdlib;
 mod typing;
 
 fn get_file_name() -> Result<String, error::Error> {
@@ -16,9 +17,12 @@ fn get_file_name() -> Result<String, error::Error> {
 
 fn main() {
     let res = get_file_name()
-        .and_then(parser::ParseTree::of_file)
-        .inspect(|parse_tree| println!("sexp: {}", parse_tree.to_sexp()))
-        .and_then(|parse_tree| parse_tree.to_program());
+        .and_then(parser::parse_file)
+        .inspect(|parse_tree| println!("sexp:\n{parse_tree}"))
+        .and_then(parser::make_program)
+        .inspect(|wt_program| println!("weak typed program:\n{wt_program}"))
+        .and_then(typing::infer_type)
+        .inspect(|t_program| println!("typed program:\n{t_program}"));
 
     match res {
         Ok(program) => {

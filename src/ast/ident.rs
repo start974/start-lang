@@ -1,14 +1,39 @@
-use super::super::location::{Located, Location};
-use std::collections::HashMap;
+pub use super::super::location::{Located, Location};
 use std::fmt;
 use std::hash::{Hash, Hasher};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
-// TODO add location
+#[derive(Clone)]
 pub struct Ident {
     pub name: String,
     location: Option<Location>,
     id: u32,
 }
+
+impl From<String> for Ident {
+    fn from(name: String) -> Self {
+        static COUNTER: AtomicUsize = AtomicUsize::new(0);
+        Self {
+            name,
+            location: None,
+            id : COUNTER.fetch_add(1, Ordering::SeqCst) as u32,
+        }
+    }
+}
+
+impl From<&str> for Ident {
+    fn from(name: &str) -> Self {
+        name.to_string().into()
+    }
+}
+
+impl From<Location> for Ident {
+    fn from(location: Location) -> Self {
+        let name = location.text();
+        name.into()
+    }
+}
+
 
 impl fmt::Display for Ident {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -36,83 +61,13 @@ impl Hash for Ident {
     }
 }
 
-impl Clone for Ident {
-    fn clone(&self) -> Self {
-        Ident {
-            name: self.name.clone(),
-            id: self.id,
-            location: self.location.clone(),
-        }
-    }
-}
-
 impl Located for Ident {
     fn get_location(&self) -> &Option<Location> {
         &self.location
     }
 
-    fn set_location(mut self, location: Location) -> Self {
-        self.location = Some(location);
+    fn set_opt_location(mut self, opt_location: Option<Location>) -> Self {
+        self.location = opt_location;
         self
-    }
-}
-
-pub struct Env {
-    counter: u32,
-    map: HashMap<String, Ident>,
-}
-
-impl Env {
-    /// make
-    pub fn empty() -> Self {
-        Env {
-            counter: 0,
-            map: HashMap::new(),
-        }
-    }
-
-    /// make identifier with variable name
-    pub fn of_string(mut self, name: String) -> (Self, Ident) {
-        let id = self.counter;
-        self.counter += 1;
-        let ident = Ident {
-            name: name.clone(),
-            id,
-            location: None,
-        };
-        let _ = self.map.insert(name.clone(), ident);
-        let ident = self.map.get(&name).unwrap().clone();
-        (self, ident)
-    }
-
-    /// add identifier with location
-    pub fn of_location(self, location: &Location) -> (Self, Ident) {
-        let name = location.text();
-        self.of_string(name)
-    }
-
-    // get identifier with variable
-    //pub fn fresh(&mut self, location: &Option<Location>) -> &Ident {
-    //let name = "_x".to_string();
-    //self.make_ident(&name, location)
-    //}
-
-    // get variable
-    //pub fn get_var(&self, var: &String) -> Option<&Ident> {
-    //self.map.get(var)
-    //}
-}
-
-impl fmt::Debug for Env {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.map.is_empty() {
-            f.write_str("{ }")
-        } else {
-            f.write_str("{\n")?;
-            for (k, v) in &self.map {
-                writeln!(f, "  {} -> {}", k, v)?;
-            }
-            f.write_str("}")
-        }
     }
 }

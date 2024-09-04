@@ -1,9 +1,5 @@
-use super::super::ast;
+pub use super::super::ast::*;
 use std::fmt;
-
-pub type Ident = ast::Ident;
-pub type Env = ast::Env;
-pub type Ty = ast::Ty;
 
 type OptionTy = Option<Ty>;
 
@@ -12,20 +8,18 @@ pub trait WeakTyped {
     fn get_opt_ty(&self) -> &OptionTy;
 
     /// set type
-    fn set_ty(self, ty: Ty) -> Self;
+    fn set_opt_ty(self, ty: OptionTy) -> Self;
 }
 
-pub type Constant = ast::Constant;
-pub type ExpressionKind = ast::ExpressionKind;
-pub type Expression = ast::Expression<OptionTy>;
-pub type Definition = ast::Definition<OptionTy>;
-pub type Program = ast::Program<OptionTy>;
+pub type WTExpression = Expression<OptionTy>;
+pub type WTDefinition = Definition<OptionTy>;
+pub type WTProgram = Program<OptionTy>;
 
 /* ------------------------------------------------------------------------ */
 /* Expression */
 /* ------------------------------------------------------------------------ */
 
-impl Expression {
+impl WTExpression {
     pub fn make_constant(c: Constant) -> Self {
         Self {
             kind: ExpressionKind::Const(c),
@@ -33,14 +27,12 @@ impl Expression {
             location: None,
         }
     }
-    pub fn set_opt_ty(mut self, ty: OptionTy) -> Self {
+}
+
+impl WeakTyped for WTExpression {
+    fn set_opt_ty(mut self, ty: OptionTy) -> Self {
         self.ty = ty;
         self
-    }
-}
-impl WeakTyped for Expression {
-    fn set_ty(self, ty: Ty) -> Self {
-        self.set_opt_ty(Some(ty))
     }
 
     fn get_opt_ty(&self) -> &OptionTy {
@@ -48,7 +40,7 @@ impl WeakTyped for Expression {
     }
 }
 
-impl std::fmt::Display for Expression {
+impl std::fmt::Display for WTExpression {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match &self.kind {
             ExpressionKind::Const(c) => write!(f, "{c}"),
@@ -60,9 +52,9 @@ impl std::fmt::Display for Expression {
 /* Definition */
 /* ------------------------------------------------------------------------ */
 
-impl Definition {
+impl WTDefinition {
     /// make expression definition
-    pub fn make_expr_def(name: Ident, body: Expression) -> Self {
+    pub fn make_expr_def(name: Ident, body: WTExpression) -> Self {
         Self::ExprDef {
             name,
             ty: None,
@@ -71,17 +63,14 @@ impl Definition {
         }
     }
     // set type with option type
-    pub fn set_opt_ty(mut self, ty: Option<Ty>) -> Self {
+}
+
+impl WeakTyped for WTDefinition {
+    fn set_opt_ty(mut self, ty: Option<Ty>) -> Self {
         match &mut self {
             Self::ExprDef { ty: t, .. } => *t = ty,
         }
         self
-    }
-}
-
-impl WeakTyped for Definition {
-    fn set_ty(self, ty: Ty) -> Self {
-        self.set_opt_ty(Some(ty))
     }
 
     fn get_opt_ty(&self) -> &OptionTy {
@@ -91,7 +80,7 @@ impl WeakTyped for Definition {
     }
 }
 
-impl fmt::Display for Definition {
+impl fmt::Display for WTDefinition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Definition::ExprDef { name, body, ty, .. } => match ty {
