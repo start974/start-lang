@@ -1,48 +1,20 @@
-use super::super::location::{Located, Location};
+pub type NConst = u32;
 
-use std::str;
-
-pub struct Constant<T> {
-    val: T,
-    location: Option<Location>,
+#[derive(Debug, Clone)]
+pub enum Constant {
+    N(NConst),
 }
 
-pub struct ParseError;
-
-impl<T> Constant<T> {
-    pub fn make(val: T) -> Self {
-        Self {
-            val,
-            location: None,
-        }
+impl Constant {
+    pub fn make_n(v: NConst) -> Self {
+        Self::N(v)
     }
 }
 
-impl<T> Located for Constant<T> {
-    fn get_location(&self) -> &Option<Location> {
-        &self.location
-    }
-
-    fn set_location(mut self, location: Location) -> Self {
-        self.location = Some(location);
-        self
-    }
-}
-
-impl<T> str::FromStr for Constant<T>
-where
-    T: str::FromStr,
-{
-    type Err = ParseError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let v = s.parse::<T>().map_err(|_| ParseError)?;
-        Ok(Self::make(v))
-    }
-}
-
-impl<T: std::fmt::Display> std::fmt::Display for Constant<T> {
+impl std::fmt::Display for Constant {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.val)
+        match self {
+            Self::N(c) => write!(f, "{c}"),
+        }
     }
 }

@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct Position {
     row: usize,
     column: usize,
@@ -16,15 +17,7 @@ impl std::fmt::Display for Position {
     }
 }
 
-impl Clone for Position {
-    fn clone(&self) -> Self {
-        Position {
-            row: self.row,
-            column: self.column,
-        }
-    }
-}
-
+#[derive(Clone)]
 pub struct Location {
     file_name: String,
     lines: Vec<String>,
@@ -120,21 +113,15 @@ impl std::fmt::Debug for Location {
     }
 }
 
-impl Clone for Location {
-    fn clone(&self) -> Self {
-        Location {
-            file_name: self.file_name.clone(),
-            lines: self.lines.clone(),
-            start: self.start.clone(),
-            end: self.end.clone(),
-        }
-    }
-}
-
 pub trait Located {
     /// location of a node
     fn get_location(&self) -> &Option<Location>;
 
+    /// set optinal location
+    fn set_opt_location(self, opt_location: Option<Location>) -> Self;
+
     /// set location
-    fn set_location(self, location: Location) -> Self;
+    fn set_location(self, location: Location) -> Self where Self: Sized {
+        self.set_opt_location(Some(location))
+    }
 }

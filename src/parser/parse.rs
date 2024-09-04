@@ -1,13 +1,15 @@
 use super::super::error::Error;
 use super::super::location::{Located, Location, Position};
-use super::ast::{Constant, Definition, Env, Expression, Ident, Program, Ty};
+use super::super::stdlib::NAME_ENV;
+use super::ast::*;
+use super::env::NameEnv;
 
 use tree_sitter::Node;
 
 pub struct Parser {
     file_name: String,
     content: Vec<String>,
-    env: Env,
+    name_env: NameEnv,
 }
 type ParserResult<T> = Result<(Parser, T), Error>;
 
@@ -16,7 +18,7 @@ impl Parser {
         Self {
             file_name: file_name.to_owned(),
             content: content.to_vec(),
-            env: Env::empty(),
+            name_env: NAME_ENV.clone(),
         }
     }
 
@@ -55,19 +57,19 @@ impl Parser {
         match node.kind() {
             "ident" => {
                 let location = self.location(node);
-                let (env, ident) = self.env.of_location(&location);
-                self.env = env;
+                let (name_env, ident) = self.name_env.of_location(&location);
+                self.name_env = name_env;
                 Ok((self, ident.set_location(location)))
             }
             _ => self.error(node, "identifier"),
         }
     }
 
-    fn parse_number_n(self, node: &Node) -> ParserResult<u32> {
+    fn parse_number_n(self, node: &Node) -> ParserResult<NConst> {
         match node.kind() {
             "number_N" => {
                 let location = self.location(node);
-                let val = location.text().parse::<u32>().unwrap();
+                let val = location.text().parse::<NConst>().unwrap();
                 Ok((self, val))
             }
             _ => self.error(node, "number"),
@@ -86,12 +88,12 @@ impl Parser {
         }
     }
 
-    fn parse_expression(mut self, node: &Node) -> ParserResult<Expression> {
+    fn parse_expression(mut self, node: &Node) -> ParserResult<WTExpression> {
         match node.kind() {
             "constant" => {
                 let constant;
                 (self, constant) = self.parse_constant(node)?;
-                Ok((self, Expression::make_constant(constant)))
+                Ok((self, WTExpression::make_constant(constant)))
             }
             _ => self.error(node, "expression"),
         }
@@ -120,7 +122,7 @@ impl Parser {
         parser.parse_ty(&node)
     }
 
-    fn parse_expr_def(self, node: &Node) -> ParserResult<Definition> {
+    fn parse_expr_def(self, node: &Node) -> ParserResult<WTDefinition> {
         // get location
         let location = self.location(node);
 
@@ -152,18 +154,18 @@ impl Parser {
         let (parser, body) = parser.parse_expression(&node)?;
 
         // make definition
-        let def = Definition::make_expr_def(ident, body)
+        let def = WTDefinition::make_expr_def(ident, body)
             .set_opt_ty(opt_ty)
             .set_location(location);
         Ok((parser, def))
     }
 
-    fn parse_definition(self, node: &Node) -> ParserResult<Definition> {
+    fn parse_definition(self, node: &Node) -> ParserResult<WTDefinition> {
         self.parse_expr_def(node)
     }
 
     /// parse program
-    pub fn parse_program(mut self, node: &Node) -> ParserResult<Program> {
+    pub fn parse_program(mut self, node: &Node) -> ParserResult<WTProgram> {
         match node.kind() {
             "program" => {
                 let mut res = Ok(Program::empty());
