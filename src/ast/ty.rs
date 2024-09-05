@@ -1,5 +1,6 @@
 pub use super::super::location::{Located, Location};
 use super::ident::Ident;
+use std::hash::{Hash, Hasher};
 
 /// constant types
 #[derive(Debug, Clone)]
@@ -31,7 +32,6 @@ impl std::fmt::Display for Ty {
     }
 }
 
-
 impl Located for Ty {
     fn get_location(&self) -> &Option<Location> {
         &self.location
@@ -52,3 +52,9 @@ impl PartialEq for Ty {
 }
 
 impl Eq for Ty {}
+
+impl Hash for Ty {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        format!("{self}").hash(state);
+    }
+}

@@ -12,14 +12,6 @@ pub enum Definition<TyT> {
     },
 }
 
-impl<TyT> Definition<TyT> {
-    /// get identifier name of definition
-    pub fn get_name(&self) -> &Ident {
-        match self {
-            Definition::ExprDef { name, .. } => name,
-        }
-    }
-}
 
 impl<TyT> Located for Definition<TyT> {
     fn get_location(&self) -> &Option<Location> {

@@ -6,6 +6,9 @@ edition = "2021"
 [build-dependencies]
 cc="*"
 
+[dev-dependencies]
+pretty_assertions = "1.4.0"
+
 [dependencies]
 tree-sitter = "0.22"
 tree-sitter-start = { path = "./tree-sitter-start" }
