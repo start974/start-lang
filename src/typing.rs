@@ -9,6 +9,6 @@ pub type Typer = infer_type::Typer;
 
 pub fn infer_type(wtprogram: WTProgram) -> Result<ast::TProgram, Error> {
     let typer = Typer::new();
-    let (_, prog) = typer.type_program(&wtprogram)?;
-    Ok(prog)
+    let (_, res_prog) = typer.type_program(&wtprogram);
+    res_prog
 }

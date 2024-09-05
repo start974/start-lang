@@ -89,22 +89,27 @@ impl Parser {
     }
 
     fn parse_expression(mut self, node: &Node) -> ParserResult<WTExpression> {
+        let location = self.location(node);
         match node.kind() {
             "constant" => {
                 let constant;
                 (self, constant) = self.parse_constant(node)?;
-                Ok((self, WTExpression::make_constant(constant)))
+                Ok((
+                    self,
+                    WTExpression::make_constant(constant).set_location(location),
+                ))
             }
             _ => self.error(node, "expression"),
         }
     }
 
     fn parse_ty(mut self, node: &Node) -> ParserResult<Ty> {
+        let location = self.location(node);
         match node.kind() {
             "ident" => {
                 let ident;
                 (self, ident) = self.parse_ident(node)?;
-                Ok((self, Ty::make_var(ident)))
+                Ok((self, Ty::make_var(ident).set_location(location)))
             }
             _ => self.error(node, "type"),
         }

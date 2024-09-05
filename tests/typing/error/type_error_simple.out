@@ -1,0 +1,4 @@
+tests/typing/error/type_error_simple.st:1:12
+1 | def test : N2 := 1
+               ^^
+Error: Type 'N2' no exists.
