@@ -12,22 +12,26 @@ pub struct Typer {
 type TypingResult<T> = (Typer, Result<T, Error>);
 
 impl Typer {
-    pub fn new() -> Self {
+    pub fn make() -> Self {
         Self {
             env: TYPE_ENV.clone(),
         }
     }
 
-    fn add_binding(mut self, name: Ident, ty: Ty) -> Self {
-        self.env = self.env.add_binding(name, ty);
+    fn add_binding<T>(mut self, name: Ident, elm: &T) -> Self
+    where
+        T: Typed,
+    {
+        self.env = self.env.add_binding(name, elm.get_ty().clone());
         self
     }
 
-    fn assert_ty<T>(&self, ty1: &Ty, elm: &T) -> Result<(), Error>
+    fn assert_ty<T1, T2>(&self, elm1: &T1, elm2: &T2) -> Result<(), Error>
     where
-        T: WeakTyped + Located,
+        T1: Typed,
+        T2: WeakTyped + Located,
     {
-        match elm.get_opt_ty() {
+        match elm2.get_opt_ty() {
             Some(ty2) if !self.env.mem(ty2) => {
                 let msg = format!("Type '{ty2}' no exists");
                 match ty2.get_location() {
@@ -35,9 +39,9 @@ impl Typer {
                     Some(location) => Err(Error::error_located(&msg, location.clone())),
                 }
             }
-            Some(ty2) if ty1 != ty2 => {
+            Some(ty2) if elm1.get_ty() != ty2 => {
                 let msg = "Expected type {ty1}, found type {ty2}";
-                match (ty2.get_location(), elm.get_location()) {
+                match (ty2.get_location(), elm2.get_location()) {
                     (None, None) => panic!("{msg}"),
                     (_, Some(location))
                     | (Some(location), _) => Err(Error::error_located(msg, location.clone())),
@@ -50,14 +54,12 @@ impl Typer {
     pub fn type_expression(self, expr: &WTExpression) -> TypingResult<TExpression> {
         match &expr.kind {
             ExpressionKind::Const(constant) => {
-                let ty = constant.get_ty();
                 let res_expr =
-                    self.assert_ty(ty, expr)
+                    self.assert_ty(constant, expr)
                         .map(|()| expr.get_location().clone())
                         .map(|location|
-                        TExpression::make_constant(constant.clone(), ty.clone()
-                            .set_opt_location(location))
-                );
+                        TExpression::make_constant(constant.clone())
+                            .set_opt_location(location));
                 (self, res_expr)
             }
         }
@@ -74,10 +76,9 @@ impl Typer {
                 let (typing, res_body) = self.type_expression(body);
                 match res_body {
                     Ok(body) => {
-                        let ty = body.get_ty().clone();
-                        let typing = typing.add_binding(name.clone(), ty.clone());
-                        let res_def = typing.assert_ty(&ty, def).map(|()|
-                            TDefinition::make_expr_def(name.clone(), ty, body)
+                        let typing = typing.add_binding(name.clone(), &body);
+                        let res_def = typing.assert_ty(&body, def).map(|()|
+                            TDefinition::make_expr_def(name.clone(), body)
                     .set_opt_location(location.clone())
                         );
                         (typing, res_def)
