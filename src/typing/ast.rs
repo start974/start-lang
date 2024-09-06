@@ -27,10 +27,10 @@ impl Typed for Constant {
 /* ------------------------------------------------------------------------ */
 
 impl TExpression {
-    pub fn make_constant(c: Constant, ty: Ty) -> Self {
+    pub fn make_constant(c: Constant) -> Self {
         Self {
+            ty: c.get_ty().clone(),
             kind: ExpressionKind::Const(c),
-            ty,
             location: None,
         }
     }
@@ -56,11 +56,10 @@ impl std::fmt::Display for TExpression {
 
 impl TDefinition {
     /// make expression definition
-    pub fn make_expr_def(name: Ident, ty: Ty, body: TExpression) -> Self {
-        assert_eq!(ty, body.get_ty().clone());
+    pub fn make_expr_def(name: Ident, body: TExpression) -> Self {
         Self::ExprDef {
             name,
-            ty,
+            ty : body.get_ty().clone(),
             body,
             location: None,
         }

@@ -17,10 +17,13 @@ type_restr :
     ":" type
 
 type :
-    "(" type ")"
+    ident
 
 expr :
     "(" expr ")"
+
+number :
+    [0-9]+
 
 ident :
     [a-z-A-Z_][a-z-A-Z_(unicode)]*
