@@ -2,10 +2,12 @@ pub use super::super::location::{Located, Location};
 use super::constant::Constant;
 
 /// constant expression
+#[derive(Debug, Clone)]
 pub enum ExpressionKind {
     Const(Constant),
 }
 
+#[derive(Debug, Clone)]
 pub struct Expression<TyT> {
     pub kind: ExpressionKind,
     pub ty: TyT,

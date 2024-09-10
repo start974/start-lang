@@ -4,6 +4,7 @@ mod location;
 mod parser;
 mod stdlib;
 mod typing;
+mod interpreter;
 
 fn get_file_name() -> Result<String, error::Error> {
     let args: Vec<String> = std::env::args().collect();
@@ -22,12 +23,14 @@ fn main() {
         .and_then(parser::make_program)
         .inspect(|wt_program| println!("weak typed program:\n{wt_program}"))
         .and_then(typing::infer_type)
-        .inspect(|t_program| println!("typed program:\n{t_program}"));
+        .inspect(|t_program| println!("typed program:\n{t_program}"))
+        .and_then(interpreter::eval_program)
+        .inspect(|value| println!("value: {value}"));
+
 
     match res {
-        Ok(program) => {
-            println!("{program}");
-            std::process::exit(0)
+        Ok(value) => {
+            std::process::exit(value.try_into().unwrap())
         }
         Err(err) => {
             eprintln!("{err}");
