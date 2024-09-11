@@ -138,4 +138,11 @@ pub trait Located {
     {
         self.set_opt_location(Some(location))
     }
+
+    fn copy_location(self, other: &impl Located) -> Self
+    where
+        Self: Sized,
+    {
+        self.set_opt_location(other.get_location().clone())
+    }
 }

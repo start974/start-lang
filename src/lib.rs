@@ -5,3 +5,4 @@ pub mod parser;
 pub mod typing;
 pub mod stdlib;
 pub mod interpreter;
+pub mod utils;

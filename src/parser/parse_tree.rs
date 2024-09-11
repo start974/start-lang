@@ -5,17 +5,17 @@ use std::io::Read;
 use tree_sitter::Parser as TSTParser;
 use tree_sitter::Tree;
 
-pub struct ParseTree {
+pub struct ParseTree<'a> {
     tree: Tree,
-    file_name: String,
+    file_name: &'a str,
     content: Vec<String>,
 }
 
 const ERROR_FILE_NOT_FOUND: i32 = 101;
 const ERROR_READ: i32 = 102;
 
-impl ParseTree {
-    pub fn of_string(file_name: String, input: &String) -> Self {
+impl<'a> ParseTree<'a> {
+    pub fn of_string(file_name: &'a str, input: &String) -> Self {
         let mut parser = TSTParser::new();
         parser
             .set_language(&tree_sitter_start::language())
@@ -29,8 +29,8 @@ impl ParseTree {
         }
     }
 
-    pub fn of_file(file_name: String) -> Result<Self, Error> {
-        File::open(file_name.clone())
+    pub fn of_file(file_name: &'a str) -> Result<Self, Error> {
+        File::open(file_name)
             .map_err(|_| {
                 let msg = format!("No such file '{file_name}'");
                 Error::error_simple(&msg, ERROR_FILE_NOT_FOUND)
@@ -54,8 +54,8 @@ impl ParseTree {
     }
 
     /// get file_name
-    pub fn file_name(&self) -> &String {
-        &self.file_name
+    pub fn file_name(&self) -> &'a str {
+        self.file_name
     }
 
     /// get content
@@ -64,7 +64,7 @@ impl ParseTree {
     }
 }
 
-impl std::fmt::Display for ParseTree {
+impl<'a> std::fmt::Display for ParseTree<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.root_node().to_sexp())
     }

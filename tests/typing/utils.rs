@@ -3,7 +3,7 @@ use startlang::error::Error;
 use startlang::parser::{make_program, parse_file};
 use startlang::typing::{ast::TProgram, infer_type};
 
-fn f(file: String) -> Result<TProgram, Error> {
+fn f(file: &str) -> Result<TProgram, Error> {
     parse_file(file).and_then(make_program).and_then(infer_type)
 }
 

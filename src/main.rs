@@ -8,6 +8,7 @@ mod parser;
 mod repl;
 mod stdlib;
 mod typing;
+mod utils;
 
 use clap::Parser;
 
@@ -16,6 +17,6 @@ fn main() {
 
     match &args.file_name {
         None => repl::repl(),
-        Some(file_name) => interpret::interpret_file(&args, file_name.to_string()),
+        Some(file_name) => interpret::interpret_file(&args, file_name),
     }
 }
