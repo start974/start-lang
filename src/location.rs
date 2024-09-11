@@ -1,3 +1,5 @@
+use color_print::cformat;
+
 #[derive(Clone)]
 pub struct Position {
     row: usize,
@@ -62,54 +64,63 @@ impl Location {
     }
 
     /// location
-    fn fmt_location(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    pub fn string_location(&self) -> String {
         let start = self.start.row;
         let end = self.end.row;
         if start == end {
-            writeln!(f, "{}:{}", self.file_name, self.start)
+            format!("{}:{}", self.file_name, self.start)
         } else {
-            writeln!(f, "{}:{}-{}", self.file_name, self.start, self.end)
+            format!("{}:{}-{}", self.file_name, self.start, self.end)
         }
     }
 
     /// content
-    fn fmt_content(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    pub fn string_content(&self) -> String {
         let digits = self.digits();
         let mut i = self.start.row + 1;
+        let mut res = String::new();
         for line in &self.lines {
-            writeln!(f, "{:width$} | {line}", i, width = digits, line = line)?;
+            res += &format!("{:width$} | {line}\n", i, width = digits, line = line);
             i += 1;
         }
-        Ok(())
+        res
+    }
+
+    /// colored content
+    pub fn colored_content(&self) -> String {
+        let digits = self.digits();
+        let mut i = self.start.row + 1;
+        let mut res = String::new();
+        for line in &self.lines {
+            res += &cformat!(
+                "<blue>{:width$} | </>{line}\n",
+                i,
+                width = digits,
+                line = line
+            );
+            i += 1;
+        }
+        res
     }
 
     /// indicator
-    fn fmt_indicator(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    pub fn string_indicator(&self) -> String {
+        let mut res = String::new();
         if self.start.row == self.end.row {
-            writeln!(
-                f,
+            res = format!(
                 "   {:width$}{indicator}",
                 " ",
                 width = self.start.column + 1,
                 indicator = "^".repeat(self.end.column - self.start.column)
-            )
-        } else {
-            Ok(())
+            );
         }
-    }
-}
-
-impl std::fmt::Display for Location {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        self.fmt_location(f)?;
-        self.fmt_content(f)?;
-        self.fmt_indicator(f)
+        res
     }
 }
 
 impl std::fmt::Debug for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        self.fmt_location(f)
+        write!(f, "{}", self.string_location())
     }
 }
 
@@ -121,7 +132,10 @@ pub trait Located {
     fn set_opt_location(self, opt_location: Option<Location>) -> Self;
 
     /// set location
-    fn set_location(self, location: Location) -> Self where Self: Sized {
+    fn set_location(self, location: Location) -> Self
+    where
+        Self: Sized,
+    {
         self.set_opt_location(Some(location))
     }
 }

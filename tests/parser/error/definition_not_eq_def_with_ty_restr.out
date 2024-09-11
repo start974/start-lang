@@ -1,4 +1,3 @@
-tests/parser/error/definition_not_eq_def_with_ty_restr.st:1:11
+Error[203]: tests/parser/error/definition_not_eq_def_with_ty_restr.st:1:11
 1 | def a : N = 32
-              ^
-Error: Expected operator ':='.
+              ^ Expected operator ':='

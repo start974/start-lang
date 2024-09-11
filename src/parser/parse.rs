@@ -13,6 +13,10 @@ pub struct Parser {
 }
 type ParserResult<T> = Result<(Parser, T), Error>;
 
+const ERROR_KIND: i32 = 201;
+const ERROR_KEYWORD: i32 = 202;
+const ERROR_OPERATOR: i32 = 203;
+
 impl Parser {
     pub fn make(file_name: &String, content: &[String]) -> Self {
         Self {
@@ -30,15 +34,19 @@ impl Parser {
         Location::make(self.file_name.clone(), &self.content, pos_start, pos_end)
     }
 
-    fn error<T>(self, node: &Node, expect: &str) -> ParserResult<T> {
+    fn error<T>(self, node: &Node, expect: &str, code: i32) -> ParserResult<T> {
         let msg = format!("Expected {expect}");
-        Err(Error::error_located(&msg, self.location(node)))
+        Err(Error::error_located(&msg, self.location(node), code))
+    }
+
+    fn error_kind<T>(self, node: &Node, expect: &str) -> ParserResult<T> {
+        self.error(node, expect, ERROR_KIND)
     }
 
     fn check_keyword(self, node: &Node, expect: &str) -> ParserResult<()> {
         if node.kind() != expect {
             let expect = format!("keyword '{}'", expect);
-            self.error(node, &expect)
+            self.error(node, &expect, ERROR_KEYWORD)
         } else {
             Ok((self, ()))
         }
@@ -47,7 +55,7 @@ impl Parser {
     fn check_operator(self, node: &Node, expect: &str) -> ParserResult<()> {
         if node.kind() != expect {
             let expect = format!("operator '{}'", expect);
-            self.error(node, &expect)
+            self.error(node, &expect, ERROR_OPERATOR)
         } else {
             Ok((self, ()))
         }
@@ -61,7 +69,7 @@ impl Parser {
                 self.name_env = name_env;
                 Ok((self, ident.set_location(location)))
             }
-            _ => self.error(node, "identifier"),
+            _ => self.error_kind(node, "identifier"),
         }
     }
 
@@ -72,7 +80,7 @@ impl Parser {
                 let val = location.text().parse::<NConst>().unwrap();
                 Ok((self, val))
             }
-            _ => self.error(node, "number"),
+            _ => self.error_kind(node, "number"),
         }
     }
 
@@ -84,7 +92,7 @@ impl Parser {
                 (self, n) = self.parse_number_n(&child)?;
                 Ok((self, Constant::make_n(n)))
             }
-            _ => self.error(node, "constant"),
+            _ => self.error_kind(node, "constant"),
         }
     }
 
@@ -99,7 +107,7 @@ impl Parser {
                     WTExpression::make_constant(constant).set_location(location),
                 ))
             }
-            _ => self.error(node, "expression"),
+            _ => self.error_kind(node, "expression"),
         }
     }
 
@@ -111,7 +119,7 @@ impl Parser {
                 (self, ident) = self.parse_ident(node)?;
                 Ok((self, Ty::make_var(ident).set_location(location)))
             }
-            _ => self.error(node, "type"),
+            _ => self.error_kind(node, "type"),
         }
     }
 
@@ -196,7 +204,7 @@ impl Parser {
                 }
                 res.map(|prog| (self, prog))
             }
-            _ => self.error(node, "program"),
+            _ => self.error_kind(node, "program"),
         }
     }
 }
