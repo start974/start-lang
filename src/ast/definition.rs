@@ -21,6 +21,7 @@ impl<TyT> ExprDef<TyT> {
         &self.body
     }
 }
+
 impl<TyT> Located for ExprDef<TyT> {
     fn get_location(&self) -> &Option<Location> {
         &self.location

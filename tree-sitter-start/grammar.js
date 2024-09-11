@@ -1,6 +1,6 @@
 module.exports = grammar({
   name: 'start',
-
+  word: $ => $.ident,
   rules: {
     program: $ =>
       repeat($._definition),

@@ -2,7 +2,7 @@ use startlang::error::Error;
 use startlang::parser::{ast::WTProgram, make_program, parse_file};
 use super::super::utils;
 
-fn f(file: String) -> Result<WTProgram, Error>{
+fn f(file: &str) -> Result<WTProgram, Error>{
     parse_file(file).and_then(make_program)
 }
 

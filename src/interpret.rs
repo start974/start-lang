@@ -12,7 +12,7 @@ where
     }
 }
 
-pub fn interpret_file(args: &Args, file_name: String) {
+pub fn interpret_file(args: &Args, file_name: &str) {
     let res = Ok(file_name)
         .and_then(parser::parse_file)
         .inspect(|parse_tree| debug_print(args.debug_sexp, "SEXP", parse_tree))

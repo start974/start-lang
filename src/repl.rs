@@ -1,25 +1,59 @@
-//use super::parser::NameEnv;
-//use super::parser::Parser;
+//use super::parser::{Parser, ParseTree};
+//use super::parser::ast::{WTDefinition, WTExpression};
 //use super::stdlib::NAME_ENV;
 use rustyline::DefaultEditor;
 
-//struct Env<'a> {
-    //parser: Parser<'a>,
-//}
+/*struct Env<'a> {*/
+    /*parser: Parser<'a>,*/
+/*}*/
 
-/*impl Env {*/
-    /*const file_name: String = "<<stdin>>".to_string();*/
+/*enum WTExprOrDef {*/
+    /*Expr(WTExpression),*/
+    /*Def(WTDefinition)*/
+/*}*/
 
-    /*pub fn new() -> Self {*/
-    /*let parser = Parser::make("<<stdin>>".to_string(), &[], NameEnv::new());*/
-        /*Self {*/
-            /*NameEnv: NAME_ENV.clone()*/
+/*const FILE_NAME: &str = "<<stdin>>";*/
+//const ERROR_EXPR_OR_DEF: i32 = 201;
+
+/*impl<'a> Env<'a> {*/
+    /*fn new() -> Self {*/
+        /*let parser = Parser::make(FILE_NAME, &[], NAME_ENV.clone());*/
+        /*Self { parser }*/
+    /*}*/
+
+    /*fn ok<T>(self, val: T) -> ResultEnv<T> {*/
+        /*(self, Ok(val))*/
+    /*}*/
+
+    /*fn from_parser_result<T>(mut self, pres: ParserResult<'a, T>) -> ResultEnv<T> {*/
+        /*self.parser = pres.parser();*/
+        /*let res = pres.result();*/
+        /*(self, res)*/
+    /*}*/
+
+    /*fn parse_string(mut self, content: &String) -> Result<ExprOrDef {*/
+        /*let node = ParseTree::of_string(FILE_NAME, content).root_node();*/
+        /*let (parser, res) = match node.kind() {*/
+            /*"expression" => {*/
+                /*self.parser.parse_expression(&node);*/
+            /*}*/
+            /*"definition" => {*/
+                /*self.parser.parse_definition(&node);*/
+            /*}*/
+            /*_ => {*/
+                /*let location = self.parser.location(&node);*/
+                /*let err = Error::error_located(*/
+                    /*"Expected expression or definition",*/
+                    /*location, 201);*/
+
+                /*(self.parser, Err(err))*/
+            /*}*/
         /*}*/
+        /*self.parser = parser;*/
+        /*(self, res)*/
     /*}*/
 
-    /*pub parse_string(&self, content: &String) -> ParseTree {*/
-        /*ParseTree::of_string("repl".to_string(), content)*/
-    /*}*/
+
 /*}*/
 
 pub fn repl() {
