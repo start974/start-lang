@@ -1,22 +1,35 @@
 use super::location::Location;
+
+use color_print::cformat;
 use std::collections::VecDeque;
 
 #[derive(Debug)]
 pub enum Error {
-    Simple(String),
-    Located { location: Location, msg: String },
+    Simple {
+        code: i32,
+        msg: String,
+    },
+    Located {
+        code: i32,
+        location: Location,
+        msg: String,
+    },
     Errors(VecDeque<Error>),
 }
 
 impl Error {
     /// make simple error
-    pub fn error_simple(msg: &str) -> Self {
-        Self::Simple(msg.to_string())
+    pub fn error_simple(msg: &str, code: i32) -> Self {
+        Self::Simple {
+            code,
+            msg: msg.to_string(),
+        }
     }
 
     /// make located error
-    pub fn error_located(msg: &str, location: Location) -> Self {
+    pub fn error_located(msg: &str, location: Location, code: i32) -> Self {
         Self::Located {
+            code,
             location,
             msg: msg.to_string(),
         }
@@ -46,16 +59,69 @@ impl Error {
         };
         Self::Errors(errors)
     }
+
+    /// get code
+    pub fn get_code(&self) -> i32 {
+        match self {
+            Self::Simple { code, .. } => *code,
+            Self::Located { code, .. } => *code,
+            Self::Errors(_) => 1,
+        }
+    }
+    /// colored error
+    pub fn colored(&self) -> String {
+        match self {
+            Self::Simple { code, msg } => {
+                cformat!("<red><bold>Error[{code}]:</bold> {msg}</red>.\n")
+            }
+            Self::Located {
+                code,
+                location,
+                msg,
+            } => {
+                let mut res = String::new();
+                res += &cformat!(
+                    "<red><bold>Error[{code}]</></> {}\n",
+                    location.string_location()
+                );
+                res += &cformat!("{}", location.colored_content());
+                res += &cformat!("<red><bold>{}</> {}</>\n", location.string_indicator(), msg);
+                res
+            }
+            Self::Errors(errors) => {
+                let mut msg = String::new();
+                for (i, error) in  errors.iter().enumerate() {
+                    if i != 0 {
+                        msg += "\n";
+                    }
+                    msg += &error.colored();
+                }
+                msg
+            }
+        }
+    }
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Simple(msg) => writeln!(f, "Error: {}.", msg),
-            Self::Located { location, msg } => writeln!(f, "{}Error: {}.", location, msg),
+            Self::Simple { code, msg } => writeln!(f, "Error[{code}]: {msg}."),
+            Self::Located {
+                code,
+                location,
+                msg,
+            } => {
+                writeln!(f, "Error[{code}]: {}", location.string_location())?;
+                write!(f, "{}", location.string_content())?;
+                writeln!(f, "{} {}", location.string_indicator(), msg)
+            }
+
             Self::Errors(errors) => {
-                for error in errors {
-                    writeln!(f, "{error}")?;
+                for (i, error) in  errors.iter().enumerate() {
+                    if i != 0 {
+                        writeln!(f)?;
+                    }
+                    write!(f, "{error}")?;
                 }
                 Ok(())
             }

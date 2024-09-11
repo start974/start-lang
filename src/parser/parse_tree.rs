@@ -11,6 +11,9 @@ pub struct ParseTree {
     content: Vec<String>,
 }
 
+const ERROR_FILE_NOT_FOUND: i32 = 101;
+const ERROR_READ: i32 = 102;
+
 impl ParseTree {
     pub fn of_string(file_name: String, input: &String) -> Self {
         let mut parser = TSTParser::new();
@@ -30,7 +33,7 @@ impl ParseTree {
         File::open(file_name.clone())
             .map_err(|_| {
                 let msg = format!("No such file '{file_name}'.");
-                Error::error_simple(&msg)
+                Error::error_simple(&msg, ERROR_FILE_NOT_FOUND)
             })
             .and_then(|mut file| {
                 let mut input = String::new();
@@ -38,7 +41,7 @@ impl ParseTree {
                     Ok(_) => Ok(input),
                     Err(_) => {
                         let msg = format!("Cannot read file '{file_name}'.");
-                        Err(Error::error_simple(&msg))
+                        Err(Error::error_simple(&msg, ERROR_READ))
                     }
                 }
             })

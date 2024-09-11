@@ -7,6 +7,7 @@ mod stdlib;
 mod typing;
 
 use clap::Parser;
+use color_print::cformat;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -27,38 +28,35 @@ struct Args {
     no_color: bool,
 }
 
-fn get_file_name() -> Result<String, error::Error> {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() != 2 {
-        let err = error::Error::error_simple("Please provide a file name");
-        Err(err)
-    } else {
-        Ok(args[1].clone())
-    }
-}
-
-fn debug_print(printing: bool, msg: String) {
+fn debug_print<T>(printing: bool, name: &str, elm: T)
+where
+    T: std::fmt::Display,
+{
     if printing {
-        eprintln!("{msg}");
+        let msg = cformat!("<cyan>{name} :</>\n{elm}");
+        eprintln!("{msg}")
     }
 }
 
 fn eval_file(args: &Args, file_name: String) {
     let res = Ok(file_name)
         .and_then(parser::parse_file)
-        .inspect(|parse_tree| debug_print(args.debug_sexp, format!("SEXP:\n{parse_tree}")))
+        .inspect(|parse_tree| debug_print(args.debug_sexp, "SEXP", parse_tree))
         .and_then(parser::make_program)
-        .inspect(|wt_program| {
-            debug_print(args.debug_parser, format!("Parsed program:\n{wt_program}"))
-        })
+        .inspect(|wt_program| debug_print(args.debug_parser, "Parsed program", wt_program))
         .and_then(typing::infer_type)
-        .inspect(|t_program| debug_print(args.debug_typer, format!("Typed program:\n{t_program}")))
+        .inspect(|t_program| debug_print(args.debug_typer, "Typed program", t_program))
         .and_then(interpreter::eval_program);
     match res {
         Ok(ret_code) => std::process::exit(ret_code.try_into().unwrap()),
         Err(err) => {
-            eprintln!("{err}");
-            std::process::exit(1)
+            let msg = if args.no_color {
+                err.to_string()
+            } else {
+                err.colored()
+            };
+            eprint!("{msg}");
+            std::process::exit(err.get_code())
         }
     }
 }

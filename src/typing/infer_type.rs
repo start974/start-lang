@@ -11,6 +11,9 @@ pub struct Typer {
 
 type TypingResult<T> = (Typer, Result<T, Error>);
 
+const ERROR_TYPE_NOT_FOUND: i32 = 301;
+const ERROR_TYPE_MISMATCH: i32 = 302;
+
 impl Typer {
     pub fn make() -> Self {
         Self {
@@ -33,19 +36,25 @@ impl Typer {
     {
         match elm2.get_opt_ty() {
             Some(ty2) if !self.env.mem(ty2) => {
-                let msg = format!("Type '{ty2}' no exists");
+                let msg = format!("Type '{ty2}' not found");
                 match ty2.get_location() {
-                    None => panic!("{msg}"),
-                    Some(location) => Err(Error::error_located(&msg, location.clone())),
+                    None => panic!("{}", Error::error_simple(&msg, ERROR_TYPE_NOT_FOUND)),
+                    Some(location) => Err(Error::error_located(
+                        &msg,
+                        location.clone(),
+                        ERROR_TYPE_NOT_FOUND,
+                    )),
                 }
             }
             Some(ty2) if elm1.get_ty() != ty2 => {
                 let msg = "Expected type {ty1}, found type {ty2}";
                 match (ty2.get_location(), elm2.get_location()) {
-                    (None, None) => panic!("{msg}"),
-                    (_, Some(location)) | (Some(location), _) => {
-                        Err(Error::error_located(msg, location.clone()))
-                    }
+                    (None, None) => panic!("{}", Error::error_simple(msg, ERROR_TYPE_MISMATCH)),
+                    (_, Some(location)) | (Some(location), _) => Err(Error::error_located(
+                        msg,
+                        location.clone(),
+                        ERROR_TYPE_MISMATCH,
+                    )),
                 }
             }
             _ => Ok(()),
