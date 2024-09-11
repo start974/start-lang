@@ -32,7 +32,7 @@ impl ParseTree {
     pub fn of_file(file_name: String) -> Result<Self, Error> {
         File::open(file_name.clone())
             .map_err(|_| {
-                let msg = format!("No such file '{file_name}'.");
+                let msg = format!("No such file '{file_name}'");
                 Error::error_simple(&msg, ERROR_FILE_NOT_FOUND)
             })
             .and_then(|mut file| {

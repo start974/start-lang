@@ -2,7 +2,7 @@ use super::super::utils;
 use startlang::error::Error;
 use startlang::interpreter::eval_program;
 use startlang::parser::{make_program, parse_file};
-use startlang::typing::{ast::TProgram, infer_type};
+use startlang::typing::infer_type;
 
 fn f(file: String) -> Result<u32, Error> {
     parse_file(file)
