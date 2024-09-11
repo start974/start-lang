@@ -51,7 +51,7 @@ impl Error {
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Simple(msg) => writeln!(f, "Error: {}", msg),
+            Self::Simple(msg) => writeln!(f, "Error: {}.", msg),
             Self::Located { location, msg } => writeln!(f, "{}Error: {}.", location, msg),
             Self::Errors(errors) => {
                 for error in errors {
