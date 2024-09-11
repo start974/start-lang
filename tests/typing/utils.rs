@@ -13,6 +13,6 @@ pub fn test_error(suffix: &str) {
     utils::test_error(PREFIX, suffix, f)
 }
 
-pub fn test_ok(suffix: &str) {
-    utils::test_ok(PREFIX, suffix, f)
+pub fn test_out(suffix: &str) {
+    utils::test_out(PREFIX, suffix, f)
 }
