@@ -14,7 +14,7 @@ module.exports = grammar({
       $.ident,
       optional($.ty_restr),
       ":=",
-      $._expr
+      $._expr_final
     ),
 
     ty_restr: $ =>
@@ -24,6 +24,9 @@ module.exports = grammar({
       $.ident
       // TODO: other types
     ),
+
+    _expr_final: $ =>
+      seq($._expr, optional(".")),
 
     _expr: $ => choice(
       seq ("(", $._expr , ")"),

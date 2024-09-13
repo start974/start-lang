@@ -3,32 +3,41 @@ use super::super::error::Error;
 use std::fs::File;
 use std::io::Read;
 use tree_sitter::Parser as TSTParser;
-use tree_sitter::Tree;
+use tree_sitter::{Language, Tree};
 
 pub struct ParseTree<'a> {
-    tree: Tree,
     file_name: &'a str,
-    content: Vec<String>,
+    content: Option<String>,
+    parser: TSTParser,
+    tree: Option<Tree>,
 }
 
 const ERROR_FILE_NOT_FOUND: i32 = 101;
 const ERROR_READ: i32 = 102;
 
 impl<'a> ParseTree<'a> {
-    pub fn of_string(file_name: &'a str, input: &String) -> Self {
-        let mut parser = TSTParser::new();
-        parser
-            .set_language(&tree_sitter_start::language())
-            .expect("Error loading start grammar.");
-        let tree = parser.parse(input, None).expect("Parsing error.");
-        let content = input.split('\n').map(str::to_string).collect();
-        ParseTree {
-            tree,
+    // create a new ParseTree
+    pub fn make(file_name: &'a str) -> Self {
+        Self {
             file_name,
-            content,
+            content: None,
+            parser: TSTParser::new(),
+            tree: None,
         }
     }
 
+    pub fn set_content(mut self, content: String) -> Self {
+        self.content = Some(content);
+        self.tree = None;
+        self
+    }
+
+    pub fn set_file_name(mut self, file_name: &'a str) -> Self {
+        self.file_name = file_name;
+        self
+    }
+
+    // create a ParseTree from a file
     pub fn of_file(file_name: &'a str) -> Result<Self, Error> {
         File::open(file_name)
             .map_err(|_| {
@@ -45,27 +54,58 @@ impl<'a> ParseTree<'a> {
                     }
                 }
             })
-            .map(|input| Self::of_string(file_name, &input))
+            .map(|content| Self::make(file_name).set_content(content))
     }
 
-    /// root node of tree
+    /// set language
+    pub fn set_language(mut self, language: &Language) -> Self {
+        self.parser
+            .set_language(language)
+            .expect("Error loading start grammar.");
+        self
+    }
+
+    /// parse content
+    /// can fail if content is not set or parsing fail or content not set
+    pub fn parse(mut self) -> Self {
+        if self.tree.is_none() {
+            let content = self
+                .content
+                .as_ref()
+                .expect("please call ParseTree::set_content");
+            let tree = self.parser.parse(content, None).expect("Parsing error.");
+            self.tree = Some(tree);
+        }
+        self
+    }
+
+    /// get tree sitter tree
+    pub fn get_tree(&self) -> &Tree {
+        self.tree.as_ref().expect("please call Parser::parse")
+    }
+
+    /// get root node
     pub fn root_node(&self) -> tree_sitter::Node {
-        self.tree.root_node()
+        self.get_tree().root_node()
+    }
+
+    /// sexp of node parsed
+    pub fn sexp(&self) -> String {
+        self.root_node().to_sexp()
     }
 
     /// get file_name
-    pub fn file_name(&self) -> &'a str {
+    pub fn get_file_name(&self) -> &'a str {
         self.file_name
     }
 
     /// get content
-    pub fn content(&self) -> &Vec<String> {
-        &self.content
-    }
-}
-
-impl<'a> std::fmt::Display for ParseTree<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.root_node().to_sexp())
+    pub fn get_content(&self) -> Vec<String> {
+        self.content
+            .clone()
+            .expect("please call ParseTree::set_content")
+            .split('\n')
+            .map(|s| s.to_string())
+            .collect()
     }
 }

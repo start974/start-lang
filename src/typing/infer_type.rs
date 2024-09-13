@@ -35,7 +35,7 @@ impl Typer {
     }
 
     fn error<T>(self, err: Error) -> TypingResult<T> {
-        TypingResult::<T>::error(self, err)
+        TypingResult::error(self, err)
     }
 
     fn assert_ty<T1, T2>(self, elm1: &T1, elm2: &T2) -> TypingResult<()>

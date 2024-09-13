@@ -51,7 +51,7 @@ impl<'a> Parser<'a> {
         let msg = format!("Expected {expect}");
         let location = self.location(node);
         let err = Error::error_located(&msg, location, code);
-        ParserResult::<T>::error(self, err)
+        ParserResult::error(self, err)
     }
 
     fn ok<T>(self, val: T) -> ParserResult<'a, T> {
@@ -202,7 +202,47 @@ impl<'a> Parser<'a> {
                 }
                 res
             }
-            _ => self.error_kind(node, "program"),
+            _ => { println!("kind {node}");
+                self.error_kind(node, "program")},
         }
     }
+
+    /// parse definitions
+    pub fn parse_repl_definitions(self, node: &Node) -> ParserResult<'a, WTProgram> {
+        match node.kind() {
+            "definitions" => {
+                let mut res = self.ok(Program::empty());
+                for i in 0..node.child_count() {
+                    let child = node.child(i).unwrap();
+                    res = res.combine(
+                        |parser| parser.parse_definition(&child),
+                        Program::add_definition,
+                    );
+                }
+                res
+            }
+            _ => { println!("kind {node}");
+                self.error_kind(node, "program")},
+        }
+    }
+
+    pub fn parse_repl_expression(self, node: &Node) -> ParserResult<'a, WTExpression> {
+        match node.kind() {
+            "expression" => self.parse_expression(node),
+            _ => self.error_kind(node, "expression"),
+        }
+    }
+
+    pub fn parse_definitions_or_expression(self, node: &Node) -> ParserResult<'a, WTDefsOrExpr> {
+        match node.kind() {
+            "definitions" => self
+                .parse_repl_definitions(node)
+                .map_res(WTDefsOrExpr::Definitions),
+            "expression" => self
+                .parse_repl_expression(node)
+                .map_res(WTDefsOrExpr::Expression),
+            _ => self.error_kind(node, "definitions or expression"),
+        }
+    }
+
 }

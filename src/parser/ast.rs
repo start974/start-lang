@@ -15,6 +15,7 @@ pub type WTExpression = Expression<OptionTy>;
 pub type WTExprDef = ExprDef<OptionTy>;
 pub type WTDefinition = Definition<OptionTy>;
 pub type WTProgram = Program<WTDefinition>;
+pub type WTDefsOrExpr = DefsOrExpr<WTDefinition, OptionTy>;
 
 /* ------------------------------------------------------------------------ */
 /* Expression */

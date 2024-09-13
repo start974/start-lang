@@ -16,7 +16,7 @@ fn main() {
     let args = args::Args::parse();
 
     match &args.file_name {
-        None => repl::repl(),
+        None => repl::repl(&args),
         Some(file_name) => interpret::interpret_file(&args, file_name),
     }
 }
