@@ -6,21 +6,40 @@ pub struct FResult<T, U> {
 }
 
 impl<T, U> FResult<T, U> {
-    pub fn ok(acc: T, res: U) -> Self {
-        Self { acc, res: Ok(res) }
+
+    pub fn make(acc: T, res: Result<U, Error>) -> Self {
+        Self { acc, res }
     }
 
-    pub fn error<U2>(acc: T, err: Error) -> FResult<T, U2> {
-        FResult { acc, res: Err(err) }
+    pub fn ok(acc: T, res: U) -> Self {
+        Self::make(acc, Ok(res))
+    }
+
+    pub fn error(acc: T, err: Error) -> Self {
+        Self::make(acc, Err(err))
     }
 
     pub fn get_res(self) -> Result<U, Error> {
         self.res
     }
 
-    //pub fn get_acc(self) -> T {
-    //self.acc
-    //}
+    pub fn get_acc(self) -> T {
+        self.acc
+    }
+
+    pub fn get_pair(self) -> (T, Result<U, Error>) {
+        (self.acc, self.res)
+    }
+
+    pub fn or_else<F>(self, f: F) -> FResult<T, U>
+    where
+        F: FnOnce(T) -> FResult<T, U>,
+    {
+        match self.res {
+            Ok(_) => self,
+            Err(_) => f(self.acc),
+        }
+    }
 }
 
 impl<T, U1> FResult<T, U1> {
@@ -30,7 +49,7 @@ impl<T, U1> FResult<T, U1> {
     {
         match self.res {
             Ok(val) => f(self.acc, val),
-            Err(e) => Self::error(self.acc, e),
+            Err(e) => FResult::error(self.acc, e),
         }
     }
 
@@ -93,4 +112,9 @@ impl<T1, U> FResult<T1, U> {
             Err(_) => self,
         }
     }
+
+    //pub fn set_acc<T2>(self, acc: T2) -> FResult<T2, U>
+    //{
+        //FResult { acc, res: self.res }
+    //}
 }

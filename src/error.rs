@@ -1,4 +1,5 @@
 use super::location::Location;
+use super::utils::colored::Colored;
 
 use color_print::cformat;
 use std::collections::VecDeque;
@@ -68,8 +69,37 @@ impl Error {
             Self::Errors(_) => 1,
         }
     }
+}
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Simple { code, msg } => writeln!(f, "Error[{code}]: {msg}."),
+            Self::Located {
+                code,
+                location,
+                msg,
+            } => {
+                writeln!(f, "Error[{code}]: {}", location.string_location())?;
+                write!(f, "{}", location.string_content())?;
+                writeln!(f, "{} {}", location.string_indicator(), msg)
+            }
+
+            Self::Errors(errors) => {
+                for (i, error) in errors.iter().enumerate() {
+                    if i != 0 {
+                        writeln!(f)?;
+                    }
+                    write!(f, "{error}")?;
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+impl Colored for Error {
     /// colored error
-    pub fn colored(&self) -> String {
+    fn colored(&self) -> String {
         match self {
             Self::Simple { code, msg } => {
                 cformat!("<red><bold>Error[{code}]:</bold> {msg}</red>.\n")
@@ -90,40 +120,13 @@ impl Error {
             }
             Self::Errors(errors) => {
                 let mut msg = String::new();
-                for (i, error) in  errors.iter().enumerate() {
+                for (i, error) in errors.iter().enumerate() {
                     if i != 0 {
                         msg += "\n";
                     }
                     msg += &error.colored();
                 }
                 msg
-            }
-        }
-    }
-}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Simple { code, msg } => writeln!(f, "Error[{code}]: {msg}."),
-            Self::Located {
-                code,
-                location,
-                msg,
-            } => {
-                writeln!(f, "Error[{code}]: {}", location.string_location())?;
-                write!(f, "{}", location.string_content())?;
-                writeln!(f, "{} {}", location.string_indicator(), msg)
-            }
-
-            Self::Errors(errors) => {
-                for (i, error) in  errors.iter().enumerate() {
-                    if i != 0 {
-                        writeln!(f)?;
-                    }
-                    write!(f, "{error}")?;
-                }
-                Ok(())
             }
         }
     }
