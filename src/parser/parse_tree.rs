@@ -3,7 +3,7 @@ use super::super::error::Error;
 use std::fs::File;
 use std::io::Read;
 use tree_sitter::Parser as TSTParser;
-use tree_sitter::{Language, Tree};
+use tree_sitter::{Language, Tree, Node};
 
 pub struct ParseTree<'a> {
     file_name: &'a str,
@@ -85,7 +85,7 @@ impl<'a> ParseTree<'a> {
     }
 
     /// get root node
-    pub fn root_node(&self) -> tree_sitter::Node {
+    pub fn root_node(&self) -> Node {
         self.get_tree().root_node()
     }
 

@@ -21,10 +21,8 @@ pub fn parse_file(file_name: &str) -> Result<ParseTree<'_>, Error> {
 
 /// make a program with parse tree
 pub fn make_program(parse_tree: ParseTree) -> Result<ast::WTProgram, Error> {
+    let parser = Parser::from_parse_tree(&parse_tree, NAME_ENV.clone());
     let node = parse_tree.get_tree().root_node();
-    let file_name = parse_tree.get_file_name();
-    let content = parse_tree.get_content();
-    let parser = Parser::make(file_name, &content, NAME_ENV.clone());
     let res = parser.parse_program(&node);
     res.get_res()
 }

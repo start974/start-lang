@@ -3,6 +3,7 @@ use super::super::location::{Located, Location, Position};
 use super::super::utils::FResult;
 use super::ast::*;
 use super::env::NameEnv;
+use super::parse_tree::ParseTree;
 
 use tree_sitter::Node;
 
@@ -19,22 +20,42 @@ const ERROR_KEYWORD: i32 = 202;
 const ERROR_OPERATOR: i32 = 203;
 
 impl<'a> Parser<'a> {
-    pub fn make(file_name: &'a str, content: &[String], name_env: NameEnv) -> Self {
+    /// make a parser
+    pub fn make(file_name: &'a str, name_env: NameEnv) -> Self {
         Self {
-            content: content.to_vec(),
+            content: Vec::new(),
             file_name,
             name_env,
         }
     }
 
-    /// update content
-    //pub fn update(mut self, file_name: &'a str, content: &[String]) -> Self {
-    //self.file_name = file_name;
-    //self.content = content.to_vec();
-    //self
-    //}
+    pub fn from_parse_tree(parse_tree: &ParseTree<'a>, name_env: NameEnv) -> Self {
+        let file_name = parse_tree.get_file_name();
+        let content = parse_tree.get_content();
+        Self {
+            content,
+            file_name,
+            name_env,
+        }
+    }
+
+    /// set content of parser
+    pub fn set_content(mut self, content: &[String]) -> Self {
+        self.content = content.to_vec();
+        self
+    }
+
+    /// set file name of parser
+    pub fn set_file_name(mut self, file_name: &'a str) -> Self {
+        self.file_name = file_name;
+        self
+    }
 
     fn location(&self, node: &Node) -> Location {
+        if self.content.is_empty() {
+            panic!("content is empty please set content with Parser::set_content")
+        }
+
         let start = node.start_position();
         let end = node.end_position();
         let pos_start = Position::make(start.row, start.column);
@@ -80,7 +101,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-     fn set_location<T>(&self, node: &Node, val: T) -> T
+    fn set_location<T>(&self, node: &Node, val: T) -> T
     where
         T: Located,
     {
@@ -202,8 +223,10 @@ impl<'a> Parser<'a> {
                 }
                 res
             }
-            _ => { println!("kind {node}");
-                self.error_kind(node, "program")},
+            _ => {
+                println!("kind {node}");
+                self.error_kind(node, "program")
+            }
         }
     }
 
@@ -221,28 +244,37 @@ impl<'a> Parser<'a> {
                 }
                 res
             }
-            _ => { println!("kind {node}");
-                self.error_kind(node, "program")},
+            _ => {
+                println!("kind {node}");
+                self.error_kind(node, "program")
+            }
         }
     }
 
     pub fn parse_repl_expression(self, node: &Node) -> ParserResult<'a, WTExpression> {
         match node.kind() {
-            "expression" => self.parse_expression(node),
+            "expression" => {
+                let child = node.child(0).unwrap();
+                self.parse_expression(&child)
+            }
             _ => self.error_kind(node, "expression"),
         }
     }
 
     pub fn parse_definitions_or_expression(self, node: &Node) -> ParserResult<'a, WTDefsOrExpr> {
-        match node.kind() {
-            "definitions" => self
-                .parse_repl_definitions(node)
-                .map_res(WTDefsOrExpr::Definitions),
-            "expression" => self
-                .parse_repl_expression(node)
-                .map_res(WTDefsOrExpr::Expression),
-            _ => self.error_kind(node, "definitions or expression"),
+        if node.kind() == "definitions_or_expression" {
+            let child = node.child(0).unwrap();
+            match child.kind() {
+                "definitions" => self
+                    .parse_repl_definitions(&child)
+                    .map_res(WTDefsOrExpr::Definitions),
+                "expression" => self
+                    .parse_repl_expression(&child)
+                    .map_res(WTDefsOrExpr::Expression),
+                _ => self.error_kind(node, "definitions or expression"),
+            }
+        } else {
+            self.error_kind(node, "definitions or expression")
         }
     }
-
 }
