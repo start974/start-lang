@@ -40,6 +40,24 @@ impl<T, U> FResult<T, U> {
             Err(_) => f(self.acc),
         }
     }
+
+    pub fn inspect_acc<F>(self, f: F) -> Self
+    where
+        F: FnOnce(&T),
+    {
+        f(&self.acc);
+        self
+    }
+
+/*    pub fn inspect_res<F>(self, f: F) -> Self*/
+    /*where*/
+        /*F: FnOnce(&U),*/
+    /*{*/
+        /*if let Ok(x) = &self.res {*/
+            /*f(x);*/
+        /*}*/
+        /*self*/
+    /*}*/
 }
 
 impl<T, U1> FResult<T, U1> {
