@@ -1,7 +1,7 @@
-use super::super::args::Args;
-use super::super::parser::ast::WTProgram;
-use super::super::parser::ParseTree;
-use super::super::typing::ast::TProgram;
+use crate::args::Args;
+use crate::parser::ast::WTProgram;
+use crate::parser::ParseTree;
+use crate::typing::ast::TProgram;
 
 use color_print::cformat;
 

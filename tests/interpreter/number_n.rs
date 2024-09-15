@@ -4,4 +4,3 @@ use super::utils::test_ret;
 fn simple_main() {
     test_ret("number_n/simple_main");
 }
-

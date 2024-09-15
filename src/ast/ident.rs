@@ -1,4 +1,4 @@
-pub use super::super::location::{Located, Location};
+pub use crate::location::{Located, Location};
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -16,7 +16,7 @@ impl From<String> for Ident {
         Self {
             name,
             location: None,
-            id : COUNTER.fetch_add(1, Ordering::SeqCst) as u32,
+            id: COUNTER.fetch_add(1, Ordering::SeqCst) as u32,
         }
     }
 }
@@ -33,7 +33,6 @@ impl From<Location> for Ident {
         name.into()
     }
 }
-
 
 impl fmt::Display for Ident {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

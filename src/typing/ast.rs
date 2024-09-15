@@ -1,5 +1,5 @@
-pub use super::super::ast::*;
-use super::super::stdlib;
+pub use crate::ast::*;
+use crate::stdlib;
 use std::fmt;
 
 pub trait Typed {
@@ -10,6 +10,7 @@ pub trait Typed {
 pub type TExpression = Expression<Ty>;
 pub type TDefinition = ExprDef<Ty>;
 pub type TProgram = Program<TDefinition>;
+pub type TDefsOrExpr = DefsOrExpr<TDefinition, Ty>;
 
 /* ------------------------------------------------------------------------ */
 /* Constant */

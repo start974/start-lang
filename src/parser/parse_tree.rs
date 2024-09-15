@@ -1,9 +1,9 @@
-use super::super::error::Error;
+use crate::error::Error;
 
 use std::fs::File;
 use std::io::Read;
 use tree_sitter::Parser as TSTParser;
-use tree_sitter::{Language, Tree, Node};
+use tree_sitter::{Language, Node, Tree};
 
 pub struct ParseTree<'a> {
     file_name: &'a str,
@@ -32,10 +32,10 @@ impl<'a> ParseTree<'a> {
         self
     }
 
-    pub fn set_file_name(mut self, file_name: &'a str) -> Self {
-        self.file_name = file_name;
-        self
-    }
+    /*    pub fn set_file_name(mut self, file_name: &'a str) -> Self {*/
+    /*self.file_name = file_name;*/
+    /*self*/
+    /*}*/
 
     // create a ParseTree from a file
     pub fn of_file(file_name: &'a str) -> Result<Self, Error> {
@@ -90,9 +90,9 @@ impl<'a> ParseTree<'a> {
     }
 
     /// sexp of node parsed
-    pub fn sexp(&self) -> String {
-        self.root_node().to_sexp()
-    }
+    /*    pub fn sexp(&self) -> String {*/
+    /*self.root_node().to_sexp()*/
+    /*}*/
 
     /// get file_name
     pub fn get_file_name(&self) -> &'a str {

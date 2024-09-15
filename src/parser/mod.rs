@@ -8,7 +8,7 @@ use super::stdlib::NAME_ENV;
 
 pub type Parser<'a> = parse::Parser<'a>;
 pub type ParseTree<'a> = parse_tree::ParseTree<'a>;
-pub type ParserResult<'a, T> = parse::ParserResult<'a, T>;
+//pub type ParserResult<'a, T> = parse::ParserResult<'a, T>;
 pub type NameEnv = env::NameEnv;
 
 /// parse a file

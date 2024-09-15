@@ -1,9 +1,9 @@
+mod args;
 pub mod ast;
 pub mod error;
+pub mod interpreter;
 pub mod location;
 pub mod parser;
-pub mod typing;
 pub mod stdlib;
-pub mod interpreter;
+pub mod typing;
 pub mod utils;
-mod args;

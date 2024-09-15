@@ -1,4 +1,4 @@
-use super::super::utils;
+use crate::utils;
 use startlang::error::Error;
 use startlang::parser::{make_program, parse_file};
 use startlang::typing::{ast::TProgram, infer_type};

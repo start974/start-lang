@@ -1,4 +1,5 @@
-pub use super::super::ast::*;
+pub use crate::ast::*;
+
 use std::fmt;
 
 type OptionTy = Option<Ty>;
