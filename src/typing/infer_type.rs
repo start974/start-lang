@@ -1,8 +1,8 @@
-use super::super::error::Error;
-use super::super::location::Located;
-use super::super::parser::ast::*;
-use super::super::stdlib::TYPE_ENV;
-use super::super::utils::FResult;
+use crate::error::Error;
+use crate::location::Located;
+use crate::parser::ast::*;
+use crate::utils::FResult;
+
 use super::ast::*;
 use super::env::TypingEnv;
 
@@ -16,10 +16,8 @@ const ERROR_TYPE_NOT_FOUND: i32 = 301;
 const ERROR_TYPE_MISMATCH: i32 = 302;
 
 impl Typer {
-    pub fn make() -> Self {
-        Self {
-            env: TYPE_ENV.clone(),
-        }
+    pub fn make(env: TypingEnv) -> Self {
+        Self { env }
     }
 
     fn add_binding<T>(mut self, name: Ident, elm: &T) -> Self
@@ -102,5 +100,20 @@ impl Typer {
                 Program::add_definition,
             )
         })
+    }
+
+    /// type definitions or expression
+    pub fn type_definitions_or_expression(
+        self,
+        defs_or_exp: &WTDefsOrExpr,
+    ) -> TypingResult<TDefsOrExpr> {
+        match defs_or_exp {
+            WTDefsOrExpr::Expression(expr) => {
+                self.type_expression(expr).map_res(TDefsOrExpr::Expression)
+            }
+            WTDefsOrExpr::Definitions(prog) => {
+                self.type_program(prog).map_res(TDefsOrExpr::Definitions)
+            }
+        }
     }
 }

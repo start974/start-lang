@@ -1,6 +1,6 @@
-pub use super::super::location::{Located, Location};
 use super::expression::Expression;
 use super::ident::Ident;
+pub use crate::location::{Located, Location};
 
 #[derive(Debug, Clone)]
 pub struct ExprDef<TyT> {

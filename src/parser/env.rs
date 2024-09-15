@@ -1,5 +1,5 @@
-use super::super::location::Location;
 use super::ast::Ident;
+use crate::location::Location;
 use std::collections::HashMap;
 use std::fmt;
 

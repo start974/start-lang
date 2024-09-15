@@ -1,5 +1,5 @@
-use super::super::ast::*;
-use super::super::typing::ast::{TDefinition, TExpression};
+use crate::ast::*;
+use crate::typing::ast::{TDefinition, TExpression};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -25,6 +25,6 @@ impl EvalEnv {
 
     // get definition to environment
     //pub fn get_definition(&self, ident: &Ident) -> Option<&TExpression> {
-        //self.definitions.get(ident)
+    //self.definitions.get(ident)
     //}
 }

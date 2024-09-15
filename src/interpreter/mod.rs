@@ -8,10 +8,10 @@ mod env;
 //type EvalEnv = env::EvalEnv;
 
 mod value;
-type Value = value::Value;
+pub type Value = value::Value;
 
 mod eval;
-type Context = eval::Context;
+pub type Context = eval::Context;
 
 static MAIN_TY: LazyLock<Ty> = LazyLock::new(|| N_TYPE.clone());
 

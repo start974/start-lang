@@ -1,10 +1,9 @@
-use super::super::error::Error;
-use super::super::location::{Located, Location, Position};
-use super::super::utils::FResult;
 use super::ast::*;
 use super::env::NameEnv;
 use super::parse_tree::ParseTree;
-
+use crate::error::Error;
+use crate::location::{Located, Location, Position};
+use crate::utils::FResult;
 use tree_sitter::Node;
 
 pub struct Parser<'a> {
@@ -46,10 +45,10 @@ impl<'a> Parser<'a> {
     }
 
     /// set file name of parser
-    pub fn set_file_name(mut self, file_name: &'a str) -> Self {
-        self.file_name = file_name;
-        self
-    }
+    //pub fn set_file_name(mut self, file_name: &'a str) -> Self {
+    //self.file_name = file_name;
+    //self
+    //}
 
     fn location(&self, node: &Node) -> Location {
         if self.content.is_empty() {
@@ -206,7 +205,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_definition(self, node: &Node) -> ParserResult<'a, WTDefinition> {
-        self.parse_expr_def(&node)
+        self.parse_expr_def(node)
     }
 
     /// parse program

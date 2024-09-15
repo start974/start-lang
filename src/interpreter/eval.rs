@@ -1,6 +1,6 @@
-use super::super::typing::ast::*;
 use super::env::EvalEnv;
 use super::value::Value;
+use crate::typing::ast::*;
 
 pub struct Context {
     env: EvalEnv,
@@ -19,7 +19,7 @@ impl Context {
     }
 
     //fn get_definition(&self, ident: &Ident) -> Option<&TExpression> {
-        //self.env.get_definition(ident)
+    //self.env.get_definition(ident)
     //}
 
     pub fn eval_const(&self, c: &Constant) -> Value {

@@ -1,4 +1,4 @@
-use super::super::ast::{Ident, Ty};
+use crate::ast::{Ident, Ty};
 use std::sync::LazyLock;
 
 pub static N_TYPE_NAME: LazyLock<Ident> = LazyLock::new(|| Ident::from("N"));

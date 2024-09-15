@@ -1,5 +1,5 @@
-pub use super::super::location::{Located, Location};
 use super::ident::Ident;
+pub use crate::location::{Located, Location};
 use std::hash::{Hash, Hasher};
 
 /// constant types

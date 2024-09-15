@@ -1,5 +1,5 @@
-use super::location::Location;
-use super::utils::colored::Colored;
+use crate::location::Location;
+use crate::utils::colored::Colored;
 
 use color_print::cformat;
 use std::collections::VecDeque;

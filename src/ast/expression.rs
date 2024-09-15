@@ -1,5 +1,5 @@
-pub use super::super::location::{Located, Location};
 use super::constant::Constant;
+pub use crate::location::{Located, Location};
 
 /// constant expression
 #[derive(Debug, Clone)]
