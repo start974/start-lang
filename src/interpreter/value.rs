@@ -1,6 +1,8 @@
+use crate::ast::NConst;
+
 #[derive(Debug, Clone)]
 pub enum Value {
-    N(u32),
+    N(NConst),
 }
 
 impl std::fmt::Display for Value {

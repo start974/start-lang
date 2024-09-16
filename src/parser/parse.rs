@@ -125,7 +125,17 @@ impl<'a> Parser<'a> {
         match node.kind() {
             "number_N" => {
                 let location = self.location(node);
-                let val = location.text().parse::<NConst>().unwrap();
+                let txt = location.text();
+                let val = if txt.starts_with("0b") || txt.starts_with("0B") {
+                    NConst::parse_bytes(txt[2..].as_bytes(), 2)
+                } else if txt.starts_with("0o") || txt.starts_with("0O") {
+                    NConst::parse_bytes(txt[2..].as_bytes(), 8)
+                } else if txt.starts_with("0x") || txt.starts_with("0X") {
+                    NConst::parse_bytes(txt[2..].as_bytes(), 16)
+                } else {
+                    NConst::parse_bytes(txt.as_bytes(), 10)
+                }
+                .unwrap();
                 self.ok(val)
             }
             _ => self.error_kind(node, "number"),
