@@ -19,7 +19,7 @@ const ERROR_MAIN_NOT_FOUND: i32 = 401;
 const ERROR_MAIN_TYPE: i32 = 402;
 
 // interpret a program
-pub fn eval_program(program: TProgram) -> Result<u32, Error> {
+pub fn eval_program(program: TProgram) -> Result<i32, Error> {
     let mut main = None;
     let mut context = Context::empty();
     for def in program.iter() {
@@ -42,7 +42,7 @@ pub fn eval_program(program: TProgram) -> Result<u32, Error> {
             ))
         }
         Some((main, _)) => match context.eval_expr(main) {
-            Value::N(value) => Ok(value),
+            Value::N(v) => Ok(v.try_into().unwrap()),
         },
     }
 }

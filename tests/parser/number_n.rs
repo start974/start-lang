@@ -13,3 +13,18 @@ fn number_typed() {
 fn number_many() {
     test_out("number_n/number_many");
 }
+
+#[test]
+fn number_bin() {
+    test_out("number_n/num_bin");
+}
+
+#[test]
+fn number_oct() {
+    test_out("number_n/num_oct");
+}
+
+#[test]
+fn number_hex() {
+    test_out("number_n/num_hex");
+}

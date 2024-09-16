@@ -5,7 +5,7 @@ fn get_out(file_name: &str) -> String {
     let file = format!("{file_name}.out");
     std::fs::read_to_string(file).unwrap()
 }
-fn get_ret(file_name: &str) -> u32 {
+fn get_ret(file_name: &str) -> i32 {
     let file = format!("{file_name}.ret");
     let line = std::fs::read_to_string(file).unwrap();
     line.trim().to_string().parse().unwrap()
@@ -49,7 +49,7 @@ where
 
 pub fn test_ret<F>(prefix: &str, suffix: &str, f: F)
 where
-    F: Fn(&str) -> Result<u32, Error>,
+    F: Fn(&str) -> Result<i32, Error>,
 {
     let file_name = get_file_name(prefix, suffix);
     match get_input(&file_name, f) {

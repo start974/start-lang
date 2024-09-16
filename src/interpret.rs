@@ -13,7 +13,7 @@ pub fn interpret_file(args: &Args, file_name: &str) {
         .inspect(|t_program| debug_typer(args, t_program))
         .and_then(interpreter::eval_program);
     match res {
-        Ok(ret_code) => std::process::exit(ret_code.try_into().unwrap()),
+        Ok(ret_code) => std::process::exit(ret_code),
         Err(err) => {
             err.colored_eprintln(args);
             std::process::exit(err.get_code())

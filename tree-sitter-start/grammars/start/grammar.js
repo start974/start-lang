@@ -1,3 +1,12 @@
+const NUMBER = token(choice(
+  /[0-9][0-9_]*/,
+  /0[xX][0-9A-Fa-f][0-9A-Fa-f_]*/,
+  /0[oO][0-7][0-7_]*/,
+  /0[bB][01][01_]*/
+))
+
+//TODO: [0-9][0-9_]*([eE][0-9_]+)?/, (add exponent)
+
 module.exports = grammar({
   name: 'start',
   word: $ => $.ident,
@@ -43,8 +52,8 @@ module.exports = grammar({
     ),
 
     number_N : $ =>
-      /[0-9]+/,
-    // TODO: add bin / oct / hex
+      NUMBER
+    ,
 
     ident : $ => /[a-zA-Z_][a-zA-Z0-9_]*/
       // TODO: add unicode chars add finish by '

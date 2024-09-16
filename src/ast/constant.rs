@@ -1,4 +1,6 @@
-pub type NConst = u32;
+use num_bigint::BigUint;
+
+pub type NConst = BigUint;
 
 #[derive(Debug, Clone)]
 pub enum Constant {

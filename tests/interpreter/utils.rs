@@ -4,7 +4,7 @@ use startlang::interpreter::eval_program;
 use startlang::parser::{make_program, parse_file};
 use startlang::typing::infer_type;
 
-fn f(file: &str) -> Result<u32, Error> {
+fn f(file: &str) -> Result<i32, Error> {
     parse_file(file)
         .and_then(make_program)
         .and_then(infer_type)

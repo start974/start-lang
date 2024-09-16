@@ -24,7 +24,7 @@ impl Context {
 
     pub fn eval_const(&self, c: &Constant) -> Value {
         match c {
-            Constant::N(n) => Value::N(*n),
+            Constant::N(n) => Value::N(n.clone()),
         }
     }
 
