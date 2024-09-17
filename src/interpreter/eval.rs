@@ -42,6 +42,7 @@ impl Context {
     pub fn eval_expr(&self, expr: &TExpression) -> Value {
         match &expr.kind {
             ExpressionKind::Const(c) => self.eval_const(c),
+            ExpressionKind::Var(_x) => todo!(),
         }
     }
 }

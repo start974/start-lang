@@ -43,14 +43,6 @@ impl Typed for TExpression {
     }
 }
 
-impl std::fmt::Display for TExpression {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match &self.kind {
-            ExpressionKind::Const(c) => write!(f, "{c}"),
-        }
-    }
-}
-
 /* ------------------------------------------------------------------------ */
 /* Definition */
 /* ------------------------------------------------------------------------ */

@@ -43,14 +43,6 @@ impl WeakTyped for WTExpression {
     }
 }
 
-impl std::fmt::Display for WTExpression {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match &self.kind {
-            ExpressionKind::Const(c) => write!(f, "{c}"),
-        }
-    }
-}
-
 //-----------------------------------------------------------------------------
 // Expression Definition
 //-----------------------------------------------------------------------------
