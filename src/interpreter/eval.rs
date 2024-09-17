@@ -13,14 +13,25 @@ impl Context {
         }
     }
 
+    pub fn get(&self, ident: &Ident) -> Option<&TExpression> {
+        self.env.get(ident)
+    }
+
+    pub fn get_main(&self) -> Option<&Ident> {
+        self.env.get_main()
+    }
+
     pub fn add_definition(mut self, definition: TDefinition) -> Self {
         self.env = self.env.add_definition(definition);
         self
     }
 
-    //fn get_definition(&self, ident: &Ident) -> Option<&TExpression> {
-    //self.env.get_definition(ident)
-    //}
+    pub fn add_program(mut self, program: TProgram) -> Self {
+        for def in program.iter() {
+            self = self.add_definition(def.clone());
+        }
+        self
+    }
 
     pub fn eval_const(&self, c: &Constant) -> Value {
         match c {

@@ -69,9 +69,9 @@ impl Env {
             .get_pair();
         self = env;
 
-        match &res {
+        match res {
             Ok(TDefsOrExpr::Expression(expr)) => {
-                let value = self.interpreter.eval_expr(expr);
+                let value = self.interpreter.eval_expr(&expr);
                 println!("{value}")
             }
             Ok(TDefsOrExpr::Definitions(prog)) => {

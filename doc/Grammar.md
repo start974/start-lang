@@ -29,11 +29,12 @@ constant:
   number_n
 
 number_n :
-  [0-9][0-9_]*
+| [0-9][0-9_]*
 | 0[xX][0-9A-Fa-f][0-9A-Fa-f_]*
-| 0[oO][0-7][0-7_]*,
+| 0[oO][0-7][0-7_]*
+| 0[oB][0-1][0-1_]*
 
 
 ident :
-  [a-z-A-Z_][a-z-A-Z_(unicode)]*
+  [a-z-A-Z(unicode)]+
 ```
