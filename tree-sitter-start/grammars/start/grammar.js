@@ -39,8 +39,8 @@ module.exports = grammar({
 
     _expr: $ => choice(
       seq ("(", $._expr , ")"),
+      $.ident,
       $.constant
-      // TODO: other expression
     ),
 
     constant: $ => choice(
