@@ -82,6 +82,10 @@
         {
           "type": "constant",
           "named": true
+        },
+        {
+          "type": "ident",
+          "named": true
         }
       ]
     }

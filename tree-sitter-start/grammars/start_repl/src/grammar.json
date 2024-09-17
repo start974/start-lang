@@ -129,6 +129,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "ident"
+        },
+        {
+          "type": "SYMBOL",
           "name": "constant"
         }
       ]
