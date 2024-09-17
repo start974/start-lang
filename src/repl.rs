@@ -79,7 +79,7 @@ impl Env {
     fn eval(self, args: &Args, input: &String) -> Self {
         let (env, res) = self
             // parse
-            .parse(args, input.clone())
+            .parse(args, input.to_owned())
             // type
             .and_then(|env, defs_or_expr| env.typing(args, &defs_or_expr))
             // interpret
@@ -110,7 +110,7 @@ pub fn repl(args: &Args) {
             Ok(mut line) => {
                 while !line.ends_with(".") {
                     line.pop();
-                    match &rl.readline("--") {
+                    match &rl.readline("-- ") {
                         Ok(line2) => {
                             line += "\n";
                             line += line2
