@@ -7,7 +7,7 @@ use startlang::typing::infer_type;
 fn f(file: &str) -> Result<i32, Error> {
     parse_file(file)
         .and_then(make_program)
-        .and_then(infer_type)
+        .and_then(|(_, wt_program)| infer_type(wt_program))
         .and_then(eval_program)
 }
 

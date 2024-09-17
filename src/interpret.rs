@@ -8,8 +8,8 @@ pub fn interpret_file(args: &Args, file_name: &str) {
         .and_then(parser::parse_file)
         .inspect(|parse_tree| debug_sexp(args, parse_tree))
         .and_then(parser::make_program)
-        .inspect(|wt_program| debug_parser(args, wt_program))
-        .and_then(typing::infer_type)
+        .inspect(|(parser, wt_program)| debug_parser(args, parser, wt_program))
+        .and_then(|(_, wt_program)| typing::infer_type(wt_program))
         .inspect(|t_program| debug_typer(args, t_program))
         .and_then(interpreter::eval_program);
     match res {

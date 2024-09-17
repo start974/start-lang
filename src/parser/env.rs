@@ -1,5 +1,6 @@
-use super::ast::Ident;
+use crate::ast::Ident;
 use crate::location::Location;
+use crate::utils::colored::*;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -59,16 +60,24 @@ impl Clone for NameEnv {
     }
 }
 
-impl fmt::Debug for NameEnv {
+impl fmt::Display for NameEnv {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.data.is_empty() {
-            f.write_str("{ }")
-        } else {
-            f.write_str("{\n")?;
-            for (k, v) in &self.data {
-                writeln!(f, "  {} -> {}", k, v)?;
-            }
-            f.write_str("}")
+        for (k, v) in &self.data {
+            writeln!(f, "{}\t->\t{}\t{}", k, v.name, v.id)?;
         }
+        Ok(())
+    }
+}
+
+impl Colored for NameEnv {
+    fn colored(&self) -> String {
+        let mut s = String::new();
+        for (k, v) in &self.data {
+            s.push_str(&cformat!(
+                "<green>{}</>\t->\t<blue>{}</>\t<cyan>{}</>\n",
+                k, v.name, v.id
+            ));
+        }
+        s
     }
 }

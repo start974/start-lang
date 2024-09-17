@@ -57,6 +57,10 @@ impl<T, U> FResult<T, U> {
     /*}*/
     /*self*/
     /*}*/
+
+    pub fn get_result(self) -> Result<(T, U), Error> {
+        self.res.map(|x| (self.acc, x))
+    }
 }
 
 impl<T, U1> FResult<T, U1> {

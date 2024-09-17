@@ -1,4 +1,5 @@
 pub use crate::ast::*;
+use crate::utils::colored::*;
 
 use std::fmt;
 
@@ -75,6 +76,20 @@ impl fmt::Display for WTExprDef {
         }
     }
 }
+
+impl Colored for WTExprDef {
+    fn colored(&self) -> String {
+        let name = cformat!("<blue>{}</>", self.name);
+        let body = self.body.colored();
+        match &self.ty {
+            None => cformat!("<magenta>def</> {name} <red>:=</> {body}"),
+            Some(ty) => {
+                let ty = ty.colored();
+                cformat!("<magenta>def</> {name} <red>:</> {ty} <red>:=</> {body}")
+            }
+        }
+    }
+}
 //-----------------------------------------------------------------------------
 // Definition
 //-----------------------------------------------------------------------------
@@ -110,6 +125,14 @@ impl fmt::Display for WTDefinition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Definition::ExprDef(expr_def) => expr_def.fmt(f),
+        }
+    }
+}
+
+impl Colored for WTDefinition {
+    fn colored(&self) -> String {
+        match self {
+            Definition::ExprDef(expr_def) => expr_def.colored(),
         }
     }
 }

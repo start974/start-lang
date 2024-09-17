@@ -33,13 +33,10 @@ pub struct DefValue {
 
 impl std::fmt::Display for DefValue {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "{name} : {ty} := {value}",
-            name = self.name,
-            ty = self.ty,
-            value = self.value
-        )
+        let name = &self.name;
+        let ty = &self.ty;
+        let value = &self.value;
+        write!(f, "{name} : {ty} := {value}")
     }
 }
 impl Colored for DefValue {

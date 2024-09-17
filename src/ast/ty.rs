@@ -1,6 +1,7 @@
 use super::ident::Ident;
 pub use crate::location::{Located, Location};
 use std::hash::{Hash, Hasher};
+use crate::utils::colored::*;
 
 /// constant types
 #[derive(Debug, Clone)]
@@ -27,7 +28,15 @@ impl Ty {
 impl std::fmt::Display for Ty {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match &self.kind {
-            Kind::Var(ident) => write!(f, "{}", ident),
+            Kind::Var(x) => write!(f, "{}", x),
+        }
+    }
+}
+
+impl Colored for Ty {
+    fn colored(&self) -> String {
+        match &self.kind {
+            Kind::Var(x) => cformat!("<yellow>{x}</>")
         }
     }
 }
