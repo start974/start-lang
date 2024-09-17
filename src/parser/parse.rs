@@ -17,6 +17,7 @@ pub type ParserResult<'a, T> = FResult<Parser<'a>, T>;
 const ERROR_KIND: i32 = 201;
 const ERROR_KEYWORD: i32 = 202;
 const ERROR_OPERATOR: i32 = 203;
+const ERROR_WILDCARD: i32 = 204;
 
 impl<'a> Parser<'a> {
     /// make a parser
@@ -156,6 +157,17 @@ impl<'a> Parser<'a> {
                 .parse_constant(node)
                 .map_res(WTExpression::make_constant)
                 .map_res2(|parser, constant| parser.set_location(node, constant)),
+            "ident" => self
+                .parse_ident(node)
+                .and_then(|parser, ident| {
+                    if ident.name == "_" {
+                        let msg = "not allowed to use wildcard '_' as an expression";
+                        parser.error(node, msg, ERROR_WILDCARD)
+                    } else {
+                        parser.ok(WTExpression::make_var(ident))
+                    }
+                })
+                .map_res2(|parser, ident| parser.set_location(node, ident)),
             _ => self.error_kind(node, "expression"),
         }
     }

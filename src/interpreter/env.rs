@@ -36,5 +36,4 @@ impl EvalEnv {
     pub fn get_main(&self) -> Option<&Ident> {
         self.main.as_ref()
     }
-
 }

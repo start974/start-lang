@@ -21,11 +21,6 @@ fn definition_no_def() {
 }
 
 #[test]
-fn expr_wrong() {
-    test_error("error/expr_wrong");
-}
-
-#[test]
 fn definition_many_error() {
     test_error("error/definition_many_error");
 }
