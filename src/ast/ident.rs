@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 pub struct Ident {
     pub name: String,
     location: Option<Location>,
-    id: u32,
+    pub id: u32,
 }
 
 impl From<String> for Ident {

@@ -1,6 +1,7 @@
 use super::constant::Constant;
 use super::ident::Ident;
-pub use crate::location::{Located, Location};
+use crate::location::{Located, Location};
+use crate::utils::colored::*;
 
 /// constant expression
 #[derive(Debug, Clone)]
@@ -32,6 +33,15 @@ impl<TyT> std::fmt::Display for Expression<TyT> {
         match &self.kind {
             ExpressionKind::Const(c) => write!(f, "{c}"),
             ExpressionKind::Var(x) => write!(f, "{x}"),
+        }
+    }
+}
+
+impl<TyT> Colored for Expression<TyT> {
+    fn colored(&self) -> String {
+        match &self.kind {
+            ExpressionKind::Const(c) => c.colored(),
+            ExpressionKind::Var(x) => cformat!("<blue>{x}<blue>"),
         }
     }
 }

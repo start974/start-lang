@@ -1,5 +1,6 @@
 pub use crate::ast::*;
 use crate::stdlib;
+use crate::utils::colored::*;
 use std::fmt;
 
 pub trait Typed {
@@ -81,5 +82,14 @@ impl fmt::Display for TDefinition {
         let body = &self.body;
         let ty = &self.ty;
         write!(f, "def {name} : {ty} := {body}")
+    }
+}
+
+impl Colored for TDefinition {
+    fn colored(&self) -> String {
+        let name = cformat!("<blue>{}</>", self.name);
+        let body = self.body.colored();
+        let ty = self.ty.colored();
+        cformat!("<magenta>def</magenta> {name} <red>:</> {ty} <red>:=</> {body}")
     }
 }

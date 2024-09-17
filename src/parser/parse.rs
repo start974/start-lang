@@ -4,6 +4,7 @@ use super::parse_tree::ParseTree;
 use crate::error::Error;
 use crate::location::{Located, Location, Position};
 use crate::utils::FResult;
+use crate::utils::colored::*;
 use tree_sitter::Node;
 
 pub struct Parser<'a> {
@@ -234,12 +235,12 @@ impl<'a> Parser<'a> {
     pub fn parse_program(self, node: &Node) -> ParserResult<'a, WTProgram> {
         match node.kind() {
             "program" => {
-                let mut res = self.ok(Program::empty());
+                let mut res = self.ok(WTProgram::empty());
                 for i in 0..node.child_count() {
                     let child = node.child(i).unwrap();
                     res = res.combine(
                         |parser| parser.parse_definition(&child),
-                        Program::add_definition,
+                        WTProgram::add_definition,
                     );
                 }
                 res
@@ -297,5 +298,21 @@ impl<'a> Parser<'a> {
         } else {
             self.error_kind(node, "definitions or expression")
         }
+    }
+}
+
+impl<'a> std::fmt::Display for Parser<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        writeln!(f, "Parser {}", self.file_name)?;
+        writeln!(f, "Name_env:\n{}", self.name_env)
+    }
+}
+
+impl<'a> Colored for Parser<'a>{
+    fn colored(&self) -> String {
+        let mut res = cformat!("<bold>Parser</bold> <blue>{}</blue>\n", self.file_name);
+        res += &cformat!("<bold>Name_env:</bold>\n");
+        res += &self.name_env.colored();
+        res
     }
 }

@@ -1,4 +1,5 @@
 use std::fmt;
+use crate::utils::colored::Colored;
 
 pub struct Program<TDef> {
     data: Vec<TDef>,
@@ -34,3 +35,18 @@ where
         Ok(())
     }
 }
+
+impl<TDef> Colored for Program<TDef>
+where
+    TDef: Colored,
+{
+    fn colored(&self) -> String {
+        let mut res = String::new();
+        for def in &self.data {
+            res += &def.colored();
+            res += "\n";
+        }
+        res
+    }
+}
+

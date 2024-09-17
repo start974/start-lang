@@ -4,7 +4,9 @@ use startlang::parser::{make_program, parse_file};
 use startlang::typing::{ast::TProgram, infer_type};
 
 fn f(file: &str) -> Result<TProgram, Error> {
-    parse_file(file).and_then(make_program).and_then(infer_type)
+    parse_file(file)
+        .and_then(make_program)
+        .and_then(|(_, wt_prog)| infer_type(wt_prog))
 }
 
 const PREFIX: &str = "typing";
