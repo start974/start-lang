@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::location::Located;
 use crate::parser::ast::*;
-use crate::utils::FResult;
+use crate::utils::{FResult, colored::Colored};
 
 use super::ast::*;
 use super::env::TypingEnv;
@@ -144,3 +144,16 @@ impl Typer {
         }
     }
 }
+
+impl std::fmt::Display for Typer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.env.fmt(f)
+    }
+}
+
+impl Colored for Typer {
+    fn colored(&self) -> String {
+        self.env.colored()
+    }
+}
+

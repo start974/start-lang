@@ -1,7 +1,7 @@
 use super::colored::*;
 use crate::args::Args;
 use crate::parser::{ast::WTProgram, ParseTree, Parser};
-use crate::typing::ast::TProgram;
+use crate::typing::{ast::TProgram, Typer};
 
 pub fn debug<T>(args: &Args, printing: bool, name: &str, elm: &T)
 where
@@ -44,6 +44,7 @@ pub fn debug_parser(args: &Args, parser: &Parser, prog: &WTProgram) {
 }
 
 /// debug typer program
-pub fn debug_typer(args: &Args, prog: &TProgram) {
+pub fn debug_typer(args: &Args, typer: &Typer, prog: &TProgram) {
+    debug_color(args, args.debug_parser, "Typer", typer);
     debug_color(args, args.debug_typer, "Typed program", prog)
 }

@@ -10,8 +10,8 @@ pub fn interpret_file(args: &Args, file_name: &str) {
         .and_then(parser::make_program)
         .inspect(|(parser, wt_program)| debug_parser(args, parser, wt_program))
         .and_then(|(_, wt_program)| typing::infer_type(wt_program))
-        .inspect(|t_program| debug_typer(args, t_program))
-        .and_then(interpreter::eval_program);
+        .inspect(|(typer, t_program)| debug_typer(args, typer, t_program))
+        .and_then(|(_, t_program)| interpreter::eval_program(t_program));
     match res {
         Ok(ret_code) => std::process::exit(ret_code),
         Err(err) => {
