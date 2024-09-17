@@ -7,8 +7,8 @@ use startlang::typing::infer_type;
 fn f(file: &str) -> Result<i32, Error> {
     parse_file(file)
         .and_then(make_program)
-        .and_then(|(_, wt_program)| infer_type(wt_program))
-        .and_then(eval_program)
+        .and_then(|(_, wt_prog)| infer_type(wt_prog))
+        .and_then(|(_, t_prog)| eval_program(t_prog))
 }
 
 const PREFIX: &str = "interpreter";

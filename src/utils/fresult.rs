@@ -18,9 +18,9 @@ impl<T, U> FResult<T, U> {
         Self::make(acc, Err(err))
     }
 
-    pub fn get_res(self) -> Result<U, Error> {
-        self.res
-    }
+    //pub fn get_res(self) -> Result<U, Error> {
+        //self.res
+    //}
 
     //pub fn get_acc(self) -> T {
     //self.acc

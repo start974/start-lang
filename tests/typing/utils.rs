@@ -7,6 +7,7 @@ fn f(file: &str) -> Result<TProgram, Error> {
     parse_file(file)
         .and_then(make_program)
         .and_then(|(_, wt_prog)| infer_type(wt_prog))
+        .map(|(_, t_prog)| t_prog)
 }
 
 const PREFIX: &str = "typing";

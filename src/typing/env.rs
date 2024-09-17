@@ -1,4 +1,5 @@
 use super::ast::{Ident, Ty};
+use crate::utils::colored::*;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone)]
@@ -36,5 +37,34 @@ impl TypingEnv {
     // get type of binding
     pub fn get_binding(&self, ident: &Ident) -> Option<Ty> {
         self.bindings.get(ident).cloned()
+    }
+}
+
+impl std::fmt::Display for TypingEnv {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        writeln!(f, "Type set:")?;
+        for ty in &self.type_set {
+            writeln!(f, "- {ty}")?;
+        }
+        writeln!(f, "Bindings :")?;
+        for (ident, ty) in &self.bindings {
+            writeln!(f, "{ident}\t:\t{ty}")?;
+        }
+        Ok(())
+    }
+}
+
+impl Colored for TypingEnv {
+    fn colored(&self) -> String {
+        let mut s = String::new();
+        s += &cformat!("<bold>Type set :</>\n");
+        for ty in &self.type_set {
+            s += &cformat!("- {}\n", ty.colored());
+        }
+        s += &cformat!("<bold>Bindings :</>\n");
+        for (ident, ty) in &self.bindings {
+            s += &cformat!("<blue>{}</>\t:\t{}\n", ident, ty.colored());
+        }
+        s
     }
 }
