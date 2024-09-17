@@ -1,5 +1,5 @@
 use crate::args::Args;
-use crate::interpreter::Interpreter;
+use crate::interpreter::{DefsOrValue, Interpreter};
 use crate::parser::{ast::WTDefsOrExpr, ParseTree, Parser};
 use crate::stdlib::{NAME_ENV, TYPE_ENV};
 use crate::typing::{ast::TDefsOrExpr, Typer};
@@ -68,41 +68,31 @@ impl Env {
         EnvResult::make(self, res)
     }
 
-    fn eval(mut self, args: &Args, input: String) -> Self {
+    fn interpret(mut self, args: &Args, defs_or_expr: &TDefsOrExpr) -> EnvResult<DefsOrValue> {
+        let (interpreter, defs_or_val) = self
+            .interpreter
+            .eval_definitions_or_expression(defs_or_expr);
+        debug_interpreter(args, &interpreter);
+        self.interpreter = interpreter;
+        EnvResult::ok(self, defs_or_val)
+    }
+
+    fn eval(self, args: &Args, input: String) -> Self {
         let (env, res) = self
-            // parse program
+            // parse
             .parse(args, input)
-            // type program
+            // type
             .and_then(|env, defs_or_expr| env.typing(args, &defs_or_expr))
+            // interpret
+            .and_then(|env, defs_or_expr| env.interpret(args, &defs_or_expr))
+            // get result
             .get_pair();
-        self = env;
 
         match res {
-            Ok(TDefsOrExpr::Expression(expr)) => {
-                let value = self.interpreter.eval_expr(&expr);
-                debug_interpreter(args, &self.interpreter);
-                value.colored_println(args);
-            }
-            Ok(TDefsOrExpr::Definitions(prog)) => {
-                let (interpreter, defs) = prog.iter().fold(
-                    (self.interpreter, Vec::new()),
-                    |(interpreter, mut defs), def| {
-                        let (interpreter, def) = interpreter.add_definition(def);
-                        defs.push(def);
-                        (interpreter, defs)
-                    },
-                );
-                debug_interpreter(args, &interpreter);
-                self.interpreter = interpreter;
-                for def in defs {
-                    def.colored_println(args);
-                }
-            }
-            Err(err) => {
-                err.colored_println(args);
-            }
+            Ok(def_or_vals) => def_or_vals.colored_println(args),
+            Err(err) => err.colored_eprintln(args),
         };
-        self
+        env
     }
 }
 
