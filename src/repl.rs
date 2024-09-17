@@ -5,8 +5,7 @@ use crate::stdlib::{NAME_ENV, TYPE_ENV};
 use crate::typing::{ast::TDefsOrExpr, Typer};
 use crate::utils::debug::*;
 use crate::utils::{colored::Colored, FResult};
-
-use rustyline::DefaultEditor;
+use rustyline::{history::FileHistory, DefaultEditor, Editor};
 
 struct Env {
     parse_tree: ParseTree<'static>,
@@ -77,10 +76,10 @@ impl Env {
         EnvResult::ok(self, defs_or_val)
     }
 
-    fn eval(self, args: &Args, input: String) -> Self {
+    fn eval(self, args: &Args, input: &String) -> Self {
         let (env, res) = self
             // parse
-            .parse(args, input)
+            .parse(args, input.clone())
             // type
             .and_then(|env, defs_or_expr| env.typing(args, &defs_or_expr))
             // interpret
@@ -96,26 +95,40 @@ impl Env {
     }
 }
 
+const HISTORY_FILE: &str = ".start-history.txt";
+fn finish(rl: &mut Editor<(), FileHistory>) {
+    if rl.save_history(HISTORY_FILE).is_err() {
+        eprintln!("Failed to save history");
+    }
+}
 pub fn repl(args: &Args) {
     let mut env = Env::new();
     let mut rl = DefaultEditor::new().unwrap();
+    let _ = rl.load_history(HISTORY_FILE);
     loop {
         match rl.readline(">> ") {
             Ok(mut line) => {
                 while !line.ends_with(".") {
                     line.pop();
-                    match &rl.readline("-- ") {
+                    match &rl.readline("--") {
                         Ok(line2) => {
                             line += "\n";
                             line += line2
                         }
-                        Err(_) => return,
+                        Err(_) => {
+                            finish(&mut rl);
+                            return;
+                        }
                     }
                 }
                 // interpret
-                env = env.eval(args, line)
+                env = env.eval(args, &line);
+                let _ = rl.add_history_entry(line);
             }
-            Err(_) => return,
+            Err(_) => {
+                finish(&mut rl);
+                return;
+            }
         }
     }
 }
