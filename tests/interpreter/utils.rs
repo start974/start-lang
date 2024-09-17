@@ -9,6 +9,7 @@ fn f(file: &str) -> Result<i32, Error> {
         .and_then(make_program)
         .and_then(|(_, wt_prog)| infer_type(wt_prog))
         .and_then(|(_, t_prog)| eval_program(t_prog))
+        .map(|(_, res)| res)
 }
 
 const PREFIX: &str = "interpreter";

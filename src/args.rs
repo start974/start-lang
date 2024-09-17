@@ -15,6 +15,9 @@ pub struct Args {
     #[arg(long, help = "Print the typed program")]
     pub debug_typer: bool,
 
+    #[arg(long, help = "Print the interpreter")]
+    pub debug_interpreter: bool,
+
     #[arg(long, help = "Don't colorize error")]
     pub no_color: bool,
 }

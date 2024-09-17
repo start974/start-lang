@@ -3,8 +3,8 @@ use super::env::NameEnv;
 use super::parse_tree::ParseTree;
 use crate::error::Error;
 use crate::location::{Located, Location, Position};
-use crate::utils::FResult;
 use crate::utils::colored::*;
+use crate::utils::FResult;
 use tree_sitter::Node;
 
 pub struct Parser<'a> {
@@ -308,7 +308,7 @@ impl<'a> std::fmt::Display for Parser<'a> {
     }
 }
 
-impl<'a> Colored for Parser<'a>{
+impl<'a> Colored for Parser<'a> {
     fn colored(&self) -> String {
         let mut res = cformat!("<bold>Parser</bold> <blue>{}</blue>\n", self.file_name);
         res += &cformat!("<bold>Name_env:</bold>\n");

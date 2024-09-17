@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::utils::colored::Colored;
+use std::fmt;
 
 pub struct Program<TDef> {
     data: Vec<TDef>,
@@ -49,4 +49,3 @@ where
         res
     }
 }
-
