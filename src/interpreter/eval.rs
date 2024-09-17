@@ -63,11 +63,28 @@ impl Interpreter {
     }
 
     /// add program in context
-    pub fn add_program(mut self, program: TProgram) -> Self {
+    pub fn add_program(mut self, program: &TProgram) -> (Self, DefValues) {
+        let mut def_vals = DefValues::new();
         for def in program.iter() {
-            self = self.add_definition(def).0;
+            let (interpreter, def_val) = self.add_definition(def);
+            def_vals.push(def_val);
+            self = interpreter;
         }
-        self
+        (self, def_vals)
+    }
+
+    /// evaluate expression or definitions
+    pub fn eval_definitions_or_expression(self, defs_or_expr: &TDefsOrExpr) -> (Self, DefsOrValue) {
+        match defs_or_expr {
+            TDefsOrExpr::Definitions(prog) => {
+                let (interpreter, defs) = self.add_program(prog);
+                (interpreter, DefsOrValue::Defs(defs))
+            }
+            TDefsOrExpr::Expression(expr) => {
+                let value = self.eval_expr(expr);
+                (self, DefsOrValue::Value(value))
+            }
+        }
     }
 
     /// evaluation main

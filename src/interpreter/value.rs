@@ -63,3 +63,35 @@ impl Colored for DefValue {
         cformat!("<blue><bold>{name}</></> <red>:</> <yellow>{ty}</> <red>:=</> {value}")
     }
 }
+
+pub type DefValues = Vec<DefValue>;
+
+pub enum DefsOrValue {
+    Value(Value),
+    Defs(DefValues),
+}
+
+impl std::fmt::Display for DefsOrValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Value(value) => write!(f, "{}", value),
+            Self::Defs(defs) => defs.iter().try_for_each(|def| def.fmt(f)),
+        }
+    }
+}
+
+impl Colored for DefsOrValue {
+    fn colored(&self) -> String {
+        match self {
+            Self::Value(value) => value.colored(),
+            Self::Defs(defs) => {
+                let mut s = String::new();
+                for def in defs {
+                    s += &def.colored();
+                    s += "\n";
+                }
+                s
+            }
+        }
+    }
+}
