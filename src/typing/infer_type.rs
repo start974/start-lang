@@ -74,6 +74,7 @@ impl Typer {
                 .assert_ty(constant, expr)
                 .map_res(|()| TExpression::make_constant(constant.clone()))
                 .map_res(|expr2| expr2.copy_location(expr)),
+            ExpressionKind::Var(_x) => todo!(),
         }
     }
 
