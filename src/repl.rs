@@ -2,11 +2,8 @@ use crate::args::Args;
 use crate::interpreter::Context;
 use crate::parser::{ast::WTDefsOrExpr, ParseTree, Parser};
 use crate::stdlib::{NAME_ENV, TYPE_ENV};
-use crate::typing::{
-    ast::{TDefsOrExpr, Typed},
-    Typer,
-};
-use crate::utils::{debug::debug_sexp, FResult};
+use crate::typing::{ast::TDefsOrExpr, Typer};
+use crate::utils::{colored::Colored, debug::debug_sexp, FResult};
 
 use rustyline::DefaultEditor;
 
@@ -72,18 +69,17 @@ impl Env {
         match res {
             Ok(TDefsOrExpr::Expression(expr)) => {
                 let value = self.interpreter.eval_expr(&expr);
-                println!("{value}")
+                value.colored_println(args);
             }
             Ok(TDefsOrExpr::Definitions(prog)) => {
                 for def in prog.iter() {
-                    self.interpreter = self.interpreter.add_definition(def.clone());
-                    let name = def.get_name();
-                    let ty = def.get_ty();
-                    println!("{name} : {ty}");
+                    let (interpreter, def_val) = self.interpreter.add_definition(def);
+                    self.interpreter = interpreter;
+                    def_val.colored_println(args);
                 }
             }
             Err(err) => {
-                eprintln!("{err}");
+                err.colored_println(args);
             }
         };
         self
