@@ -8,7 +8,9 @@ mod eval;
 pub use eval::*;
 
 // interpret a program
-pub fn eval_program(program: TProgram) -> Result<i32, Error> {
-    let context = Context::empty();
-    context.add_program(program).eval_main()
+pub fn eval_program(program: TProgram) -> Result<(Interpreter, i32), Error> {
+    let mut interpreter = Interpreter::empty();
+    interpreter = interpreter.add_program(program);
+    let res = interpreter.eval_main()?.try_into()?;
+    Ok((interpreter, res))
 }

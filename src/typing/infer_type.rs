@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::location::Located;
 use crate::parser::ast::*;
-use crate::utils::{FResult, colored::Colored};
+use crate::utils::{colored::Colored, FResult};
 
 use super::ast::*;
 use super::env::TypingEnv;
@@ -156,4 +156,3 @@ impl Colored for Typer {
         self.env.colored()
     }
 }
-

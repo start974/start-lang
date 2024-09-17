@@ -1,5 +1,5 @@
-use num_bigint::BigUint;
 use crate::utils::colored::*;
+use num_bigint::BigUint;
 
 pub type NConst = BigUint;
 

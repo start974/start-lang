@@ -6,7 +6,7 @@ use std::sync::LazyLock;
 pub static NAME_ENV: LazyLock<NameEnv> = LazyLock::new(|| {
     let mut name_env = NameEnv::empty();
     // N idents
-    name_env = name_env.add(number_n::N_TYPE_NAME.clone()).unwrap();
+    name_env = name_env.add_ident(number_n::N_TYPE_NAME.clone()).unwrap();
     name_env
 });
 

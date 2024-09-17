@@ -1,10 +1,26 @@
 use crate::ast::{Ident, NConst, Ty};
+use crate::error::Error;
 use crate::location::Location;
 use crate::utils::colored::*;
 
 #[derive(Debug, Clone)]
 pub enum Value {
     N(NConst),
+}
+
+const ERROR_CONVERT_TO_INTEGER: i32 = -2;
+impl TryInto<i32> for Value {
+    type Error = Error;
+    fn try_into(self) -> Result<i32, Self::Error> {
+        match self {
+            Self::N(n) => NConst::try_into(n).map_err(|_| {
+                Error::error_simple(
+                    "value is to loong to be convert to integer",
+                    ERROR_CONVERT_TO_INTEGER,
+                )
+            }),
+        }
+    }
 }
 
 impl std::fmt::Display for Value {

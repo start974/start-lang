@@ -1,15 +1,16 @@
-pub mod ast;
-mod env;
-mod parse;
-mod parse_tree;
-
 use super::error::Error;
 use super::stdlib::NAME_ENV;
 
-pub type Parser<'a> = parse::Parser<'a>;
-pub type ParseTree<'a> = parse_tree::ParseTree<'a>;
-//pub type ParserResult<'a, T> = parse::ParserResult<'a, T>;
-pub type NameEnv = env::NameEnv;
+pub mod ast;
+
+mod env;
+pub use env::*;
+
+mod parse;
+pub use parse::*;
+
+mod parse_tree;
+pub use parse_tree::*;
 
 /// parse a file
 pub fn parse_file(file_name: &str) -> Result<ParseTree<'_>, Error> {

@@ -16,8 +16,8 @@ impl NameEnv {
         }
     }
 
-    /// add idetifier to environment
-    pub fn add(mut self, ident: Ident) -> Option<Self> {
+    /// add indetifier to environment
+    pub fn add_ident(mut self, ident: Ident) -> Option<Self> {
         match self.data.insert(ident.name.clone(), ident) {
             Some(_) => None,
             None => Some(self),
@@ -34,7 +34,7 @@ impl NameEnv {
             Some(ident) => (self, ident),
             None => {
                 let ident = Ident::from(name.clone());
-                let name_env = self.add(ident.clone()).unwrap();
+                let name_env = self.add_ident(ident.clone()).unwrap();
                 (name_env, ident)
             }
         }
@@ -75,7 +75,9 @@ impl Colored for NameEnv {
         for (k, v) in &self.data {
             s.push_str(&cformat!(
                 "<green>{}</>\t->\t<blue>{}</>\t<cyan>{}</>\n",
-                k, v.name, v.id
+                k,
+                v.name,
+                v.id
             ));
         }
         s

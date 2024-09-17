@@ -3,10 +3,11 @@ use crate::error::Error;
 use crate::stdlib::number_n::N_TYPE;
 use crate::typing::ast::*;
 use crate::typing::ast::{TDefinition, TExpression};
+use crate::utils::colored::*;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
-pub struct Context {
+pub struct Interpreter {
     env: HashMap<Ident, Value>,
     main: Option<DefValue>,
 }
@@ -15,7 +16,7 @@ static MAIN_TY: LazyLock<Ty> = LazyLock::new(|| N_TYPE.clone());
 const ERROR_MAIN_NOT_FOUND: i32 = 401;
 const ERROR_MAIN_TYPE: i32 = 402;
 
-impl Context {
+impl Interpreter {
     /// empty context
     pub fn empty() -> Self {
         Self {
@@ -70,7 +71,7 @@ impl Context {
     }
 
     /// evaluation main
-    pub fn eval_main(&self) -> Result<i32, Error> {
+    pub fn eval_main(&self) -> Result<Value, Error> {
         match &self.main {
             None => Err(Error::error_simple(
                 "main function not found",
@@ -84,9 +85,33 @@ impl Context {
                     ERROR_MAIN_TYPE,
                 ))
             }
-            Some(main) => match &main.value {
-                Value::N(v) => Ok(v.try_into().unwrap()),
-            },
+            Some(main) => Ok(main.value.clone()),
         }
+    }
+}
+
+impl std::fmt::Display for Interpreter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (k, v) in &self.env {
+            writeln!(f, "{}\n{}", k, v)?;
+        }
+        match &self.main {
+            None => writeln!(f, "main : ⊥"),
+            Some(main) => writeln!(f, "main :\n{}", main),
+        }
+    }
+}
+
+impl Colored for Interpreter {
+    fn colored(&self) -> String {
+        let mut s = String::new();
+        for (k, v) in &self.env {
+            s += &cformat!("<blue>{}:</>\n{}\n", k, v.colored());
+        }
+        match &self.main {
+            None => s += &cformat!("<bold>main :</> ⊥"),
+            Some(main) => s += &cformat!("<bold>main</>:\n{}", main.colored()),
+        }
+        s
     }
 }

@@ -3,7 +3,9 @@ use startlang::error::Error;
 use startlang::parser::{ast::WTProgram, make_program, parse_file};
 
 fn f(file: &str) -> Result<WTProgram, Error> {
-    parse_file(file).and_then(make_program).map(|(_, wt_prog)| wt_prog)
+    parse_file(file)
+        .and_then(make_program)
+        .map(|(_, wt_prog)| wt_prog)
 }
 
 const PREFIX: &str = "parser";

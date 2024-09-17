@@ -19,7 +19,7 @@ impl<T, U> FResult<T, U> {
     }
 
     //pub fn get_res(self) -> Result<U, Error> {
-        //self.res
+    //self.res
     //}
 
     //pub fn get_acc(self) -> T {
@@ -39,6 +39,16 @@ impl<T, U> FResult<T, U> {
     //Err(_) => f(self.acc),
     //}
     //}
+
+    pub fn inspect<F>(self, f: F) -> Self
+    where
+        F: FnOnce(&T, &U),
+    {
+        if let Ok(x) = &self.res {
+            f(&self.acc, x);
+        }
+        self
+    }
 
     //pub fn inspect_acc<F>(self, f: F) -> Self
     //where
