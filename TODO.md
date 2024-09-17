@@ -1,95 +1,7 @@
 # TODO
 
-## Definition of program
-### Grammar
-```
-prgm :
-    definition*
-
-definition :
-    expr_def
-
-expr_def :
-    "def" ident (type_restr)? := expr
-
-type_restr :
-    ":" type
-
-ident :
-    [a-z-A-Z_(unicode)]+
-
-type :
-    ...
-    "(" type ")"
-
-expr :
-    ...
-    "(" expr ")"
-```
-
-### Ast
-```
-type ident α := {
-    name : string,
-    id : N,
-    extra : α
-}
-
-type program α :=
-    ident α -> option (definition α)
-
-and definition α :=
-    Expr_def : (expr_def α)
-
-and expr_def α := {
-    id : ident α,
-    ty : ty α,
-    body : expr α,
-    extra : α
-}
-```
-
-### Make localised ast
-```
-type pos := {
-    start : N,
-    end : N
-}
-
-type loc := {
-    file_name : string,
-    pos_start : pos,
-    pos_end : pos
-}
-
-```
-
-### Make typed ast
-```
-type ty := ...
-
-type weak_typed := option ty
-
-```
-
-### pipeline
-```
-def main :=
-| [ f_name ] =>
-    parse f_name        (* make a parse tree *)
-    |> to_weak_typed    (* make a weak_typed ast *)
-    |> infer_type       (* make a localised (typed ast) *)
-    |> erase_type       (* make a localised ast *)
-    |> erase_localised  (* make a ast *)
-    |> eval             (* eval expression *)
-| args => error args
-```
-
-### typing
-
-infer type and raise error if typing is unsatified
-
 ## Number (N and Z)
+
 ### Grammar
 ```
 ty :
@@ -108,48 +20,68 @@ number :
 number_N :
       [0-9]+
     | number_N "E" number_Z
-    | (0b | 0B) [0-1]+
-    | (0o | 0O) [0-7]+
-    | (0x | 0x) [0-9-a-f-A-F]+
+    | 0[bB][0-1][0-1_]*
+    | 0[oO][0-7][0-1_]*
+    | 0[xX][0-9-a-f-A-F] [0-9-a-f-A-F]*
 
 number_Z :
-    '-' number_N
+    [-+] number_N
 ```
 
 ### Typing
 ```
-type ty α :=
-| Ty_prim (prim_ty α)
+-------------
+  Γ ⊢ n : N
 
-type prim_ty α :=
-| Number (number α)
+-------------
+  Γ ⊢ -n : Z
 
-type number α :=
-| N { extra : α }
-| Z { extra : α }
-```
+-------------
+  Γ ⊢ +n : Z
 
-### Ast
-```
-type expression α :=
-| Const (const α)
-
-type constant α :=
-| Number (number α)
-
-type number α :=
-| N { value : N_ty, extra : α }
-| Z { value : Z_ty, extra : α }
 ```
 
 ### Interpretation
-Interpret with localised ast
+```
+-------------------
+  n : N ---> V(n)
+
+-------------------
+  k : Z ---> V(k)
+```
 
 ### Example
 
 ```
 def a : N := 10
 def b : Z := -10
+```
+
+## Variable substitution
+### Grammar
+```
+expr :
+  ident
+  ...
+```
+
+### Typing
+```
+--------------------
+  Γ, x : τ ⊢ x : τ
+```
+
+### Interpretation
+```
+--------------------
+ Δ ⊢ x ---> Δ[x]
+```
+
+### Example
+
+```
+def a : N := 10
+def b : N := a
 ```
 
 ## Type alias

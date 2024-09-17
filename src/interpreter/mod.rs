@@ -20,29 +20,24 @@ const ERROR_MAIN_TYPE: i32 = 402;
 
 // interpret a program
 pub fn eval_program(program: TProgram) -> Result<i32, Error> {
-    let mut main = None;
     let mut context = Context::empty();
-    for def in program.iter() {
-        context = context.add_definition(def.clone());
-        if def.get_name().name == "main" {
-            main = Some((def.get_body(), def.get_location()))
+    context = context.add_program(program);
+    match context.get_main() {
+        Some(main) => {
+            let expr = context.get(main).unwrap();
+            if expr.get_ty() != &*MAIN_TY {
+                let loc = main.get_location().clone().unwrap();
+                let msg = format!("main function must be typed by '{}' type", *MAIN_TY);
+                Err(Error::error_located(&msg, loc, ERROR_MAIN_TYPE))
+            } else {
+                match context.eval_expr(expr) {
+                    Value::N(v) => Ok(v.try_into().unwrap()),
+                }
+            }
         }
-    }
-    match main {
         None => Err(Error::error_simple(
             "main function not found",
             ERROR_MAIN_NOT_FOUND,
         )),
-        Some((main, opt_loc)) if *main.get_ty() != (*MAIN_TY) => {
-            let msg = format!("main function must be typed by '{}' type", *MAIN_TY);
-            Err(Error::error_located(
-                &msg,
-                opt_loc.clone().unwrap(),
-                ERROR_MAIN_TYPE,
-            ))
-        }
-        Some((main, _)) => match context.eval_expr(main) {
-            Value::N(v) => Ok(v.try_into().unwrap()),
-        },
     }
 }
