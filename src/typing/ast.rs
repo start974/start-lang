@@ -28,10 +28,20 @@ impl Typed for Constant {
 /* ------------------------------------------------------------------------ */
 
 impl TExpression {
+    /// make constant expression
     pub fn make_constant(c: Constant) -> Self {
         Self {
             ty: c.get_ty().clone(),
             kind: ExpressionKind::Const(c),
+            location: None,
+        }
+    }
+
+    /// make variable expression
+    pub fn make_var(x: Ident, ty: Ty) -> Self {
+        Self {
+            ty,
+            kind: ExpressionKind::Var(x),
             location: None,
         }
     }

@@ -9,3 +9,8 @@ fn type_error_simple() {
 fn type_error_many() {
     test_error("error/type_error_many")
 }
+
+#[test]
+fn var_not_exist() {
+    test_error("error/var_not_exist")
+}

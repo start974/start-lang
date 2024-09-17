@@ -32,4 +32,9 @@ impl TypingEnv {
     pub fn mem(&self, ty: &Ty) -> bool {
         self.type_set.contains(ty)
     }
+
+    // get type of binding
+    pub fn get_binding(&self, ident: &Ident) -> Option<Ty> {
+        self.bindings.get(ident).cloned()
+    }
 }

@@ -14,6 +14,7 @@ type TypingResult<T> = FResult<Typer, T>;
 
 const ERROR_TYPE_NOT_FOUND: i32 = 301;
 const ERROR_TYPE_MISMATCH: i32 = 302;
+const ERROR_VAR_NOT_FOUND: i32 = 303;
 
 impl Typer {
     pub fn make(env: TypingEnv) -> Self {
@@ -32,49 +33,74 @@ impl Typer {
         TypingResult::ok(self, val)
     }
 
-    fn error<T>(self, err: Error) -> TypingResult<T> {
-        TypingResult::error(self, err)
+    fn error<T, T2>(self, msg: String, elm: &T2, id: i32) -> TypingResult<T>
+    where
+        T2: Located,
+    {
+        match elm.get_location() {
+            None => panic!("{}", Error::error_simple(&msg, id)),
+            Some(location) => {
+                let err = Error::error_located(&msg, location.clone(), id);
+                TypingResult::error(self, err)
+            }
+        }
     }
 
-    fn assert_ty<T1, T2>(self, elm1: &T1, elm2: &T2) -> TypingResult<()>
+    fn get_binding(self, name: &Ident) -> TypingResult<Ty> {
+        match self.env.get_binding(name) {
+            Some(ty) => self.ok(ty),
+            None => {
+                let msg = format!("Variable '{name}' not found");
+                self.error(msg, name, ERROR_VAR_NOT_FOUND)
+            }
+        }
+    }
+
+    fn assert_ty<T2>(self, ty1: &Ty, elm2: &T2) -> TypingResult<()>
     where
-        T1: Typed,
         T2: WeakTyped + Located,
     {
         match elm2.get_opt_ty() {
             Some(ty2) if !self.env.mem(ty2) => {
                 let msg = format!("Type '{ty2}' not found");
-                match ty2.get_location() {
-                    None => panic!("{}", Error::error_simple(&msg, ERROR_TYPE_NOT_FOUND)),
-                    Some(location) => {
-                        let location = location.clone();
-                        let err = Error::error_located(&msg, location, ERROR_TYPE_NOT_FOUND);
-                        self.error(err)
-                    }
-                }
+                self.error(msg, ty2, ERROR_TYPE_NOT_FOUND)
             }
-            Some(ty2) if elm1.get_ty() != ty2 => {
+            Some(ty2) if ty1 != ty2 => {
                 let msg = "Expected type {ty1}, found type {ty2}";
                 match (ty2.get_location(), elm2.get_location()) {
                     (None, None) => panic!("{}", Error::error_simple(msg, ERROR_TYPE_MISMATCH)),
                     (_, Some(location)) | (Some(location), _) => {
-                        let location = location.clone();
-                        let err = Error::error_located(msg, location, ERROR_TYPE_MISMATCH);
-                        self.error(err)
+                        let err = Error::error_located(msg, location.clone(), ERROR_TYPE_MISMATCH);
+                        TypingResult::error(self, err)
                     }
                 }
             }
             _ => self.ok(()),
         }
     }
+    fn assert_ty2<T1, T2>(self, elm1: &T1, elm2: &T2) -> TypingResult<()>
+    where
+        T1: Typed,
+        T2: WeakTyped + Located,
+    {
+        let ty1 = elm1.get_ty();
+        self.assert_ty(ty1, elm2)
+    }
 
     pub fn type_expression(self, expr: &WTExpression) -> TypingResult<TExpression> {
         match &expr.kind {
             ExpressionKind::Const(constant) => self
-                .assert_ty(constant, expr)
+                .assert_ty2(constant, expr)
                 .map_res(|()| TExpression::make_constant(constant.clone()))
                 .map_res(|expr2| expr2.copy_location(expr)),
-            ExpressionKind::Var(_x) => todo!(),
+            ExpressionKind::Var(x) => self
+                .get_binding(x)
+                .and_then(|typing, ty| {
+                    typing
+                        .assert_ty(&ty, expr)
+                        .map_res(|()| TExpression::make_var(x.clone(), ty))
+                })
+                .map_res(|expr2| expr2.copy_location(expr)),
         }
     }
 
@@ -82,7 +108,7 @@ impl Typer {
         let name = def.get_name();
         self.type_expression(def.get_body())
             .map_acc2(|typing, body| typing.add_binding(name.clone(), body))
-            .and_then(|typing, body| typing.assert_ty(&body, def).map_res(|()| body))
+            .and_then(|typing, body| typing.assert_ty2(&body, def).map_res(|()| body))
             .map_res(|body| TDefinition::make_expr_def(name.clone(), body))
             .map_res(|def2| def2.copy_location(def))
     }

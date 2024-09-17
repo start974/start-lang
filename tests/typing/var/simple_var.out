@@ -1,0 +1,2 @@
+def a : N := 1
+def b : N := a
