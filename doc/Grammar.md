@@ -36,5 +36,5 @@ number_n :
 | 0[oB][0-1][0-1_]*
 
 ident :
-  [a-z-A-Z(unicode)]+
+  [a-z-A-Z_][a-z-A-Z0-9_]+
 ```

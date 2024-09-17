@@ -2,10 +2,10 @@ Error[201]: tests/parser/error/definition_many_error.st:1:5
 1 | def 2 := 3
         ^ Expected identifier
 
-Error[201]: tests/parser/error/definition_many_error.st:6:10
+Error[204]: tests/parser/error/definition_many_error.st:6:10
 6 | def b := _
-             ^ Expected expression
+             ^ Expected not allowed to use wildcard '_' as an expression
 
-Error[202]: tests/parser/error/definition_many_error.st:8:11
+Error[201]: tests/parser/error/definition_many_error.st:8:10
 8 | def c := 6bob
-              ^^^ Expected keyword 'def'
+             ^ Expected expression

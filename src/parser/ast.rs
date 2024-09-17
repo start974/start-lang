@@ -30,6 +30,14 @@ impl WTExpression {
             location: None,
         }
     }
+
+    pub fn make_var(ident: Ident) -> Self {
+        Self {
+            kind: ExpressionKind::Var(ident),
+            ty: None,
+            location: None,
+        }
+    }
 }
 
 impl WeakTyped for WTExpression {
