@@ -1,7 +1,6 @@
 use crate::location::Location;
-use crate::utils::colored::Colored;
+use crate::utils::colored::*;
 
-use color_print::cformat;
 use std::collections::VecDeque;
 
 #[derive(Debug)]
