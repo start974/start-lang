@@ -116,6 +116,7 @@ impl Typer {
     pub fn type_definition(self, def: &WTDefinition) -> TypingResult<TDefinition> {
         match def {
             WTDefinition::ExprDef(expr_def) => self.type_expr_def(expr_def),
+            WTDefinition::TyDef(_ty_def) => todo!(),
         }
     }
 
