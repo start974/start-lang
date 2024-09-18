@@ -55,6 +55,17 @@ impl WeakTyped for WTExpression {
 //-----------------------------------------------------------------------------
 // Expression Definition
 //-----------------------------------------------------------------------------
+impl WTExprDef {
+    pub fn new(name: Ident, body: WTExpression) -> Self {
+        Self {
+            name,
+            body,
+            ty: None,
+            location: None,
+        }
+    }
+}
+
 impl WeakTyped for WTExprDef {
     fn set_opt_ty(mut self, opt_ty: Option<Ty>) -> Self {
         self.ty = opt_ty;
@@ -94,40 +105,11 @@ impl Colored for WTExprDef {
 // Definition
 //-----------------------------------------------------------------------------
 
-impl WTDefinition {
-    /// make expression definition
-    pub fn make_expr_def(name: Ident, body: WTExpression) -> Self {
-        let expr_def = ExprDef {
-            name,
-            ty: None,
-            body,
-            location: None,
-        };
-        Self::ExprDef(expr_def)
-    }
-}
-
-impl WeakTyped for WTDefinition {
-    fn set_opt_ty(self, opt_ty: Option<Ty>) -> Self {
-        match self {
-            Self::ExprDef(expr_def) => Self::ExprDef(expr_def.set_opt_ty(opt_ty)),
-            Self::TyDef(_) => todo!(),
-        }
-    }
-
-    fn get_opt_ty(&self) -> &OptionTy {
-        match self {
-            Self::ExprDef(expr_def) => expr_def.get_opt_ty(),
-            Self::TyDef(_) => todo!(),
-        }
-    }
-}
-
 impl fmt::Display for WTDefinition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::ExprDef(expr_def) => expr_def.fmt(f),
-            Self::TyDef(_) => todo!(),
+            Self::TyDef(ty_def) => ty_def.fmt(f),
         }
     }
 }
@@ -136,7 +118,7 @@ impl Colored for WTDefinition {
     fn colored(&self) -> String {
         match self {
             Self::ExprDef(expr_def) => expr_def.colored(),
-            Self::TyDef(_) => todo!(),
+            Self::TyDef(ty_def) => ty_def.colored(),
         }
     }
 }

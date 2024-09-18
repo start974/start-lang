@@ -46,12 +46,6 @@ impl<'a> Parser<'a> {
         self
     }
 
-    /// set file name of parser
-    //pub fn set_file_name(mut self, file_name: &'a str) -> Self {
-    //self.file_name = file_name;
-    //self
-    //}
-
     fn location(&self, node: &Node) -> Location {
         if self.content.is_empty() {
             panic!("content is empty please set content with Parser::set_content")
@@ -192,9 +186,9 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_expr_def(self, node: &Node) -> ParserResult<'a, WTDefinition> {
+    fn parse_expr_def(self, node: &Node) -> ParserResult<'a, WTExprDef> {
         let mut child = node.child(0).unwrap();
-        // definition child
+        // def keyword
         self.check_keyword(&child, "def")
             // identifier
             .and_then(|parser, ()| {
@@ -221,14 +215,43 @@ impl<'a> Parser<'a> {
                     .parse_expression(&child)
                     .map_res(|body| (ident, opt_ty, body))
             })
-            .map_res(|(name, opt_ty, body)| {
-                WTDefinition::make_expr_def(name, body).set_opt_ty(opt_ty)
-            })
+            .map_res(|(name, opt_ty, body)| WTExprDef::new(name, body).set_opt_ty(opt_ty))
             .map_res2(|parser, def| parser.set_location(node, def))
     }
 
-    pub fn parse_definition(self, node: &Node) -> ParserResult<'a, WTDefinition> {
-        self.parse_expr_def(node)
+    fn parse_type_def(self, node: &Node) -> ParserResult<'a, TyDef> {
+        let mut child = node.child(0).unwrap();
+        // type keyword
+        self.check_keyword(&child, "type")
+            // identifier
+            .and_then(|parser, ()| {
+                child = child.next_sibling().unwrap();
+                parser.parse_ident(&child)
+            })
+            // eq def
+            .and_then(|parser, ident| {
+                child = child.next_sibling().unwrap();
+                parser.check_operator(&child, ":=").map_res(|()| ident)
+            })
+            // body
+            .and_then(|parser, ident| {
+                child = child.next_sibling().unwrap();
+                parser.parse_ty(&child).map_res(|ty| (ident, ty))
+            })
+            .map_res(|(name, ty)| TyDef::new(name, ty))
+            .map_res2(|parser, def| parser.set_location(node, def))
+    }
+
+    fn parse_definition(self, node: &Node) -> ParserResult<'a, WTDefinition> {
+        match node.child(0) {
+            Some(keyword) if keyword.kind() == "def" => {
+                self.parse_expr_def(node).map_res(WTDefinition::ExprDef)
+            }
+            Some(keyword) if keyword.kind() == "type" => {
+                self.parse_type_def(node).map_res(WTDefinition::TyDef)
+            }
+            _ => self.error_kind(node, "definition"),
+        }
     }
 
     /// parse program
