@@ -9,9 +9,13 @@ prgm :
 
 definition :
   expr_def
+| type_def
 
 expr_def :
   "def" ident (type_restr)? := expr
+
+type_def:
+  "type" ident := type
 
 type_restr :
   ":" type
