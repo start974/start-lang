@@ -2,6 +2,7 @@ use super::ast::*;
 use super::env::NameEnv;
 use super::parse_tree::ParseTree;
 use crate::error::Error;
+use crate::error::*;
 use crate::location::{Located, Location, Position};
 use crate::utils::colored::*;
 use crate::utils::FResult;
@@ -13,7 +14,7 @@ pub struct Parser<'a> {
     name_env: NameEnv,
 }
 
-pub type ParserResult<'a, T> = FResult<Parser<'a>, T>;
+pub type ParserResult<'a, T, E> = FResult<Parser<'a>, T, E>;
 
 const ERROR_KIND: i32 = 201;
 const ERROR_KEYWORD: i32 = 202;
@@ -63,22 +64,22 @@ impl<'a> Parser<'a> {
         )
     }
 
-    fn error<T>(self, node: &Node, expect: &str, code: i32) -> ParserResult<'a, T> {
+    fn error<T>(self, node: &Node, expect: &str, code: i32) -> ParserResult<'a, T, Error> {
         let msg = format!("Expected {expect}");
         let location = self.location(node);
-        let err = Error::error_located(&msg, location, code);
-        ParserResult::error(self, err)
+        let err = Error::make(&msg, code).set_location(location);
+        ParserResult::err(self, err)
     }
 
-    fn ok<T>(self, val: T) -> ParserResult<'a, T> {
+    fn ok<T, E>(self, val: T) -> ParserResult<'a, T, E> {
         ParserResult::ok(self, val)
     }
 
-    fn error_kind<T>(self, node: &Node, expect: &str) -> ParserResult<'a, T> {
+    fn error_kind<T>(self, node: &Node, expect: &str) -> ParserResult<'a, T, Error> {
         self.error(node, expect, ERROR_KIND)
     }
 
-    fn check_keyword(self, node: &Node, expect: &str) -> ParserResult<'a, ()> {
+    fn check_keyword(self, node: &Node, expect: &str) -> ParserResult<'a, (), Error> {
         if node.kind() != expect {
             let expect = format!("keyword '{}'", expect);
             self.error(node, &expect, ERROR_KEYWORD)
@@ -87,7 +88,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn check_operator(self, node: &Node, expect: &str) -> ParserResult<'a, ()> {
+    fn check_operator(self, node: &Node, expect: &str) -> ParserResult<'a, (), Error> {
         if node.kind() != expect {
             let expect = format!("operator '{}'", expect);
             self.error(node, &expect, ERROR_OPERATOR)
@@ -104,7 +105,7 @@ impl<'a> Parser<'a> {
         val.set_location(location)
     }
 
-    fn parse_ident(mut self, node: &Node) -> ParserResult<'a, Ident> {
+    fn parse_ident(mut self, node: &Node) -> ParserResult<'a, Ident, Error> {
         match node.kind() {
             "ident" => {
                 let location = self.location(node);
@@ -117,7 +118,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_number_n(self, node: &Node) -> ParserResult<'a, NConst> {
+    fn parse_number_n(self, node: &Node) -> ParserResult<'a, NConst, Error> {
         match node.kind() {
             "number_N" => {
                 let location = self.location(node);
@@ -138,7 +139,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_constant(self, node: &Node) -> ParserResult<'a, Constant> {
+    fn parse_constant(self, node: &Node) -> ParserResult<'a, Constant, Error> {
         let child = node.child(0).unwrap();
         match child.kind() {
             "number_N" => self.parse_number_n(&child).map_res(Constant::make_n),
@@ -146,7 +147,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_expression(self, node: &Node) -> ParserResult<'a, WTExpression> {
+    pub fn parse_expression(self, node: &Node) -> ParserResult<'a, WTExpression, Error> {
         match node.kind() {
             "constant" => self
                 .parse_constant(node)
@@ -167,7 +168,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_ty(self, node: &Node) -> ParserResult<'a, Ty> {
+    fn parse_ty(self, node: &Node) -> ParserResult<'a, Ty, Error> {
         match node.kind() {
             "ident" => self
                 .parse_ident(node)
@@ -177,7 +178,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_ty_restr(self, node: &Node) -> ParserResult<'a, Ty> {
+    fn parse_ty_restr(self, node: &Node) -> ParserResult<'a, Ty, Error> {
         let mut child = node.child(0).unwrap();
         // colon
         self.check_operator(&child, ":").and_then(|parser, ()| {
@@ -186,7 +187,7 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_expr_def(self, node: &Node) -> ParserResult<'a, WTExprDef> {
+    fn parse_expr_def(self, node: &Node) -> ParserResult<'a, WTExprDef, Error> {
         let mut child = node.child(0).unwrap();
         // def keyword
         self.check_keyword(&child, "def")
@@ -219,7 +220,7 @@ impl<'a> Parser<'a> {
             .map_res2(|parser, def| parser.set_location(node, def))
     }
 
-    fn parse_type_def(self, node: &Node) -> ParserResult<'a, TyDef> {
+    fn parse_type_def(self, node: &Node) -> ParserResult<'a, TyDef, Error> {
         let mut child = node.child(0).unwrap();
         // type keyword
         self.check_keyword(&child, "type")
@@ -242,7 +243,7 @@ impl<'a> Parser<'a> {
             .map_res2(|parser, def| parser.set_location(node, def))
     }
 
-    fn parse_definition(self, node: &Node) -> ParserResult<'a, WTDefinition> {
+    fn parse_definition(self, node: &Node) -> ParserResult<'a, WTDefinition, Error> {
         match node.child(0) {
             Some(keyword) if keyword.kind() == "def" => {
                 self.parse_expr_def(node).map_res(WTDefinition::ExprDef)
@@ -255,7 +256,7 @@ impl<'a> Parser<'a> {
     }
 
     /// parse program
-    pub fn parse_program(self, node: &Node) -> ParserResult<'a, WTProgram> {
+    pub fn parse_program(self, node: &Node) -> ParserResult<'a, WTProgram, Errors> {
         match node.kind() {
             "program" => {
                 let mut res = self.ok(WTProgram::empty());
@@ -268,15 +269,12 @@ impl<'a> Parser<'a> {
                 }
                 res
             }
-            _ => {
-                println!("kind {node}");
-                self.error_kind(node, "program")
-            }
+            _ => self.error_kind(node, "program").to_errors(),
         }
     }
 
     /// parse definitions
-    pub fn parse_repl_definitions(self, node: &Node) -> ParserResult<'a, WTProgram> {
+    pub fn parse_repl_definitions(self, node: &Node) -> ParserResult<'a, WTProgram, Errors> {
         match node.kind() {
             "definitions" => {
                 let mut res = self.ok(Program::empty());
@@ -289,14 +287,11 @@ impl<'a> Parser<'a> {
                 }
                 res
             }
-            _ => {
-                println!("kind {node}");
-                self.error_kind(node, "program")
-            }
+            _ => self.error_kind(node, "program").to_errors(),
         }
     }
 
-    pub fn parse_repl_expression(self, node: &Node) -> ParserResult<'a, WTExpression> {
+    pub fn parse_repl_expression(self, node: &Node) -> ParserResult<'a, WTExpression, Error> {
         match node.kind() {
             "expression" => {
                 let child = node.child(0).unwrap();
@@ -306,7 +301,10 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_definitions_or_expression(self, node: &Node) -> ParserResult<'a, WTDefsOrExpr> {
+    pub fn parse_definitions_or_expression(
+        self,
+        node: &Node,
+    ) -> ParserResult<'a, WTDefsOrExpr, Errors> {
         if node.kind() == "definitions_or_expression" {
             let child = node.child(0).unwrap();
             match child.kind() {
@@ -315,11 +313,15 @@ impl<'a> Parser<'a> {
                     .map_res(WTDefsOrExpr::Definitions),
                 "expression" => self
                     .parse_repl_expression(&child)
-                    .map_res(WTDefsOrExpr::Expression),
-                _ => self.error_kind(node, "definitions or expression"),
+                    .map_res(WTDefsOrExpr::Expression)
+                    .to_errors(),
+                _ => self
+                    .error_kind(node, "definitions or expression")
+                    .to_errors(),
             }
         } else {
             self.error_kind(node, "definitions or expression")
+                .to_errors()
         }
     }
 }

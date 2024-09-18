@@ -42,7 +42,7 @@ impl<'a> ParseTree<'a> {
         File::open(file_name)
             .map_err(|_| {
                 let msg = format!("No such file '{file_name}'");
-                Error::error_simple(&msg, ERROR_FILE_NOT_FOUND)
+                Error::make(&msg, ERROR_FILE_NOT_FOUND)
             })
             .and_then(|mut file| {
                 let mut input = String::new();
@@ -50,7 +50,7 @@ impl<'a> ParseTree<'a> {
                     Ok(_) => Ok(input),
                     Err(_) => {
                         let msg = format!("Cannot read file '{file_name}'.");
-                        Err(Error::error_simple(&msg, ERROR_READ))
+                        Err(Error::make(&msg, ERROR_READ))
                     }
                 }
             })

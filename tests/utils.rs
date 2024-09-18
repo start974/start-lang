@@ -1,5 +1,5 @@
 use pretty_assertions::assert_eq;
-use startlang::error::Error;
+use startlang::error::Errors;
 
 fn get_out(file_name: &str) -> String {
     let file = format!("{file_name}.out");
@@ -11,9 +11,9 @@ fn get_ret(file_name: &str) -> i32 {
     line.trim().to_string().parse().unwrap()
 }
 
-fn get_input<F, T>(file_name: &str, f: F) -> Result<T, Error>
+fn get_input<F, T>(file_name: &str, f: F) -> Result<T, Errors>
 where
-    F: Fn(&str) -> Result<T, Error>,
+    F: Fn(&str) -> Result<T, Errors>,
 {
     let file = format!("{file_name}.st");
     f(&file)
@@ -25,7 +25,7 @@ fn get_file_name(prefix: &str, suffix: &str) -> String {
 
 pub fn test_error<F, T>(prefix: &str, suffix: &str, f: F)
 where
-    F: Fn(&str) -> Result<T, Error>,
+    F: Fn(&str) -> Result<T, Errors>,
     T: std::fmt::Display,
 {
     let file_name = get_file_name(prefix, suffix);
@@ -37,7 +37,7 @@ where
 
 pub fn test_out<F, T>(prefix: &str, suffix: &str, f: F)
 where
-    F: Fn(&str) -> Result<T, Error>,
+    F: Fn(&str) -> Result<T, Errors>,
     T: std::fmt::Display,
 {
     let file_name = get_file_name(prefix, suffix);
@@ -49,7 +49,7 @@ where
 
 pub fn test_ret<F>(prefix: &str, suffix: &str, f: F)
 where
-    F: Fn(&str) -> Result<i32, Error>,
+    F: Fn(&str) -> Result<i32, Errors>,
 {
     let file_name = get_file_name(prefix, suffix);
     match get_input(&file_name, f) {

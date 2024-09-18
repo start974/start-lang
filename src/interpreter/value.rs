@@ -1,6 +1,6 @@
 use crate::ast::{Ident, NConst, Ty};
 use crate::error::Error;
-use crate::location::Location;
+use crate::location::*;
 use crate::utils::colored::*;
 
 #[derive(Debug, Clone)]
@@ -14,7 +14,7 @@ impl TryInto<i32> for Value {
     fn try_into(self) -> Result<i32, Self::Error> {
         match self {
             Self::N(n) => NConst::try_into(n).map_err(|_| {
-                Error::error_simple(
+                Error::make(
                     "value is to loong to be convert to integer",
                     ERROR_CONVERT_TO_INTEGER,
                 )
@@ -55,12 +55,24 @@ impl std::fmt::Display for DefValue {
         write!(f, "{name} : {ty} := {value}")
     }
 }
+
 impl Colored for DefValue {
     fn colored(&self) -> String {
         let name = &self.name;
         let ty = &self.ty;
         let value = &self.value.colored();
         cformat!("<blue><bold>{name}</></> <red>:</> <yellow>{ty}</> <red>:=</> {value}")
+    }
+}
+
+impl Located for DefValue {
+    fn get_location(&self) -> &Option<Location> {
+        &self.location
+    }
+
+    fn set_opt_location(mut self, opt_location: Option<Location>) -> Self {
+        self.location = opt_location;
+        self
     }
 }
 

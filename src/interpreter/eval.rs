@@ -90,17 +90,10 @@ impl Interpreter {
     /// evaluation main
     pub fn eval_main(&self) -> Result<Value, Error> {
         match &self.main {
-            None => Err(Error::error_simple(
-                "main function not found",
-                ERROR_MAIN_NOT_FOUND,
-            )),
+            None => Err(Error::make("main function not found", ERROR_MAIN_NOT_FOUND)),
             Some(main) if main.ty != *MAIN_TY => {
                 let msg = format!("main function must be typed by '{}' type", *MAIN_TY);
-                Err(Error::error_located(
-                    &msg,
-                    main.location.clone().unwrap(),
-                    ERROR_MAIN_TYPE,
-                ))
+                Err(Error::make(&msg, ERROR_MAIN_TYPE).copy_location(main))
             }
             Some(main) => Ok(main.value.clone()),
         }
