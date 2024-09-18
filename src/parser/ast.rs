@@ -111,12 +111,14 @@ impl WeakTyped for WTDefinition {
     fn set_opt_ty(self, opt_ty: Option<Ty>) -> Self {
         match self {
             Self::ExprDef(expr_def) => Self::ExprDef(expr_def.set_opt_ty(opt_ty)),
+            Self::TyDef(_) => todo!(),
         }
     }
 
     fn get_opt_ty(&self) -> &OptionTy {
         match self {
-            Definition::ExprDef(expr_def) => expr_def.get_opt_ty(),
+            Self::ExprDef(expr_def) => expr_def.get_opt_ty(),
+            Self::TyDef(_) => todo!(),
         }
     }
 }
@@ -124,7 +126,8 @@ impl WeakTyped for WTDefinition {
 impl fmt::Display for WTDefinition {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Definition::ExprDef(expr_def) => expr_def.fmt(f),
+            Self::ExprDef(expr_def) => expr_def.fmt(f),
+            Self::TyDef(_) => todo!(),
         }
     }
 }
@@ -132,7 +135,8 @@ impl fmt::Display for WTDefinition {
 impl Colored for WTDefinition {
     fn colored(&self) -> String {
         match self {
-            Definition::ExprDef(expr_def) => expr_def.colored(),
+            Self::ExprDef(expr_def) => expr_def.colored(),
+            Self::TyDef(_) => todo!(),
         }
     }
 }
