@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::error::*;
 use crate::location::Located;
 use crate::parser::ast::*;
 use crate::utils::{colored::Colored, FResult};
@@ -10,7 +10,7 @@ pub struct Typer {
     env: TypingEnv,
 }
 
-type TypingResult<T> = FResult<Typer, T>;
+type TypingResult<T, E> = FResult<Typer, T, E>;
 
 const ERROR_TYPE_NOT_FOUND: i32 = 301;
 const ERROR_TYPE_MISMATCH: i32 = 302;
@@ -29,24 +29,19 @@ impl Typer {
         self
     }
 
-    fn ok<T>(self, val: T) -> TypingResult<T> {
+    fn ok<T, E>(self, val: T) -> TypingResult<T, E> {
         TypingResult::ok(self, val)
     }
 
-    fn error<T, T2>(self, msg: String, elm: &T2, id: i32) -> TypingResult<T>
+    fn error<T, T2>(self, msg: String, elm: &T2, id: i32) -> TypingResult<T, Error>
     where
         T2: Located,
     {
-        match elm.get_location() {
-            None => panic!("{}", Error::error_simple(&msg, id)),
-            Some(location) => {
-                let err = Error::error_located(&msg, location.clone(), id);
-                TypingResult::error(self, err)
-            }
-        }
+        let err = Error::make(&msg, id).copy_location(elm);
+        TypingResult::err(self, err)
     }
 
-    fn get_binding(self, name: &Ident) -> TypingResult<Ty> {
+    fn get_binding(self, name: &Ident) -> TypingResult<Ty, Error> {
         match self.env.get_binding(name) {
             Some(ty) => self.ok(ty),
             None => {
@@ -56,7 +51,7 @@ impl Typer {
         }
     }
 
-    fn assert_ty<T2>(self, ty1: &Ty, elm2: &T2) -> TypingResult<()>
+    fn assert_ty<T2>(self, ty1: &Ty, elm2: &T2) -> TypingResult<(), Error>
     where
         T2: WeakTyped + Located,
     {
@@ -66,19 +61,13 @@ impl Typer {
                 self.error(msg, ty2, ERROR_TYPE_NOT_FOUND)
             }
             Some(ty2) if ty1 != ty2 => {
-                let msg = "Expected type {ty1}, found type {ty2}";
-                match (ty2.get_location(), elm2.get_location()) {
-                    (None, None) => panic!("{}", Error::error_simple(msg, ERROR_TYPE_MISMATCH)),
-                    (_, Some(location)) | (Some(location), _) => {
-                        let err = Error::error_located(msg, location.clone(), ERROR_TYPE_MISMATCH);
-                        TypingResult::error(self, err)
-                    }
-                }
+                let msg = format!("Expected type {ty1}, found type {ty2}");
+                self.error(msg, elm2, ERROR_TYPE_MISMATCH)
             }
             _ => self.ok(()),
         }
     }
-    fn assert_ty2<T1, T2>(self, elm1: &T1, elm2: &T2) -> TypingResult<()>
+    fn assert_ty2<T1, T2>(self, elm1: &T1, elm2: &T2) -> TypingResult<(), Error>
     where
         T1: Typed,
         T2: WeakTyped + Located,
@@ -87,7 +76,7 @@ impl Typer {
         self.assert_ty(ty1, elm2)
     }
 
-    pub fn type_expression(self, expr: &WTExpression) -> TypingResult<TExpression> {
+    pub fn type_expression(self, expr: &WTExpression) -> TypingResult<TExpression, Error> {
         match &expr.kind {
             ExpressionKind::Const(constant) => self
                 .assert_ty2(constant, expr)
@@ -104,7 +93,7 @@ impl Typer {
         }
     }
 
-    pub fn type_expr_def(self, def: &WTExprDef) -> TypingResult<TDefinition> {
+    pub fn type_expr_def(self, def: &WTExprDef) -> TypingResult<TDefinition, Error> {
         let name = def.get_name();
         self.type_expression(def.get_body())
             .map_acc2(|typing, body| typing.add_binding(name.clone(), body))
@@ -113,7 +102,7 @@ impl Typer {
             .map_res(|def2| def2.copy_location(def))
     }
 
-    pub fn type_definition(self, def: &WTDefinition) -> TypingResult<TDefinition> {
+    pub fn type_definition(self, def: &WTDefinition) -> TypingResult<TDefinition, Error> {
         match def {
             WTDefinition::ExprDef(expr_def) => self.type_expr_def(expr_def),
             WTDefinition::TyDef(_ty_def) => todo!(),
@@ -121,7 +110,7 @@ impl Typer {
     }
 
     /// type a program
-    pub fn type_program(self, program: &WTProgram) -> TypingResult<TProgram> {
+    pub fn type_program(self, program: &WTProgram) -> TypingResult<TProgram, Errors> {
         program.iter().fold(self.ok(Program::empty()), |res, def| {
             res.combine(
                 |typing| typing.type_definition(def),
@@ -134,11 +123,12 @@ impl Typer {
     pub fn type_definitions_or_expression(
         self,
         defs_or_exp: &WTDefsOrExpr,
-    ) -> TypingResult<TDefsOrExpr> {
+    ) -> TypingResult<TDefsOrExpr, Errors> {
         match defs_or_exp {
-            WTDefsOrExpr::Expression(expr) => {
-                self.type_expression(expr).map_res(TDefsOrExpr::Expression)
-            }
+            WTDefsOrExpr::Expression(expr) => self
+                .type_expression(expr)
+                .map_res(TDefsOrExpr::Expression)
+                .to_errors(),
             WTDefsOrExpr::Definitions(prog) => {
                 self.type_program(prog).map_res(TDefsOrExpr::Definitions)
             }

@@ -1,10 +1,10 @@
 use crate::utils;
-use startlang::error::Error;
+use startlang::error::Errors;
 use startlang::interpreter::eval_program;
 use startlang::parser::{make_program, parse_file};
 use startlang::typing::infer_type;
 
-fn f(file: &str) -> Result<i32, Error> {
+fn f(file: &str) -> Result<i32, Errors> {
     parse_file(file)
         .and_then(make_program)
         .and_then(|(_, wt_prog)| infer_type(wt_prog))

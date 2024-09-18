@@ -1,8 +1,8 @@
 use crate::utils;
-use startlang::error::Error;
+use startlang::error::Errors;
 use startlang::parser::{ast::WTProgram, make_program, parse_file};
 
-fn f(file: &str) -> Result<WTProgram, Error> {
+fn f(file: &str) -> Result<WTProgram, Errors> {
     parse_file(file)
         .and_then(make_program)
         .map(|(_, wt_prog)| wt_prog)

@@ -1,10 +1,12 @@
 use crate::args::Args;
+use crate::error::Errors;
 use crate::interpreter::{DefsOrValue, Interpreter};
 use crate::parser::{ast::WTDefsOrExpr, ParseTree, Parser};
 use crate::stdlib::{NAME_ENV, TYPE_ENV};
 use crate::typing::{ast::TDefsOrExpr, Typer};
+use crate::utils::colored::*;
 use crate::utils::debug::*;
-use crate::utils::{colored::Colored, FResult};
+use crate::utils::FResult;
 use rustyline::{history::FileHistory, DefaultEditor, Editor};
 
 struct Env {
@@ -16,7 +18,7 @@ struct Env {
 
 const FILE_NAME: &str = "<<stdin>>";
 
-type EnvResult<T> = FResult<Env, T>;
+type EnvResult<T> = FResult<Env, T, Errors>;
 
 impl Env {
     fn new() -> Self {

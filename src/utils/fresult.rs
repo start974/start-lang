@@ -1,12 +1,12 @@
-use crate::error::Error;
+use crate::error::{Error, Errors};
 
-pub struct FResult<T, U> {
+pub struct FResult<T, U, E> {
     acc: T,
-    res: Result<U, Error>,
+    res: Result<U, E>,
 }
 
-impl<T, U> FResult<T, U> {
-    pub fn make(acc: T, res: Result<U, Error>) -> Self {
+impl<T, U, E> FResult<T, U, E> {
+    pub fn make(acc: T, res: Result<U, E>) -> Self {
         Self { acc, res }
     }
 
@@ -14,7 +14,7 @@ impl<T, U> FResult<T, U> {
         Self::make(acc, Ok(res))
     }
 
-    pub fn error(acc: T, err: Error) -> Self {
+    pub fn err(acc: T, err: E) -> Self {
         Self::make(acc, Err(err))
     }
 
@@ -26,7 +26,7 @@ impl<T, U> FResult<T, U> {
     //self.acc
     //}
 
-    pub fn get_pair(self) -> (T, Result<U, Error>) {
+    pub fn get_pair(self) -> (T, Result<U, E>) {
         (self.acc, self.res)
     }
 
@@ -68,37 +68,23 @@ impl<T, U> FResult<T, U> {
     /*self*/
     /*}*/
 
-    pub fn get_result(self) -> Result<(T, U), Error> {
+    pub fn get_result(self) -> Result<(T, U), E> {
         self.res.map(|x| (self.acc, x))
     }
 }
 
-impl<T, U1> FResult<T, U1> {
-    pub fn and_then<F, U2>(self, f: F) -> FResult<T, U2>
+impl<T, U1, E> FResult<T, U1, E> {
+    pub fn and_then<F, U2>(self, f: F) -> FResult<T, U2, E>
     where
-        F: FnOnce(T, U1) -> FResult<T, U2>,
+        F: FnOnce(T, U1) -> FResult<T, U2, E>,
     {
         match self.res {
             Ok(val) => f(self.acc, val),
-            Err(e) => FResult::error(self.acc, e),
+            Err(e) => FResult::err(self.acc, e),
         }
     }
 
-    pub fn combine<F1, F2, U2, U3>(self, f1: F1, f2: F2) -> FResult<T, U3>
-    where
-        F1: FnOnce(T) -> FResult<T, U2>,
-        F2: FnOnce(U1, U2) -> U3,
-    {
-        let r = f1(self.acc);
-        let res = match (self.res, r.res) {
-            (Ok(x), Ok(y)) => Ok(f2(x, y)),
-            (Err(e), Ok(_)) | (Ok(_), Err(e)) => Err(e),
-            (Err(e1), Err(e2)) => Err(e1.error_add(e2)),
-        };
-        FResult { acc: r.acc, res }
-    }
-
-    pub fn map_res<U2, F>(self, f: F) -> FResult<T, U2>
+    pub fn map_res<U2, F>(self, f: F) -> FResult<T, U2, E>
     where
         F: FnOnce(U1) -> U2,
     {
@@ -108,7 +94,7 @@ impl<T, U1> FResult<T, U1> {
         }
     }
 
-    pub fn map_res2<U2, F>(self, f: F) -> FResult<T, U2>
+    pub fn map_res2<U2, F>(self, f: F) -> FResult<T, U2, E>
     where
         F: FnOnce(&T, U1) -> U2,
     {
@@ -120,7 +106,7 @@ impl<T, U1> FResult<T, U1> {
     }
 }
 
-impl<T1, U> FResult<T1, U> {
+impl<T1, U, E> FResult<T1, U, E> {
     //pub fn map_acc<T2, F>(self, f: F) -> FResult<T2, U>
     //where
     //F: FnOnce(T1) -> T2,
@@ -131,7 +117,7 @@ impl<T1, U> FResult<T1, U> {
     //}
     //}
 
-    pub fn map_acc2<F>(self, f: F) -> FResult<T1, U>
+    pub fn map_acc2<F>(self, f: F) -> FResult<T1, U, E>
     where
         F: FnOnce(T1, &U) -> T1,
     {
@@ -148,4 +134,33 @@ impl<T1, U> FResult<T1, U> {
     //{
     //FResult { acc, res: self.res }
     //}
+}
+
+impl<T, U1> FResult<T, U1, Errors> {
+    /// cobmine result made by [f1] using [f2] and
+    /// and make error list for many errors occured
+    pub fn combine<F1, F2, U2, U3>(self, f1: F1, f2: F2) -> FResult<T, U3, Errors>
+    where
+        F1: FnOnce(T) -> FResult<T, U2, Error>,
+        F2: FnOnce(U1, U2) -> U3,
+    {
+        let r = f1(self.acc);
+        let res = match (self.res, r.res) {
+            (Ok(x), Ok(y)) => Ok(f2(x, y)),
+            (Ok(_), Err(e)) => Err(Errors::from(e)),
+            (Err(errs), Ok(_)) => Err(errs),
+            (Err(errs), Err(e)) => Err(errs.add_error(e)),
+        };
+        FResult { acc: r.acc, res }
+    }
+}
+
+impl<T, U> FResult<T, U, Error> {
+    /// comvert error to errors
+    pub fn to_errors(self) -> FResult<T, U, Errors> {
+        match self.res {
+            Ok(x) => FResult::ok(self.acc, x),
+            Err(e) => FResult::err(self.acc, Errors::from(e)),
+        }
+    }
 }
