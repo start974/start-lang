@@ -25,6 +25,10 @@
         {
           "type": "expr_def",
           "named": true
+        },
+        {
+          "type": "type_def",
+          "named": true
         }
       ]
     }
@@ -106,6 +110,21 @@
     }
   },
   {
+    "type": "type_def",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "(",
     "named": false
   },
@@ -136,5 +155,9 @@
   {
     "type": "number_N",
     "named": true
+  },
+  {
+    "type": "type",
+    "named": false
   }
 ]

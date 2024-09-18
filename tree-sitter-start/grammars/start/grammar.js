@@ -25,18 +25,27 @@ module.exports = grammar({
 
     _definition: $ => choice(
       $.expr_def,
-      // TODO: add type def
+      $.type_def,
     ),
 
-    expr_def: $ =>seq("def",
+    expr_def: $ =>seq(
+      "def",
       $.ident,
       optional($.ty_restr),
       ":=",
       $._expr_final
     ),
 
-    ty_restr: $ =>
-      seq(":", $._ty),
+    type_def: $ => seq(
+      "type",
+      $.ident,
+      ":=",
+      $._ty
+    ),
+
+    ty_restr: $ => seq(
+      ":",
+      $._ty),
 
     _ty: $ => choice(
       $.ident
