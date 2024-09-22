@@ -1,4 +1,4 @@
-pub use crate::location::{Located, Location};
+pub use crate::location::Location;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -6,7 +6,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 #[derive(Clone)]
 pub struct Ident {
     pub name: String,
-    location: Option<Location>,
     pub id: u32,
 }
 
@@ -15,7 +14,6 @@ impl From<String> for Ident {
         static COUNTER: AtomicUsize = AtomicUsize::new(0);
         Self {
             name,
-            location: None,
             id: COUNTER.fetch_add(1, Ordering::SeqCst) as u32,
         }
     }
@@ -57,16 +55,5 @@ impl Eq for Ident {}
 impl Hash for Ident {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.id.hash(state);
-    }
-}
-
-impl Located for Ident {
-    fn get_location(&self) -> &Option<Location> {
-        &self.location
-    }
-
-    fn set_opt_location(mut self, opt_location: Option<Location>) -> Self {
-        self.location = opt_location;
-        self
     }
 }

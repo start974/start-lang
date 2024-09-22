@@ -1,5 +1,5 @@
 use super::value::*;
-use crate::error::Error;
+use crate::error::*;
 use crate::stdlib::number_n::N_TYPE;
 use crate::typing::ast::*;
 use crate::typing::ast::{TDefinition, TExpression};
@@ -90,10 +90,23 @@ impl Interpreter {
     /// evaluation main
     pub fn eval_main(&self) -> Result<Value, Error> {
         match &self.main {
-            None => Err(Error::make("main function not found", ERROR_MAIN_NOT_FOUND)),
+            None => {
+                let msg = Head::new()
+                    .text("Function")
+                    .quoted("main")
+                    .text("not found");
+                Err(Error::make(msg, ERROR_MAIN_NOT_FOUND))
+            }
             Some(main) if main.ty != *MAIN_TY => {
-                let msg = format!("main function must be typed by '{}' type", *MAIN_TY);
-                Err(Error::make(&msg, ERROR_MAIN_TYPE).copy_location(main))
+                let msg = Head::new()
+                    .text("Function")
+                    .quoted("main")
+                    .text("has wrong type");
+                let err = Error::make(msg, ERROR_MAIN_TYPE)
+                    .copy_location(main)
+                    .add_hint(Hint::new().text("Expect :").quoted(&MAIN_TY.to_string()))
+                    .add_hint(Hint::new().text("Got    :").quoted(&main.ty.to_string()));
+                Err(err)
             }
             Some(main) => Ok(main.value.clone()),
         }

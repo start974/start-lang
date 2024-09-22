@@ -1,4 +1,4 @@
-use color_print::cformat;
+use colored::Colorize;
 
 #[derive(Clone)]
 pub struct Position {
@@ -63,64 +63,48 @@ impl Location {
         )
     }
 
-    /// location
-    pub fn string_location(&self) -> String {
+    /// fmt location
+    pub fn fmt_location(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let start = self.start.row;
         let end = self.end.row;
         if start == end {
-            format!("{}:{}", self.file_name, self.start)
+            write!(f, "{}:{}", self.file_name, self.start)
         } else {
-            format!("{}:{}-{}", self.file_name, self.start, self.end)
+            write!(f, "{}:{}-{}", self.file_name, self.start, self.end)
         }
     }
 
-    /// content
-    pub fn string_content(&self) -> String {
+    /// fmt content
+    pub fn fmt_content(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let digits = self.digits();
         let mut i = self.start.row + 1;
-        let mut res = String::new();
         for line in &self.lines {
-            res += &format!("{:width$} | {line}\n", i, width = digits, line = line);
+            write!(f, "{:width$}", i.to_string().blue(), width = digits)?;
+            write!(f, "{}", " | ".blue())?;
+            writeln!(f, "{}", line)?;
             i += 1;
         }
-        res
+        Ok(())
     }
 
-    /// colored content
-    pub fn colored_content(&self) -> String {
-        let digits = self.digits();
-        let mut i = self.start.row + 1;
-        let mut res = String::new();
-        for line in &self.lines {
-            res += &cformat!(
-                "<blue>{:width$} | </>{line}\n",
-                i,
-                width = digits,
-                line = line
-            );
-            i += 1;
-        }
-        res
-    }
-
-    /// indicator
-    pub fn string_indicator(&self) -> String {
-        let mut res = String::new();
+    /// fmt indicator
+    pub fn fmt_indicator(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         if self.start.row == self.end.row {
-            res = format!(
+            write!(
+                f,
                 "   {:width$}{indicator}",
                 " ",
                 width = self.start.column + 1,
-                indicator = "^".repeat(self.end.column - self.start.column)
-            );
+                indicator = "^".repeat(self.end.column - self.start.column).red().bold()
+            )?;
         }
-        res
+        Ok(())
     }
 }
 
 impl std::fmt::Debug for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.string_location())
+        self.fmt_location(f)
     }
 }
 

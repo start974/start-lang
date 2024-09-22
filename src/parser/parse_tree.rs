@@ -1,5 +1,4 @@
-use crate::error::Error;
-
+use crate::error::*;
 use std::fs::File;
 use std::io::Read;
 use tree_sitter::Parser as TSTParser;
@@ -41,16 +40,16 @@ impl<'a> ParseTree<'a> {
     pub fn of_file(file_name: &'a str) -> Result<Self, Error> {
         File::open(file_name)
             .map_err(|_| {
-                let msg = format!("No such file '{file_name}'");
-                Error::make(&msg, ERROR_FILE_NOT_FOUND)
+                let msg = Head::new().text("No such file").quoted(file_name);
+                Error::make(msg, ERROR_FILE_NOT_FOUND)
             })
             .and_then(|mut file| {
                 let mut input = String::new();
                 match file.read_to_string(&mut input) {
                     Ok(_) => Ok(input),
                     Err(_) => {
-                        let msg = format!("Cannot read file '{file_name}'.");
-                        Err(Error::make(&msg, ERROR_READ))
+                        let msg = Head::new().text("Cannot read file").quoted(file_name);
+                        Err(Error::make(msg, ERROR_READ))
                     }
                 }
             })

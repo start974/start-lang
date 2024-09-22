@@ -1,25 +1,182 @@
 use crate::location;
 use crate::location::Location;
-use crate::utils::colored::*;
 
+pub use colored::{ColoredString, Colorize};
 use std::collections::VecDeque;
 
-type Hint = String;
+pub trait Message {
+    /// make new message
+    fn new() -> Self
+    where
+        Self: Sized;
+
+    /// push a colored string
+    fn push(self, msg: ColoredString) -> Self
+    where
+        Self: Sized;
+
+    /// colored text
+    fn text_colored(&self, msg: &str) -> ColoredString;
+
+    /// colored important
+    fn important_colored(&self, msg: &str) -> ColoredString;
+
+    /// iter over colored strings
+    fn iter(&self) -> std::slice::Iter<ColoredString>;
+
+    /// len of message
+    fn len(&self) -> usize;
+
+    /// is empty
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// make text message with color style without space
+    fn text_(self, msg: &str) -> Self
+    where
+        Self: Sized,
+    {
+        let msg_colored = self.text_colored(msg);
+        self.push(msg_colored)
+    }
+
+    /// add space
+    fn space(self) -> Self
+    where
+        Self: Sized,
+    {
+        self.text_(" ")
+    }
+
+    /// make text with space if necessary
+    fn text(self, msg: &str) -> Self
+    where
+        Self: Sized,
+    {
+        if self.is_empty() {
+            self.text_(msg)
+        } else {
+            self.space().text_(msg)
+        }
+    }
+
+    /// add important message
+    fn important_(self, msg: &str) -> Self
+    where
+        Self: Sized,
+    {
+        let msg_colored = self.important_colored(msg);
+        self.push(msg_colored)
+    }
+
+    /// add important message preceded by space
+    fn important(self, msg: &str) -> Self
+    where
+        Self: Sized,
+    {
+        if self.is_empty() {
+            self.important_(msg)
+        } else {
+            self.space().important_(msg)
+        }
+    }
+
+    /// add quoted message
+    fn quoted_(self, msg: &str) -> Self
+    where
+        Self: Sized,
+    {
+        self.text_("\"").text_(msg).text_("\"")
+    }
+
+    /// add quoted message preceded by space
+    fn quoted(self, msg: &str) -> Self
+    where
+        Self: Sized,
+    {
+        if self.is_empty() {
+            self.quoted_(msg)
+        } else {
+            self.space().quoted_(msg)
+        }
+    }
+}
+
+impl std::fmt::Display for dyn Message {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for msg in self.iter() {
+            write!(f, "{}", msg)?;
+        }
+        if !self.is_empty() {
+            writeln!(f, "{}", self.text_colored("."))?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct Head(Vec<ColoredString>);
+impl Message for Head {
+    fn new() -> Self {
+        Self(Vec::new())
+    }
+    fn push(mut self, msg: ColoredString) -> Self {
+        self.0.push(msg);
+        self
+    }
+    fn text_colored(&self, msg: &str) -> ColoredString {
+        msg.red()
+    }
+    fn important_colored(&self, msg: &str) -> ColoredString {
+        msg.red().bold()
+    }
+    fn iter(&self) -> std::slice::Iter<ColoredString> {
+        self.0.iter()
+    }
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+#[derive(Debug)]
+pub struct Hint(Vec<ColoredString>);
+impl Message for Hint {
+    fn new() -> Self {
+        Self(Vec::new())
+    }
+    fn push(mut self, msg: ColoredString) -> Self {
+        self.0.push(msg);
+        self
+    }
+    fn text_colored(&self, msg: &str) -> ColoredString {
+        msg.into()
+    }
+    fn important_colored(&self, msg: &str) -> ColoredString {
+        msg.yellow().bold()
+    }
+    fn iter(&self) -> std::slice::Iter<ColoredString> {
+        self.0.iter()
+    }
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
 
 #[derive(Debug)]
 pub struct Error {
     code: i32,
-    msg: String,
+    head: Head,
     hints: Vec<Hint>,
     location: Option<Location>,
 }
 
 impl Error {
     /// make simple error
-    pub fn make(msg: &str, code: i32) -> Self {
+    pub fn make(head: Head, code: i32) -> Self {
         Self {
             code,
-            msg: msg.to_string(),
+            head,
             hints: Vec::new(),
             location: None,
         }
@@ -49,75 +206,27 @@ impl location::Located for Error {
 }
 
 impl std::fmt::Display for Error {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
-        /*match self {*/
-        /*Self::Simple(err)  => {*/
-        /*writeln!(f, "Error[{}]: {}.", err.code, err.msg),*/
-        /*}*/
-        /*Self::Located {*/
-        /*code,*/
-        /*location,*/
-        /*msg,*/
-        /*} => {*/
-        /*writeln!(f, "Error[{code}]: {}", location.string_location())?;*/
-        /*write!(f, "{}", location.string_content())?;*/
-        /*writeln!(f, "{} {}", location.string_indicator(), msg)*/
-        /*}*/
-
-        /*Self::Errors(errors) => {*/
-        /*for (i, error) in errors.iter().enumerate() {*/
-        /*if i != 0 {*/
-        /*writeln!(f)?;*/
-        /*}*/
-        /*write!(f, "{error}")?;*/
-        /*}*/
-        /*Ok(())*/
-        /*}*/
-        /*}*/
-    }
-}
-impl Colored for Error {
-    /// colored error
-    fn colored(&self) -> String {
-        todo!()
-        /*match self {*/
-        /*Self::Simple(err) => {*/
-        /*let s = String::new();*/
-        /*s += & cformat!("<red><bold>Error[{}]:</bold> {}</red>.\n{}", err.code, err.msg)*/
-        /*if !err.hint.is_empty() {*/
-        /*cformat!("<bold>Hint:</bold>\n");*/
-        /*}*/
-
-        /*for hint in &err.hint {*/
-        /*s += &cformat!("{hint}");*/
-        /*}*/
-        /*}*/
-        /*Self::Located {*/
-        /*code,*/
-        /*location,*/
-        /*msg,*/
-        /*} => {*/
-        /*let mut res = String::new();*/
-        /*res += &cformat!(*/
-        /*"<red><bold>Error[{code}]</></> {}\n",*/
-        /*location.string_location()*/
-        /*);*/
-        /*res += &cformat!("{}", location.colored_content());*/
-        /*res += &cformat!("<red><bold>{}</> {}</>\n", location.string_indicator(), msg);*/
-        /*res*/
-        /*}*/
-        /*Self::Errors(errors) => {*/
-        /*let mut msg = String::new();*/
-        /*for (i, error) in errors.iter().enumerate() {*/
-        /*if i != 0 {*/
-        /*msg += "\n";*/
-        /*}*/
-        /*msg += &error.colored();*/
-        /*}*/
-        /*msg*/
-        /*}*/
-        /*}*/
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &format!("Error[{}]: ", self.code).red().bold())?;
+        if let Some(location) = &self.location {
+            location.fmt_location(f)?;
+            writeln!(f)?;
+            location.fmt_content(f)?;
+            location.fmt_indicator(f)?;
+            write!(f, " ")?;
+        }
+        write!(f, "{}", &self.head as &dyn Message)?;
+        if !self.hints.is_empty() {
+            writeln!(f, "\n{}", "Hints:".yellow().bold())?;
+            let n = self.hints.len();
+            for (i, hint) in self.hints.iter().enumerate() {
+                write!(f, "{}", hint as &dyn Message)?;
+                if i < n - 1 {
+                    writeln!(f)?;
+                }
+            }
+        }
+        Ok(())
     }
 }
 
@@ -158,15 +267,13 @@ impl From<Error> for Errors {
 
 impl std::fmt::Display for Errors {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for err in self.errors.iter() {
-            writeln!(f, "{}", err)?;
+        let n = self.errors.len();
+        for (i, err) in self.errors.iter().enumerate() {
+            write!(f, "{}", err)?;
+            if i < n - 1 {
+                writeln!(f)?;
+            }
         }
         Ok(())
-    }
-}
-
-impl Colored for Errors {
-    fn colored(&self) -> String {
-        todo!()
     }
 }

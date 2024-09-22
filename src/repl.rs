@@ -35,10 +35,10 @@ impl Env {
         }
     }
 
-    fn parse(mut self, args: &Args, input: String) -> EnvResult<WTDefsOrExpr> {
+    fn parse(mut self, input: String) -> EnvResult<WTDefsOrExpr> {
         // make a part tree
         self.parse_tree = self.parse_tree.set_content(input).parse();
-        debug_sexp(args, &self.parse_tree);
+        debug_sexp(&self.parse_tree);
 
         // parse
         let content = self.parse_tree.get_content();
@@ -48,32 +48,32 @@ impl Env {
             .set_content(&content)
             .parse_definitions_or_expression(&node)
             .inspect(|parser, defs_or_expr| {
-                debug_parser(args, parser);
-                debug_parsed_defs_or_expr(args, defs_or_expr)
+                debug_parser(parser);
+                debug_parsed_defs_or_expr(defs_or_expr)
             })
             .get_pair();
         self.parser = parser;
         EnvResult::make(self, res)
     }
 
-    fn typing(mut self, args: &Args, defs_or_expr: &WTDefsOrExpr) -> EnvResult<TDefsOrExpr> {
+    fn typing(mut self, defs_or_expr: &WTDefsOrExpr) -> EnvResult<TDefsOrExpr> {
         let (typer, res) = self
             .typer
             .type_definitions_or_expression(defs_or_expr)
             .inspect(|typer, defs_or_expr| {
-                debug_typer(args, typer);
-                debug_typed_defs_or_expr(args, defs_or_expr)
+                debug_typer(typer);
+                debug_typed_defs_or_expr(defs_or_expr)
             })
             .get_pair();
         self.typer = typer;
         EnvResult::make(self, res)
     }
 
-    fn interpret(mut self, args: &Args, defs_or_expr: &TDefsOrExpr) -> EnvResult<DefsOrValue> {
+    fn interpret(mut self, defs_or_expr: &TDefsOrExpr) -> EnvResult<DefsOrValue> {
         let (interpreter, defs_or_val) = self
             .interpreter
             .eval_definitions_or_expression(defs_or_expr);
-        debug_interpreter(args, &interpreter);
+        debug_interpreter(&interpreter);
         self.interpreter = interpreter;
         EnvResult::ok(self, defs_or_val)
     }
@@ -81,17 +81,17 @@ impl Env {
     fn eval(self, args: &Args, input: &String) -> Self {
         let (env, res) = self
             // parse
-            .parse(args, input.to_owned())
+            .parse(input.to_owned())
             // type
-            .and_then(|env, defs_or_expr| env.typing(args, &defs_or_expr))
+            .and_then(|env, defs_or_expr| env.typing(&defs_or_expr))
             // interpret
-            .and_then(|env, defs_or_expr| env.interpret(args, &defs_or_expr))
+            .and_then(|env, defs_or_expr| env.interpret(&defs_or_expr))
             // get result
             .get_pair();
 
         match res {
             Ok(def_or_vals) => def_or_vals.colored_println(args),
-            Err(err) => err.colored_eprintln(args),
+            Err(err) => eprintln!("{}", err),
         };
         env
     }

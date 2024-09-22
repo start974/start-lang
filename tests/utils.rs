@@ -1,5 +1,6 @@
 use pretty_assertions::assert_eq;
 use startlang::error::Errors;
+use colored::control::SHOULD_COLORIZE;
 
 fn get_out(file_name: &str) -> String {
     let file = format!("{file_name}.out");
@@ -15,6 +16,7 @@ fn get_input<F, T>(file_name: &str, f: F) -> Result<T, Errors>
 where
     F: Fn(&str) -> Result<T, Errors>,
 {
+    SHOULD_COLORIZE.set_override(false);
     let file = format!("{file_name}.st");
     f(&file)
 }
