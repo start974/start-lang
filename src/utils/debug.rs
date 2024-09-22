@@ -1,5 +1,3 @@
-use super::colored::*;
-use crate::args::Args;
 use crate::interpreter::Interpreter;
 use crate::parser::{
     ast::{WTDefsOrExpr, WTProgram},
@@ -9,87 +7,109 @@ use crate::typing::{
     ast::{TDefsOrExpr, TProgram},
     Typer,
 };
+use colored::Colorize;
+use lazy_static::lazy_static;
+use std::sync::atomic::{AtomicBool, Ordering};
 
-pub fn debug<T>(args: &Args, printing: bool, name: &str, elm: &T)
-where
-    T: std::fmt::Display,
-{
-    if printing {
-        if args.no_color {
-            eprintln!("{name} :\n{elm}");
-        } else {
-            let msg = cformat!("<cyan>{name} :</>\n{elm}");
-            eprintln!("{}", msg);
-        };
+pub struct DebugFlag(AtomicBool);
+
+impl Default for DebugFlag {
+    fn default() -> Self {
+        Self(AtomicBool::new(false))
     }
 }
 
-pub fn debug_color<T>(args: &Args, printing: bool, name: &str, elm: &T)
-where
-    T: std::fmt::Display + Colored,
-{
-    if printing {
-        if args.no_color {
-            eprintln!("{name} :\n{elm}");
-        } else {
-            let c_elm = elm.colored();
-            let msg = cformat!("<cyan>{name} :</>\n{c_elm}");
-            eprintln!("{}", msg);
-        };
+impl DebugFlag {
+    /// se debug flag
+    fn set_debug(&self, value: bool) {
+        self.0.store(value, Ordering::Relaxed);
     }
+
+    /// activate debug flag
+    pub fn activate(&self) {
+        self.set_debug(true);
+    }
+
+    /// get debug flag
+    pub fn is_active(&self) -> bool {
+        self.0.load(Ordering::Relaxed)
+    }
+}
+
+lazy_static! {
+    pub static ref DEBUG_SEXP: DebugFlag = DebugFlag::default();
+    pub static ref DEBUG_PARSER: DebugFlag = DebugFlag::default();
+    pub static ref DEBUG_TYPER: DebugFlag = DebugFlag::default();
+    pub static ref DEBUG_INTERPRETER: DebugFlag = DebugFlag::default();
 }
 
 /// debug sexp of node
-pub fn debug_sexp(args: &Args, parse_tree: &ParseTree) {
-    debug(args, args.debug_sexp, "SEXP", &parse_tree.root_node())
+pub fn debug_sexp(parse_tree: &ParseTree) {
+    if DEBUG_SEXP.is_active() {
+        eprintln!("{}:\n{}", "SEXP".cyan().bold(), parse_tree.root_node());
+    }
 }
 
 /// debug parsed program
-pub fn debug_parser(args: &Args, parser: &Parser) {
-    debug_color(args, args.debug_parser, "Parser", parser)
+pub fn debug_parser(parser: &Parser) {
+    if DEBUG_PARSER.is_active() {
+        eprintln!("{}:\n{}", "Parser".cyan().bold(), parser);
+    }
 }
 
 /// debug parsed program
-pub fn debug_parsed_prog(args: &Args, prog: &WTProgram) {
-    debug_color(args, args.debug_parser, "Parsed program", prog)
+pub fn debug_parsed_prog(prog: &WTProgram) {
+    if DEBUG_PARSER.is_active() {
+        eprintln!("{}:\n{}", "Parsed program".cyan().bold(), prog);
+    }
 }
 
 /// debug parsed definitions or expression
-pub fn debug_parsed_defs_or_expr(args: &Args, defs_or_expr: &WTDefsOrExpr) {
-    debug_color(
-        args,
-        args.debug_parser,
-        "Parsed definitions or expression",
-        defs_or_expr,
-    )
+pub fn debug_parsed_defs_or_expr(defs_or_expr: &WTDefsOrExpr) {
+    if DEBUG_PARSER.is_active() {
+        eprintln!(
+            "{}:\n{}",
+            "Parsed definitions or expression".cyan().bold(),
+            defs_or_expr
+        );
+    }
 }
 
 /// debug typer program
-pub fn debug_typer(args: &Args, typer: &Typer) {
-    debug_color(args, args.debug_typer, "Typer", typer);
+pub fn debug_typer(typer: &Typer) {
+    if DEBUG_TYPER.is_active() {
+        eprintln!("{}:\n{}", "Typer".cyan().bold(), typer);
+    }
 }
 
 /// debug typed program
-pub fn debug_typed_prog(args: &Args, prog: &TProgram) {
-    debug_color(args, args.debug_typer, "Typed program", prog)
+pub fn debug_typed_prog(prog: &TProgram) {
+    if DEBUG_TYPER.is_active() {
+        eprintln!("{}:\n{}", "Typed program".cyan().bold(), prog);
+    }
 }
 
 /// debug typed definitions or expression
-pub fn debug_typed_defs_or_expr(args: &Args, defs_or_expr: &TDefsOrExpr) {
-    debug_color(
-        args,
-        args.debug_typer,
-        "Typed definitions or expression",
-        defs_or_expr,
-    )
+pub fn debug_typed_defs_or_expr(defs_or_expr: &TDefsOrExpr) {
+    if DEBUG_TYPER.is_active() {
+        eprintln!(
+            "{}:\n{}",
+            "Typed definitions or expression".cyan().bold(),
+            defs_or_expr
+        );
+    }
 }
 
 /// debug interpreter
-pub fn debug_interpreter(args: &Args, interpreter: &Interpreter) {
-    debug_color(args, args.debug_interpreter, "Interpreter", interpreter);
+pub fn debug_interpreter(interpreter: &Interpreter) {
+    if DEBUG_INTERPRETER.is_active() {
+        eprintln!("{}:\n{}", "Interpreter".cyan().bold(), interpreter);
+    }
 }
 
 /// debug main result
-pub fn debug_i32_res(args: &Args, res: &i32) {
-    debug(args, args.debug_interpreter, "Return value", res)
+pub fn debug_i32_res(res: &i32) {
+    if DEBUG_INTERPRETER.is_active() {
+        eprintln!("{}: {}", "Return value".cyan().bold(), res);
+    }
 }

@@ -33,20 +33,16 @@ impl Typer {
         TypingResult::ok(self, val)
     }
 
-    fn error<T, T2>(self, msg: String, elm: &T2, id: i32) -> TypingResult<T, Error>
-    where
-        T2: Located,
-    {
-        let err = Error::make(&msg, id).copy_location(elm);
-        TypingResult::err(self, err)
-    }
-
-    fn get_binding(self, name: &Ident) -> TypingResult<Ty, Error> {
+    fn get_binding(self, name: &Ident, location: &Option<Location>) -> TypingResult<Ty, Error> {
         match self.env.get_binding(name) {
             Some(ty) => self.ok(ty),
             None => {
-                let msg = format!("Variable '{name}' not found");
-                self.error(msg, name, ERROR_VAR_NOT_FOUND)
+                let msg = Head::new()
+                    .text("Variable")
+                    .quoted(&name.to_string())
+                    .text("not found");
+                let err = Error::make(msg, ERROR_VAR_NOT_FOUND).set_opt_location(location.clone());
+                TypingResult::err(self, err)
             }
         }
     }
@@ -57,12 +53,20 @@ impl Typer {
     {
         match elm2.get_opt_ty() {
             Some(ty2) if !self.env.mem(ty2) => {
-                let msg = format!("Type '{ty2}' not found");
-                self.error(msg, ty2, ERROR_TYPE_NOT_FOUND)
+                let msg = Head::new()
+                    .text("Type")
+                    .quoted(&ty2.to_string())
+                    .text("not found");
+                let err = Error::make(msg, ERROR_TYPE_NOT_FOUND).copy_location(ty2);
+                TypingResult::err(self, err)
             }
             Some(ty2) if ty1 != ty2 => {
-                let msg = format!("Expected type {ty1}, found type {ty2}");
-                self.error(msg, elm2, ERROR_TYPE_MISMATCH)
+                let msg = Head::new().text("Type mismatch");
+                let err = Error::make(msg, ERROR_TYPE_MISMATCH)
+                    .copy_location(elm2)
+                    .add_hint(Hint::new().text("Expect type:").quoted(&ty1.to_string()))
+                    .add_hint(Hint::new().text("Found type: ").quoted(&ty2.to_string()));
+                TypingResult::err(self, err)
             }
             _ => self.ok(()),
         }
@@ -80,16 +84,15 @@ impl Typer {
         match &expr.kind {
             ExpressionKind::Const(constant) => self
                 .assert_ty2(constant, expr)
-                .map_res(|()| TExpression::make_constant(constant.clone()))
-                .map_res(|expr2| expr2.copy_location(expr)),
-            ExpressionKind::Var(x) => self
-                .get_binding(x)
-                .and_then(|typing, ty| {
-                    typing
-                        .assert_ty(&ty, expr)
-                        .map_res(|()| TExpression::make_var(x.clone(), ty))
-                })
-                .map_res(|expr2| expr2.copy_location(expr)),
+                .map_res(|()| TExpression::make_constant(constant.clone()).copy_location(expr)),
+            ExpressionKind::Var(x) => {
+                self.get_binding(x, expr.get_location())
+                    .and_then(|typing, ty| {
+                        typing
+                            .assert_ty(&ty, expr)
+                            .map_res(|()| TExpression::make_var(x.clone(), ty).copy_location(expr))
+                    })
+            }
         }
     }
 
@@ -97,9 +100,11 @@ impl Typer {
         let name = def.get_name();
         self.type_expression(def.get_body())
             .map_acc2(|typing, body| typing.add_binding(name.clone(), body))
-            .and_then(|typing, body| typing.assert_ty2(&body, def).map_res(|()| body))
-            .map_res(|body| TDefinition::make_expr_def(name.clone(), body))
-            .map_res(|def2| def2.copy_location(def))
+            .and_then(|typing, body| {
+                typing
+                    .assert_ty2(&body, def)
+                    .map_res(|()| TDefinition::make_expr_def(name.clone(), body))
+            })
     }
 
     pub fn type_definition(self, def: &WTDefinition) -> TypingResult<TDefinition, Error> {

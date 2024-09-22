@@ -1,5 +1,5 @@
 use crate::ast::{Ident, NConst, Ty};
-use crate::error::Error;
+use crate::error::*;
 use crate::location::*;
 use crate::utils::colored::*;
 
@@ -14,10 +14,8 @@ impl TryInto<i32> for Value {
     fn try_into(self) -> Result<i32, Self::Error> {
         match self {
             Self::N(n) => NConst::try_into(n).map_err(|_| {
-                Error::make(
-                    "value is to loong to be convert to integer",
-                    ERROR_CONVERT_TO_INTEGER,
-                )
+                let msg = Head::new().text("value is to loong to be convert to integer");
+                Error::make(msg, ERROR_CONVERT_TO_INTEGER)
             }),
         }
     }

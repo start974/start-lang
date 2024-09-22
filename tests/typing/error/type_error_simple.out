@@ -1,3 +1,3 @@
 Error[301]: tests/typing/error/type_error_simple.st:1:12
 1 | def test : N2 := 1
-               ^^ Type 'N2' not found
+               ^^ Type "N2" not found.

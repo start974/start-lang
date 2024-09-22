@@ -64,34 +64,45 @@ impl<'a> Parser<'a> {
         )
     }
 
-    fn error<T>(self, node: &Node, expect: &str, code: i32) -> ParserResult<'a, T, Error> {
-        let msg = format!("Expected {expect}");
-        let location = self.location(node);
-        let err = Error::make(&msg, code).set_location(location);
-        ParserResult::err(self, err)
-    }
-
     fn ok<T, E>(self, val: T) -> ParserResult<'a, T, E> {
         ParserResult::ok(self, val)
     }
 
+    fn error<T>(self, node: &Node, err: Error) -> ParserResult<'a, T, Error> {
+        let location = self.location(node);
+        let err = err.set_location(location);
+        ParserResult::err(self, err)
+    }
+
     fn error_kind<T>(self, node: &Node, expect: &str) -> ParserResult<'a, T, Error> {
-        self.error(node, expect, ERROR_KIND)
+        let msg = Head::new().text("Expected").important(expect);
+        self.error(node, Error::make(msg, ERROR_KIND))
     }
 
-    fn check_keyword(self, node: &Node, expect: &str) -> ParserResult<'a, (), Error> {
-        if node.kind() != expect {
-            let expect = format!("keyword '{}'", expect);
-            self.error(node, &expect, ERROR_KEYWORD)
-        } else {
-            self.ok(())
-        }
+    fn error_wilcard<T>(self, node: &Node) -> ParserResult<'a, T, Error> {
+        let msg = Head::new()
+            .text("Not allowed to use wildcard")
+            .quoted("_")
+            .text("as an expression");
+        self.error(node, Error::make(msg, ERROR_WILDCARD))
     }
 
-    fn check_operator(self, node: &Node, expect: &str) -> ParserResult<'a, (), Error> {
+    fn error_keyword<T>(self, node: &Node, expect: &str) -> ParserResult<'a, T, Error> {
+        let msg = Head::new().text("Expected keyword").quoted(expect);
+        self.error(node, Error::make(msg, ERROR_KEYWORD))
+    }
+
+    fn error_operator<T>(self, node: &Node, expect: &str) -> ParserResult<'a, T, Error> {
+        let msg = Head::new().text("Expected operator").quoted(expect);
+        self.error(node, Error::make(msg, ERROR_OPERATOR))
+    }
+
+    fn check<F>(self, node: &Node, expect: &str, f: F) -> ParserResult<'a, (), Error>
+    where
+        F: FnOnce(Parser<'a>, &Node, &str) -> ParserResult<'a, (), Error>,
+    {
         if node.kind() != expect {
-            let expect = format!("operator '{}'", expect);
-            self.error(node, &expect, ERROR_OPERATOR)
+            f(self, node, expect)
         } else {
             self.ok(())
         }
@@ -111,7 +122,6 @@ impl<'a> Parser<'a> {
                 let location = self.location(node);
                 let (name_env, ident) = self.name_env.of_location(&location);
                 self.name_env = name_env;
-                let ident = self.set_location(node, ident);
                 self.ok(ident)
             }
             _ => self.error_kind(node, "identifier"),
@@ -157,8 +167,7 @@ impl<'a> Parser<'a> {
                 .parse_ident(node)
                 .and_then(|parser, ident| {
                     if ident.name == "_" {
-                        let msg = "not allowed to use wildcard '_' as an expression";
-                        parser.error(node, msg, ERROR_WILDCARD)
+                        parser.error_wilcard(node)
                     } else {
                         parser.ok(WTExpression::make_var(ident))
                     }
@@ -181,49 +190,60 @@ impl<'a> Parser<'a> {
     fn parse_ty_restr(self, node: &Node) -> ParserResult<'a, Ty, Error> {
         let mut child = node.child(0).unwrap();
         // colon
-        self.check_operator(&child, ":").and_then(|parser, ()| {
-            child = child.next_sibling().unwrap();
-            parser.parse_ty(&child)
-        })
+        self.check(&child, ":", Self::error_operator)
+            .and_then(|parser, ()| {
+                child = child.next_sibling().unwrap();
+                parser.parse_ty(&child)
+            })
     }
 
     fn parse_expr_def(self, node: &Node) -> ParserResult<'a, WTExprDef, Error> {
         let mut child = node.child(0).unwrap();
         // def keyword
-        self.check_keyword(&child, "def")
+        self.check(&child, "def", Self::error_keyword)
             // identifier
             .and_then(|parser, ()| {
                 child = child.next_sibling().unwrap();
-                parser.parse_ident(&child)
+                let location = parser.location(&child);
+                parser
+                    .parse_ident(&child)
+                    .map_res(|ident| (ident, location))
             })
             // type restriction
-            .and_then(|parser, ident| {
+            .and_then(|parser, (ident, location)| {
                 child = child.next_sibling().unwrap();
                 if child.grammar_name() == "ty_restr" {
                     let res = parser.parse_ty_restr(&child);
                     child = child.next_sibling().unwrap();
-                    res.map_res(|ty| (ident, Some(ty)))
+                    res.map_res(|ty| (ident, location, Some(ty)))
                 } else {
-                    parser.ok((ident, None))
+                    parser.ok((ident, location, None))
                 }
             })
             // eq def
-            .and_then(|parser, old_res| parser.check_operator(&child, ":=").map_res(|()| old_res))
+            .and_then(|parser, old_res| {
+                parser
+                    .check(&child, ":=", Self::error_operator)
+                    .map_res(|()| old_res)
+            })
             // body
-            .and_then(|parser, (ident, opt_ty)| {
+            .and_then(|parser, (ident, location, opt_ty)| {
                 child = child.next_sibling().unwrap();
                 parser
                     .parse_expression(&child)
-                    .map_res(|body| (ident, opt_ty, body))
+                    .map_res(|body| (ident, location, opt_ty, body))
             })
-            .map_res(|(name, opt_ty, body)| WTExprDef::new(name, body).set_opt_ty(opt_ty))
-            .map_res2(|parser, def| parser.set_location(node, def))
+            .map_res(|(name, location, opt_ty, body)| {
+                WTExprDef::new(name, body)
+                    .set_opt_ty(opt_ty)
+                    .set_location(location)
+            })
     }
 
     fn parse_type_def(self, node: &Node) -> ParserResult<'a, TyDef, Error> {
         let mut child = node.child(0).unwrap();
         // type keyword
-        self.check_keyword(&child, "type")
+        self.check(&child, "type", Self::error_keyword)
             // identifier
             .and_then(|parser, ()| {
                 child = child.next_sibling().unwrap();
@@ -232,7 +252,9 @@ impl<'a> Parser<'a> {
             // eq def
             .and_then(|parser, ident| {
                 child = child.next_sibling().unwrap();
-                parser.check_operator(&child, ":=").map_res(|()| ident)
+                parser
+                    .check(&child, ":=", Self::error_operator)
+                    .map_res(|()| ident)
             })
             // body
             .and_then(|parser, ident| {

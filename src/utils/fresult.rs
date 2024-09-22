@@ -1,4 +1,5 @@
-use crate::error::{Error, Errors};
+use crate::error::*;
+use crate::location::*;
 
 pub struct FResult<T, U, E> {
     acc: T,
@@ -162,5 +163,25 @@ impl<T, U> FResult<T, U, Error> {
             Ok(x) => FResult::ok(self.acc, x),
             Err(e) => FResult::err(self.acc, Errors::from(e)),
         }
+    }
+}
+
+impl<T, U, E> Located for FResult<T, U, E>
+where
+    U: Located,
+    E: Located,
+{
+    fn get_location(&self) -> &Option<Location> {
+        match self.res {
+            Ok(ref x) => x.get_location(),
+            Err(ref e) => e.get_location(),
+        }
+    }
+    fn set_opt_location(mut self, opt_location: Option<Location>) -> Self {
+        self.res = match self.res {
+            Ok(x) => Ok(x.set_opt_location(opt_location)),
+            Err(e) => Err(e.set_opt_location(opt_location)),
+        };
+        self
     }
 }
