@@ -19,9 +19,10 @@ pub use expression::*;
 mod ident;
 pub use ident::*;
 
-
 mod program;
 pub use program::*;
+
+pub mod pretty_print;
 
 mod ty;
 pub use ty::*;

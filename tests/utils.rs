@@ -1,6 +1,6 @@
+use colored::control::SHOULD_COLORIZE;
 use pretty_assertions::assert_eq;
 use startlang::error::Errors;
-use colored::control::SHOULD_COLORIZE;
 
 fn get_out(file_name: &str) -> String {
     let file = format!("{file_name}.out");
