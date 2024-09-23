@@ -59,10 +59,10 @@ impl Typed for TExpression {
 
 impl TDefinition {
     /// make expression definition
-    pub fn make_expr_def(name: Ident, body: TExpression) -> Self {
+    pub fn make_expr_def(name: Ident, ty: Ty, body: TExpression) -> Self {
         Self {
             name,
-            ty: body.get_ty().clone(),
+            ty,
             body,
             location: None,
         }

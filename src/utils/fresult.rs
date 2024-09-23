@@ -138,7 +138,7 @@ impl<T1, U, E> FResult<T1, U, E> {
 }
 
 impl<T, U1> FResult<T, U1, Errors> {
-    /// cobmine result made by [f1] using [f2] and
+    /// combine result made by [f1] using [f2] and
     /// and make error list for many errors occured
     pub fn combine<F1, F2, U2, U3>(self, f1: F1, f2: F2) -> FResult<T, U3, Errors>
     where
@@ -154,15 +154,53 @@ impl<T, U1> FResult<T, U1, Errors> {
         };
         FResult { acc: r.acc, res }
     }
+
+    /// cobmine result made by [f1] using [f2] and
+    /// and make error list for many errors occured
+    pub fn combine_box<F1, F2, U2, U3>(self, f1: F1, f2: F2) -> FResult<T, U3, Errors>
+    where
+        F1: FnOnce(T) -> FResult<T, U2, ErrorBox>,
+        F2: FnOnce(U1, U2) -> U3,
+    {
+        let r = f1(self.acc);
+        let res = match (self.res, r.res) {
+            (Ok(x), Ok(y)) => Ok(f2(x, y)),
+            (Ok(_), Err(e)) => Err(Errors::from(e)),
+            (Err(errs), Ok(_)) => Err(errs),
+            (Err(errs), Err(e)) => Err(errs.add_error(*e)),
+        };
+        FResult { acc: r.acc, res }
+    }
+}
+
+impl<T, U, E1> FResult<T, U, E1> {
+    /// map error from [E1] to [E2]
+    pub fn map_err<E2, F>(self, f: F) -> FResult<T, U, E2>
+    where
+        F: FnOnce(E1) -> E2,
+    {
+        FResult {
+            acc: self.acc,
+            res: self.res.map_err(f),
+        }
+    }
 }
 
 impl<T, U> FResult<T, U, Error> {
     /// comvert error to errors
     pub fn into_errors(self) -> FResult<T, U, Errors> {
-        match self.res {
-            Ok(x) => FResult::ok(self.acc, x),
-            Err(e) => FResult::err(self.acc, Errors::from(e)),
-        }
+        self.map_err(Errors::from)
+    }
+    ///// convert error to error box
+    //pub fn into_error_box(self) -> FResult<T, U, ErrorBox> {
+        //self.map_err(Box::new)
+    //}
+}
+
+impl<T, U> FResult<T, U, ErrorBox> {
+    /// comvert error box to errors
+    pub fn into_errors(self) -> FResult<T, U, Errors> {
+        self.map_err(Errors::from)
     }
 }
 
