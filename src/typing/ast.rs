@@ -1,7 +1,6 @@
 pub use crate::ast::pretty_print::*;
 pub use crate::ast::*;
 use crate::stdlib;
-use std::fmt;
 
 pub trait Typed {
     /// get type
