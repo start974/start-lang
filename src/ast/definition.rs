@@ -6,7 +6,7 @@ pub use crate::location::{Located, Location};
 #[derive(Debug, Clone)]
 pub enum Definition<TyT> {
     ExprDef(ExprDef<TyT>),
-    TyDef(TyDef)
+    TyDef(TyDef),
 }
 
 impl<TyT> Located for Definition<TyT> {
@@ -21,7 +21,6 @@ impl<TyT> Located for Definition<TyT> {
         match self {
             Self::ExprDef(expr_def) => Self::ExprDef(expr_def.set_opt_location(opt_location)),
             Self::TyDef(ty_def) => Self::TyDef(ty_def.set_opt_location(opt_location)),
-
         }
     }
 }

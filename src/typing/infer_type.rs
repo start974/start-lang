@@ -133,7 +133,7 @@ impl Typer {
             WTDefsOrExpr::Expression(expr) => self
                 .type_expression(expr)
                 .map_res(TDefsOrExpr::Expression)
-                .to_errors(),
+                .into_errors(),
             WTDefsOrExpr::Definitions(prog) => {
                 self.type_program(prog).map_res(TDefsOrExpr::Definitions)
             }

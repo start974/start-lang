@@ -290,7 +290,7 @@ impl<'a> Parser<'a> {
                 }
                 res
             }
-            _ => self.error_kind(node, "program").to_errors(),
+            _ => self.error_kind(node, "program").into_errors(),
         }
     }
 
@@ -308,7 +308,7 @@ impl<'a> Parser<'a> {
                 }
                 res
             }
-            _ => self.error_kind(node, "program").to_errors(),
+            _ => self.error_kind(node, "program").into_errors(),
         }
     }
 
@@ -335,14 +335,14 @@ impl<'a> Parser<'a> {
                 "expression" => self
                     .parse_repl_expression(&child)
                     .map_res(WTDefsOrExpr::Expression)
-                    .to_errors(),
+                    .into_errors(),
                 _ => self
                     .error_kind(node, "definitions or expression")
-                    .to_errors(),
+                    .into_errors(),
             }
         } else {
             self.error_kind(node, "definitions or expression")
-                .to_errors()
+                .into_errors()
         }
     }
 }

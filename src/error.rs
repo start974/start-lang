@@ -171,6 +171,8 @@ pub struct Error {
     location: Option<Location>,
 }
 
+pub type ErrorBox = Box<Error>;
+
 impl Error {
     /// make simple error
     pub fn make(head: Head, code: i32) -> Self {
@@ -262,6 +264,12 @@ impl Errors {
 impl From<Error> for Errors {
     fn from(error: Error) -> Self {
         Self::empty().add_error(error)
+    }
+}
+
+impl From<ErrorBox> for Errors {
+    fn from(error: ErrorBox) -> Self {
+        Self::empty().add_error(*error)
     }
 }
 

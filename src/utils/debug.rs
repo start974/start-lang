@@ -1,3 +1,4 @@
+use crate::ast::pretty_print::Pretty;
 use crate::interpreter::Interpreter;
 use crate::parser::{
     ast::{WTDefsOrExpr, WTProgram},
@@ -7,7 +8,6 @@ use crate::typing::{
     ast::{TDefsOrExpr, TProgram},
     Typer,
 };
-use crate::ast::pretty_print::Pretty;
 use colored::Colorize;
 use lazy_static::lazy_static;
 use std::sync::atomic::{AtomicBool, Ordering};
