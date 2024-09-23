@@ -1,23 +1,43 @@
+use super::ast::*;
+use super::env::TypingEnv;
 use crate::error::*;
 use crate::location::Located;
 use crate::parser::ast::*;
+use crate::stdlib::number_n::N_TYPE;
 use crate::utils::FResult;
-
-use super::ast::*;
-use super::env::TypingEnv;
+use lazy_static::lazy_static;
 
 pub struct Typer {
     env: TypingEnv,
+    main_res: Result<(), ErrorBox>,
 }
 
 type TypingResult<T, E> = FResult<Typer, T, E>;
 
+lazy_static! {
+    static ref MAIN_TY: Ty = N_TYPE.clone();
+}
+
 const ERROR_TYPE_MISMATCH: i32 = 302;
 const ERROR_VAR_NOT_FOUND: i32 = 303;
 
+const ERROR_MAIN_NOT_FOUND: i32 = 401;
+
+pub fn main_function_not_found() -> ErrorBox {
+    let msg = Head::new()
+        .text("Function")
+        .quoted("main")
+        .text("not found");
+    let err = Error::make(msg, ERROR_MAIN_NOT_FOUND);
+    Box::new(err)
+}
+
 impl Typer {
     pub fn make(env: TypingEnv) -> Self {
-        Self { env }
+        Self {
+            env,
+            main_res: Err(main_function_not_found()),
+        }
     }
 
     fn add_binding<T>(mut self, name: Ident, elm: &T) -> Self
@@ -130,6 +150,16 @@ impl Typer {
                             .unwrap_or_else(|| body.get_ty().clone())
                     })
                     .map_res(|ty| TDefinition::make_expr_def(name.clone(), ty, body))
+                    .map_acc(|typing| {
+                        if def.name.name == "main" {
+                            let pair = typing.assert_ty(&MAIN_TY, def).get_pair();
+                            let mut typing = pair.0;
+                            typing.main_res = pair.1;
+                            typing
+                        } else {
+                            typing
+                        }
+                    })
             })
     }
 
@@ -176,6 +206,11 @@ impl Typer {
                 self.type_program(prog).map_res(TDefsOrExpr::Definitions)
             }
         }
+    }
+
+    /// check main exists and well typed
+    pub fn check_main(&self) -> Result<(), ErrorBox> {
+        self.main_res.clone()
     }
 }
 

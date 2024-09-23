@@ -5,7 +5,7 @@ pub fn interpret_file(file_name: &str) {
     let res = Ok(file_name)
         // parse tree
         .and_then(parser::parse_file)
-        .inspect(|parse_tree| debug_sexp(parse_tree))
+        .inspect(debug_sexp)
         // parser program
         .and_then(parser::make_program)
         .inspect(|(parser, prog)| {
@@ -13,13 +13,16 @@ pub fn interpret_file(file_name: &str) {
             debug_parsed_prog(prog)
         })
         // type program
-        .and_then(|(_, prog)| typing::infer_type(prog))
+        .map(|(_, prog)| prog)
+        .and_then(typing::infer_type)
         .inspect(|(typer, prog)| {
             debug_typer(typer);
             debug_typed_prog(prog)
         })
+        // check main exists and well typed
+        .and_then(|(typer, prog)| typing::check_main(&typer).map(|()| prog))
         // interpret program
-        .and_then(|(_, prog)| interpreter::eval_program(prog))
+        .and_then(interpreter::eval_program)
         .inspect(|(interpreter, ret)| {
             debug_interpreter(interpreter);
             debug_i32_res(ret)

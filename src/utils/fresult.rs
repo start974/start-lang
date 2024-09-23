@@ -108,15 +108,15 @@ impl<T, U1, E> FResult<T, U1, E> {
 }
 
 impl<T1, U, E> FResult<T1, U, E> {
-    //pub fn map_acc<T2, F>(self, f: F) -> FResult<T2, U>
-    //where
-    //F: FnOnce(T1) -> T2,
-    //{
-    //FResult {
-    //acc: f(self.acc),
-    //res: self.res,
-    //}
-    //}
+    pub fn map_acc<T2, F>(self, f: F) -> FResult<T2, U, E>
+    where
+        F: FnOnce(T1) -> T2,
+    {
+        FResult {
+            acc: f(self.acc),
+            res: self.res,
+        }
+    }
 
     pub fn map_acc2<F>(self, f: F) -> FResult<T1, U, E>
     where
@@ -193,7 +193,7 @@ impl<T, U> FResult<T, U, Error> {
     }
     ///// convert error to error box
     //pub fn into_error_box(self) -> FResult<T, U, ErrorBox> {
-        //self.map_err(Box::new)
+    //self.map_err(Box::new)
     //}
 }
 
