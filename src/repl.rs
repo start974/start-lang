@@ -1,4 +1,3 @@
-use crate::args::Args;
 use crate::ast::pretty_print::*;
 use crate::error::Errors;
 use crate::interpreter::{DefsOrValue, Interpreter};

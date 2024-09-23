@@ -13,16 +13,16 @@ pub struct ColorInfo {
 
 impl ColorInfo {
     /// set fg color
-    fn color<S: Into<Color>>(mut self, color: S) -> Self {
+    fn fg_color<S: Into<Color>>(mut self, color: S) -> Self {
         self.fg_color = Some(color.into());
         self
     }
 
     /// set bg color
-    fn on_color<S: Into<Color>>(mut self, color: S) -> Self {
-        self.bg_color = Some(color.into());
-        self
-    }
+    //fn bg_color<S: Into<Color>>(mut self, color: S) -> Self {
+        //self.bg_color = Some(color.into());
+        //self
+    //}
 
     /// set style
     fn style(mut self, style: Styles) -> Self {
@@ -201,12 +201,14 @@ impl Theme {
 lazy_static! {
     pub static ref THEME: Theme = Theme {
         width: 80,
-        keyword: ColorInfo::default().color(Color::Magenta),
-        operator: ColorInfo::default().color(Color::Red),
-        def_var: ColorInfo::default().color(Color::Blue),
-        expr_var: ColorInfo::default().color(Color::Blue).style(Styles::Bold),
-        number: ColorInfo::default().color(Color::Green),
-        ty_var: ColorInfo::default().color(Color::Yellow),
+        keyword: ColorInfo::default().fg_color(Color::Magenta),
+        operator: ColorInfo::default().fg_color(Color::Red),
+        def_var: ColorInfo::default().fg_color(Color::Blue),
+        expr_var: ColorInfo::default()
+            .fg_color(Color::Blue)
+            .style(Styles::Bold),
+        number: ColorInfo::default().fg_color(Color::Green),
+        ty_var: ColorInfo::default().fg_color(Color::Yellow),
     };
     pub static ref THEME_NO_COLOR: Theme = Theme::default();
 }

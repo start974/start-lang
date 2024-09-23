@@ -19,15 +19,15 @@ impl TyDef {
         }
     }
 
-    // get name of definition
-    pub fn get_name(&self) -> &Ident {
-        &self.name
-    }
+    //// get name of definition
+    //pub fn get_name(&self) -> &Ident {
+        //&self.name
+    //}
 
-    // get type of definition
-    pub fn get_ty(&self) -> &Ty {
-        &self.ty
-    }
+    //// get type of definition
+    //pub fn get_ty(&self) -> &Ty {
+        //&self.ty
+    //}
 }
 
 impl Located for TyDef {
