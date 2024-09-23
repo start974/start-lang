@@ -12,7 +12,6 @@ pub struct Typer {
 
 type TypingResult<T, E> = FResult<Typer, T, E>;
 
-const ERROR_TYPE_NOT_FOUND: i32 = 301;
 const ERROR_TYPE_MISMATCH: i32 = 302;
 const ERROR_VAR_NOT_FOUND: i32 = 303;
 
@@ -33,7 +32,7 @@ impl Typer {
         TypingResult::ok(self, val)
     }
 
-    fn get_binding(self, name: &Ident, location: &Option<Location>) -> TypingResult<Ty, Error> {
+    fn get_binding(self, name: &Ident, location: &Option<Location>) -> TypingResult<Ty, ErrorBox> {
         match self.env.get_binding(name) {
             Some(ty) => self.ok(ty),
             None => {
@@ -42,36 +41,58 @@ impl Typer {
                     .quoted(&name.to_string())
                     .text("not found");
                 let err = Error::make(msg, ERROR_VAR_NOT_FOUND).set_opt_location(location.clone());
-                TypingResult::err(self, err)
+                TypingResult::err(self, Box::new(err))
             }
         }
     }
 
-    fn assert_ty<T2>(self, ty1: &Ty, elm2: &T2) -> TypingResult<(), Error>
+    fn assert_ty<T2>(self, ty1: &Ty, elm2: &T2) -> TypingResult<(), ErrorBox>
     where
         T2: WeakTyped + Located,
     {
         match elm2.get_opt_ty() {
-            Some(ty2) if !self.env.mem(ty2) => {
-                let msg = Head::new()
-                    .text("Type")
-                    .quoted(&ty2.to_string())
-                    .text("not found");
-                let err = Error::make(msg, ERROR_TYPE_NOT_FOUND).copy_location(ty2);
-                TypingResult::err(self, err)
-            }
-            Some(ty2) if ty1 != ty2 => {
-                let msg = Head::new().text("Type mismatch");
-                let err = Error::make(msg, ERROR_TYPE_MISMATCH)
-                    .copy_location(elm2)
-                    .add_hint(Hint::new().text("Expect type:").quoted(&ty1.to_string()))
-                    .add_hint(Hint::new().text("Found type: ").quoted(&ty2.to_string()));
-                TypingResult::err(self, err)
+            Some(ty2) => {
+                let res = self.env.normalize(ty1).and_then(|ty1_n| {
+                    self.env.normalize(ty2).and_then(|ty2_n| {
+                        if ty1_n != ty2_n {
+                            let msg = Head::new().text("Type mismatch");
+                            let mut err = Error::make(msg, ERROR_TYPE_MISMATCH).copy_location(elm2);
+                            err = err.add_hint(
+                                Hint::new()
+                                    .text("Expect type:  ")
+                                    .important(&ty1.to_string()),
+                            );
+                            if ty1 != &ty1_n {
+                                err = err.add_hint(
+                                    Hint::new()
+                                        .text("- Normalized: ")
+                                        .important(&ty1_n.to_string()),
+                                )
+                            }
+                            err = err.add_hint(
+                                Hint::new()
+                                    .text("Found type:   ")
+                                    .important(&ty2.to_string()),
+                            );
+                            if ty2 != &ty2_n {
+                                err = err.add_hint(
+                                    Hint::new()
+                                        .text("- Normalized: ")
+                                        .important(&ty2_n.to_string()),
+                                )
+                            }
+                            Err(Box::new(err))
+                        } else {
+                            Ok(())
+                        }
+                    })
+                });
+                TypingResult::make(self, res)
             }
             _ => self.ok(()),
         }
     }
-    fn assert_ty2<T1, T2>(self, elm1: &T1, elm2: &T2) -> TypingResult<(), Error>
+    fn assert_ty2<T1, T2>(self, elm1: &T1, elm2: &T2) -> TypingResult<(), ErrorBox>
     where
         T1: Typed,
         T2: WeakTyped + Located,
@@ -80,7 +101,7 @@ impl Typer {
         self.assert_ty(ty1, elm2)
     }
 
-    pub fn type_expression(self, expr: &WTExpression) -> TypingResult<TExpression, Error> {
+    fn type_expression(self, expr: &WTExpression) -> TypingResult<TExpression, ErrorBox> {
         match &expr.kind {
             ExpressionKind::Const(constant) => self
                 .assert_ty2(constant, expr)
@@ -96,30 +117,47 @@ impl Typer {
         }
     }
 
-    pub fn type_expr_def(self, def: &WTExprDef) -> TypingResult<TDefinition, Error> {
+    fn type_expr_def(self, def: &WTExprDef) -> TypingResult<TDefinition, ErrorBox> {
         let name = def.get_name();
         self.type_expression(def.get_body())
             .map_acc2(|typing, body| typing.add_binding(name.clone(), body))
             .and_then(|typing, body| {
                 typing
                     .assert_ty2(&body, def)
-                    .map_res(|()| TDefinition::make_expr_def(name.clone(), body))
+                    .map_res(|()| {
+                        def.get_opt_ty()
+                            .clone()
+                            .unwrap_or_else(|| body.get_ty().clone())
+                    })
+                    .map_res(|ty| TDefinition::make_expr_def(name.clone(), ty, body))
             })
     }
 
-    pub fn type_definition(self, def: &WTDefinition) -> TypingResult<TDefinition, Error> {
+    fn add_type_def(mut self, ty_def: &TyDef) -> TypingResult<(), ErrorBox> {
+        let (env, res) = self
+            .env
+            .add_alias(ty_def.name.clone(), Some(ty_def.ty.clone()))
+            .get_pair();
+        self.env = env;
+        TypingResult::make(self, res)
+    }
+
+    fn type_definition(self, def: &WTDefinition) -> TypingResult<Option<TDefinition>, ErrorBox> {
         match def {
-            WTDefinition::ExprDef(expr_def) => self.type_expr_def(expr_def),
-            WTDefinition::TyDef(_ty_def) => todo!(),
+            WTDefinition::ExprDef(expr_def) => self.type_expr_def(expr_def).map_res(Some),
+            WTDefinition::TyDef(ty_def) => self.add_type_def(ty_def).map_res(|()| None),
         }
     }
 
     /// type a program
     pub fn type_program(self, program: &WTProgram) -> TypingResult<TProgram, Errors> {
         program.iter().fold(self.ok(Program::empty()), |res, def| {
-            res.combine(
+            res.combine_box(
                 |typing| typing.type_definition(def),
-                Program::add_definition,
+                |prog, opt_def| match opt_def {
+                    Some(def) => prog.add_definition(def),
+                    None => prog,
+                },
             )
         })
     }

@@ -4,15 +4,20 @@ use super::typing::TypingEnv;
 use std::sync::LazyLock;
 
 pub static NAME_ENV: LazyLock<NameEnv> = LazyLock::new(|| {
-    let mut name_env = NameEnv::empty();
     // N idents
-    name_env = name_env.add_ident(number_n::N_TYPE_NAME.clone()).unwrap();
-    name_env
+    NameEnv::empty()
+        .add_ident(number_n::N_TYPE_NAME.clone())
+        .unwrap()
 });
 
 pub static TYPE_ENV: LazyLock<TypingEnv> = LazyLock::new(|| {
-    let mut type_env = TypingEnv::empty();
     // N types
-    type_env = type_env.add_type(number_n::N_TYPE.clone());
-    type_env
+    let (env, res) = TypingEnv::empty()
+        .add_alias(
+            number_n::N_TYPE_NAME.clone(),
+            None
+        )
+        .get_pair();
+    let () = res.map_err(|err| panic!("{}", err)).unwrap();
+    env
 });

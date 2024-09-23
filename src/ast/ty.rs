@@ -11,7 +11,7 @@ pub enum Kind {
 
 #[derive(Debug, Clone)]
 pub struct Ty {
-    kind: Kind,
+    pub kind: Kind,
     location: Option<Location>,
 }
 
@@ -51,6 +51,7 @@ impl Pretty for Ty {
         }
     }
 }
+
 impl Eq for Ty {}
 
 impl Hash for Ty {

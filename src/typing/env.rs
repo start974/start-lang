@@ -1,19 +1,23 @@
 use super::ast::*;
+use crate::error::*;
+use crate::utils::FResult;
 use colored::Colorize;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct TypingEnv {
     bindings: HashMap<Ident, Ty>,
-    type_set: HashSet<Ty>,
+    type_alias: HashMap<Ident, Option<Ty>>,
 }
+
+const ERROR_TYPE_NOT_FOUND: i32 = 301;
 
 impl TypingEnv {
     /// empty typing environment
     pub fn empty() -> Self {
         Self {
             bindings: HashMap::new(),
-            type_set: HashSet::new(),
+            type_alias: HashMap::new(),
         }
     }
 
@@ -23,15 +27,33 @@ impl TypingEnv {
         self
     }
 
-    // add types in type set
-    pub fn add_type(mut self, ty: Ty) -> Self {
-        let _ = self.type_set.insert(ty);
-        self
+    /// normalize type
+    pub fn normalize(&self, ty: &Ty) -> Result<Ty, ErrorBox> {
+        match &ty.kind {
+            Kind::Var(x) => match self.type_alias.get(x) {
+                Some(Some(ty)) => self.normalize(ty),
+                Some(None) => Ok(ty.clone()),
+                None => {
+                    let msg = Head::new()
+                        .text("Type name")
+                        .quoted(&x.to_string())
+                        .text("not found");
+                    let err = Error::make(msg, ERROR_TYPE_NOT_FOUND).copy_location(ty);
+                    Err(Box::new(err))
+                }
+            },
+        }
     }
-
-    // check if type exists in type set
-    pub fn mem(&self, ty: &Ty) -> bool {
-        self.type_set.contains(ty)
+    // add types in type set
+    pub fn add_alias(self, name: Ident, alias_ty: Option<Ty>) -> FResult<Self, (), ErrorBox> {
+        let opt_ty_res = match &alias_ty {
+            Some(ty) => self.normalize(ty).map(Some),
+            None => Ok(None),
+        };
+        FResult::make(self, opt_ty_res).and_then(|mut env, opt_ty| {
+            let _ = env.type_alias.insert(name, opt_ty);
+            FResult::ok(env, ())
+        })
     }
 
     // get type of binding
@@ -42,10 +64,6 @@ impl TypingEnv {
 
 impl std::fmt::Display for TypingEnv {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        writeln!(f, "{}", "Type set:".bold())?;
-        for ty in &self.type_set {
-            writeln!(f, "- {}", ty.to_string_colored())?;
-        }
         writeln!(f, "{}", "Bindings :".bold())?;
         for (ident, ty) in &self.bindings {
             writeln!(
@@ -54,6 +72,18 @@ impl std::fmt::Display for TypingEnv {
                 ident.to_string().blue(),
                 ty.to_string_colored()
             )?;
+        }
+        writeln!(f, "{}", "Type alias:".bold())?;
+        for (ident, ty) in &self.type_alias {
+            match ty {
+                Some(ty) => writeln!(
+                    f,
+                    "{}\t=>\t{}",
+                    ident.to_string().blue(),
+                    ty.to_string_colored()
+                )?,
+                None => writeln!(f, "{}\t=>\t{}", ident.to_string().blue(), "⊥".red())?,
+            }
         }
         Ok(())
     }

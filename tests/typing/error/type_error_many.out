@@ -1,11 +1,11 @@
 Error[301]: tests/typing/error/type_error_many.st:1:13
 1 | def test1 : N2 := 1
-                ^^ Type "N2" not found.
+                ^^ Type name "N2" not found.
 
 Error[301]: tests/typing/error/type_error_many.st:3:13
 3 | def test3 : N3 := 1
-                ^^ Type "N3" not found.
+                ^^ Type name "N3" not found.
 
 Error[301]: tests/typing/error/type_error_many.st:4:13
 4 | def test4 : N3 := 1
-                ^^ Type "N3" not found.
+                ^^ Type name "N3" not found.
