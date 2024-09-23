@@ -20,8 +20,8 @@ impl ColorInfo {
 
     /// set bg color
     //fn bg_color<S: Into<Color>>(mut self, color: S) -> Self {
-        //self.bg_color = Some(color.into());
-        //self
+    //self.bg_color = Some(color.into());
+    //self
     //}
 
     /// set style

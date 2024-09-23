@@ -21,12 +21,12 @@ impl TyDef {
 
     //// get name of definition
     //pub fn get_name(&self) -> &Ident {
-        //&self.name
+    //&self.name
     //}
 
     //// get type of definition
     //pub fn get_ty(&self) -> &Ty {
-        //&self.ty
+    //&self.ty
     //}
 }
 

@@ -1,8 +1,8 @@
 use crate::utils;
+use startlang::ast::pretty_print::Pretty;
 use startlang::error::Errors;
 use startlang::parser::{make_program, parse_file};
 use startlang::typing::infer_type;
-use startlang::ast::pretty_print::Pretty;
 
 fn f(file: &str) -> Result<String, Errors> {
     parse_file(file)

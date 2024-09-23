@@ -2,9 +2,9 @@ use super::value::*;
 use crate::error::*;
 use crate::stdlib::number_n::N_TYPE;
 use crate::typing::ast::*;
+pub use colored::Colorize;
 use std::collections::HashMap;
 use std::sync::LazyLock;
-pub use colored::Colorize;
 
 pub struct Interpreter {
     env: HashMap<Ident, Value>,
@@ -87,14 +87,15 @@ impl Interpreter {
     }
 
     /// evaluation main
-    pub fn eval_main(&self) -> Result<Value, Error> {
+    pub fn eval_main(&self) -> Result<Value, ErrorBox> {
         match &self.main {
             None => {
                 let msg = Head::new()
                     .text("Function")
                     .quoted("main")
                     .text("not found");
-                Err(Error::make(msg, ERROR_MAIN_NOT_FOUND))
+                let err = Error::make(msg, ERROR_MAIN_NOT_FOUND);
+                Err(Box::new(err))
             }
             Some(main) if main.ty != *MAIN_TY => {
                 let msg = Head::new()
@@ -105,7 +106,7 @@ impl Interpreter {
                     .copy_location(main)
                     .add_hint(Hint::new().text("Expect :").quoted(&MAIN_TY.to_string()))
                     .add_hint(Hint::new().text("Got    :").quoted(&main.ty.to_string()));
-                Err(err)
+                Err(Box::new(err))
             }
             Some(main) => Ok(main.value.clone()),
         }
@@ -115,7 +116,12 @@ impl Interpreter {
 impl std::fmt::Display for Interpreter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for (k, v) in &self.env {
-            writeln!(f, "{}\n{}", k.to_string().blue().bold(), v.to_string_colored())?;
+            writeln!(
+                f,
+                "{}\n{}",
+                k.to_string().blue().bold(),
+                v.to_string_colored()
+            )?;
         }
         write!(f, "{}:", "main".bold())?;
         match &self.main {
@@ -124,4 +130,3 @@ impl std::fmt::Display for Interpreter {
         }
     }
 }
-

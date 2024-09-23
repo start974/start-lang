@@ -25,7 +25,7 @@ impl<TDef> Program<TDef> {
 
 impl<TDef> Pretty for Program<TDef>
 where
-    TDef: Pretty
+    TDef: Pretty,
 {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         let mut doc = Doc::nil();

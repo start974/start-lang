@@ -158,7 +158,7 @@ impl<T, U1> FResult<T, U1, Errors> {
 
 impl<T, U> FResult<T, U, Error> {
     /// comvert error to errors
-    pub fn to_errors(self) -> FResult<T, U, Errors> {
+    pub fn into_errors(self) -> FResult<T, U, Errors> {
         match self.res {
             Ok(x) => FResult::ok(self.acc, x),
             Err(e) => FResult::err(self.acc, Errors::from(e)),

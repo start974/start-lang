@@ -37,11 +37,12 @@ impl<'a> ParseTree<'a> {
     /*}*/
 
     // create a ParseTree from a file
-    pub fn of_file(file_name: &'a str) -> Result<Self, Error> {
+    pub fn of_file(file_name: &'a str) -> Result<Self, ErrorBox> {
         File::open(file_name)
             .map_err(|_| {
                 let msg = Head::new().text("No such file").quoted(file_name);
-                Error::make(msg, ERROR_FILE_NOT_FOUND)
+                let err = Error::make(msg, ERROR_FILE_NOT_FOUND);
+                Box::new(err)
             })
             .and_then(|mut file| {
                 let mut input = String::new();
@@ -49,7 +50,8 @@ impl<'a> ParseTree<'a> {
                     Ok(_) => Ok(input),
                     Err(_) => {
                         let msg = Head::new().text("Cannot read file").quoted(file_name);
-                        Err(Error::make(msg, ERROR_READ))
+                        let err = Error::make(msg, ERROR_READ);
+                        Err(Box::new(err))
                     }
                 }
             })
