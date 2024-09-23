@@ -1,5 +1,5 @@
-use super::ast::{Ident, Ty};
-use crate::utils::colored::*;
+use super::ast::*;
+use colored::Colorize;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone)]
@@ -42,29 +42,19 @@ impl TypingEnv {
 
 impl std::fmt::Display for TypingEnv {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        writeln!(f, "Type set:")?;
+        writeln!(f, "{}", "Type set:".bold())?;
         for ty in &self.type_set {
-            writeln!(f, "- {ty}")?;
+            writeln!(f, "- {}", ty.to_string_colored())?;
         }
-        writeln!(f, "Bindings :")?;
+        writeln!(f, "{}", "Bindings :".bold())?;
         for (ident, ty) in &self.bindings {
-            writeln!(f, "{ident}\t:\t{ty}")?;
+            writeln!(
+                f,
+                "{}\t:\t{}",
+                ident.to_string().blue(),
+                ty.to_string_colored()
+            )?;
         }
         Ok(())
-    }
-}
-
-impl Colored for TypingEnv {
-    fn colored(&self) -> String {
-        let mut s = String::new();
-        s += &cformat!("<bold>Type set :</>\n");
-        for ty in &self.type_set {
-            s += &cformat!("- {}\n", ty.colored());
-        }
-        s += &cformat!("<bold>Bindings :</>\n");
-        for (ident, ty) in &self.bindings {
-            s += &cformat!("<blue>{}</>\t:\t{}\n", ident, ty.colored());
-        }
-        s
     }
 }

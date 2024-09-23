@@ -1,6 +1,6 @@
 use super::ident::Ident;
+pub use super::pretty_print::*;
 pub use crate::location::{Located, Location};
-use crate::utils::colored::*;
 use std::hash::{Hash, Hasher};
 
 /// constant types
@@ -25,22 +25,6 @@ impl Ty {
     }
 }
 
-impl std::fmt::Display for Ty {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match &self.kind {
-            Kind::Var(x) => write!(f, "{}", x),
-        }
-    }
-}
-
-impl Colored for Ty {
-    fn colored(&self) -> String {
-        match &self.kind {
-            Kind::Var(x) => cformat!("<yellow>{x}</>"),
-        }
-    }
-}
-
 impl Located for Ty {
     fn get_location(&self) -> &Option<Location> {
         &self.location
@@ -60,10 +44,17 @@ impl PartialEq for Ty {
     }
 }
 
+impl Pretty for Ty {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        match &self.kind {
+            Kind::Var(x) => theme.ty_var(x),
+        }
+    }
+}
 impl Eq for Ty {}
 
 impl Hash for Ty {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        format!("{self}").hash(state);
+        self.to_string().hash(state)
     }
 }

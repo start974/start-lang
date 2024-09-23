@@ -1,4 +1,3 @@
-pub mod colored;
 pub mod debug;
 
 mod fresult;

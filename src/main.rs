@@ -32,7 +32,7 @@ fn main() {
     }
 
     match &args.file_name {
-        None => repl::repl(&args),
+        None => repl::repl(),
         Some(file_name) => interpret::interpret_file(file_name),
     }
 }

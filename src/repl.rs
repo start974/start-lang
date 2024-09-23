@@ -1,10 +1,10 @@
 use crate::args::Args;
+use crate::ast::pretty_print::*;
 use crate::error::Errors;
 use crate::interpreter::{DefsOrValue, Interpreter};
 use crate::parser::{ast::WTDefsOrExpr, ParseTree, Parser};
 use crate::stdlib::{NAME_ENV, TYPE_ENV};
 use crate::typing::{ast::TDefsOrExpr, Typer};
-use crate::utils::colored::*;
 use crate::utils::debug::*;
 use crate::utils::FResult;
 use rustyline::{history::FileHistory, DefaultEditor, Editor};
@@ -78,7 +78,7 @@ impl Env {
         EnvResult::ok(self, defs_or_val)
     }
 
-    fn eval(self, args: &Args, input: &String) -> Self {
+    fn eval(self, input: &String) -> Self {
         let (env, res) = self
             // parse
             .parse(input.to_owned())
@@ -90,7 +90,7 @@ impl Env {
             .get_pair();
 
         match res {
-            Ok(def_or_vals) => def_or_vals.colored_println(args),
+            Ok(def_or_vals) => println!("{}", def_or_vals.to_string_colored()),
             Err(err) => eprintln!("{}", err),
         };
         env
@@ -103,7 +103,7 @@ fn finish(rl: &mut Editor<(), FileHistory>) {
         eprintln!("Failed to save history");
     }
 }
-pub fn repl(args: &Args) {
+pub fn repl() {
     let mut env = Env::new();
     let mut rl = DefaultEditor::new().unwrap();
     let _ = rl.load_history(HISTORY_FILE);
@@ -124,7 +124,7 @@ pub fn repl(args: &Args) {
                     }
                 }
                 // interpret
-                env = env.eval(args, &line);
+                env = env.eval(&line);
                 let _ = rl.add_history_entry(line);
             }
             Err(_) => {

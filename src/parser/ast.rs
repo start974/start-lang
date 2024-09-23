@@ -1,7 +1,5 @@
+pub use crate::ast::pretty_print::*;
 pub use crate::ast::*;
-use crate::utils::colored::*;
-
-use std::fmt;
 
 type OptionTy = Option<Ty>;
 
@@ -77,48 +75,39 @@ impl WeakTyped for WTExprDef {
     }
 }
 
-impl fmt::Display for WTExprDef {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let name = &self.name;
-        let body = &self.body;
-        match &self.ty {
-            None => write!(f, "def {name} := {body}"),
-            Some(ty) => write!(f, "def {name} : {ty} := {body}"),
-        }
+impl Pretty for WTExprDef {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        let doc_ty = self.ty.iter().fold(Doc::nil(), |doc, ty| {
+            Doc::group(
+                doc.append(theme.op_typed_by())
+                    .append(Doc::space())
+                    .append(ty.pretty(theme)),
+            )
+            .append(Doc::space())
+        });
+        Doc::group(
+            Doc::nil()
+                .append(theme.kw_def())
+                .append(Doc::space())
+                .append(theme.def_var(&self.name))
+                .append(Doc::space())
+                .append(doc_ty)
+                .append(theme.op_eq_def())
+                .append(Doc::line())
+                .append(self.body.pretty(theme)),
+        )
     }
 }
 
-impl Colored for WTExprDef {
-    fn colored(&self) -> String {
-        let name = cformat!("<blue>{}</>", self.name);
-        let body = self.body.colored();
-        match &self.ty {
-            None => cformat!("<magenta>def</> {name} <red>:=</> {body}"),
-            Some(ty) => {
-                let ty = ty.colored();
-                cformat!("<magenta>def</> {name} <red>:</> {ty} <red>:=</> {body}")
-            }
-        }
-    }
-}
 //-----------------------------------------------------------------------------
 // Definition
 //-----------------------------------------------------------------------------
 
-impl fmt::Display for WTDefinition {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Pretty for WTDefinition {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Self::ExprDef(expr_def) => expr_def.fmt(f),
-            Self::TyDef(ty_def) => ty_def.fmt(f),
-        }
-    }
-}
-
-impl Colored for WTDefinition {
-    fn colored(&self) -> String {
-        match self {
-            Self::ExprDef(expr_def) => expr_def.colored(),
-            Self::TyDef(ty_def) => ty_def.colored(),
+            Self::ExprDef(expr_def) => expr_def.pretty(theme),
+            Self::TyDef(ty_def) => ty_def.pretty(theme),
         }
     }
 }

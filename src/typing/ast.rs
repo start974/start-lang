@@ -1,6 +1,6 @@
+pub use crate::ast::pretty_print::*;
 pub use crate::ast::*;
 use crate::stdlib;
-use crate::utils::colored::*;
 use std::fmt;
 
 pub trait Typed {
@@ -76,20 +76,23 @@ impl Typed for TDefinition {
     }
 }
 
-impl fmt::Display for TDefinition {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let name = &self.name;
-        let body = &self.body;
-        let ty = &self.ty;
-        write!(f, "def {name} : {ty} := {body}")
-    }
-}
-
-impl Colored for TDefinition {
-    fn colored(&self) -> String {
-        let name = cformat!("<blue>{}</>", self.name);
-        let body = self.body.colored();
-        let ty = self.ty.colored();
-        cformat!("<magenta>def</magenta> {name} <red>:</> {ty} <red>:=</> {body}")
+impl Pretty for TDefinition {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::group(
+            Doc::nil()
+                .append(theme.kw_def())
+                .append(Doc::space())
+                .append(theme.def_var(&self.name))
+                .append(Doc::space())
+                .append(
+                    Doc::group(theme.op_typed_by())
+                        .append(Doc::line())
+                        .append(self.ty.pretty(theme)),
+                )
+                .append(Doc::space())
+                .append(theme.op_eq_def())
+                .append(Doc::line())
+                .append(self.body.pretty(theme)),
+        )
     }
 }

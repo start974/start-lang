@@ -1,5 +1,4 @@
 use crate::args::Args;
-use crate::utils::colored::Colored;
 use crate::utils::debug::*;
 use crate::{interpreter, parser, typing};
 

@@ -1,8 +1,6 @@
-use super::expression::Expression;
-use super::ident::Ident;
-use super::ty::Ty;
+pub use super::pretty_print::*;
+use super::{Ident, Ty};
 pub use crate::location::{Located, Location};
-use crate::utils::colored::*;
 
 #[derive(Debug, Clone)]
 pub struct TyDef {
@@ -43,18 +41,17 @@ impl Located for TyDef {
     }
 }
 
-impl std::fmt::Display for TyDef {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "type {} := {}", self.name, self.ty)
-    }
-}
-
-impl Colored for TyDef {
-    fn colored(&self) -> String {
-        cformat!(
-            "<magenta>type</magenta> <yellow>{}</> <red>:=</> {}",
-            self.name,
-            self.ty.colored()
+impl Pretty for TyDef {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::group(
+            Doc::nil()
+                .append(theme.kw_type())
+                .append(Doc::space())
+                .append(theme.def_var(&self.name))
+                .append(Doc::space())
+                .append(theme.op_eq_def())
+                .append(Doc::line())
+                .append(Doc::group(self.ty.pretty(theme))),
         )
     }
 }
