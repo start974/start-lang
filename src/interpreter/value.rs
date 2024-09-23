@@ -1,7 +1,7 @@
+pub use crate::ast::pretty_print::*;
 use crate::ast::{Ident, NConst, Ty};
 use crate::error::*;
 use crate::location::*;
-use crate::utils::colored::*;
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -21,18 +21,10 @@ impl TryInto<i32> for Value {
     }
 }
 
-impl std::fmt::Display for Value {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Pretty for Value {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Self::N(n) => write!(f, "{n}"),
-        }
-    }
-}
-
-impl Colored for Value {
-    fn colored(&self) -> String {
-        match self {
-            Self::N(n) => cformat!("<green>{n}</>"),
+            Self::N(n) => theme.number(n),
         }
     }
 }
@@ -45,21 +37,23 @@ pub struct DefValue {
     pub location: Option<Location>,
 }
 
-impl std::fmt::Display for DefValue {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let name = &self.name;
-        let ty = &self.ty;
-        let value = &self.value;
-        write!(f, "{name} : {ty} := {value}")
-    }
-}
-
-impl Colored for DefValue {
-    fn colored(&self) -> String {
-        let name = &self.name;
-        let ty = &self.ty;
-        let value = &self.value.colored();
-        cformat!("<blue><bold>{name}</></> <red>:</> <yellow>{ty}</> <red>:=</> {value}")
+impl Pretty for DefValue {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::group(
+            Doc::nil()
+                .append(theme.def_var(&self.name))
+                .append(Doc::space())
+                .append(Doc::group(
+                    theme
+                        .op_typed_by()
+                        .append(Doc::line())
+                        .append(self.ty.pretty(theme)),
+                ))
+                .append(Doc::space())
+                .append(theme.op_eq_def())
+                .append(Doc::line())
+                .append(self.value.pretty(theme)),
+        )
     }
 }
 
@@ -81,27 +75,13 @@ pub enum DefsOrValue {
     Defs(DefValues),
 }
 
-impl std::fmt::Display for DefsOrValue {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Pretty for DefsOrValue {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Self::Value(value) => write!(f, "{}", value),
-            Self::Defs(defs) => defs.iter().try_for_each(|def| def.fmt(f)),
-        }
-    }
-}
-
-impl Colored for DefsOrValue {
-    fn colored(&self) -> String {
-        match self {
-            Self::Value(value) => value.colored(),
-            Self::Defs(defs) => {
-                let mut s = String::new();
-                for def in defs {
-                    s += &def.colored();
-                    s += "\n";
-                }
-                s
-            }
+            Self::Value(value) => value.pretty(theme),
+            Self::Defs(defs) => defs.iter().fold(Doc::nil(), |doc, def| {
+                doc.append(def.pretty(theme).append(Doc::line_()))
+            }),
         }
     }
 }

@@ -4,7 +4,6 @@ use super::parse_tree::ParseTree;
 use crate::error::Error;
 use crate::error::*;
 use crate::location::{Located, Location, Position};
-use crate::utils::colored::*;
 use crate::utils::FResult;
 use tree_sitter::Node;
 
@@ -350,16 +349,7 @@ impl<'a> Parser<'a> {
 
 impl<'a> std::fmt::Display for Parser<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        writeln!(f, "Parser {}", self.file_name)?;
-        writeln!(f, "Name_env:\n{}", self.name_env)
-    }
-}
-
-impl<'a> Colored for Parser<'a> {
-    fn colored(&self) -> String {
-        let mut res = cformat!("<bold>Parser</bold> <blue>{}</blue>\n", self.file_name);
-        res += &cformat!("<bold>Name_env:</bold>\n");
-        res += &self.name_env.colored();
-        res
+        writeln!(f, "{} {}", "Parser".bold(), self.file_name.underline())?;
+        writeln!(f, "{}:\n{}", "NameEnv".bold(), self.name_env)
     }
 }

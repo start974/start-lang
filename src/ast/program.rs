@@ -1,5 +1,4 @@
-use crate::utils::colored::Colored;
-use std::fmt;
+pub use super::pretty_print::*;
 
 pub struct Program<TDef> {
     data: Vec<TDef>,
@@ -24,28 +23,15 @@ impl<TDef> Program<TDef> {
     }
 }
 
-impl<TDef> fmt::Display for Program<TDef>
+impl<TDef> Pretty for Program<TDef>
 where
-    TDef: std::fmt::Display,
+    TDef: Pretty
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        let mut doc = Doc::nil();
         for def in &self.data {
-            writeln!(f, "{}", def)?;
+            doc = doc.append(def.pretty(theme)).append(Doc::line())
         }
-        Ok(())
-    }
-}
-
-impl<TDef> Colored for Program<TDef>
-where
-    TDef: Colored,
-{
-    fn colored(&self) -> String {
-        let mut res = String::new();
-        for def in &self.data {
-            res += &def.colored();
-            res += "\n";
-        }
-        res
+        doc
     }
 }

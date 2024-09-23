@@ -1,13 +1,14 @@
 use crate::utils;
 use startlang::error::Errors;
 use startlang::parser::{make_program, parse_file};
-use startlang::typing::{ast::TProgram, infer_type};
+use startlang::typing::infer_type;
+use startlang::ast::pretty_print::Pretty;
 
-fn f(file: &str) -> Result<TProgram, Errors> {
+fn f(file: &str) -> Result<String, Errors> {
     parse_file(file)
         .and_then(make_program)
         .and_then(|(_, wt_prog)| infer_type(wt_prog))
-        .map(|(_, t_prog)| t_prog)
+        .map(|(_, t_prog)| t_prog.to_string())
 }
 
 const PREFIX: &str = "typing";

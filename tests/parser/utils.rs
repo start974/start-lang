@@ -1,11 +1,12 @@
 use crate::utils;
 use startlang::error::Errors;
-use startlang::parser::{ast::WTProgram, make_program, parse_file};
+use startlang::parser::{make_program, parse_file};
+use startlang::ast::pretty_print::Pretty;
 
-fn f(file: &str) -> Result<WTProgram, Errors> {
+fn f(file: &str) -> Result<String, Errors> {
     parse_file(file)
         .and_then(make_program)
-        .map(|(_, wt_prog)| wt_prog)
+        .map(|(_, wt_prog)| wt_prog.to_string())
 }
 
 const PREFIX: &str = "parser";

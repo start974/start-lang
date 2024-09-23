@@ -7,6 +7,7 @@ use crate::typing::{
     ast::{TDefsOrExpr, TProgram},
     Typer,
 };
+use crate::ast::pretty_print::Pretty;
 use colored::Colorize;
 use lazy_static::lazy_static;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -60,7 +61,11 @@ pub fn debug_parser(parser: &Parser) {
 /// debug parsed program
 pub fn debug_parsed_prog(prog: &WTProgram) {
     if DEBUG_PARSER.is_active() {
-        eprintln!("{}:\n{}", "Parsed program".cyan().bold(), prog);
+        eprintln!(
+            "{}:\n{}",
+            "Parsed program".cyan().bold(),
+            prog.to_string_colored()
+        );
     }
 }
 
@@ -70,7 +75,7 @@ pub fn debug_parsed_defs_or_expr(defs_or_expr: &WTDefsOrExpr) {
         eprintln!(
             "{}:\n{}",
             "Parsed definitions or expression".cyan().bold(),
-            defs_or_expr
+            defs_or_expr.to_string_colored()
         );
     }
 }
@@ -85,7 +90,11 @@ pub fn debug_typer(typer: &Typer) {
 /// debug typed program
 pub fn debug_typed_prog(prog: &TProgram) {
     if DEBUG_TYPER.is_active() {
-        eprintln!("{}:\n{}", "Typed program".cyan().bold(), prog);
+        eprintln!(
+            "{}:\n{}",
+            "Typed program".cyan().bold(),
+            prog.to_string_colored()
+        );
     }
 }
 
@@ -95,7 +104,7 @@ pub fn debug_typed_defs_or_expr(defs_or_expr: &TDefsOrExpr) {
         eprintln!(
             "{}:\n{}",
             "Typed definitions or expression".cyan().bold(),
-            defs_or_expr
+            defs_or_expr.to_string_colored()
         );
     }
 }

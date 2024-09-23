@@ -1,6 +1,5 @@
 use crate::ast::Ident;
 use crate::location::Location;
-use crate::utils::colored::*;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -66,20 +65,5 @@ impl fmt::Display for NameEnv {
             writeln!(f, "{}\t->\t{}\t{}", k, v.name, v.id)?;
         }
         Ok(())
-    }
-}
-
-impl Colored for NameEnv {
-    fn colored(&self) -> String {
-        let mut s = String::new();
-        for (k, v) in &self.data {
-            s.push_str(&cformat!(
-                "<green>{}</>\t->\t<blue>{}</>\t<cyan>{}</>\n",
-                k,
-                v.name,
-                v.id
-            ));
-        }
-        s
     }
 }

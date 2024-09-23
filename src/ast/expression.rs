@@ -1,7 +1,7 @@
 use super::constant::Constant;
 use super::ident::Ident;
+pub use super::pretty_print::*;
 use crate::location::{Located, Location};
-use crate::utils::colored::*;
 
 /// constant expression
 #[derive(Debug, Clone)]
@@ -28,20 +28,11 @@ impl<TyT> Located for Expression<TyT> {
     }
 }
 
-impl<TyT> std::fmt::Display for Expression<TyT> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match &self.kind {
-            ExpressionKind::Const(c) => write!(f, "{c}"),
-            ExpressionKind::Var(x) => write!(f, "{x}"),
-        }
-    }
-}
-
-impl<TyT> Colored for Expression<TyT> {
-    fn colored(&self) -> String {
-        match &self.kind {
-            ExpressionKind::Const(c) => c.colored(),
-            ExpressionKind::Var(x) => cformat!("<blue>{x}<blue>"),
-        }
+impl<TyT> Pretty for Expression<TyT> {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::group(match &self.kind {
+            ExpressionKind::Const(c) => c.pretty(theme),
+            ExpressionKind::Var(x) => theme.expr_var(x),
+        })
     }
 }

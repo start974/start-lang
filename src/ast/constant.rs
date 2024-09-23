@@ -1,4 +1,4 @@
-use crate::utils::colored::*;
+pub use super::pretty_print::*;
 use num_bigint::BigUint;
 
 pub type NConst = BigUint;
@@ -14,18 +14,10 @@ impl Constant {
     }
 }
 
-impl std::fmt::Display for Constant {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            Self::N(c) => write!(f, "{c}"),
-        }
-    }
-}
-
-impl Colored for Constant {
-    fn colored(&self) -> String {
-        match self {
-            Self::N(c) => cformat!("<green>{c}</>"),
+impl Pretty for Constant {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        match &self {
+            Self::N(n) => theme.number(n),
         }
     }
 }

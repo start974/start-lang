@@ -1,15 +1,16 @@
-use super::*;
+use super::{Ident, NConst};
 use colored::{Color, ColoredString, Colorize, Styles};
 use lazy_static::lazy_static;
 use pretty::{RcDoc, Render, RenderAnnotated};
 use std::collections::VecDeque;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct ColorInfo {
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct ColorInfo {
     fg_color: Option<Color>,
     bg_color: Option<Color>,
-    style: Styles,
+    styles: Vec<Styles>,
 }
+
 impl ColorInfo {
     /// set fg color
     fn color<S: Into<Color>>(mut self, color: S) -> Self {
@@ -25,23 +26,26 @@ impl ColorInfo {
 
     /// set style
     fn style(mut self, style: Styles) -> Self {
-        self.style = style;
+        self.styles.push(style);
         self
     }
 
     /// color a string
     fn colorize(&self, s: &str) -> ColoredString {
-        let mut cs = match self.style {
-            Styles::Clear => s.clear(),
-            Styles::Bold => s.bold(),
-            Styles::Dimmed => s.dimmed(),
-            Styles::Italic => s.italic(),
-            Styles::Underline => s.underline(),
-            Styles::Blink => s.blink(),
-            Styles::Reversed => s.reverse(),
-            Styles::Hidden => s.hidden(),
-            Styles::Strikethrough => s.strikethrough(),
-        };
+        let mut cs = s.normal();
+        for style in self.styles.iter() {
+            cs = match style {
+                Styles::Clear => s.clear(),
+                Styles::Bold => s.bold(),
+                Styles::Dimmed => s.dimmed(),
+                Styles::Italic => s.italic(),
+                Styles::Underline => s.underline(),
+                Styles::Blink => s.blink(),
+                Styles::Reversed => panic!("deprecated"),
+                Styles::Hidden => s.hidden(),
+                Styles::Strikethrough => s.strikethrough(),
+            };
+        }
         if let Some(c) = self.fg_color {
             cs = cs.color(c)
         }
@@ -73,7 +77,7 @@ where
     type Error = std::fmt::Error;
 
     fn write_str_all(&mut self, s: &str) -> Result<(), Self::Error> {
-        if let Some(color_info) = self.color_info_stack.get(0) {
+        if let Some(color_info) = self.color_info_stack.front() {
             write!(self.upstream, "{}", color_info.colorize(s))
         } else {
             write!(self.upstream, "{}", s)
@@ -103,15 +107,6 @@ where
         Ok(())
     }
 }
-impl Default for ColorInfo {
-    fn default() -> Self {
-        Self {
-            fg_color: None,
-            bg_color: None,
-            style: Styles::Clear,
-        }
-    }
-}
 
 pub struct Theme {
     /// limit to try to align
@@ -121,17 +116,20 @@ pub struct Theme {
     keyword: ColorInfo,
     /// operator color
     operator: ColorInfo,
+
     /// var definition color
     def_var: ColorInfo,
+
     /// expression var color
     expr_var: ColorInfo,
     /// constant color
     number: ColorInfo,
-    /// type color
-    ty: ColorInfo,
+
+    /// type var
+    ty_var: ColorInfo,
 }
 
-type Doc<'a> = RcDoc<'a, ColorInfo>;
+pub type Doc<'a> = RcDoc<'a, ColorInfo>;
 
 impl Default for Theme {
     /// theme without color
@@ -143,37 +141,60 @@ impl Default for Theme {
             def_var: ColorInfo::default(),
             expr_var: ColorInfo::default(),
             number: ColorInfo::default(),
-            ty: ColorInfo::default(),
+            ty_var: ColorInfo::default(),
         }
     }
 }
 
 impl Theme {
-    /// format keyword
+    /// pprint keyword
     pub fn keyword<'a>(&self, keyword: &'a str) -> Doc<'a> {
-        Doc::text(keyword).annotate(self.keyword)
+        Doc::text(keyword).annotate(self.keyword.clone())
     }
 
-    /// format operator
+    /// pprint operator
     pub fn operator<'a>(&self, operator: &'a str) -> Doc<'a> {
-        Doc::text(operator).annotate(self.operator)
+        Doc::text(operator).annotate(self.operator.clone())
     }
 
-    /// format definition variable
-    pub fn def_var(&self, var: &Ident) -> Doc<'_> {
-        Doc::text(var.to_string()).annotate(self.def_var)
+    /// ppprint definition variable
+    pub fn def_var<'a>(&self, var: &Ident) -> Doc<'a> {
+        Doc::text(var.to_string()).annotate(self.def_var.clone())
     }
 
-    /// format variable expression
-    pub fn expr_var(&self, var: &Ident) -> Doc<'_> {
-        Doc::text(var.to_string()).annotate(self.expr_var)
+    /// pprint variable expression
+    pub fn expr_var<'a>(&self, var: &Ident) -> Doc<'a> {
+        Doc::text(var.to_string()).annotate(self.expr_var.clone())
     }
 
-    /// format constant expression
-    pub fn number(&self, constant: &Constant) -> Doc<'_> {
-        match constant {
-            Constant::N(c) => Doc::text(c.to_string()).annotate(self.number),
-        }
+    /// pprint constant expression
+    pub fn number<'a>(&self, n: &NConst) -> Doc<'a> {
+        Doc::text(n.to_string()).annotate(self.number.clone())
+    }
+
+    /// pprint type variable
+    pub fn ty_var<'a>(&self, var: &Ident) -> Doc<'a> {
+        Doc::text(var.to_string()).annotate(self.ty_var.clone())
+    }
+
+    /// pprint keyword type
+    pub fn kw_type<'a>(&self) -> Doc<'a> {
+        self.keyword("type")
+    }
+
+    /// pprint keyword type
+    pub fn kw_def<'a>(&self) -> Doc<'a> {
+        self.keyword("def")
+    }
+
+    /// pprint operator eqdef
+    pub fn op_eq_def<'a>(&self) -> Doc<'a> {
+        self.operator(":=")
+    }
+
+    /// pprint opertor typed by ":"
+    pub fn op_typed_by<'a>(&self) -> Doc<'a> {
+        self.operator(":")
     }
 }
 
@@ -185,19 +206,32 @@ lazy_static! {
         def_var: ColorInfo::default().color(Color::Blue),
         expr_var: ColorInfo::default().color(Color::Blue).style(Styles::Bold),
         number: ColorInfo::default().color(Color::Green),
-        ty: ColorInfo::default().color(Color::Yellow),
+        ty_var: ColorInfo::default().color(Color::Yellow),
     };
+    pub static ref THEME_NO_COLOR: Theme = Theme::default();
 }
 
-trait Pretty {
+pub trait Pretty {
     /// pretty print
     fn pretty(&self, theme: &Theme) -> Doc<'_>;
-}
 
-impl std::fmt::Display for dyn Pretty {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    /// render to string
+    fn to_string(&self) -> String {
+        let theme = &THEME_NO_COLOR;
+        let mut stream = StreamColored::new(String::new());
+        self.pretty(theme)
+            .render_raw(theme.width, &mut stream)
+            .unwrap();
+        stream.upstream
+    }
+
+    /// render to colored string
+    fn to_string_colored(&self) -> String {
         let theme = &THEME;
-        let mut stream = StreamColored::new(f);
-        self.pretty(theme).render_raw(theme.width, &mut stream)
+        let mut stream = StreamColored::new(String::new());
+        self.pretty(theme)
+            .render_raw(theme.width, &mut stream)
+            .unwrap();
+        stream.upstream
     }
 }

@@ -2,10 +2,9 @@ use super::value::*;
 use crate::error::*;
 use crate::stdlib::number_n::N_TYPE;
 use crate::typing::ast::*;
-use crate::typing::ast::{TDefinition, TExpression};
-use crate::utils::colored::*;
 use std::collections::HashMap;
 use std::sync::LazyLock;
+pub use colored::Colorize;
 
 pub struct Interpreter {
     env: HashMap<Ident, Value>,
@@ -116,25 +115,13 @@ impl Interpreter {
 impl std::fmt::Display for Interpreter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for (k, v) in &self.env {
-            writeln!(f, "{}\n{}", k, v)?;
+            writeln!(f, "{}\n{}", k.to_string().blue().bold(), v.to_string_colored())?;
         }
+        write!(f, "{}:", "main".bold())?;
         match &self.main {
-            None => writeln!(f, "main : ⊥"),
-            Some(main) => writeln!(f, "main :\n{}", main),
+            None => writeln!(f, " ⊥"),
+            Some(main) => writeln!(f, "\n{}", main.to_string_colored()),
         }
     }
 }
 
-impl Colored for Interpreter {
-    fn colored(&self) -> String {
-        let mut s = String::new();
-        for (k, v) in &self.env {
-            s += &cformat!("<blue>{}:</>\n{}\n", k, v.colored());
-        }
-        match &self.main {
-            None => s += &cformat!("<bold>main :</> ⊥"),
-            Some(main) => s += &cformat!("<bold>main</>:\n{}", main.colored()),
-        }
-        s
-    }
-}
