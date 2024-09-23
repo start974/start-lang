@@ -87,7 +87,7 @@ pub trait Message {
     where
         Self: Sized,
     {
-        self.text_("\"").text_(msg).text_("\"")
+        self.text_("\"").important_(msg).text_("\"")
     }
 
     /// add quoted message preceded by space
@@ -109,13 +109,13 @@ impl std::fmt::Display for dyn Message {
             write!(f, "{}", msg)?;
         }
         if !self.is_empty() {
-            writeln!(f, "{}", self.text_colored("."))?;
+            write!(f, "{}", self.text_colored("."))?;
         }
         Ok(())
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Head(Vec<ColoredString>);
 impl Message for Head {
     fn new() -> Self {
@@ -139,7 +139,7 @@ impl Message for Head {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Hint(Vec<ColoredString>);
 impl Message for Hint {
     fn new() -> Self {
@@ -150,7 +150,7 @@ impl Message for Hint {
         self
     }
     fn text_colored(&self, msg: &str) -> ColoredString {
-        msg.into()
+        msg.yellow()
     }
     fn important_colored(&self, msg: &str) -> ColoredString {
         msg.yellow().bold()
@@ -163,15 +163,13 @@ impl Message for Hint {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Error {
     code: i32,
     head: Head,
     hints: Vec<Hint>,
     location: Option<Location>,
 }
-
-pub type ErrorBox = Box<Error>;
 
 impl Error {
     /// make simple error
@@ -217,15 +215,11 @@ impl std::fmt::Display for Error {
             location.fmt_indicator(f)?;
             write!(f, " ")?;
         }
-        write!(f, "{}", &self.head as &dyn Message)?;
+        writeln!(f, "{}", &self.head as &dyn Message)?;
         if !self.hints.is_empty() {
-            writeln!(f, "\n{}", "Hints:".yellow().bold())?;
-            let n = self.hints.len();
-            for (i, hint) in self.hints.iter().enumerate() {
-                write!(f, "{}", hint as &dyn Message)?;
-                if i < n - 1 {
-                    writeln!(f)?;
-                }
+            writeln!(f, "{}", "Hints:".yellow().bold())?;
+            for hint in self.hints.iter() {
+                writeln!(f, "  {}", hint as &dyn Message)?;
             }
         }
         Ok(())
@@ -236,6 +230,8 @@ impl std::fmt::Display for Error {
 pub struct Errors {
     errors: VecDeque<Error>,
 }
+
+pub type ErrorBox = Box<Error>;
 
 impl Errors {
     /// empty errors

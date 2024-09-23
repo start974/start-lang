@@ -1,19 +1,14 @@
 use super::value::*;
 use crate::error::*;
-use crate::stdlib::number_n::N_TYPE;
 use crate::typing::ast::*;
+use crate::typing::main_function_not_found;
 pub use colored::Colorize;
 use std::collections::HashMap;
-use std::sync::LazyLock;
 
 pub struct Interpreter {
     env: HashMap<Ident, Value>,
     main: Option<DefValue>,
 }
-
-static MAIN_TY: LazyLock<Ty> = LazyLock::new(|| N_TYPE.clone());
-const ERROR_MAIN_NOT_FOUND: i32 = 401;
-const ERROR_MAIN_TYPE: i32 = 402;
 
 impl Interpreter {
     /// empty context
@@ -89,25 +84,7 @@ impl Interpreter {
     /// evaluation main
     pub fn eval_main(&self) -> Result<Value, ErrorBox> {
         match &self.main {
-            None => {
-                let msg = Head::new()
-                    .text("Function")
-                    .quoted("main")
-                    .text("not found");
-                let err = Error::make(msg, ERROR_MAIN_NOT_FOUND);
-                Err(Box::new(err))
-            }
-            Some(main) if main.ty != *MAIN_TY => {
-                let msg = Head::new()
-                    .text("Function")
-                    .quoted("main")
-                    .text("has wrong type");
-                let err = Error::make(msg, ERROR_MAIN_TYPE)
-                    .copy_location(main)
-                    .add_hint(Hint::new().text("Expect :").quoted(&MAIN_TY.to_string()))
-                    .add_hint(Hint::new().text("Got    :").quoted(&main.ty.to_string()));
-                Err(Box::new(err))
-            }
+            None => Err(main_function_not_found()),
             Some(main) => Ok(main.value.clone()),
         }
     }
