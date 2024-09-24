@@ -1,0 +1,23 @@
+width : 80
+
+keyword:
+  fg: "magenta"
+
+operator:
+  fg: "red"
+
+def_var:
+  fg: "blue"
+  styles:
+    - "bold"
+
+expr_var:
+  fg: "blue"
+
+number:
+  fg: "green"
+
+ty_var:
+  fg: "yellow"
+  styles:
+    - "italic"

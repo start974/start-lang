@@ -13,10 +13,7 @@ pub static NAME_ENV: LazyLock<NameEnv> = LazyLock::new(|| {
 pub static TYPE_ENV: LazyLock<TypingEnv> = LazyLock::new(|| {
     // N types
     let (env, res) = TypingEnv::empty()
-        .add_alias(
-            number_n::N_TYPE_NAME.clone(),
-            None
-        )
+        .add_alias(number_n::N_TYPE_NAME.clone(), None)
         .get_pair();
     let () = res.map_err(|err| panic!("{}", err)).unwrap();
     env
