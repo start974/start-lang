@@ -14,10 +14,10 @@ def_var:
 expr_var:
   fg: "blue"
 
-number:
-  fg: "green"
-
 ty_var:
   fg: "yellow"
   styles:
     - "italic"
+
+number:
+  fg: "green"
