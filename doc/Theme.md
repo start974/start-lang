@@ -1,14 +1,11 @@
 # Theme file
 
 When **debug flags** or **repl** display program a theme is used.
-By default is use [theme](asserts/theme.yml).
-To change this theme use flag `--theme <THEME.yml>`
+By default is use [theme](../asserts/theme.yml).
+To change this theme use flag `--theme <theme.yml>`
 
 ## Width
 You can set with with key `width` and width need to be **positive**
-```
-    width : <N>
-```
 
 ## Colors
 You can set color (`color`) using default color string:
@@ -34,10 +31,7 @@ color :=
   | color_rgb
 ```
 
-Or using a rgb color (`color_rgb`) with a list of 3 number between 0 and 255.
-```
-color_rgb := [<N>, <N>, <N>]
-```
+Or using a rgb color (`color_rgb`) with a list of **3 numbers between 0 and 255**.
 
 ## Styles
 Style information (`style`) is in list of string:
@@ -66,17 +60,18 @@ style_info :=
 ## Theme
 Theme can set somme expression or keyword of language:
 - **keyword** keyword of languae
-    - *def*
-    - *type*
+    - `def`
+    - `type`
 - **operator** operator of language
-    - *:=*
-    - *:*
+    - `:=`
+    - `:`
 - **def_var** variable in definition
 - **expr_var** variable in expression
 - **ty_var** variable in type
 - **number** numbers in expression
 
 ## Example
+This is an example of correct file
 ```
 width : 80
 
