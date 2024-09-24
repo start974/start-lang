@@ -19,9 +19,10 @@ impl<T, U, E> FResult<T, U, E> {
         Self::make(acc, Err(err))
     }
 
-    //pub fn get_res(self) -> Result<U, Error> {
-    //self.res
-    //}
+    /// get res part
+    pub fn get_res(self) -> Result<U, E> {
+        self.res
+    }
 
     //pub fn get_acc(self) -> T {
     //self.acc
@@ -138,36 +139,36 @@ impl<T1, U, E> FResult<T1, U, E> {
 }
 
 impl<T, U1> FResult<T, U1, Errors> {
-    /// combine result made by [f1] using [f2] and
+    /// combine result of [Error] made by [f1] using [f2] and
     /// and make error list for many errors occured
-    pub fn combine<F1, F2, U2, U3>(self, f1: F1, f2: F2) -> FResult<T, U3, Errors>
+    pub fn combine<F1, F2, U2, U3, E>(self, f1: F1, f2: F2) -> FResult<T, U3, Errors>
     where
-        F1: FnOnce(T) -> FResult<T, U2, Error>,
+        E: Into<Errors> + Into<Error>,
+        F1: FnOnce(T) -> FResult<T, U2, E>,
         F2: FnOnce(U1, U2) -> U3,
     {
         let r = f1(self.acc);
         let res = match (self.res, r.res) {
             (Ok(x), Ok(y)) => Ok(f2(x, y)),
-            (Ok(_), Err(e)) => Err(Errors::from(e)),
+            (Ok(_), Err(e)) => Err(e.into()),
             (Err(errs), Ok(_)) => Err(errs),
-            (Err(errs), Err(e)) => Err(errs.add_error(e)),
+            (Err(errs), Err(e)) => Err(errs.add_error(e.into())),
         };
         FResult { acc: r.acc, res }
     }
 
-    /// cobmine result made by [f1] using [f2] and
+    /// combine result of [Errors] made by [f1] using [f2] and
     /// and make error list for many errors occured
-    pub fn combine_box<F1, F2, U2, U3>(self, f1: F1, f2: F2) -> FResult<T, U3, Errors>
+    pub fn combines<F1, F2, U2, U3>(self, f1: F1, f2: F2) -> FResult<T, U3, Errors>
     where
-        F1: FnOnce(T) -> FResult<T, U2, ErrorBox>,
+        F1: FnOnce(T) -> FResult<T, U2, Errors>,
         F2: FnOnce(U1, U2) -> U3,
     {
         let r = f1(self.acc);
         let res = match (self.res, r.res) {
             (Ok(x), Ok(y)) => Ok(f2(x, y)),
-            (Ok(_), Err(e)) => Err(Errors::from(e)),
-            (Err(errs), Ok(_)) => Err(errs),
-            (Err(errs), Err(e)) => Err(errs.add_error(*e)),
+            (Ok(_), Err(errs)) | (Err(errs), Ok(_)) => Err(errs),
+            (Err(errs1), Err(errs2)) => Err(errs1.concat(errs2)),
         };
         FResult { acc: r.acc, res }
     }

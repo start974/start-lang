@@ -233,6 +233,12 @@ pub struct Errors {
 
 pub type ErrorBox = Box<Error>;
 
+impl From<Box<Error>> for Error {
+    fn from(error: Box<Error>) -> Self {
+        *error
+    }
+}
+
 impl Errors {
     /// empty errors
     pub fn empty() -> Self {
@@ -244,6 +250,12 @@ impl Errors {
     /// add other error
     pub fn add_error(mut self, err: Error) -> Self {
         self.errors.push_back(err);
+        self
+    }
+
+    /// contant errors
+    pub fn concat(mut self, mut other: Self) -> Self {
+        self.errors.append(&mut other.errors);
         self
     }
 

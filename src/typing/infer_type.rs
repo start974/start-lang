@@ -182,7 +182,7 @@ impl Typer {
     /// type a program
     pub fn type_program(self, program: &WTProgram) -> TypingResult<TProgram, Errors> {
         program.iter().fold(self.ok(Program::empty()), |res, def| {
-            res.combine_box(
+            res.combine(
                 |typing| typing.type_definition(def),
                 |prog, opt_def| match opt_def {
                     Some(def) => prog.add_definition(def),

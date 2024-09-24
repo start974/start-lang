@@ -19,3 +19,4 @@ pretty = "0.12.3"
 rustyline = "14.0.0"
 tree-sitter = "0.22"
 tree-sitter-start = { path = "./tree-sitter-start" }
+yaml-rust = "0.4.5"
