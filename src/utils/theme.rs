@@ -28,9 +28,9 @@ impl ColorInfo {
     }
 
     // set style
-/*    pub fn style(mut self, style: Styles) -> Self {*/
-        /*self.styles.push(style);*/
-        /*self*/
+    /*    pub fn style(mut self, style: Styles) -> Self {*/
+    /*self.styles.push(style);*/
+    /*self*/
     /*}*/
 
     /// add many styles

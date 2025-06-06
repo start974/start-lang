@@ -1,5 +1,7 @@
 mod ast;
 mod error;
+mod error2;
+mod location2;
 mod interpret;
 mod interpreter;
 mod location;
