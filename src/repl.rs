@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::error::Errors;
 use crate::interpreter::{DefsOrValue, Interpreter};
 use crate::parser::{ast::WTDefsOrExpr, ParseTree, Parser};
@@ -8,11 +10,17 @@ use crate::utils::writer::StdoutPrettyWriter;
 use crate::utils::FResult;
 use rustyline::{history::FileHistory, DefaultEditor, Editor};
 
+type Printer = StdoutPrettyWriter<Rc<Theme>>;
 struct Env {
+    // theme of repl
+    theme: Rc<Theme>,
+    /// printer for output
+    printer: Printer,
+    /// parse tree for input
     parse_tree: ParseTree<'static>,
+    /// parser for input
     parser: Parser<'static>,
-    //printer: StdoutPrettyWriter,
-    theme: Theme,
+    /// type environment
     typer: Typer,
     interpreter: Interpreter,
 }
@@ -24,15 +32,19 @@ type EnvResult<T> = FResult<Env, T, Errors>;
 impl Env {
     fn new() -> Self {
         let language = tree_sitter_start::start_repl_language();
-        let theme = Theme::default_theme();
-        //let printer = StdoutPrettyWriter::new(theme);
+        let parse_tree = ParseTree::make(FILE_NAME).set_language(&language);
+        let parser = Parser::make(FILE_NAME, NAME_ENV.clone());
+        let theme = Rc::new(Theme::default_theme());
+        let printer = StdoutPrettyWriter::new(theme.clone());
+        let typer = Typer::make(TYPE_ENV.clone());
+        let interpreter = Interpreter::empty();
         Self {
-            parse_tree: ParseTree::make(FILE_NAME).set_language(&language),
-            parser: Parser::make(FILE_NAME, NAME_ENV.clone()),
-            //printer,
             theme,
-            typer: Typer::make(TYPE_ENV.clone()),
-            interpreter: Interpreter::empty(),
+            printer,
+            parse_tree,
+            parser,
+            typer,
+            interpreter,
         }
     }
 
@@ -79,8 +91,8 @@ impl Env {
         EnvResult::ok(self, defs_or_val)
     }
 
-    fn eval(self, input: &String) -> Self {
-        let (env, res) = self
+    fn eval(mut self, input: &String) -> Self {
+        let (mut env, res) = self
             // parse
             .parse(input.to_owned())
             // type
@@ -91,8 +103,7 @@ impl Env {
             .get_pair();
 
         match res {
-            Ok(def_or_vals) => todo!("Implement pretty printing"),
-            //println!("{}", def_or_vals.to_string_colored()),
+            Ok(def_or_vals) => env.printer.print(&def_or_vals),
             Err(err) => eprintln!("{}", err),
         };
         env

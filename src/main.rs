@@ -9,10 +9,6 @@ mod stdlib;
 mod typing;
 mod utils;
 
-use colored::control::SHOULD_COLORIZE;
-use error::*;
-use utils::*;
-
 use clap::Parser;
 
 #[derive(Parser, Debug)]

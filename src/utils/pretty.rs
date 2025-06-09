@@ -8,7 +8,7 @@ use super::writer::WriterTrait;
 // ===========================================================================
 // Pretty Trait
 // ===========================================================================
-pub trait Pretty {
+pub trait Pretty: Sized {
     /// pretty print
     fn pretty(&self, theme: &Theme) -> Doc<'_>;
 }
@@ -16,12 +16,12 @@ pub trait Pretty {
 // ===========================================================================
 // Pretty Writer
 // ===========================================================================
-pub struct PrettyWriter<W> {
+pub struct PrettyWriter<W, T> {
     writer: W,
-    theme: Theme,
+    theme: T,
 }
 
-impl<W> std::fmt::Write for PrettyWriter<W>
+impl<W, T> std::fmt::Write for PrettyWriter<W, T>
 where
     W: std::fmt::Write,
 {
@@ -30,20 +30,24 @@ where
     }
 }
 
-impl<W> WriterTrait for PrettyWriter<W> where W: WriterTrait {}
+impl<W, T> WriterTrait for PrettyWriter<W, T> where W: WriterTrait {}
 
-impl<W> ThemeGet for PrettyWriter<W> {
+impl<W, T> ThemeGet for PrettyWriter<W, T>
+where
+    T: AsRef<Theme>,
+{
     fn theme(&self) -> &Theme {
-        &self.theme
+        self.theme.as_ref()
     }
 }
 
-impl<W> PrettyWriter<W>
+impl<W, T> PrettyWriter<W, T>
 where
     W: std::fmt::Write,
+    T: AsRef<Theme>,
 {
     /// print object with pretty and theme
-    fn print(&mut self, o: &impl Pretty) {
+    pub fn print(&mut self, o: &impl Pretty) {
         let doc = o.pretty(self.theme());
         let width = self.theme().width;
         let mut stream = StreamColored::new(&mut self.writer);
@@ -51,11 +55,12 @@ where
     }
 }
 
-impl<W> PrettyWriter<W>
+impl<W, T> PrettyWriter<W, T>
 where
     W: Default,
+    T: AsRef<Theme>,
 {
-    pub fn new(theme: Theme) -> Self {
+    pub fn new(theme: T) -> Self {
         Self {
             writer: W::default(),
             theme,
@@ -63,16 +68,7 @@ where
     }
 }
 
-impl<W> Default for PrettyWriter<W>
-where
-    W: Default,
-{
-    fn default() -> Self {
-        Self::new(Theme::default())
-    }
-}
-
-impl PrettyWriter<String> {
+impl<T> PrettyWriter<String, T> {
     /// get string from writer
     pub fn get_string(self) -> String {
         self.writer
@@ -81,13 +77,6 @@ impl PrettyWriter<String> {
     /// clear the writer
     pub fn clear(&mut self) {
         self.writer.clear();
-    }
-
-    /// get string from pretty object
-    pub fn make_string(o: &impl Pretty) -> String {
-        let mut writer = Self::default();
-        writer.print(o);
-        writer.get_string()
     }
 }
 

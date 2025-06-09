@@ -23,7 +23,7 @@ impl std::fmt::Write for Stdout {
 
 impl WriterTrait for Stdout {}
 
-pub type StdoutPrettyWriter = PrettyWriter<Stdout>;
+pub type StdoutPrettyWriter<T> = PrettyWriter<Stdout, T>;
 
 // ===========================================================================
 // Stderr writer
@@ -41,7 +41,7 @@ impl std::fmt::Write for Stderr {
 
 impl WriterTrait for Stderr {}
 
-pub type StderrPrettyWriter = PrettyWriter<Stderr>;
+pub type StderrPrettyWriter<T> = PrettyWriter<Stderr, T>;
 
 // ===========================================================================
 // NoWrite writer
@@ -57,7 +57,7 @@ impl std::fmt::Write for NoWrite {
 
 impl WriterTrait for NoWrite {}
 
-pub type NoPrettyWriter = PrettyWriter<NoWrite>;
+pub type NoPrettyWriter<T> = PrettyWriter<NoWrite, T>;
 
 // ===========================================================================
 // String writer
@@ -65,7 +65,7 @@ pub type NoPrettyWriter = PrettyWriter<NoWrite>;
 
 impl WriterTrait for String {}
 
-pub type StringPrettyWriter = PrettyWriter<String>;
+pub type StringPrettyWriter<T> = PrettyWriter<String, T>;
 
 // ===========================================================================
 // Debug Writer
