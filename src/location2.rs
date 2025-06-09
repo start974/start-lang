@@ -1,15 +1,22 @@
+use std::path::Path;
+
 use ariadne::Span;
 
-pub type SourceId = String;
-
-pub struct Location {
+pub struct Location<'path> {
     start: usize,
     end: usize,
-    source: SourceId,
+    path: &'path Path,
 }
 
-impl Span for Location {
-    type SourceId = String;
+impl<'path> Location<'path> {
+    /// Create a new location with the given start and end positions in the source.
+    pub fn new(start: usize, end: usize, path: &'path Path) -> Self {
+        Self { start, end, path }
+    }
+}
+
+impl<'path> Span for Location<'path> {
+    type SourceId = &'path Path;
     fn start(&self) -> usize {
         self.start
     }
@@ -17,7 +24,7 @@ impl Span for Location {
         self.end
     }
     fn source(&self) -> &Self::SourceId {
-        &self.source
+        &self.path
     }
 }
 

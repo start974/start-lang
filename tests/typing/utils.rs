@@ -1,14 +1,14 @@
 use crate::utils;
-use startlang::ast::pretty_print::Pretty;
 use startlang::error::Errors;
 use startlang::parser::{make_program, parse_file};
 use startlang::typing::infer_type;
+use startlang::utils::writer::StringPrettyWriter;
 
 fn f(file: &str) -> Result<String, Errors> {
     parse_file(file)
         .and_then(make_program)
         .and_then(|(_, wt_prog)| infer_type(wt_prog))
-        .map(|(_, t_prog)| t_prog.to_string())
+        .map(|(_, t_prog)| StringPrettyWriter::make_string(&t_prog))
 }
 
 const PREFIX: &str = "typing";

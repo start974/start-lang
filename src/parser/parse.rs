@@ -133,11 +133,11 @@ impl<'a> Parser<'a> {
                 let location = self.location(node);
                 let txt = location.text();
                 let val = if txt.starts_with("0b") || txt.starts_with("0B") {
-                    NConst::parse_bytes(txt[2..].as_bytes(), 2)
+                    NConst::parse_bytes(&txt.as_bytes()[2..], 2)
                 } else if txt.starts_with("0o") || txt.starts_with("0O") {
-                    NConst::parse_bytes(txt[2..].as_bytes(), 8)
+                    NConst::parse_bytes(&txt.as_bytes()[2..], 8)
                 } else if txt.starts_with("0x") || txt.starts_with("0X") {
-                    NConst::parse_bytes(txt[2..].as_bytes(), 16)
+                    NConst::parse_bytes(&txt.as_bytes()[2..], 16)
                 } else {
                     NConst::parse_bytes(txt.as_bytes(), 10)
                 }
@@ -347,7 +347,7 @@ impl<'a> Parser<'a> {
     }
 }
 
-impl<'a> std::fmt::Display for Parser<'a> {
+impl std::fmt::Display for Parser<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         writeln!(f, "{} {}", "Parser".bold(), self.file_name.underline())?;
         writeln!(f, "{}:\n{}", "NameEnv".bold(), self.name_env)

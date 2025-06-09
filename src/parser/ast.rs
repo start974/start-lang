@@ -1,5 +1,5 @@
-pub use crate::ast::pretty_print::*;
 pub use crate::ast::*;
+use crate::utils::theme::{Doc, Theme};
 
 type OptionTy = Option<Ty>;
 

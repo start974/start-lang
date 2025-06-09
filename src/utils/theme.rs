@@ -1,11 +1,7 @@
-use super::parse_yml_theme::{parse_yml_keys, ThemeKey};
 use crate::ast::{Ident, NConst};
-use crate::error::*;
 pub use colored::{Color, Styles};
 use colored::{ColoredString, Colorize};
-use lazy_static::lazy_static;
 use pretty::RcDoc;
-use std::sync::Mutex;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ColorInfo {
@@ -88,22 +84,52 @@ pub struct Theme {
 
 pub type Doc<'a> = RcDoc<'a, ColorInfo>;
 
-impl Default for Theme {
-    /// theme without color
-    fn default() -> Self {
+impl Theme {
+    /// create a default theme
+    pub fn default_theme() -> Self {
         Self {
             width: 80,
-            keyword: ColorInfo::default(),
-            operator: ColorInfo::default(),
-            def_var: ColorInfo::default(),
-            expr_var: ColorInfo::default(),
-            number: ColorInfo::default(),
-            ty_var: ColorInfo::default(),
+            keyword: ColorInfo {
+                fg_color: Some(Color::Magenta),
+                bg_color: None,
+                styles: vec![],
+            },
+            operator: ColorInfo {
+                fg_color: Some(Color::Red),
+                bg_color: None,
+                styles: vec![],
+            },
+            def_var: ColorInfo {
+                fg_color: Some(Color::Blue),
+                bg_color: None,
+                styles: vec![Styles::Bold],
+            },
+            expr_var: ColorInfo {
+                fg_color: Some(Color::Blue),
+                bg_color: None,
+                styles: vec![],
+            },
+            number: ColorInfo {
+                fg_color: Some(Color::Green),
+                bg_color: None,
+                styles: vec![],
+            },
+            ty_var: ColorInfo {
+                fg_color: Some(Color::Yellow),
+                bg_color: None,
+                styles: vec![Styles::Italic],
+            },
         }
     }
-}
 
-impl Theme {
+    /// print title
+    pub fn title1<'a>(&self, title: &'a str) -> Doc<'a> {
+        Doc::text(title).annotate(ColorInfo {
+            fg_color: Some(Color::Cyan),
+            bg_color: None,
+            styles: vec![Styles::Bold],
+        })
+    }
     /// pprint keyword
     pub fn keyword<'a>(&self, keyword: &'a str) -> Doc<'a> {
         Doc::text(keyword).annotate(self.keyword.clone())
@@ -155,33 +181,21 @@ impl Theme {
     }
 }
 
-lazy_static! {
-    static ref THEME: Mutex<Theme> = Mutex::new(Theme::default());
-    static ref THEME_NO_COLOR: Theme = Theme::default();
-}
-
-/// set global theme
-pub fn set_theme_from_yml(file_name: &str, content: String) -> Result<(), Errors> {
-    for key in parse_yml_keys(file_name, content)? {
-        match key {
-            ThemeKey::Width(w) => THEME.lock().unwrap().width = w,
-            ThemeKey::Keyword(c) => THEME.lock().unwrap().keyword = c,
-            ThemeKey::Operator(c) => THEME.lock().unwrap().operator = c,
-            ThemeKey::DefVar(c) => THEME.lock().unwrap().def_var = c,
-            ThemeKey::ExprVar(c) => THEME.lock().unwrap().expr_var = c,
-            ThemeKey::Number(c) => THEME.lock().unwrap().number = c,
-            ThemeKey::TyVar(c) => THEME.lock().unwrap().ty_var = c,
+impl Default for Theme {
+    fn default() -> Self {
+        Self {
+            width: 80,
+            keyword: ColorInfo::default(),
+            operator: ColorInfo::default(),
+            def_var: ColorInfo::default(),
+            expr_var: ColorInfo::default(),
+            number: ColorInfo::default(),
+            ty_var: ColorInfo::default(),
         }
     }
-    Ok(())
 }
 
-/// get global theme
-pub fn get_theme() -> &'static Mutex<Theme> {
-    &THEME
-}
-
-/// get no color theme
-pub fn get_theme_no_color() -> &'static Theme {
-    &THEME_NO_COLOR
+pub trait ThemeGet {
+    /// get theme
+    fn theme(&self) -> &Theme;
 }

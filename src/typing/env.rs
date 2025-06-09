@@ -1,7 +1,7 @@
 use super::ast::*;
 use crate::error::*;
+use crate::utils::theme::{Doc, Theme};
 use crate::utils::FResult;
-use colored::Colorize;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
@@ -62,29 +62,47 @@ impl TypingEnv {
     }
 }
 
-impl std::fmt::Display for TypingEnv {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        writeln!(f, "{}", "Bindings :".bold())?;
-        for (ident, ty) in &self.bindings {
-            writeln!(
-                f,
-                "{}\t:\t{}",
-                ident.to_string().blue(),
-                ty.to_string_colored()
-            )?;
-        }
-        writeln!(f, "{}", "Type alias:".bold())?;
-        for (ident, ty) in &self.type_alias {
-            match ty {
-                Some(ty) => writeln!(
-                    f,
-                    "{}\t=>\t{}",
-                    ident.to_string().blue(),
-                    ty.to_string_colored()
-                )?,
-                None => writeln!(f, "{}\t=>\t{}", ident.to_string().blue(), "⊥".red())?,
-            }
-        }
-        Ok(())
+impl Pretty for TypingEnv {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::nil()
+            .append(theme.title1("Bindings :"))
+            .append(Doc::line())
+            .append(Doc::intersperse(
+                self.bindings.iter().map(|(ident, ty)| {
+                    Doc::group(
+                        Doc::nil()
+                            .append(Doc::text(ident.to_string()))
+                            .append(Doc::space())
+                            .append(Doc::text(":"))
+                            .append(Doc::space())
+                            .append(ty.pretty(theme)),
+                    )
+                }),
+                Doc::line(),
+            ))
+            .append(Doc::line())
+            .append(theme.title1("Type alias:"))
+            .append(Doc::line())
+            .append(Doc::intersperse(
+                self.type_alias.iter().map(|(ident, ty)| match ty {
+                    Some(ty) => Doc::group(
+                        Doc::nil()
+                            .append(Doc::text(ident.to_string()))
+                            .append(Doc::space())
+                            .append(Doc::text("=>"))
+                            .append(Doc::space())
+                            .append(ty.pretty(theme)),
+                    ),
+                    None => Doc::group(
+                        Doc::nil()
+                            .append(Doc::text(ident.to_string()))
+                            .append(Doc::space())
+                            .append(Doc::text("=>"))
+                            .append(Doc::space())
+                            .append(Doc::text("⊥")),
+                    ),
+                }),
+                Doc::line(),
+            ))
     }
 }

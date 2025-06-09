@@ -90,7 +90,7 @@ impl<'a> ParseTree<'a> {
         self.get_tree().root_node()
     }
 
-    /// sexp of node parsed
+    // sexp of node parsed
     /*    pub fn sexp(&self) -> String {*/
     /*self.root_node().to_sexp()*/
     /*}*/

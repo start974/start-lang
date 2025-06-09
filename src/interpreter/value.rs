@@ -1,7 +1,7 @@
-pub use crate::ast::pretty_print::*;
-use crate::ast::{Ident, NConst, Ty};
+use crate::ast::{Ident, NConst, Pretty, Ty};
 use crate::error::*;
 use crate::location::*;
+use crate::utils::theme::{Doc, Theme};
 
 #[derive(Debug, Clone)]
 pub enum Value {

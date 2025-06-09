@@ -1,6 +1,6 @@
-pub use super::pretty_print::*;
-use super::{Ident, Ty};
+use super::{Ident, Pretty, Ty};
 pub use crate::location::{Located, Location};
+use crate::utils::theme::{Doc, Theme};
 
 #[derive(Debug, Clone)]
 pub struct TyDef {

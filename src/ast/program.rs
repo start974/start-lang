@@ -1,4 +1,5 @@
-pub use super::pretty_print::*;
+use super::Pretty;
+use crate::utils::theme::{Doc, Theme};
 
 pub struct Program<TDef> {
     data: Vec<TDef>,

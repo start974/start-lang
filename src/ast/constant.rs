@@ -1,4 +1,5 @@
-pub use super::pretty_print::*;
+use super::Pretty;
+use crate::utils::theme::{Doc, Theme};
 use num_bigint::BigUint;
 
 pub type NConst = BigUint;
