@@ -2,7 +2,6 @@ use super::value::*;
 use crate::error::*;
 use crate::typing::ast::*;
 use crate::typing::main_function_not_found;
-pub use colored::Colorize;
 use std::collections::HashMap;
 
 pub struct Interpreter {
@@ -86,24 +85,6 @@ impl Interpreter {
         match &self.main {
             None => Err(main_function_not_found()),
             Some(main) => Ok(main.value.clone()),
-        }
-    }
-}
-
-impl std::fmt::Display for Interpreter {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for (k, v) in &self.env {
-            writeln!(
-                f,
-                "{}\n{}",
-                k.to_string().blue().bold(),
-                v.to_string_colored()
-            )?;
-        }
-        write!(f, "{}:", "main".bold())?;
-        match &self.main {
-            None => writeln!(f, " ⊥"),
-            Some(main) => writeln!(f, "\n{}", main.to_string_colored()),
         }
     }
 }

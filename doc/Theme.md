@@ -1,8 +1,35 @@
 # Theme file
 
 When **debug flags** or **repl** display program a theme is used.
-By default is use [theme](../asserts/theme.yml).
+By default is use [theme](../assets/theme.yml).
 To change this theme use flag `--theme <theme.yml>`
+
+## Default
+```
+width : 80
+
+keyword:
+  fg: "magenta"
+
+operator:
+  fg: "red"
+
+def_var:
+  fg: "blue"
+  styles:
+    - "bold"
+
+expr_var:
+  fg: "blue"
+
+ty_var:
+  fg: "yellow"
+  styles:
+    - "italic"
+
+number:
+  fg: "green"
+```
 
 ## Width
 You can set with with key `width` and width need to be **positive**

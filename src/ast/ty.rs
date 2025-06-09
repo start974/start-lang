@@ -1,6 +1,6 @@
-use super::ident::Ident;
-pub use super::pretty_print::*;
+use super::{ident::Ident, Pretty};
 pub use crate::location::{Located, Location};
+use crate::utils::theme::{Doc, Theme};
 use std::hash::{Hash, Hasher};
 
 /// constant types
@@ -56,6 +56,8 @@ impl Eq for Ty {}
 
 impl Hash for Ty {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.to_string().hash(state)
+        match &self.kind {
+            Kind::Var(ident) => ident.hash(state),
+        }
     }
 }

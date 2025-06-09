@@ -1,4 +1,4 @@
-use crate::ast::Theme;
+use crate::utils::theme::Theme;
 
 use ariadne::FileCache;
 use std::{collections::VecDeque, io::Write};

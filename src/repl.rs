@@ -1,16 +1,18 @@
-use crate::ast::pretty_print::*;
 use crate::error::Errors;
 use crate::interpreter::{DefsOrValue, Interpreter};
 use crate::parser::{ast::WTDefsOrExpr, ParseTree, Parser};
 use crate::stdlib::{NAME_ENV, TYPE_ENV};
 use crate::typing::{ast::TDefsOrExpr, Typer};
-use crate::utils::debug::*;
+use crate::utils::theme::Theme;
+use crate::utils::writer::StdoutPrettyWriter;
 use crate::utils::FResult;
 use rustyline::{history::FileHistory, DefaultEditor, Editor};
 
 struct Env {
     parse_tree: ParseTree<'static>,
     parser: Parser<'static>,
+    //printer: StdoutPrettyWriter,
+    theme: Theme,
     typer: Typer,
     interpreter: Interpreter,
 }
@@ -22,22 +24,22 @@ type EnvResult<T> = FResult<Env, T, Errors>;
 impl Env {
     fn new() -> Self {
         let language = tree_sitter_start::start_repl_language();
-        let parse_tree = ParseTree::make(FILE_NAME).set_language(&language);
-        let parser = Parser::make(FILE_NAME, NAME_ENV.clone());
-        let typer = Typer::make(TYPE_ENV.clone());
-        let interpreter = Interpreter::empty();
+        let theme = Theme::default_theme();
+        //let printer = StdoutPrettyWriter::new(theme);
         Self {
-            parse_tree,
-            parser,
-            typer,
-            interpreter,
+            parse_tree: ParseTree::make(FILE_NAME).set_language(&language),
+            parser: Parser::make(FILE_NAME, NAME_ENV.clone()),
+            //printer,
+            theme,
+            typer: Typer::make(TYPE_ENV.clone()),
+            interpreter: Interpreter::empty(),
         }
     }
 
     fn parse(mut self, input: String) -> EnvResult<WTDefsOrExpr> {
         // make a part tree
         self.parse_tree = self.parse_tree.set_content(input).parse();
-        debug_sexp(&self.parse_tree);
+        //debug_sexp(&self.parse_tree);
 
         // parse
         let content = self.parse_tree.get_content();
@@ -46,10 +48,10 @@ impl Env {
             .parser
             .set_content(&content)
             .parse_definitions_or_expression(&node)
-            .inspect(|parser, defs_or_expr| {
-                debug_parser(parser);
-                debug_parsed_defs_or_expr(defs_or_expr)
-            })
+            //.inspect(|parser, defs_or_expr| {
+            //debug_parser(parser);
+            //debug_parsed_defs_or_expr(defs_or_expr)
+            //})
             .get_pair();
         self.parser = parser;
         EnvResult::make(self, res)
@@ -59,10 +61,10 @@ impl Env {
         let (typer, res) = self
             .typer
             .type_definitions_or_expression(defs_or_expr)
-            .inspect(|typer, defs_or_expr| {
-                debug_typer(typer);
-                debug_typed_defs_or_expr(defs_or_expr)
-            })
+            //.inspect(|typer, defs_or_expr| {
+            //debug_typer(typer);
+            //debug_typed_defs_or_expr(defs_or_expr)
+            //})
             .get_pair();
         self.typer = typer;
         EnvResult::make(self, res)
@@ -72,7 +74,7 @@ impl Env {
         let (interpreter, defs_or_val) = self
             .interpreter
             .eval_definitions_or_expression(defs_or_expr);
-        debug_interpreter(&interpreter);
+        //debug_interpreter(&interpreter);
         self.interpreter = interpreter;
         EnvResult::ok(self, defs_or_val)
     }
@@ -89,7 +91,8 @@ impl Env {
             .get_pair();
 
         match res {
-            Ok(def_or_vals) => println!("{}", def_or_vals.to_string_colored()),
+            Ok(def_or_vals) => todo!("Implement pretty printing"),
+            //println!("{}", def_or_vals.to_string_colored()),
             Err(err) => eprintln!("{}", err),
         };
         env

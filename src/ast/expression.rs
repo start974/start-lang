@@ -1,7 +1,8 @@
 use super::constant::Constant;
 use super::ident::Ident;
-pub use super::pretty_print::*;
 use crate::location::{Located, Location};
+pub use crate::utils::pretty::*;
+use crate::utils::theme::{Doc, Theme};
 
 /// constant expression
 #[derive(Debug, Clone)]

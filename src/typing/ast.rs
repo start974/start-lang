@@ -1,6 +1,7 @@
-pub use crate::ast::pretty_print::*;
+pub use crate::utils::pretty::*;
 pub use crate::ast::*;
 use crate::stdlib;
+use crate::utils::theme::{Doc, Theme};
 
 pub trait Typed {
     /// get type

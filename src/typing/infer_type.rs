@@ -4,6 +4,7 @@ use crate::error::*;
 use crate::location::Located;
 use crate::parser::ast::*;
 use crate::stdlib::number_n::N_TYPE;
+use crate::utils::theme::{Doc, Theme};
 use crate::utils::FResult;
 use lazy_static::lazy_static;
 
@@ -78,27 +79,19 @@ impl Typer {
                             let msg = Head::new().text("Type mismatch");
                             let mut err = Error::make(msg, ERROR_TYPE_MISMATCH).copy_location(elm2);
                             err = err.add_hint(
-                                Hint::new()
-                                    .text("Expect type:  ")
-                                    .important(&ty1.to_string()),
+                                Hint::new().text("Expect type:  "), //.important(&ty1.to_string()),
                             );
                             if ty1 != &ty1_n {
                                 err = err.add_hint(
-                                    Hint::new()
-                                        .text("- Normalized: ")
-                                        .important(&ty1_n.to_string()),
+                                    Hint::new().text("- Normalized: "), //.important(&ty1_n.to_string()),
                                 )
                             }
                             err = err.add_hint(
-                                Hint::new()
-                                    .text("Found type:   ")
-                                    .important(&ty2.to_string()),
+                                Hint::new().text("Found type:   "), //.important(&ty2.to_string()),
                             );
                             if ty2 != &ty2_n {
                                 err = err.add_hint(
-                                    Hint::new()
-                                        .text("- Normalized: ")
-                                        .important(&ty2_n.to_string()),
+                                    Hint::new().text("- Normalized: "), //.important(&ty2_n.to_string()),
                                 )
                             }
                             Err(Box::new(err))
@@ -214,8 +207,8 @@ impl Typer {
     }
 }
 
-impl std::fmt::Display for Typer {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.env.fmt(f)
+impl Pretty for Typer {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        self.env.pretty(theme)
     }
 }

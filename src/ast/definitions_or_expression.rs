@@ -1,6 +1,6 @@
-use super::expression::Expression;
-pub use super::pretty_print::*;
+use super::{expression::Expression, Pretty};
 use super::program::Program;
+use crate::utils::theme::{Doc, Theme};
 
 pub enum DefsOrExpr<TDef, TyT> {
     Definitions(Program<TDef>),
