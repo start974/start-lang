@@ -1,12 +1,11 @@
 use crate::utils;
 use startlang::error::Errors;
 use startlang::parser::{make_program, parse_file};
-use startlang::utils::writer::StringPrettyWriter;
 
 fn f(file: &str) -> Result<String, Errors> {
     parse_file(file)
         .and_then(make_program)
-        .map(|(_, wt_prog)| StringPrettyWriter::make_string(&wt_prog))
+        .map(|(_, wt_prog)| utils::make_string(&wt_prog))
 }
 
 const PREFIX: &str = "parser";

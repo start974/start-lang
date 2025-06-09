@@ -1,6 +1,9 @@
 use colored::control::SHOULD_COLORIZE;
 use pretty_assertions::assert_eq;
+use startlang::ast::PrettyWriter;
 use startlang::error::Errors;
+use startlang::utils::pretty::Pretty;
+use startlang::utils::theme::Theme;
 
 fn get_out(file_name: &str) -> String {
     let file = format!("{file_name}.out");
@@ -58,4 +61,11 @@ where
         Ok(r) => assert_eq!(r, get_ret(&file_name)),
         Err(e) => panic!("Expected no error found \n {e}"),
     }
+}
+
+pub fn make_string(o: &impl Pretty) -> String {
+    let theme = Theme::default();
+    let mut writer = PrettyWriter::new(&theme);
+    writer.print(o);
+    writer.get_string()
 }
