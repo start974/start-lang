@@ -4,21 +4,21 @@ use crate::utils::theme::{Doc, Theme};
 
 use super::{Constant, Identifier, Ty};
 
-pub enum ExpressionKind<Path> {
-    Const(Constant<Path>),
-    Var(Identifier<Path>),
+pub enum ExpressionKind {
+    Const(Constant),
+    Var(Identifier),
 }
 
-pub struct Expression<Path> {
+pub struct Expression {
     /// kind of expression
-    kind: ExpressionKind<Path>,
+    kind: ExpressionKind,
     /// type of restiction
-    ty: Option<Ty<Path>>,
+    ty: Option<Ty>,
 }
 
-impl<Path> Expression<Path> {
+impl Expression {
     /// Create a new expression with a constant
-    pub fn constant(c: Constant<Path>) -> Self {
+    pub fn constant(c: Constant) -> Self {
         Self {
             kind: ExpressionKind::Const(c),
             ty: None,
@@ -26,7 +26,7 @@ impl<Path> Expression<Path> {
     }
 
     /// Create a new expression with a variable
-    pub fn var(x: Identifier<Path>) -> Self {
+    pub fn var(x: Identifier) -> Self {
         Self {
             kind: ExpressionKind::Var(x),
             ty: None,
@@ -34,29 +34,29 @@ impl<Path> Expression<Path> {
     }
 
     /// get the kind of the expression
-    pub fn kind(&self) -> &ExpressionKind<Path> {
+    pub fn kind(&self) -> &ExpressionKind {
         &self.kind
     }
 
     /// Get the kind of the expression
-    pub fn ty(&self) -> &Option<Ty<Path>> {
+    pub fn ty(&self) -> &Option<Ty> {
         &self.ty
     }
 
     /// set the type of the expression
-    pub fn set_ty(&mut self, ty: Ty<Path>) {
+    pub fn set_ty(&mut self, ty: Ty) {
         self.ty = Some(ty);
     }
 
     /// set the type of the expression and return self
-    pub fn with_ty(mut self, ty: Ty<Path>) -> Self {
+    pub fn with_ty(mut self, ty: Ty) -> Self {
         self.set_ty(ty);
         self
     }
 }
 
-impl<Path> Located<Path> for Expression<Path> {
-    fn loc(&self) -> &Location<Path> {
+impl Located for Expression {
+    fn loc(&self) -> &Location {
         match &self.kind {
             ExpressionKind::Const(c) => c.loc(),
             ExpressionKind::Var(x) => x.loc(),
@@ -64,7 +64,7 @@ impl<Path> Located<Path> for Expression<Path> {
     }
 }
 
-impl<Path> Pretty for Expression<Path> {
+impl Pretty for Expression {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         let doc = match &self.kind {
             ExpressionKind::Const(c) => c.pretty(theme),

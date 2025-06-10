@@ -3,36 +3,36 @@ pub use crate::location2::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
-pub struct TyDefinition<Path> {
-    name: Identifier<Path>,
-    ty: Ty<Path>,
+pub struct TyDefinition {
+    name: Identifier,
+    ty: Ty,
 }
 
-impl<Path> TyDefinition<Path> {
+impl TyDefinition {
     /// make a new type definition
-    pub fn new(name: Identifier<Path>, ty: Ty<Path>) -> Self {
+    pub fn new(name: Identifier, ty: Ty) -> Self {
         Self { name, ty }
     }
 
     /// get name of type
-    pub fn name(&self) -> &Identifier<Path> {
+    pub fn name(&self) -> &Identifier {
         &self.name
     }
 
     /// get type of type definition
-    pub fn ty(&self) -> &Ty<Path> {
+    pub fn ty(&self) -> &Ty {
         &self.ty
     }
 }
 
-impl<Path> Located<Path> for TyDefinition<Path> {
+impl Located for TyDefinition {
     /// location is at name of definition
-    fn loc(&self) -> &Location<Path> {
+    fn loc(&self) -> &Location {
         self.name.loc()
     }
 }
 
-impl<Path> Pretty for TyDefinition<Path> {
+impl Pretty for TyDefinition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::group(
             Doc::nil()

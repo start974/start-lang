@@ -9,10 +9,10 @@ pub enum ConstantKind {
     N(NConst),
 }
 
-pub struct Constant<Path>(Loc<Path, ConstantKind>);
+pub struct Constant(Loc<ConstantKind>);
 
-impl<Path> Constant<Path> {
-    pub fn make_n(v: NConst, loc: Location<Path>) -> Self {
+impl Constant {
+    pub fn make_n(v: NConst, loc: Location) -> Self {
         let data = ConstantKind::N(v);
         Self(Loc::new(data, loc))
     }
@@ -22,13 +22,13 @@ impl<Path> Constant<Path> {
     }
 }
 
-impl<Path> Located<Path> for Constant<Path> {
-    fn loc(&self) -> &Location<Path> {
+impl Located for Constant {
+    fn loc(&self) -> &Location {
         &self.0.loc
     }
 }
 
-impl<Path> Pretty for Constant<Path> {
+impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self.kind() {
             ConstantKind::N(n) => theme.number(n.to_string()),
