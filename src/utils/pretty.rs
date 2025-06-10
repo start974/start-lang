@@ -30,17 +30,6 @@ where
     }
 }
 
-impl<W, T> WriterTrait for PrettyWriter<W, T> where W: WriterTrait {}
-
-impl<W, T> ThemeGet for PrettyWriter<W, T>
-where
-    T: AsRef<Theme>,
-{
-    fn theme(&self) -> &Theme {
-        self.theme.as_ref()
-    }
-}
-
 impl<W, T> PrettyWriter<W, T>
 where
     W: std::fmt::Write,
@@ -48,35 +37,20 @@ where
 {
     /// print object with pretty and theme
     pub fn print(&mut self, o: &impl Pretty) {
-        let doc = o.pretty(self.theme());
-        let width = self.theme().width;
-        let mut stream = StreamColored::new(&mut self.writer);
-        doc.render_raw(width, &mut stream).unwrap();
+        let theme = self.theme.as_ref();
+        o.pretty(theme)
+            .render_raw(theme.width, &mut StreamColored::new(&mut self.writer))
+            .unwrap();
+    }
+
+    pub fn writer_mut(&mut self) -> &mut W {
+        &mut self.writer
     }
 }
 
-impl<W, T> PrettyWriter<W, T>
-where
-    W: Default,
-    T: AsRef<Theme>,
-{
-    pub fn new(theme: T) -> Self {
-        Self {
-            writer: W::default(),
-            theme,
-        }
-    }
-}
-
-impl<T> PrettyWriter<String, T> {
-    /// get string from writer
-    pub fn get_string(self) -> String {
-        self.writer
-    }
-
-    /// clear the writer
-    pub fn clear(&mut self) {
-        self.writer.clear();
+impl<W, T> PrettyWriter<W, T> {
+    pub fn new(theme: T, writer: W) -> Self {
+        Self { writer, theme }
     }
 }
 

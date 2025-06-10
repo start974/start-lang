@@ -1,11 +1,11 @@
 use std::io::Write;
 
-use crate::ast::PrettyWriter;
+use crate::{ast::PrettyWriter, error2::ErrorWriter, location2::SourceCache};
 
 // ===========================================================================
 // Writer trait
 // ===========================================================================
-pub trait WriterTrait: std::fmt::Write {}
+pub trait WriterTrait: std::fmt::Write + std::io::Write {}
 
 // ===========================================================================
 // Stdout writer
@@ -21,9 +21,30 @@ impl std::fmt::Write for Stdout {
     }
 }
 
+impl std::io::Write for Stdout {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        std::io::stdout().write(buf)
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        std::io::stdout().flush()
+    }
+}
+
 impl WriterTrait for Stdout {}
 
 pub type StdoutPrettyWriter<T> = PrettyWriter<Stdout, T>;
+impl<T> StdoutPrettyWriter<T> {
+    pub fn make(theme: T) -> Self {
+        PrettyWriter::new(theme, Stdout)
+    }
+}
+
+pub type StdoutErrorWriter<T> = ErrorWriter<Stdout, T>;
+impl<T> StdoutErrorWriter<T> {
+    pub fn make(theme: T, cache: SourceCache) -> Self {
+        ErrorWriter::new(theme, Stdout, cache)
+    }
+}
 
 // ===========================================================================
 // Stderr writer
@@ -39,9 +60,30 @@ impl std::fmt::Write for Stderr {
     }
 }
 
+impl std::io::Write for Stderr {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        std::io::stderr().write(buf)
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        std::io::stderr().flush()
+    }
+}
+
 impl WriterTrait for Stderr {}
 
 pub type StderrPrettyWriter<T> = PrettyWriter<Stderr, T>;
+impl<T> StderrPrettyWriter<T> {
+    pub fn make(theme: T) -> Self {
+        PrettyWriter::new(theme, Stderr)
+    }
+}
+
+pub type StderrErrorWriter<T> = ErrorWriter<Stderr, T>;
+impl<T> StderrErrorWriter<T> {
+    pub fn make(theme: T, cache: SourceCache) -> Self {
+        ErrorWriter::new(theme, Stderr, cache)
+    }
+}
 
 // ===========================================================================
 // NoWrite writer
@@ -55,23 +97,90 @@ impl std::fmt::Write for NoWrite {
     }
 }
 
+impl std::io::Write for NoWrite {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 impl WriterTrait for NoWrite {}
 
 pub type NoPrettyWriter<T> = PrettyWriter<NoWrite, T>;
+impl<T> NoPrettyWriter<T> {
+    pub fn make(theme: T) -> Self {
+        PrettyWriter::new(theme, NoWrite)
+    }
+}
+
+pub type NoErrorWriter<T> = ErrorWriter<NoWrite, T>;
+impl<T> NoErrorWriter<T> {
+    pub fn make(theme: T, cache: SourceCache) -> Self {
+        ErrorWriter::new(theme, NoWrite, cache)
+    }
+}
 
 // ===========================================================================
 // String writer
 // ===========================================================================
 
-impl WriterTrait for String {}
+pub struct StringBuffer(String);
 
-pub type StringPrettyWriter<T> = PrettyWriter<String, T>;
+impl Default for StringBuffer {
+    fn default() -> Self {
+        Self(String::new())
+    }
+}
+
+impl std::fmt::Write for StringBuffer {
+    fn write_str(&mut self, s: &str) -> std::fmt::Result {
+        self.0.push_str(s);
+        Ok(())
+    }
+}
+
+impl std::io::Write for StringBuffer {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.0.push_str(std::str::from_utf8(buf).unwrap());
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+impl StringBuffer {
+    pub fn get_str(&self) -> &str {
+        &self.0
+    }
+
+    pub fn clear(&mut self) {
+        self.0.clear();
+    }
+}
+
+impl WriterTrait for StringBuffer {}
+
+pub type StringPrettyWriter<T> = PrettyWriter<StringBuffer, T>;
+impl<T> StringPrettyWriter<T> {
+    pub fn make(theme: T) -> Self {
+        PrettyWriter::new(theme, StringBuffer::default())
+    }
+}
+pub type StringErrorWriter<T> = ErrorWriter<StringBuffer, T>;
+impl<T> StringErrorWriter<T> {
+    pub fn make(theme: T, cache: SourceCache) -> Self {
+        ErrorWriter::new(theme, StringBuffer::default(), cache)
+    }
+}
 
 // ===========================================================================
 // Debug Writer
 // ===========================================================================
 
-struct DebugWriter {
+pub struct DebugWriter {
     is_active: bool,
 }
 
@@ -84,3 +193,25 @@ impl std::fmt::Write for DebugWriter {
         }
     }
 }
+
+impl std::io::Write for DebugWriter {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        if self.is_active {
+            Stdout.write(buf)
+        } else {
+            NoWrite.write(buf)
+        }
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        if self.is_active {
+            Stdout.flush()
+        } else {
+            NoWrite.flush()
+        }
+    }
+}
+
+impl WriterTrait for DebugWriter {}
+
+pub type DebugPrettyWriter<T> = PrettyWriter<DebugWriter, T>;
+pub type DebugErrorWriter<T> = ErrorWriter<DebugWriter, T>;

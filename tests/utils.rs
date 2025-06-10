@@ -4,6 +4,7 @@ use startlang::ast::PrettyWriter;
 use startlang::error::Errors;
 use startlang::utils::pretty::Pretty;
 use startlang::utils::theme::Theme;
+use startlang::utils::writer::StringPrettyWriter;
 
 fn get_out(file_name: &str) -> String {
     let file = format!("{file_name}.out");
@@ -65,7 +66,7 @@ where
 
 pub fn make_string(o: &impl Pretty) -> String {
     let theme = Theme::default();
-    let mut writer = PrettyWriter::new(&theme);
+    let mut writer = StringPrettyWriter::make(&theme);
     writer.print(o);
-    writer.get_string()
+    writer.writer_mut().get_str().to_string()
 }

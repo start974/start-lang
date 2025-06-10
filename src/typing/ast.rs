@@ -1,6 +1,5 @@
 pub use crate::ast::*;
 use crate::stdlib;
-pub use crate::utils::pretty::*;
 use crate::utils::theme::{Doc, Theme};
 
 pub trait Typed {

@@ -35,7 +35,7 @@ impl Env {
         let parse_tree = ParseTree::make(FILE_NAME).set_language(&language);
         let parser = Parser::make(FILE_NAME, NAME_ENV.clone());
         let theme = Rc::new(Theme::default_theme());
-        let printer = StdoutPrettyWriter::new(theme.clone());
+        let printer = StdoutPrettyWriter::make(theme.clone());
         let typer = Typer::make(TYPE_ENV.clone());
         let interpreter = Interpreter::empty();
         Self {

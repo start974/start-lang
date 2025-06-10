@@ -129,6 +129,25 @@ impl Theme {
             styles: vec![Styles::Bold],
         })
     }
+
+    /// error message
+    pub fn error_message<'a>(&self, message: &'a str) -> Doc<'a> {
+        Doc::text(message).annotate(ColorInfo {
+            fg_color: Some(Color::Red),
+            bg_color: None,
+            styles: vec![],
+        })
+    }
+
+    /// error important message
+    pub fn error_important<'a>(&self, message: &'a str) -> Doc<'a> {
+        Doc::text(message).annotate(ColorInfo {
+            fg_color: Some(Color::Red),
+            bg_color: None,
+            styles: vec![Styles::Bold],
+        })
+    }
+
     /// pprint keyword
     pub fn keyword<'a>(&self, keyword: &'a str) -> Doc<'a> {
         Doc::text(keyword).annotate(self.keyword.clone())
