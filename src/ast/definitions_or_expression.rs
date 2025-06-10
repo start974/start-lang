@@ -1,5 +1,5 @@
-use super::{expression::Expression, Pretty};
 use super::program::Program;
+use super::{expression::Expression, Pretty};
 use crate::utils::theme::{Doc, Theme};
 
 pub enum DefsOrExpr<TDef, TyT> {

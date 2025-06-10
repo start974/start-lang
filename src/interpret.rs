@@ -8,23 +8,23 @@ pub fn interpret_file(file_name: &str) {
         // parser program
         .and_then(parser::make_program)
         //.inspect(|(parser, prog)| {
-            //debug_parser(parser);
-            //debug_parsed_prog(prog)
+        //debug_parser(parser);
+        //debug_parsed_prog(prog)
         //})
         // type program
         .map(|(_, prog)| prog)
         .and_then(typing::infer_type)
         //.inspect(|(typer, prog)| {
-            //debug_typer(typer);
-            //debug_typed_prog(prog)
+        //debug_typer(typer);
+        //debug_typed_prog(prog)
         //})
         // check main exists and well typed
         .and_then(|(typer, prog)| typing::check_main(&typer).map(|()| prog))
         // interpret program
         .and_then(interpreter::eval_program)
         //.inspect(|(interpreter, ret)| {
-            //debug_interpreter(interpreter);
-            //debug_i32_res(ret)
+        //debug_interpreter(interpreter);
+        //debug_i32_res(ret)
         //})
         // map result
         .map(|(_, ret)| ret);

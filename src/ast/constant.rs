@@ -18,7 +18,7 @@ impl Constant {
 impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self {
-            Self::N(n) => theme.number(n),
+            Self::N(n) => theme.number(n.to_string()),
         }
     }
 }

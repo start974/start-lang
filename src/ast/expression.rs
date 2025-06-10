@@ -33,7 +33,7 @@ impl<TyT> Pretty for Expression<TyT> {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::group(match &self.kind {
             ExpressionKind::Const(c) => c.pretty(theme),
-            ExpressionKind::Var(x) => theme.expr_var(x),
+            ExpressionKind::Var(x) => theme.expr_var(&x.name),
         })
     }
 }

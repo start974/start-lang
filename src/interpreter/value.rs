@@ -24,7 +24,7 @@ impl TryInto<i32> for Value {
 impl Pretty for Value {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Self::N(n) => theme.number(n),
+            Self::N(n) => theme.number(n.to_string()),
         }
     }
 }
@@ -41,7 +41,7 @@ impl Pretty for DefValue {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::group(
             Doc::nil()
-                .append(theme.def_var(&self.name))
+                .append(theme.def_var(&self.name.name))
                 .append(Doc::space())
                 .append(Doc::group(
                     theme
