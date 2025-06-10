@@ -9,6 +9,9 @@ mod stdlib;
 mod typing;
 mod utils;
 
+mod location2;
+mod error2;
+
 use clap::Parser;
 
 #[derive(Parser, Debug)]

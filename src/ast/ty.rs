@@ -47,7 +47,7 @@ impl PartialEq for Ty {
 impl Pretty for Ty {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self.kind {
-            Kind::Var(x) => theme.ty_var(x),
+            Kind::Var(x) => theme.ty_var(&x.name),
         }
     }
 }

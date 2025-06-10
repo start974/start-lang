@@ -1,4 +1,3 @@
-use crate::ast::{Ident, NConst};
 pub use colored::{Color, Styles};
 use colored::{ColoredString, Colorize};
 use pretty::RcDoc;
@@ -141,23 +140,23 @@ impl Theme {
     }
 
     /// ppprint definition variable
-    pub fn def_var<'a>(&self, var: &Ident) -> Doc<'a> {
-        Doc::text(var.to_string()).annotate(self.def_var.clone())
+    pub fn def_var<'a>(&self, var: &'a str) -> Doc<'a> {
+        Doc::text(var).annotate(self.def_var.clone())
     }
 
     /// pprint variable expression
-    pub fn expr_var<'a>(&self, var: &Ident) -> Doc<'a> {
-        Doc::text(var.to_string()).annotate(self.expr_var.clone())
+    pub fn expr_var<'a>(&self, var: &'a str) -> Doc<'a> {
+        Doc::text(var).annotate(self.expr_var.clone())
     }
 
     /// pprint constant expression
-    pub fn number<'a>(&self, n: &NConst) -> Doc<'a> {
-        Doc::text(n.to_string()).annotate(self.number.clone())
+    pub fn number<'a>(&self, n: String) -> Doc<'a> {
+        Doc::text(n).annotate(self.number.clone())
     }
 
     /// pprint type variable
-    pub fn ty_var<'a>(&self, var: &Ident) -> Doc<'a> {
-        Doc::text(var.to_string()).annotate(self.ty_var.clone())
+    pub fn ty_var<'a>(&self, var: &'a str) -> Doc<'a> {
+        Doc::text(var).annotate(self.ty_var.clone())
     }
 
     /// pprint keyword type

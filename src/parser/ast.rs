@@ -89,7 +89,7 @@ impl Pretty for WTExprDef {
             Doc::nil()
                 .append(theme.kw_def())
                 .append(Doc::space())
-                .append(theme.def_var(&self.name))
+                .append(theme.def_var(&self.name.name))
                 .append(Doc::space())
                 .append(doc_ty)
                 .append(theme.op_eq_def())

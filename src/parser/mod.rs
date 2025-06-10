@@ -2,6 +2,7 @@ use super::error::*;
 use super::stdlib::NAME_ENV;
 
 pub mod ast;
+pub mod ast2;
 
 mod env;
 pub use env::*;

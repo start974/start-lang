@@ -1,6 +1,6 @@
-pub use crate::utils::pretty::*;
 pub use crate::ast::*;
 use crate::stdlib;
+pub use crate::utils::pretty::*;
 use crate::utils::theme::{Doc, Theme};
 
 pub trait Typed {
@@ -82,7 +82,7 @@ impl Pretty for TDefinition {
             Doc::nil()
                 .append(theme.kw_def())
                 .append(Doc::space())
-                .append(theme.def_var(&self.name))
+                .append(theme.def_var(&self.name.name))
                 .append(Doc::space())
                 .append(
                     Doc::group(theme.op_typed_by())
