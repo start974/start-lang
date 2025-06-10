@@ -1,10 +1,10 @@
 use crate::location2::{Loc, Located, Location};
 
-pub struct Identifier<Path>(Loc<Path, String>);
+pub struct Identifier(Loc<String>);
 
-impl<Path> Identifier<Path> {
+impl Identifier {
     /// Creates a new identifier with the given name and location.
-    pub fn new(name: String, loc: Location<Path>) -> Self {
+    pub fn new(name: String, loc: Location) -> Self {
         Self(Loc::new(name, loc))
     }
 
@@ -14,21 +14,21 @@ impl<Path> Identifier<Path> {
     }
 }
 
-impl<Path> Located<Path> for Identifier<Path> {
-    fn loc(&self) -> &Location<Path> {
+impl Located for Identifier {
+    fn loc(&self) -> &Location {
         &self.0.loc
     }
 }
 
-impl<Path> PartialEq for Identifier<Path> {
+impl PartialEq for Identifier {
     fn eq(&self, other: &Self) -> bool {
         self.0.data == other.0.data
     }
 }
 
-impl<Path> Eq for Identifier<Path> {}
+impl Eq for Identifier {}
 
-impl<Path> std::hash::Hash for Identifier<Path> {
+impl std::hash::Hash for Identifier {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.0.data.hash(state);
     }

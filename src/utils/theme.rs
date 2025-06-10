@@ -194,7 +194,14 @@ impl Default for Theme {
     }
 }
 
+impl AsRef<Theme> for &Theme {
+    fn as_ref(&self) -> &Theme {
+        self
+    }
+}
+
 pub trait ThemeGet {
     /// get theme
     fn theme(&self) -> &Theme;
 }
+

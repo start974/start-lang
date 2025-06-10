@@ -5,26 +5,26 @@ use crate::utils::theme::{Doc, Theme};
 use super::identifier::Identifier;
 
 /// constant types
-pub enum Ty<Path> {
-    Var(Identifier<Path>),
+pub enum Ty {
+    Var(Identifier),
 }
 
-impl<Path> Ty<Path> {
+impl Ty {
     /// make variable type
-    pub fn var(ident: Identifier<Path>) -> Self {
+    pub fn var(ident: Identifier) -> Self {
         Self::Var(ident)
     }
 }
 
-impl<Path> Located<Path> for Ty<Path> {
-    fn loc(&self) -> &Location<Path> {
+impl Located for Ty {
+    fn loc(&self) -> &Location {
         match self {
             Ty::Var(ident) => ident.loc(),
         }
     }
 }
 
-impl<Path> Pretty for Ty<Path> {
+impl Pretty for Ty {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             Ty::Var(ident) => theme.ty_var(ident.name()),

@@ -3,15 +3,15 @@ pub use crate::location2::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
-pub struct ExpressionDefinition<Path> {
-    name: Identifier<Path>,
-    body: Expression<Path>,
-    ty: Option<Ty<Path>>,
+pub struct ExpressionDefinition {
+    name: Identifier,
+    body: Expression,
+    ty: Option<Ty>,
 }
 
-impl<Path> ExpressionDefinition<Path> {
+impl ExpressionDefinition {
     /// Create a new expression definition
-    pub fn new(name: Identifier<Path>, body: Expression<Path>) -> Self {
+    pub fn new(name: Identifier, body: Expression) -> Self {
         Self {
             name,
             body,
@@ -20,40 +20,40 @@ impl<Path> ExpressionDefinition<Path> {
     }
 
     /// Get the name of the expression definition
-    pub fn name(&self) -> &Identifier<Path> {
+    pub fn name(&self) -> &Identifier {
         &self.name
     }
 
     /// Get the body of the expression definition
-    pub fn body(&self) -> &Expression<Path> {
+    pub fn body(&self) -> &Expression {
         &self.body
     }
 
     /// Get the type of the expression definition
-    pub fn ty(&self) -> &Option<Ty<Path>> {
+    pub fn ty(&self) -> &Option<Ty> {
         &self.ty
     }
 
     /// Set type
-    pub fn set_ty(&mut self, ty: Ty<Path>) {
+    pub fn set_ty(&mut self, ty: Ty) {
         self.ty = Some(ty);
     }
 
     /// with type
-    pub fn with_ty(mut self, ty: Ty<Path>) -> Self {
+    pub fn with_ty(mut self, ty: Ty) -> Self {
         self.set_ty(ty);
         self
     }
 }
 
-impl<Path> Located<Path> for ExpressionDefinition<Path> {
+impl Located for ExpressionDefinition {
     /// location is at name of definition
-    fn loc(&self) -> &Location<Path> {
+    fn loc(&self) -> &Location {
         self.name.loc()
     }
 }
 
-impl<Path> Pretty for ExpressionDefinition<Path> {
+impl Pretty for ExpressionDefinition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
             .append(theme.kw_def()) // NOTE: rm when command definition implemented
