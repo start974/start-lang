@@ -168,3 +168,9 @@ impl<T> Located for Loc<T> {
         &self.loc
     }
 }
+
+// ==========================================================================
+// Report
+// ==========================================================================
+pub type Report<'a> = ariadne::Report<'a, Location>;
+pub type ReportBuilder<'a> = ariadne::ReportBuilder<'a, Location>;
