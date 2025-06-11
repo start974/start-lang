@@ -66,6 +66,14 @@ impl Message {
         self.important(&format!("\"{}\"", text))
     }
 
+    /// add message from pretty
+    pub fn from_pretty(self, p: &impl Pretty) -> Self {
+        let theme = Theme::default();
+        let mut writer = StringPrettyWriter::make(&theme);
+        writer.print(p);
+        self.text(writer.writer_mut().get_str())
+    }
+
     /// string of message
     pub fn to_string(&self, theme: &Theme) -> String {
         let mut writer = StringPrettyWriter::make(&theme);

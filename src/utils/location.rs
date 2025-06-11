@@ -266,6 +266,20 @@ where
     }
 }
 
+pub trait LocatedSet {
+    /// set location
+    fn set_loc(&mut self, loc: &impl Located);
+
+    /// with location
+    fn with_loc(mut self, loc: &impl Located) -> Self
+    where
+        Self: Sized,
+    {
+        self.set_loc(loc);
+        self
+    }
+}
+
 // ==========================================================================
 // Localised
 // ==========================================================================
@@ -287,6 +301,12 @@ impl<T> Loc<T> {
 impl<T> Located for Loc<T> {
     fn loc(&self) -> &Location {
         &self.loc
+    }
+}
+
+impl<T> LocatedSet for Loc<T> {
+    fn set_loc(&mut self, loc: &impl Located) {
+        self.loc = loc.loc().clone();
     }
 }
 

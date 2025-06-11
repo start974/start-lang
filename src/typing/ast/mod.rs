@@ -1,6 +1,3 @@
-mod constant;
-pub use constant::*;
-
 mod expression;
 pub use expression::*;
 
@@ -12,3 +9,6 @@ pub use program::*;
 
 mod ty;
 pub use ty::*;
+
+mod variable;
+pub use variable::*;

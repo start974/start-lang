@@ -7,13 +7,19 @@ pub type NConst = BigUint;
 
 pub enum ConstantKind {
     N(NConst),
+    B(bool),
 }
 
 pub struct Constant(Loc<ConstantKind>);
 
 impl Constant {
-    pub fn make_n(v: NConst, loc: Location) -> Self {
+    pub fn n(v: NConst, loc: Location) -> Self {
         let data = ConstantKind::N(v);
+        Self(Loc::new(data, loc))
+    }
+
+    pub fn b(v: bool, loc: Location) -> Self {
+        let data = ConstantKind::B(v);
         Self(Loc::new(data, loc))
     }
 
@@ -31,7 +37,14 @@ impl Located for Constant {
 impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self.kind() {
-            ConstantKind::N(n) => theme.number(n.to_string()),
+            ConstantKind::N(n) => theme.number(n),
+            ConstantKind::B(b) => {
+                if *b {
+                    theme.keyword(&"true")
+                } else {
+                    theme.keyword(&"false")
+                }
+            }
         }
     }
 }
