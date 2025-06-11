@@ -223,4 +223,3 @@ pub trait ThemeGet {
     /// get theme
     fn theme(&self) -> &Theme;
 }
-
