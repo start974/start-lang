@@ -1,5 +1,5 @@
-mod fresult;
+pub mod error;
+pub mod location;
 pub mod pretty;
-pub mod writer;
-pub use fresult::*;
 pub mod theme;
+pub mod writer;

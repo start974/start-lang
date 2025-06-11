@@ -1,22 +1,21 @@
-use std::rc::Rc;
-
-use crate::location2::{Location, Report, ReportBuilder, SourceCache, SourceId};
+use super::location::{Located, SourceCache};
+use super::location::{Location, Report, ReportBuilder};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
-use crate::utils::writer::{StringBuffer, StringPrettyWriter};
+use crate::utils::writer::StringPrettyWriter;
 
 // ===========================================================================
 // Error Writer
 // ===========================================================================
 
-pub struct ErrorWriter<W, T> {
-    cache: SourceCache,
+pub struct ErrorWriter<C, W, T> {
+    cache: C,
     writer: W,
     theme: T,
 }
 
-impl<W, T> ErrorWriter<W, T> {
-    pub fn new(theme: T, writer: W, cache: SourceCache) -> Self {
+impl<C, W, T> ErrorWriter<C, W, T> {
+    pub fn new(theme: T, writer: W, cache: C) -> Self {
         Self {
             cache,
             theme,
@@ -24,14 +23,15 @@ impl<W, T> ErrorWriter<W, T> {
         }
     }
 }
-impl<W, T> ErrorWriter<W, T>
+impl<C, W, T> ErrorWriter<C, W, T>
 where
     W: std::io::Write,
     T: AsRef<Theme>,
+    C: AsMut<SourceCache>,
 {
     /// print error with writer
     pub fn eprint(&mut self, e: &impl ErrorWrite) {
-        e.write(self.theme.as_ref(), &mut self.cache, &mut self.writer);
+        e.write(self.theme.as_ref(), self.cache.as_mut(), &mut self.writer);
     }
 }
 
@@ -65,6 +65,13 @@ impl Message {
     pub fn quoted(self, text: &str) -> Self {
         self.important(&format!("\"{}\"", text))
     }
+
+    /// string of message
+    pub fn to_string(&self, theme: &Theme) -> String {
+        let mut writer = StringPrettyWriter::make(&theme);
+        writer.print(self);
+        writer.writer_mut().get_str().to_string()
+    }
 }
 
 impl Pretty for Message {
@@ -74,7 +81,7 @@ impl Pretty for Message {
                 MessageKind::Text(text) => theme.error_message(text),
                 MessageKind::Important(text) => theme.error_important(text),
             }),
-            Doc::space(),
+            Doc::nil(),
         )
     }
 }
@@ -83,71 +90,79 @@ impl Pretty for Message {
 // Error trait
 // ===========================================================================
 
-trait ErrorCode {
+pub trait ErrorCode {
     /// error code
     fn code(&self) -> i32;
 }
 
-trait ErrorReport: ErrorCode {
-    /// location of error
-    fn location(&self) -> Location;
+pub trait ErrorWrite {
+    /// write error
+    fn write(&self, theme: &Theme, cache: &mut SourceCache, writer: &mut dyn std::io::Write);
+}
 
+pub trait Error: ErrorCode + ErrorWrite {}
+
+pub trait ErrorReport: ErrorCode + Located {
     /// finalize report
-    fn finalize(&self, theme: &Theme, report: ReportBuilder) -> Report;
+    fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a>;
 
     /// message of error
-    fn message(&self, theme: &Theme) -> Message;
-
-    /// string of message
-    fn message_string(&self, theme: &Theme) -> String {
-        let mut writer = StringPrettyWriter::make(&theme);
-        writer.print(&self.message(theme));
-        writer.writer_mut().get_str().to_string()
-    }
+    fn message(&self) -> Message;
 
     /// report of error
     fn report(&self, theme: &Theme) -> Report {
         self.finalize(
             theme,
-            Report::build(ariadne::ReportKind::Error, self.location())
+            Report::build(ariadne::ReportKind::Error, self.loc().clone())
                 .with_code(self.code())
-                .with_message(self.message_string(theme)),
+                .with_message(self.message().to_string(theme)),
         )
     }
 }
 
-trait ErrorWrite {
-    /// write error
-    fn write(&self, theme: &Theme, cache: &mut SourceCache, writer: &mut dyn std::io::Write);
-}
-
-// ===========================================================================
-// Error Report
-// ===========================================================================
-struct ErrorReportBuilder<T>(T);
-
-impl<T> ErrorReportBuilder<T> {
-    /// create new error report
-    pub fn new(error_report: T) -> Self {
-        Self(error_report)
-    }
-}
-
-impl<T> ErrorWrite for ErrorReportBuilder<T>
+impl<T> ErrorWrite for T
 where
     T: ErrorReport,
 {
     fn write(&self, theme: &Theme, cache: &mut SourceCache, writer: &mut dyn std::io::Write) {
-        self.0.report(theme).write(cache, writer).unwrap();
+        self.report(theme).write(cache, writer).unwrap(); // Use unwrap or proper error handling
+    }
+}
+
+impl<E> Error for E where E: ErrorReport {}
+
+// ===========================================================================
+// Error Box
+// ===========================================================================
+impl<E> ErrorCode for Box<E>
+where
+    E: ErrorCode,
+{
+    fn code(&self) -> i32 {
+        self.as_ref().code()
+    }
+}
+
+impl<E> ErrorReport for Box<E>
+where
+    E: ErrorReport,
+{
+    fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
+        self.as_ref().finalize(theme, report)
+    }
+
+    fn message(&self) -> Message {
+        self.as_ref().message()
     }
 }
 
 // ===========================================================================
 // Error Pair
 // ===========================================================================
-impl<T> ErrorCode for (T, T)
+
+impl<E> ErrorCode for (E, E)
 where
-    T: ErrorCode,
+    E: ErrorCode,
 {
     fn code(&self) -> i32 {
         let code1 = self.0.code();
@@ -160,13 +175,47 @@ where
     }
 }
 
-impl<T> ErrorWrite for (T, T)
+impl<E> ErrorWrite for (E, E)
 where
-    T: ErrorWrite,
+    E: ErrorWrite,
 {
     fn write(&self, theme: &Theme, cache: &mut SourceCache, writer: &mut dyn std::io::Write) {
         self.0.write(theme, cache, writer);
         writer.write_all(b"\n").unwrap();
         self.1.write(theme, cache, writer);
+    }
+}
+
+impl<E> Error for (E, E) where E: Error {}
+
+// ===========================================================================
+// Error List
+// ===========================================================================
+impl<E> ErrorCode for [E]
+where
+    E: ErrorCode,
+{
+    fn code(&self) -> i32 {
+        if self.is_empty() {
+            0
+        } else if self.len() == 1 {
+            self[0].code()
+        } else {
+            1
+        }
+    }
+}
+
+impl<E> ErrorWrite for [E]
+where
+    E: ErrorWrite,
+{
+    fn write(&self, theme: &Theme, cache: &mut SourceCache, writer: &mut dyn std::io::Write) {
+        for (i, error) in self.iter().enumerate() {
+            if i > 0 {
+                writer.write_all(b"\n").unwrap();
+            }
+            error.write(theme, cache, writer);
+        }
     }
 }

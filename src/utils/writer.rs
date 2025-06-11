@@ -1,6 +1,6 @@
+use super::pretty::PrettyWriter;
+use crate::utils::error::ErrorWriter;
 use std::io::Write;
-
-use crate::{ast::PrettyWriter, error2::ErrorWriter, location2::SourceCache};
 
 // ===========================================================================
 // Writer trait
@@ -39,9 +39,9 @@ impl<T> StdoutPrettyWriter<T> {
     }
 }
 
-pub type StdoutErrorWriter<T> = ErrorWriter<Stdout, T>;
-impl<T> StdoutErrorWriter<T> {
-    pub fn make(theme: T, cache: SourceCache) -> Self {
+pub type StdoutErrorWriter<C, T> = ErrorWriter<C, Stdout, T>;
+impl<C, T> StdoutErrorWriter<C, T> {
+    pub fn make(theme: T, cache: C) -> Self {
         ErrorWriter::new(theme, Stdout, cache)
     }
 }
@@ -78,9 +78,9 @@ impl<T> StderrPrettyWriter<T> {
     }
 }
 
-pub type StderrErrorWriter<T> = ErrorWriter<Stderr, T>;
-impl<T> StderrErrorWriter<T> {
-    pub fn make(theme: T, cache: SourceCache) -> Self {
+pub type StderrErrorWriter<C, T> = ErrorWriter<C, Stderr, T>;
+impl<C, T> StderrErrorWriter<C, T> {
+    pub fn make(theme: T, cache: C) -> Self {
         ErrorWriter::new(theme, Stderr, cache)
     }
 }
@@ -115,9 +115,9 @@ impl<T> NoPrettyWriter<T> {
     }
 }
 
-pub type NoErrorWriter<T> = ErrorWriter<NoWrite, T>;
-impl<T> NoErrorWriter<T> {
-    pub fn make(theme: T, cache: SourceCache) -> Self {
+pub type NoErrorWriter<C, T> = ErrorWriter<C, NoWrite, T>;
+impl<C, T> NoErrorWriter<C, T> {
+    pub fn make(theme: T, cache: C) -> Self {
         ErrorWriter::new(theme, NoWrite, cache)
     }
 }
@@ -169,9 +169,9 @@ impl<T> StringPrettyWriter<T> {
         PrettyWriter::new(theme, StringBuffer::default())
     }
 }
-pub type StringErrorWriter<T> = ErrorWriter<StringBuffer, T>;
-impl<T> StringErrorWriter<T> {
-    pub fn make(theme: T, cache: SourceCache) -> Self {
+pub type StringErrorWriter<C, T> = ErrorWriter<C, StringBuffer, T>;
+impl<C, T> StringErrorWriter<C, T> {
+    pub fn make(theme: T, cache: C) -> Self {
         ErrorWriter::new(theme, StringBuffer::default(), cache)
     }
 }
@@ -214,4 +214,4 @@ impl std::io::Write for DebugWriter {
 impl WriterTrait for DebugWriter {}
 
 pub type DebugPrettyWriter<T> = PrettyWriter<DebugWriter, T>;
-pub type DebugErrorWriter<T> = ErrorWriter<DebugWriter, T>;
+pub type DebugErrorWriter<C, T> = ErrorWriter<C, DebugWriter, T>;

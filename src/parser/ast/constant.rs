@@ -1,4 +1,4 @@
-use crate::location2::{Loc, Located, Location};
+use crate::utils::location::{Loc, Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use num_bigint::BigUint;

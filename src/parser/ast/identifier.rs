@@ -1,4 +1,4 @@
-use crate::location2::{Loc, Located, Location};
+use crate::utils::location::{Loc, Located, Location};
 
 pub struct Identifier(Loc<String>);
 
