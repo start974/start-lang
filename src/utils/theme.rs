@@ -122,8 +122,8 @@ impl Theme {
     }
 
     /// print title
-    pub fn title1<'a>(&self, title: &'a str) -> Doc<'a> {
-        Doc::text(title).annotate(ColorInfo {
+    pub fn title1<'a>(&self, title: &impl ToString) -> Doc<'a> {
+        Doc::text(title.to_string()).annotate(ColorInfo {
             fg_color: Some(Color::Cyan),
             bg_color: None,
             styles: vec![Styles::Bold],
@@ -131,8 +131,8 @@ impl Theme {
     }
 
     /// error message
-    pub fn error_message<'a>(&self, message: &'a str) -> Doc<'a> {
-        Doc::text(message).annotate(ColorInfo {
+    pub fn error_message<'a>(&self, message: &impl ToString) -> Doc<'a> {
+        Doc::text(message.to_string()).annotate(ColorInfo {
             fg_color: Some(Color::Red),
             bg_color: None,
             styles: vec![],
@@ -140,8 +140,8 @@ impl Theme {
     }
 
     /// error important message
-    pub fn error_important<'a>(&self, message: &'a str) -> Doc<'a> {
-        Doc::text(message).annotate(ColorInfo {
+    pub fn error_important<'a>(&self, message: &impl ToString) -> Doc<'a> {
+        Doc::text(message.to_string()).annotate(ColorInfo {
             fg_color: Some(Color::Red),
             bg_color: None,
             styles: vec![Styles::Bold],
@@ -149,53 +149,53 @@ impl Theme {
     }
 
     /// pprint keyword
-    pub fn keyword<'a>(&self, keyword: &'a str) -> Doc<'a> {
-        Doc::text(keyword).annotate(self.keyword.clone())
+    pub fn keyword<'a>(&self, keyword: &impl ToString) -> Doc<'a> {
+        Doc::text(keyword.to_string()).annotate(self.keyword.clone())
     }
 
     /// pprint operator
-    pub fn operator<'a>(&self, operator: &'a str) -> Doc<'a> {
-        Doc::text(operator).annotate(self.operator.clone())
+    pub fn operator<'a>(&self, operator: &impl ToString) -> Doc<'a> {
+        Doc::text(operator.to_string()).annotate(self.operator.clone())
     }
 
     /// ppprint definition variable
-    pub fn def_var<'a>(&self, var: &'a str) -> Doc<'a> {
-        Doc::text(var).annotate(self.def_var.clone())
+    pub fn def_var<'a>(&self, var: &impl ToString) -> Doc<'a> {
+        Doc::text(var.to_string()).annotate(self.def_var.clone())
     }
 
     /// pprint variable expression
-    pub fn expr_var<'a>(&self, var: &'a str) -> Doc<'a> {
-        Doc::text(var).annotate(self.expr_var.clone())
+    pub fn expr_var<'a>(&self, var: &impl ToString) -> Doc<'a> {
+        Doc::text(var.to_string()).annotate(self.expr_var.clone())
     }
 
     /// pprint constant expression
-    pub fn number<'a>(&self, n: String) -> Doc<'a> {
-        Doc::text(n).annotate(self.number.clone())
+    pub fn number<'a>(&self, n: &impl ToString) -> Doc<'a> {
+        Doc::text(n.to_string()).annotate(self.number.clone())
     }
 
     /// pprint type variable
-    pub fn ty_var<'a>(&self, var: &'a str) -> Doc<'a> {
-        Doc::text(var).annotate(self.ty_var.clone())
+    pub fn ty_var<'a>(&self, var: &impl ToString) -> Doc<'a> {
+        Doc::text(var.to_string()).annotate(self.ty_var.clone())
     }
 
     /// pprint keyword type
     pub fn kw_type<'a>(&self) -> Doc<'a> {
-        self.keyword("type")
+        self.keyword(&"type")
     }
 
     /// pprint keyword type
     pub fn kw_def<'a>(&self) -> Doc<'a> {
-        self.keyword("def")
+        self.keyword(&"def")
     }
 
     /// pprint operator eqdef
     pub fn op_eq_def<'a>(&self) -> Doc<'a> {
-        self.operator(":=")
+        self.operator(&":=")
     }
 
     /// pprint opertor typed by ":"
     pub fn op_typed_by<'a>(&self) -> Doc<'a> {
-        self.operator(":")
+        self.operator(&":")
     }
 }
 

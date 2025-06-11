@@ -1,3 +1,5 @@
+use std::slice::Iter;
+
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -26,8 +28,9 @@ impl Program {
         self
     }
 
-    pub fn items(&self) -> &[ProgramItem] {
-        &self.0
+    /// iter on program items
+    pub fn iter(&self) -> Iter<ProgramItem> {
+        self.0.iter()
     }
 }
 
@@ -43,8 +46,8 @@ impl Pretty for ProgramItem {
 impl Pretty for Program {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::intersperse(
-            self.items().iter().map(|item| item.pretty(theme)),
-            Doc::line(),
+            self.iter().map(|item| item.pretty(theme)),
+            Doc::line_().append(Doc::line_()),
         )
     }
 }

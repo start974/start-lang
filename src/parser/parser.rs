@@ -44,7 +44,6 @@ impl Parser {
         where F: Fn(&str, Location) -> Error
         {
         if node.grammar_name() != expect {
-            println!("Expected: {}, found: {}", expect, node.grammar_name());
             Err(f(expect, self.loc(node)))
         } else {
             Ok(())
@@ -82,7 +81,7 @@ impl Parser {
             "number_N" => {
                 let n = self.number_n(&child)?;
                 let loc = self.loc(&child);
-                Ok(Constant::make_n(n, loc))
+                Ok(Constant::n(n, loc))
             },
             _ => Err(Error::kind("constant", self.loc(node))),
         }

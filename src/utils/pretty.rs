@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use pretty::{Render, RenderAnnotated};
 
-use super::theme::{ColorInfo, Doc, Theme};
+use super::{theme::{ColorInfo, Doc, Theme}, writer::StringPrettyWriter};
 
 // ===========================================================================
 // Pretty Trait

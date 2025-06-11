@@ -1,4 +1,5 @@
-/*pub mod ast;*/
+pub mod ast;
+mod error;
 /*use super::error::Errors;*/
 /*use super::parser::ast::WTProgram;*/
 /*use crate::stdlib::TYPE_ENV;*/
