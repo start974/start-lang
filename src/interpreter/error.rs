@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::utils::error::{ErrorCode, ErrorReport, Message};
+use crate::utils::error::{Error, ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder, UNKNOWN_LOCATION};
 
 // =======================================================================
@@ -42,3 +42,5 @@ impl ErrorReport for ErrorFileRead {
             .text(".")
     }
 }
+
+impl Error for ErrorFileRead {}

@@ -4,8 +4,8 @@ pub struct Identifier(Loc<String>);
 
 impl Identifier {
     /// Creates a new identifier with the given name and location.
-    pub fn new(name: String, loc: Location) -> Self {
-        Self(Loc::new(name, loc))
+    pub fn new(name: &str, loc: Location) -> Self {
+        Self(Loc::new(name.to_string(), loc))
     }
 
     /// name of identifier

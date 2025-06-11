@@ -1,5 +1,5 @@
 use super::location::{Located, SourceCache};
-use super::location::{Location, Report, ReportBuilder};
+use super::location::{Report, ReportBuilder};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use crate::utils::writer::StringPrettyWriter;
@@ -129,8 +129,6 @@ where
     }
 }
 
-impl<E> Error for E where E: ErrorReport {}
-
 // ===========================================================================
 // Error Box
 // ===========================================================================
@@ -156,13 +154,16 @@ where
     }
 }
 
+impl<E> Error for Box<E> where E: ErrorReport + ErrorCode {}
+
 // ===========================================================================
 // Error Pair
 // ===========================================================================
 
-impl<E> ErrorCode for (E, E)
+impl<E1, E2> ErrorCode for (E1, E2)
 where
-    E: ErrorCode,
+    E1: ErrorCode,
+    E2: ErrorCode,
 {
     fn code(&self) -> i32 {
         let code1 = self.0.code();
@@ -175,9 +176,10 @@ where
     }
 }
 
-impl<E> ErrorWrite for (E, E)
+impl<E1, E2> ErrorWrite for (E1, E2)
 where
-    E: ErrorWrite,
+    E1: ErrorWrite,
+    E2: ErrorWrite,
 {
     fn write(&self, theme: &Theme, cache: &mut SourceCache, writer: &mut dyn std::io::Write) {
         self.0.write(theme, cache, writer);
@@ -186,12 +188,17 @@ where
     }
 }
 
-impl<E> Error for (E, E) where E: Error {}
+impl<E1, E2> Error for (E1, E2)
+where
+    E1: ErrorReport + ErrorCode,
+    E2: ErrorReport + ErrorCode,
+{
+}
 
 // ===========================================================================
-// Error List
+// Error Vec
 // ===========================================================================
-impl<E> ErrorCode for [E]
+impl<E> ErrorCode for Vec<E>
 where
     E: ErrorCode,
 {
@@ -206,7 +213,7 @@ where
     }
 }
 
-impl<E> ErrorWrite for [E]
+impl<E> ErrorWrite for Vec<E>
 where
     E: ErrorWrite,
 {
@@ -219,3 +226,5 @@ where
         }
     }
 }
+
+impl<E> Error for Vec<E> where E: ErrorReport + ErrorCode {}

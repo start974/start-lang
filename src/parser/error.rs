@@ -1,49 +1,73 @@
 use ariadne::Label;
 
-use crate::utils::error::{ErrorCode, ErrorReport, Message};
+use crate::utils::error::{self, ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder};
 use crate::utils::theme::Theme;
 
 // =======================================================================
-// Error Kind
+// Error Parser
 // =======================================================================
-pub struct ErrorKind {
-    expect: String,
-    found: String,
-    location: Location,
+enum Kind {
+    Operator,
+    Keyword,
+    Kind,
 }
 
-impl ErrorKind {
-    pub fn new(expect: &str, found: &str, location: Location) -> Self {
+pub struct Error {
+    location: Location,
+    expect: String,
+    kind: Kind,
+}
+
+impl Error {
+    pub fn operator(expect: &str, location: Location) -> Self {
         Self {
-            expect: expect.to_string(),
-            found: found.to_string(),
             location,
+            kind: Kind::Operator,
+            expect: expect.to_string(),
+        }
+    }
+
+    pub fn keyword(expect: &str, location: Location) -> Self {
+        Self {
+            location,
+            kind: Kind::Keyword,
+            expect: expect.to_string(),
+        }
+    }
+
+    pub fn kind(expect: &str, location: Location) -> Self {
+        Self {
+            location,
+            kind: Kind::Kind,
+            expect: expect.to_string(),
         }
     }
 }
 
-impl ErrorCode for ErrorKind {
+impl ErrorCode for Error {
     fn code(&self) -> i32 {
-        201
+        match self.kind {
+            Kind::Operator => 203,
+            Kind::Keyword => 202,
+            Kind::Kind => 201,
+        }
     }
 }
 
-impl Located for ErrorKind {
+impl Located for Error {
     fn loc(&self) -> &Location {
         &self.location
     }
 }
 
-impl ErrorReport for ErrorKind {
+impl ErrorReport for Error {
     fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
         report
             .with_label(
                 Label::new(self.loc().clone()).with_message(
                     Message::nil()
-                        .text("Found")
-                        .important(&self.found)
-                        .text(", expected ")
+                        .text("Expect ")
                         .important(&self.expect)
                         .text(".")
                         .to_string(theme),
@@ -53,51 +77,14 @@ impl ErrorReport for ErrorKind {
     }
     fn message(&self) -> Message {
         Message::nil()
-            .text("Expect ")
-            .important(&self.expect)
+            .text("Unexpected ")
+            .important(match self.kind {
+                Kind::Operator => "operator",
+                Kind::Keyword => "keyword",
+                Kind::Kind => "kind",
+            })
             .text(".")
     }
 }
 
-// =======================================================================
-// Error Keyword
-// =======================================================================
-
-pub struct ErrorKeyword {
-    keyword: String,
-    location: Location,
-}
-
-impl ErrorKeyword {
-    pub fn new(keyword: &str, location: Location) -> Self {
-        Self {
-            keyword: keyword.to_string(),
-            location,
-        }
-    }
-}
-
-impl ErrorCode for ErrorKeyword {
-    fn code(&self) -> i32 {
-        202
-    }
-}
-
-impl Located for ErrorKeyword {
-    fn loc(&self) -> &Location {
-        &self.location
-    }
-}
-
-impl ErrorReport for ErrorKeyword {
-    fn finalize<'a>(&self, _: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
-        report.finish()
-    }
-
-    fn message(&self) -> Message {
-        Message::nil()
-            .text("Unexpected keyword: ")
-            .important(&self.keyword)
-            .text(".")
-    }
-}
+impl error::Error for Error {}
