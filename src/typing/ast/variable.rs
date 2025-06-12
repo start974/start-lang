@@ -19,6 +19,13 @@ pub struct Variable {
     ty: Ty,
 }
 
+impl Variable {
+    /// get the identifier of the variable
+    pub fn identifier(&self) -> &Identifier {
+        &self.identifier
+    }
+}
+
 pub mod sealed_mut_ty {
     use super::*;
     impl TypedMut for Variable {

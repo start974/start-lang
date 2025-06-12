@@ -10,7 +10,7 @@ use crate::utils::theme::Theme;
 enum Kind {
     Operator,
     Keyword,
-    Kind,
+    GrammarRule,
 }
 
 pub struct Error {
@@ -39,7 +39,7 @@ impl Error {
     pub fn kind(expect: &str, location: Location) -> Self {
         Self {
             location,
-            kind: Kind::Kind,
+            kind: Kind::GrammarRule,
             expect: expect.to_string(),
         }
     }
@@ -50,7 +50,7 @@ impl ErrorCode for Error {
         match self.kind {
             Kind::Operator => 203,
             Kind::Keyword => 202,
-            Kind::Kind => 201,
+            Kind::GrammarRule => 201,
         }
     }
 }
@@ -81,7 +81,7 @@ impl ErrorReport for Error {
             .important(match self.kind {
                 Kind::Operator => "operator",
                 Kind::Keyword => "keyword",
-                Kind::Kind => "kind",
+                Kind::GrammarRule => "kind",
             })
             .text(".")
     }

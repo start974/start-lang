@@ -37,14 +37,8 @@ impl Located for Constant {
 impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self.kind() {
-            ConstantKind::N(n) => theme.number(n),
-            ConstantKind::B(b) => {
-                if *b {
-                    theme.keyword(&"true")
-                } else {
-                    theme.keyword(&"false")
-                }
-            }
+            ConstantKind::N(n) => theme.constant(n),
+            ConstantKind::B(b) => theme.constant(b),
         }
     }
 }

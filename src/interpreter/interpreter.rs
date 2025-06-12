@@ -1,16 +1,23 @@
+use std::io::Write;
+
+use crate::interpreter::summary::SummaryDefinition;
 use crate::parser::{ast as parser_ast, Parser};
+use crate::typing::ast as typing_ast;
 use crate::typing::from_parser::FromParser;
-use crate::typing::{ast as typing_ast};
 use crate::utils::error::Error;
 use crate::utils::location::{SourceCache, SourceId};
 use crate::utils::theme::Theme;
-use crate::utils::writer::StderrErrorWriter;
+use crate::utils::writer::{StderrErrorWriter, StderrPrettyWriter};
+use crate::vm::env::Env as EnvVm;
 
 use super::error::ErrorFileRead;
 
 pub struct Interpreter {
     cache: SourceCache,
     theme: Theme,
+    typer: FromParser,
+    vm_env: EnvVm,
+    repl_mod: bool,
 }
 
 type Result<T> = std::result::Result<T, i32>;
@@ -18,9 +25,18 @@ type Result<T> = std::result::Result<T, i32>;
 impl Interpreter {
     /// Create a new interpreter instance
     pub fn new() -> Self {
-        let theme = Theme::default_theme();
-        let cache = SourceCache::new();
-        Self { cache, theme }
+        Self {
+            cache: SourceCache::new(),
+            theme: Theme::default_theme(),
+            typer: FromParser::new(),
+            vm_env: EnvVm::new(),
+            repl_mod: false,
+        }
+    }
+
+    /// update repl module
+    pub fn set_repl_mod(&mut self, repl_mod: bool) {
+        self.repl_mod = repl_mod;
     }
 
     fn fail(&mut self, error: &impl Error) -> i32 {
@@ -58,24 +74,30 @@ impl Interpreter {
         parser.parse().map_err(|error| self.fail(&error))
     }
 
-        /// type check the program and return the typed program
+    /// type check the program and return the typed program
     fn typing(&mut self, program: parser_ast::Program) -> Result<typing_ast::Program> {
-        let mut from_parser = FromParser::new();
-        from_parser.program(&program)
+        self.typer
+            .program(&program)
             .map_err(|error| self.fail(&error))
     }
 
-    /*/// eval program*/
-    /*fn eval(&self, program: &typing_ast::Program) -> vm::Value {*/
-    /*todo!() }*/
+    /// eval program
+    fn eval(&mut self, program: &typing_ast::Program) {
+        let mut printer = StderrPrettyWriter::make(&self.theme);
+        for def in program.iter() {
+            self.vm_env.add_definition(def);
+            if self.repl_mod {
+                let _ = printer.print(&SummaryDefinition::from(def));
+            }
+        }
+        printer.flush().unwrap()
+    }
 
     /// run the interpreter on the given source id
     pub fn run(&mut self, source_id: SourceId) -> Result<()> {
         let program_parse = self.parse(source_id)?;
         let program_typed = self.typing(program_parse)?;
-        let _ = program_typed;
-        //let value = self.eval(program_typed);
-        //value
+        self.eval(&program_typed);
         Ok(())
     }
 }

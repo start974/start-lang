@@ -75,7 +75,7 @@ pub struct Theme {
     /// expression var color
     pub expr_var: ColorInfo,
     /// constant color
-    pub number: ColorInfo,
+    pub constant: ColorInfo,
 
     /// type var
     pub ty_var: ColorInfo,
@@ -108,7 +108,7 @@ impl Theme {
                 bg_color: None,
                 styles: vec![],
             },
-            number: ColorInfo {
+            constant: ColorInfo {
                 fg_color: Some(Color::Green),
                 bg_color: None,
                 styles: vec![],
@@ -169,8 +169,8 @@ impl Theme {
     }
 
     /// pprint constant expression
-    pub fn number<'a>(&self, n: &impl ToString) -> Doc<'a> {
-        Doc::text(n.to_string()).annotate(self.number.clone())
+    pub fn constant<'a>(&self, n: &impl ToString) -> Doc<'a> {
+        Doc::text(n.to_string()).annotate(self.constant.clone())
     }
 
     /// pprint type variable
@@ -207,7 +207,7 @@ impl Default for Theme {
             operator: ColorInfo::default(),
             def_var: ColorInfo::default(),
             expr_var: ColorInfo::default(),
-            number: ColorInfo::default(),
+            constant: ColorInfo::default(),
             ty_var: ColorInfo::default(),
         }
     }

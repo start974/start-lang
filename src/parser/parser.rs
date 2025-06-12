@@ -89,7 +89,7 @@ impl Parser {
 
     pub fn expression(&self, node: &Node) -> Result<Expression> {
         match node.kind() {
-            "constant" => self.constant(node).map(|c| Expression::constant(c)),
+            "constant" => self.constant(node).map(Expression::constant),
             "ident" => {
                 let ident = self.ident(node)?;
                 if ident.name() == "_" {

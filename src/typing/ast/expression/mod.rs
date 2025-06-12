@@ -1,5 +1,6 @@
 mod constant;
 pub use constant::Constant;
+pub use constant::ConstantKind;
 
 mod expression;
 pub use expression::Expression;
