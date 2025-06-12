@@ -18,8 +18,9 @@ pub fn run(interpreter: &mut Interpreter) {
 /// make promp string
 pub fn prompt_string(line_num: usize, many_line: bool) -> String {
     let line_num_str = line_num.to_string();
-    let mut res = if line_num_str.len() < 3 {
-        " ".repeat(4 - line_num_str.len())
+    const MAX_LINE_NUM_LEN: usize = 3;
+    let mut res = if line_num_str.len() <= MAX_LINE_NUM_LEN {
+        " ".repeat(MAX_LINE_NUM_LEN - line_num_str.len())
     } else {
         String::new()
     };
@@ -36,6 +37,7 @@ pub fn repl() {
     let mut rl = DefaultEditor::new().unwrap();
     let _ = rl.load_history(HISTORY_FILE);
     let mut interpreter = Interpreter::new();
+    interpreter.set_repl_mod(true);
     let mut line_num = 1;
     let mut many_line = false;
     loop {

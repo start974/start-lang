@@ -3,122 +3,55 @@ use crate::utils::error::ErrorWriter;
 use std::io::Write;
 
 // ===========================================================================
-// Writer trait
-// ===========================================================================
-pub trait WriterTrait: std::fmt::Write + std::io::Write {}
-
-// ===========================================================================
 // Stdout writer
 // ===========================================================================
-#[derive(Default)]
-pub struct Stdout;
 
-impl std::fmt::Write for Stdout {
-    fn write_str(&mut self, s: &str) -> std::fmt::Result {
-        std::io::stdout()
-            .write_all(s.as_bytes())
-            .map_err(|_| std::fmt::Error)
-    }
-}
-
-impl std::io::Write for Stdout {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        std::io::stdout().write(buf)
-    }
-    fn flush(&mut self) -> std::io::Result<()> {
-        std::io::stdout().flush()
-    }
-}
-
-impl WriterTrait for Stdout {}
-
-pub type StdoutPrettyWriter<T> = PrettyWriter<Stdout, T>;
+pub type StdoutPrettyWriter<T> = PrettyWriter<std::io::Stdout, T>;
 impl<T> StdoutPrettyWriter<T> {
     pub fn make(theme: T) -> Self {
-        PrettyWriter::new(theme, Stdout)
+        PrettyWriter::new(theme, std::io::stdout())
     }
 }
 
-pub type StdoutErrorWriter<C, T> = ErrorWriter<C, Stdout, T>;
+pub type StdoutErrorWriter<C, T> = ErrorWriter<C, std::io::Stdout, T>;
 impl<C, T> StdoutErrorWriter<C, T> {
     pub fn make(theme: T, cache: C) -> Self {
-        ErrorWriter::new(theme, Stdout, cache)
+        ErrorWriter::new(theme, std::io::stdout(), cache)
     }
 }
 
 // ===========================================================================
 // Stderr writer
 // ===========================================================================
-#[derive(Default)]
-pub struct Stderr;
 
-impl std::fmt::Write for Stderr {
-    fn write_str(&mut self, s: &str) -> std::fmt::Result {
-        std::io::stderr()
-            .write_all(s.as_bytes())
-            .map_err(|_| std::fmt::Error)
-    }
-}
-
-impl std::io::Write for Stderr {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        std::io::stderr().write(buf)
-    }
-    fn flush(&mut self) -> std::io::Result<()> {
-        std::io::stderr().flush()
-    }
-}
-
-impl WriterTrait for Stderr {}
-
-pub type StderrPrettyWriter<T> = PrettyWriter<Stderr, T>;
+pub type StderrPrettyWriter<T> = PrettyWriter<std::io::Stderr, T>;
 impl<T> StderrPrettyWriter<T> {
     pub fn make(theme: T) -> Self {
-        PrettyWriter::new(theme, Stderr)
+        PrettyWriter::new(theme, std::io::stderr())
     }
 }
 
-pub type StderrErrorWriter<C, T> = ErrorWriter<C, Stderr, T>;
+pub type StderrErrorWriter<C, T> = ErrorWriter<C, std::io::Stderr, T>;
 impl<C, T> StderrErrorWriter<C, T> {
     pub fn make(theme: T, cache: C) -> Self {
-        ErrorWriter::new(theme, Stderr, cache)
+        ErrorWriter::new(theme, std::io::stderr(), cache)
     }
 }
 
 // ===========================================================================
-// NoWrite writer
+// Sink writer
 // ===========================================================================
-#[derive(Default)]
-pub struct NoWrite;
-
-impl std::fmt::Write for NoWrite {
-    fn write_str(&mut self, _: &str) -> std::fmt::Result {
-        Ok(())
-    }
-}
-
-impl std::io::Write for NoWrite {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        Ok(buf.len())
-    }
-    fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
-    }
-}
-
-impl WriterTrait for NoWrite {}
-
-pub type NoPrettyWriter<T> = PrettyWriter<NoWrite, T>;
-impl<T> NoPrettyWriter<T> {
+pub type SinkPrettyWriter<T> = PrettyWriter<std::io::Sink, T>;
+impl<T> SinkPrettyWriter<T> {
     pub fn make(theme: T) -> Self {
-        PrettyWriter::new(theme, NoWrite)
+        PrettyWriter::new(theme, std::io::sink())
     }
 }
 
-pub type NoErrorWriter<C, T> = ErrorWriter<C, NoWrite, T>;
-impl<C, T> NoErrorWriter<C, T> {
+pub type SinkErrorWriter<C, T> = ErrorWriter<C, std::io::Sink, T>;
+impl<C, T> SinkErrorWriter<C, T> {
     pub fn make(theme: T, cache: C) -> Self {
-        ErrorWriter::new(theme, NoWrite, cache)
+        ErrorWriter::new(theme, std::io::sink(), cache)
     }
 }
 
@@ -161,8 +94,6 @@ impl StringBuffer {
     }
 }
 
-impl WriterTrait for StringBuffer {}
-
 pub type StringPrettyWriter<T> = PrettyWriter<StringBuffer, T>;
 impl<T> StringPrettyWriter<T> {
     pub fn make(theme: T) -> Self {
@@ -184,34 +115,23 @@ pub struct DebugWriter {
     is_active: bool,
 }
 
-impl std::fmt::Write for DebugWriter {
-    fn write_str(&mut self, s: &str) -> std::fmt::Result {
-        if self.is_active {
-            Stdout.write_str(s)
-        } else {
-            NoWrite.write_str(s)
-        }
-    }
-}
-
 impl std::io::Write for DebugWriter {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         if self.is_active {
-            Stdout.write(buf)
+            std::io::stdout().write(buf)
         } else {
-            NoWrite.write(buf)
+            std::io::sink().write(buf)
         }
     }
+
     fn flush(&mut self) -> std::io::Result<()> {
         if self.is_active {
-            Stdout.flush()
+            std::io::stdout().flush()
         } else {
-            NoWrite.flush()
+            std::io::sink().flush()
         }
     }
 }
-
-impl WriterTrait for DebugWriter {}
 
 pub type DebugPrettyWriter<T> = PrettyWriter<DebugWriter, T>;
 pub type DebugErrorWriter<C, T> = ErrorWriter<C, DebugWriter, T>;

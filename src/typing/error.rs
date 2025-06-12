@@ -26,7 +26,7 @@ impl ErrorCode for ErrorVariableNotFound {
 
 impl Located for ErrorVariableNotFound {
     fn loc(&self) -> &Location {
-        &self.identifier.loc()
+        self.identifier.loc()
     }
 }
 
@@ -37,7 +37,7 @@ impl ErrorReport for ErrorVariableNotFound {
                 Label::new(self.identifier.loc().clone()).with_message(
                     Message::nil()
                         .text("Variable ")
-                        .quoted(&self.identifier.to_string())
+                        .quoted(self.identifier.name())
                         .text(" not found in the current scope.")
                         .to_string(theme),
                 ),

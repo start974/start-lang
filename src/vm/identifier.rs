@@ -1,0 +1,43 @@
+use crate::typing::ast;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Identifier {
+    name: String,
+    id: usize,
+}
+
+impl Identifier {
+    /// create a new identifier
+    pub fn new(name: String, id: usize) -> Self {
+        Self { name, id }
+    }
+    /// get the identifier name
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+    /// get the identifier id
+    pub fn id(&self) -> usize {
+        self.id
+    }
+}
+
+impl From<&ast::Identifier> for Identifier {
+    fn from(value: &ast::Identifier) -> Self {
+        Identifier {
+            name: value.name().to_string(),
+            id: value.id(),
+        }
+    }
+}
+
+impl From<ast::Identifier> for Identifier {
+    fn from(value: ast::Identifier) -> Self {
+        Self::from(&value)
+    }
+}
+
+impl From<&ast::Variable> for Identifier {
+    fn from(value: &ast::Variable) -> Self {
+        Self::from(value.identifier())
+    }
+}

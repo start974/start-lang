@@ -1,7 +1,5 @@
-use super::ast::{
-    self as ast_typed, IdentifierBuilder, Ty, TyAlias, TyAliasEnv, TyEnv, Typed, VariableEnv,
-};
-use super::error::{ErrorFromParser, ErrorVariableNotFound};
+use super::ast::{self as ast_typed, IdentifierBuilder, Ty, TyAliasEnv, Typed, VariableEnv};
+use super::error::ErrorFromParser;
 use crate::parser::ast as ast_parser;
 use crate::utils::location::LocatedSet;
 
@@ -41,7 +39,7 @@ impl FromParser {
                 ast_typed::Expression::Constant(c_ty)
             }
             ast_parser::ExpressionKind::Variable(x) => {
-                let id = self.id_builder.get(x.name());
+                let id = self.id_builder.get(x.name()).with_loc(x);
                 let var = self.var_env.get(&id).map_err(Error::from)?;
                 ast_typed::Expression::Variable(var)
             }
@@ -133,5 +131,11 @@ impl FromParser {
         } else {
             Err(errors)
         }
+    }
+}
+
+impl Default for FromParser {
+    fn default() -> Self {
+        Self::new()
     }
 }

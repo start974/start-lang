@@ -18,18 +18,24 @@ pub struct Identifier {
     loc: Location,
 }
 
+impl Identifier {
+    /// get name of Identifier
+    pub fn name(&self) -> &str {
+        match &self.name {
+            Name::Fresh => &"__fresh__",
+            Name::Named(s) => s,
+        }
+    }
+
+    /// get id
+    pub fn id(&self) -> usize {
+        self.id
+    }
+}
+
 impl ToString for Identifier {
     fn to_string(&self) -> String {
-        match &self.name {
-            Name::Fresh => format!("fresh_{}", self.id),
-            Name::Named(name) => {
-                if self.id == 0 {
-                    name.clone()
-                } else {
-                    format!("{}_{}", name, self.id)
-                }
-            }
-        }
+        format!("{}_{}", self.name(), self.id())
     }
 }
 
@@ -76,7 +82,7 @@ impl IdentifierBuilder {
     pub fn new() -> Self {
         Self {
             table: std::collections::HashMap::new(),
-            fresh_id: 0,
+            fresh_id: 1,
             snapshot: Box::new(None),
         }
     }

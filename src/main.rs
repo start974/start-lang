@@ -6,6 +6,7 @@ mod repl;
 mod stdlib;
 mod typing;
 mod utils;
+mod vm;
 
 fn main() {
     let args = env::args().collect::<Vec<_>>();

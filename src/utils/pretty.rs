@@ -23,26 +23,29 @@ pub struct PrettyWriter<W, T> {
     theme: T,
 }
 
-impl<W, T> std::fmt::Write for PrettyWriter<W, T>
+impl<W, T> std::io::Write for PrettyWriter<W, T>
 where
-    W: std::fmt::Write,
+    W: std::io::Write,
 {
-    fn write_str(&mut self, s: &str) -> std::fmt::Result {
-        self.writer.write_str(s)
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.writer.write(buf)
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.writer.flush()
     }
 }
 
 impl<W, T> PrettyWriter<W, T>
 where
-    W: std::fmt::Write,
+    W: std::io::Write,
     T: AsRef<Theme>,
 {
     /// print object with pretty and theme
-    pub fn print(&mut self, o: &impl Pretty) {
+    pub fn print(&mut self, o: &impl Pretty) -> std::io::Result<()> {
         let theme = self.theme.as_ref();
         o.pretty(theme)
-            .render_raw(theme.width, &mut StreamColored::new(&mut self.writer))
-            .unwrap();
+            .render_raw(theme.width, &mut StreamColored::new(&mut self.writer))?;
+        self.writer.flush()
     }
 
     pub fn writer_mut(&mut self) -> &mut W {
@@ -75,15 +78,16 @@ impl<'w, W> StreamColored<'w, W> {
 
 impl<W> Render for StreamColored<'_, W>
 where
-    W: std::fmt::Write,
+    W: std::io::Write,
 {
-    type Error = std::fmt::Error;
+    type Error = std::io::Error;
 
     fn write_str_all(&mut self, s: &str) -> Result<(), Self::Error> {
         if let Some(color_info) = self.color_info_stack.front() {
-            write!(&mut self.upstream, "{}", color_info.colorize(s))
+            let s = format!("{}", color_info.colorize(s));
+            self.upstream.write_all(s.as_bytes())
         } else {
-            write!(&mut self.upstream, "{}", s)
+            Ok(())
         }
     }
 
@@ -92,13 +96,13 @@ where
     }
 
     fn fail_doc(&self) -> Self::Error {
-        std::fmt::Error
+        Self::Error::new(std::io::ErrorKind::Other, "fail to write doc")
     }
 }
 
 impl<W> RenderAnnotated<'_, ColorInfo> for StreamColored<'_, W>
 where
-    W: std::fmt::Write,
+    W: std::io::Write,
 {
     fn push_annotation(&mut self, annot: &ColorInfo) -> Result<(), Self::Error> {
         self.color_info_stack.push_front(annot.clone());
