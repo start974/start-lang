@@ -1,5 +1,6 @@
-use super::super::Variable;
-use crate::typing::ast::{Constant, Ty, Typed};
+use super::super::ty::{Ty, Typed, TypedMut};
+use super::super::variable::Variable;
+use super::constant::Constant;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -13,17 +14,23 @@ pub enum Expression {
     Var(Variable),
 }
 
+pub mod sealed_mut_ty {
+    use super::*;
+    impl TypedMut for Expression {
+        fn ty_mut(&mut self) -> &mut Ty {
+            match self {
+                Expression::Const(c) => c.ty_mut(),
+                Expression::Var(v) => v.ty_mut(),
+            }
+        }
+    }
+}
+
 impl Typed for Expression {
     fn ty(&self) -> &Ty {
         match self {
             Expression::Const(c) => c.ty(),
             Expression::Var(v) => v.ty(),
-        }
-    }
-    fn ty_loc_mut(&mut self) -> &mut Location {
-        match self {
-            Expression::Const(c) => c.ty_loc_mut(),
-            Expression::Var(v) => v.ty_loc_mut(),
         }
     }
 }

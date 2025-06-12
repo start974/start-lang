@@ -1,11 +1,12 @@
-use std::collections::HashMap;
-use std::rc::Rc;
 use super::super::error::ErrorUnexpectedType;
-use super::{
-    Expression, ExpressionDefinition, Identifier, IdentifierBuilder, Ty, Typed, VariableEnv,
-};
+use super::expression::{Expression, ExpressionDefinition};
+use super::identifier::{Identifier, IdentifierBuilder};
+use super::ty::{Ty, TyBuiltin, Typed};
+use super::variable::VariableEnv;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
+use std::collections::HashMap;
+use std::rc::Rc;
 
 // =======================================================================
 // Program
@@ -74,8 +75,8 @@ impl ProgramBuilder {
 
     /// set main expression
     pub fn set_main(&mut self, expr: Expression) -> Result<(), Box<ErrorUnexpectedType>> {
-        let main_ty = Ty::n();
-        let expr = expr.constraint_ty(&main_ty)?;
+        let main_ty = Ty::Builtin(TyBuiltin::N);
+        let expr = expr.constraint_ty(main_ty)?;
         self.program.main = Some(expr);
         Ok(())
     }
