@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use super::super::ty::{Ty, TyBuiltin, Typed, TypedMut};
 use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
 use crate::utils::pretty::Pretty;

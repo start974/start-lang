@@ -113,3 +113,58 @@ impl ErrorReport for ErrorUnexpectedType {
         Message::nil().text("Unexpected type.")
     }
 }
+
+// =======================================================================
+// ErrorFromParser
+// =======================================================================
+pub enum ErrorFromParser {
+    VariableNotFound(ErrorVariableNotFound),
+    UnexpectedType(ErrorUnexpectedType),
+}
+
+impl From<ErrorVariableNotFound> for ErrorFromParser {
+    fn from(e: ErrorVariableNotFound) -> Self {
+        ErrorFromParser::VariableNotFound(e)
+    }
+}
+
+impl From<ErrorUnexpectedType> for ErrorFromParser {
+    fn from(e: ErrorUnexpectedType) -> Self {
+        ErrorFromParser::UnexpectedType(e)
+    }
+}
+
+impl ErrorCode for ErrorFromParser {
+    fn code(&self) -> i32 {
+        match self {
+            ErrorFromParser::VariableNotFound(e) => e.code(),
+            ErrorFromParser::UnexpectedType(e) => e.code(),
+        }
+    }
+}
+
+impl Located for ErrorFromParser {
+    fn loc(&self) -> &Location {
+        match self {
+            ErrorFromParser::VariableNotFound(e) => e.loc(),
+            ErrorFromParser::UnexpectedType(e) => e.loc(),
+        }
+    }
+}
+
+impl ErrorReport for ErrorFromParser {
+    fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
+        match self {
+            ErrorFromParser::VariableNotFound(e) => e.finalize(theme, report),
+            ErrorFromParser::UnexpectedType(e) => e.finalize(theme, report),
+        }
+    }
+    fn message(&self) -> crate::utils::error::Message {
+        match self {
+            ErrorFromParser::VariableNotFound(e) => e.message(),
+            ErrorFromParser::UnexpectedType(e) => e.message(),
+        }
+    }
+}
+
+impl Error for ErrorFromParser {}

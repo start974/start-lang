@@ -19,10 +19,34 @@ pub struct Program {
 }
 
 impl Program {
-    fn push_definition(&mut self, def: ExpressionDefinition) {
+    /// make program
+    pub fn new() -> Self {
+        Self {
+            env: HashMap::new(),
+            ordered_env: Vec::new(),
+            main: None,
+        }
+    }
+
+    /// push a new definition
+    /// return none if definition already exist
+    pub fn with_definition(mut self, def: ExpressionDefinition) -> Option<Self> {
         let identifier = Rc::new(def.name().clone());
-        self.env.insert(identifier.clone(), def);
-        self.ordered_env.push(identifier);
+        match self.env.insert(identifier.clone(), def) {
+            None => {
+                self.ordered_env.push(identifier);
+                Some(self)
+            }
+            Some(_) => None,
+        }
+    }
+
+    /// set main expression
+    pub fn set_main(&mut self, expr: Expression) -> Result<(), Box<ErrorUnexpectedType>> {
+        let main_ty = Ty::Builtin(TyBuiltin::N);
+        let expr = expr.constraint_ty(main_ty)?;
+        self.main = Some(expr);
+        Ok(())
     }
 
     /// iter on environment (without main)
@@ -42,60 +66,5 @@ impl Pretty for Program {
             self.iter().map(|item| item.pretty(theme)),
             Doc::line_().append(Doc::line_()),
         )
-    }
-}
-
-// =======================================================================
-// Program Builder
-// =======================================================================
-pub struct ProgramBuilder {
-    program: Program,
-    indent_builder: IdentifierBuilder,
-}
-
-impl ProgramBuilder {
-    /// make a new program builder
-    pub fn nil() -> Self {
-        let program = Program {
-            env: HashMap::new(),
-            ordered_env: Vec::new(),
-            main: None,
-        };
-        Self {
-            program,
-            indent_builder: IdentifierBuilder::nil(),
-        }
-    }
-
-    /// add definition to program
-    pub fn add_definition(&mut self, def: ExpressionDefinition) {
-        let identifier = Rc::new(def.name().clone());
-        self.program.env.insert(identifier, def);
-    }
-
-    /// set main expression
-    pub fn set_main(&mut self, expr: Expression) -> Result<(), Box<ErrorUnexpectedType>> {
-        let main_ty = Ty::Builtin(TyBuiltin::N);
-        let expr = expr.constraint_ty(main_ty)?;
-        self.program.main = Some(expr);
-        Ok(())
-    }
-
-    /// build the program
-    pub fn build(self) -> Program {
-        self.program
-    }
-}
-
-impl VariableEnv for ProgramBuilder {
-    fn add_definition(&mut self, def: ExpressionDefinition) {
-        self.program.push_definition(def);
-    }
-
-    fn get_ty(&self, identifier: &Identifier) -> Option<&Ty> {
-        self.program
-            .env
-            .get(&Rc::new(identifier.clone()))
-            .map(|def| def.ty())
     }
 }

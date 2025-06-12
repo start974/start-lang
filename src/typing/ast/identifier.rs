@@ -73,7 +73,7 @@ pub struct IdentifierBuilder {
 
 impl IdentifierBuilder {
     /// create a new identifier builder
-    pub fn nil() -> Self {
+    pub fn new() -> Self {
         Self {
             table: std::collections::HashMap::new(),
             fresh_id: 0,
@@ -103,9 +103,19 @@ impl IdentifierBuilder {
     }
 
     /// create a new identifier
-    pub fn make(mut self, name: &str) -> Identifier {
+    pub fn build(&mut self, name: &str) -> Identifier {
         let id = self.identifier_id(name).unwrap_or(0);
         self.table.insert(name.to_string(), id + 1);
+        Identifier {
+            name: Name::Named(name.to_string()),
+            id,
+            loc: UNKNOWN_LOCATION,
+        }
+    }
+
+    /// get identifier by name
+    pub fn get(&self, name: &str) -> Identifier {
+        let id = self.identifier_id(name).unwrap_or(0);
         Identifier {
             name: Name::Named(name.to_string()),
             id,

@@ -1,4 +1,6 @@
 use crate::parser::{ast as parser_ast, Parser};
+use crate::typing::from_parser::FromParser;
+use crate::typing::{ast as typing_ast};
 use crate::utils::error::Error;
 use crate::utils::location::{SourceCache, SourceId};
 use crate::utils::theme::Theme;
@@ -56,10 +58,12 @@ impl Interpreter {
         parser.parse().map_err(|error| self.fail(&error))
     }
 
-    /*    /// type check the program and return the typed program*/
-    /*fn typing(&self, program: &parser_ast::Program) -> typing_ast::Program {*/
-    /*todo!()*/
-    /*}*/
+        /// type check the program and return the typed program
+    fn typing(&mut self, program: parser_ast::Program) -> Result<typing_ast::Program> {
+        let mut from_parser = FromParser::new();
+        from_parser.program(&program)
+            .map_err(|error| self.fail(&error))
+    }
 
     /*/// eval program*/
     /*fn eval(&self, program: &typing_ast::Program) -> vm::Value {*/
@@ -67,10 +71,11 @@ impl Interpreter {
 
     /// run the interpreter on the given source id
     pub fn run(&mut self, source_id: SourceId) -> Result<()> {
-        let _program_parse = self.parse(source_id)?;
-        todo!()
-        //let program_typed = self.typing(program_parse);
+        let program_parse = self.parse(source_id)?;
+        let program_typed = self.typing(program_parse)?;
+        let _ = program_typed;
         //let value = self.eval(program_typed);
         //value
+        Ok(())
     }
 }

@@ -1,5 +1,5 @@
-use super::super::ty::{Ty, Typed, TypedMut};
 use super::super::identifier::Identifier;
+use super::super::ty::{Ty, Typed, TypedMut};
 use super::Expression;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
@@ -50,7 +50,6 @@ pub mod sealed_mut_ty {
             self.body.ty_mut()
         }
     }
-
 }
 impl Typed for Definition {
     fn ty(&self) -> &Ty {
