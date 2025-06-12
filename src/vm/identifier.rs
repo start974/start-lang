@@ -6,21 +6,6 @@ pub struct Identifier {
     id: usize,
 }
 
-impl Identifier {
-    /// create a new identifier
-    pub fn new(name: String, id: usize) -> Self {
-        Self { name, id }
-    }
-    /// get the identifier name
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-    /// get the identifier id
-    pub fn id(&self) -> usize {
-        self.id
-    }
-}
-
 impl From<&ast::Identifier> for Identifier {
     fn from(value: &ast::Identifier) -> Self {
         Identifier {

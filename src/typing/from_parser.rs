@@ -26,7 +26,7 @@ impl FromParser {
     fn constant(&self, constant: &ast_parser::Constant) -> ast_typed::Constant {
         match constant.kind() {
             ast_parser::ConstantKind::N(n) => ast_typed::Constant::n(n.clone()),
-            ast_parser::ConstantKind::B(b) => ast_typed::Constant::b(*b),
+            //ast_parser::ConstantKind::B(b) => ast_typed::Constant::b(*b),
         }
         .with_loc(constant)
     }

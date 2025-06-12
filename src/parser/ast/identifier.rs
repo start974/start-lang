@@ -14,9 +14,9 @@ impl Identifier {
     }
 }
 
-impl ToString for Identifier {
-    fn to_string(&self) -> String {
-        self.name().to_string()
+impl std::fmt::Display for Identifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name())
     }
 }
 

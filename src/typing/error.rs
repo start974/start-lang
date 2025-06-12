@@ -90,7 +90,7 @@ impl ErrorReport for ErrorUnexpectedType {
                 Label::new(self.location.clone()).with_message(
                     Message::nil()
                         .text("Expect Type ")
-                        .from_pretty(&self.expected)
+                        .of_pretty(&self.expected)
                         .text(".")
                         .to_string(theme),
                 ),
@@ -98,13 +98,13 @@ impl ErrorReport for ErrorUnexpectedType {
             .with_note(
                 Message::nil()
                     .text("Expected type: ")
-                    .from_pretty(&self.expected)
+                    .of_pretty(&self.expected)
                     .to_string(theme),
             )
             .with_note(
                 Message::nil()
                     .text("Found type:     ")
-                    .from_pretty(&self.found)
+                    .of_pretty(&self.found)
                     .to_string(theme),
             )
             .finish()

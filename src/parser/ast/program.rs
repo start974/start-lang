@@ -22,11 +22,11 @@ impl Program {
         self.0.push(item);
     }
 
-    /// with item program
-    pub fn with_item(mut self, item: ProgramItem) -> Self {
-        self.add_item(item);
-        self
-    }
+/*    /// with item program*/
+    /*pub fn with_item(mut self, item: ProgramItem) -> Self {*/
+        /*self.add_item(item);*/
+        /*self*/
+    /*}*/
 
     /// iter on program items
     pub fn iter(&self) -> Iter<ProgramItem> {

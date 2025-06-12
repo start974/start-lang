@@ -1,13 +1,11 @@
-use std::rc::Rc;
-
 use super::super::error::ErrorVariableNotFound;
 use super::identifier::Identifier;
 use super::ty::{Ty, Typed, TypedMut};
+use super::TyEnv;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
-use super::{ExpressionDefinition, TyEnv};
 // ==========================================================================
 // Variable
 // ==========================================================================
@@ -43,7 +41,7 @@ impl Typed for Variable {
 
 impl Located for Variable {
     fn loc(&self) -> &Location {
-        &self.identifier.loc()
+        self.identifier.loc()
     }
 }
 
@@ -67,7 +65,7 @@ pub struct VariableEnv(TyEnv);
 impl VariableEnv {
     /// create a new type environment
     pub fn new() -> Self {
-        Self(TyEnv::new())
+       Self(TyEnv::new())
     }
 
     /// insert a type into the environment
@@ -82,5 +80,11 @@ impl VariableEnv {
             identifier: identifier.clone(),
             ty: ty.clone(),
         })
+    }
+}
+
+impl Default for VariableEnv {
+    fn default() -> Self {
+        Self::new()
     }
 }

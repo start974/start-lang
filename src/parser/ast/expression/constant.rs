@@ -7,7 +7,7 @@ pub type NConst = BigUint;
 
 pub enum ConstantKind {
     N(NConst),
-    B(bool),
+    //B(bool),
 }
 
 pub struct Constant(Loc<ConstantKind>);
@@ -18,10 +18,10 @@ impl Constant {
         Self(Loc::new(data, loc))
     }
 
-    pub fn b(v: bool, loc: Location) -> Self {
-        let data = ConstantKind::B(v);
-        Self(Loc::new(data, loc))
-    }
+    //pub fn b(v: bool, loc: Location) -> Self {
+        //let data = ConstantKind::B(v);
+        //Self(Loc::new(data, loc))
+    //}
 
     pub fn kind(&self) -> &ConstantKind {
         &self.0.data
@@ -38,7 +38,7 @@ impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self.kind() {
             ConstantKind::N(n) => theme.constant(n),
-            ConstantKind::B(b) => theme.constant(b),
+            //ConstantKind::B(b) => theme.constant(b),
         }
     }
 }

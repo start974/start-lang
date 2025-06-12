@@ -1,12 +1,11 @@
 use super::super::super::error::{ErrorUnexpectedType, ErrorVariableNotFound};
 use super::alias::Alias;
 use super::builtin::Builtin;
-use crate::typing::ast::{ExpressionDefinition, Identifier, VariableEnv};
+use crate::typing::ast::Identifier;
 use crate::utils::location::Located;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use std::collections::HashMap;
-use std::rc::Rc;
 
 // ==========================================================================
 // alias Ty
@@ -20,29 +19,29 @@ pub enum Ty {
 
 impl Ty {
     //// get map of aliases
-    pub fn aliases<'a>(&'a self) -> HashMap<Identifier, &'a Ty> {
-        fn aux<'a>(
-            ty: &'a Ty,
-            mut acc: HashMap<Identifier, &'a Ty>,
-        ) -> HashMap<Identifier, &'a Ty> {
-            match ty {
-                Ty::Alias(alias) => {
-                    acc.insert(alias.name().clone(), alias.ty());
-                    aux(alias.ty(), acc)
-                }
-                Ty::Builtin(_) => acc,
-            }
-        }
-        aux(self, HashMap::new())
-    }
+/*    pub fn aliases(&self) -> HashMap<Identifier, &'_ Ty> {*/
+        /*fn aux<'a>(*/
+            /*ty: &'a Ty,*/
+            /*mut acc: HashMap<Identifier, &'a Ty>,*/
+        /*) -> HashMap<Identifier, &'a Ty> {*/
+            /*match ty {*/
+                /*Ty::Alias(alias) => {*/
+                    /*acc.insert(alias.name().clone(), alias.ty());*/
+                    /*aux(alias.ty(), acc)*/
+                /*}*/
+                /*Ty::Builtin(_) => acc,*/
+            /*}*/
+        /*}*/
+        /*aux(self, HashMap::new())*/
+    /*}*/
 
-    /// remove alias from type
-    pub fn normalize(&self) -> Self {
-        match self {
-            Ty::Alias(alias) => alias.ty().normalize(),
-            Ty::Builtin(builtin) => Self::Builtin(builtin.clone()),
-        }
-    }
+    ///// remove alias from type
+    //pub fn normalize(&self) -> Self {
+    //match self {
+    //Ty::Alias(alias) => alias.ty().normalize(),
+    //Ty::Builtin(builtin) => Self::Builtin(builtin.clone()),
+    //}
+    //}
 
     /// type is compatible with another type
     pub fn is_compatible(&self, other: &Self) -> bool {
@@ -122,9 +121,8 @@ impl TyEnv {
 
     /// insert a type into the environment
     pub fn add(&mut self, name: Identifier, ty: Ty) {
-        match self.0.insert(name.clone(), ty) {
-            Some(_) => panic!("Identifier {name:#?} already exists in environment"),
-            None => (),
+        if self.0.insert(name.clone(), ty).is_some() {
+            panic!("Identifier {name:#?} already exists in environment")
         }
     }
 
@@ -133,5 +131,11 @@ impl TyEnv {
         self.0
             .get(identifier)
             .ok_or_else(|| ErrorVariableNotFound::new(identifier.clone()))
+    }
+}
+
+impl Default for TyEnv {
+    fn default() -> Self {
+        Self::new()
     }
 }

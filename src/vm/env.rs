@@ -31,7 +31,7 @@ impl Env {
                 let id = Identifier::from(id_ty);
                 match self.get(&id) {
                     Some(value) => value.clone(),
-                    None => panic!("Variable {} not found", id_ty.to_string()),
+                    None => panic!("Variable {} not found", id_ty),
                 }
             }
         }
@@ -40,7 +40,13 @@ impl Env {
     /// add a definition to the environment
     pub fn add_definition(&mut self, def: &ExpressionDefinition) {
         let id = Identifier::from(def.name());
-        let value = self.eval(&def.body());
+        let value = self.eval(def.body());
         self.set(id, value);
+    }
+}
+
+impl Default for Env {
+    fn default() -> Self {
+        Self::new()
     }
 }

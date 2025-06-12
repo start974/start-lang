@@ -1,5 +1,4 @@
 mod alias;
-pub use alias::Alias as TyAlias;
 pub use alias::TyAliasEnv;
 
 mod builtin;
