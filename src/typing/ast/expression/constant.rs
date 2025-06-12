@@ -1,4 +1,4 @@
-use super::super::{Ty, Typed};
+use super::super::ty::{Ty, TyBuiltin, Typed, TypedMut};
 use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -24,7 +24,7 @@ impl Constant {
     /// create natural number constant
     pub fn n(v: NConst) -> Self {
         Self {
-            ty: Ty::n(),
+            ty: Ty::Builtin(TyBuiltin::N),
             loc: UNKNOWN_LOCATION,
             kind: ConstantKind::N(v),
         }
@@ -33,7 +33,7 @@ impl Constant {
     /// create boolean constant
     pub fn b(b: bool) -> Self {
         Self {
-            ty: Ty::bool(),
+            ty: Ty::Builtin(TyBuiltin::B),
             loc: UNKNOWN_LOCATION,
             kind: ConstantKind::B(b),
         }
@@ -72,12 +72,17 @@ impl Pretty for Constant {
     }
 }
 
+pub mod sealed_ty_mut {
+    use super::*;
+    impl TypedMut for Constant {
+        fn ty_mut(&mut self) -> &mut Ty {
+            &mut self.ty
+        }
+    }
+}
+
 impl Typed for Constant {
     fn ty(&self) -> &Ty {
         &self.ty
-    }
-
-    fn ty_loc_mut(&mut self) -> &mut Location {
-        self.ty.loc_mut()
     }
 }

@@ -1,5 +1,6 @@
 use super::super::error::ErrorVariableNotFound;
-use crate::typing::ast::{Identifier, Ty, Typed};
+use super::identifier::Identifier;
+use super::ty::{Ty, Typed, TypedMut};
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -17,13 +18,18 @@ pub struct Variable {
     ty: Ty,
 }
 
+pub mod sealed_mut_ty {
+    use super::*;
+    impl TypedMut for Variable {
+        fn ty_mut(&mut self) -> &mut Ty {
+            &mut self.ty
+        }
+    }
+}
+
 impl Typed for Variable {
     fn ty(&self) -> &Ty {
         &self.ty
-    }
-
-    fn ty_loc_mut(&mut self) -> &mut Location {
-        self.ty.loc_mut()
     }
 }
 
