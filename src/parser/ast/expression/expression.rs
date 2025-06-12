@@ -5,8 +5,8 @@ use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
 pub enum ExpressionKind {
-    Const(Constant),
-    Var(Identifier),
+    Constant(Constant),
+    Variable(Identifier),
 }
 
 pub struct Expression {
@@ -20,7 +20,7 @@ impl Expression {
     /// Create a new expression with a constant
     pub fn constant(c: Constant) -> Self {
         Self {
-            kind: ExpressionKind::Const(c),
+            kind: ExpressionKind::Constant(c),
             ty: None,
         }
     }
@@ -28,7 +28,7 @@ impl Expression {
     /// Create a new expression with a variable
     pub fn var(x: Identifier) -> Self {
         Self {
-            kind: ExpressionKind::Var(x),
+            kind: ExpressionKind::Variable(x),
             ty: None,
         }
     }
@@ -58,8 +58,8 @@ impl Expression {
 impl Located for Expression {
     fn loc(&self) -> &Location {
         match &self.kind {
-            ExpressionKind::Const(c) => c.loc(),
-            ExpressionKind::Var(x) => x.loc(),
+            ExpressionKind::Constant(c) => c.loc(),
+            ExpressionKind::Variable(x) => x.loc(),
         }
     }
 }
@@ -67,8 +67,8 @@ impl Located for Expression {
 impl Pretty for Expression {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         let doc = match &self.kind {
-            ExpressionKind::Const(c) => c.pretty(theme),
-            ExpressionKind::Var(x) => theme.expr_var(&x.to_string()),
+            ExpressionKind::Constant(c) => c.pretty(theme),
+            ExpressionKind::Variable(x) => theme.expr_var(&x.to_string()),
         };
         if let Some(ty) = &self.ty {
             doc.append(Doc::space())

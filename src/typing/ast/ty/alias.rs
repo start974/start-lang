@@ -1,11 +1,11 @@
+use crate::typing::error::ErrorVariableNotFound;
 use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
 use super::super::Identifier;
 use super::ty::Ty;
-use std::collections::HashMap;
-use std::rc::Rc;
+use super::TyEnv;
 
 // ==========================================================================
 // alias Ty
@@ -15,20 +15,13 @@ pub struct Alias {
     /// name of alias
     name: Identifier,
     /// type of alias
-    ty: Rc<Ty>,
-    /// location of alias
-    loc: Location,
+    ty: Box<Ty>,
 }
 
 impl Alias {
     /// get type of alias
     pub fn ty(&self) -> &Ty {
-        self.ty.as_ref()
-    }
-
-    /// get rc type
-    pub fn rc_ty(&self) -> Rc<Ty> {
-        self.ty.clone()
+        &self.ty
     }
 
     /// name of alias
@@ -39,13 +32,13 @@ impl Alias {
 
 impl Located for Alias {
     fn loc(&self) -> &Location {
-        &self.loc
+        &self.name.loc()
     }
 }
 
 impl LocatedSet for Alias {
     fn set_loc(&mut self, loc: &impl Located) {
-        self.loc = loc.loc().clone();
+        self.name.set_loc(loc);
     }
 }
 
@@ -58,34 +51,25 @@ impl Pretty for Alias {
 // ==========================================================================
 // Type alias environment
 // ==========================================================================
-pub struct EnvTy{
-    env: HashMap<Identifier, Rc<Ty>>,
-}
+pub struct TyAliasEnv(TyEnv);
 
-impl EnvTy {
-    /// make a new type alias environment
+impl TyAliasEnv {
+    /// create type alias environment
     pub fn new() -> Self {
-        Self {
-            env: HashMap::new(),
-        }
+        TyAliasEnv(TyEnv::new())
     }
 
-    /// insert a type alias into the environment
-    pub fn insert(&mut self, name: Identifier, ty: Rc<Ty>) {
-        self.env.insert(name, ty);
+    /// add alias to environment
+    pub fn add(&mut self, name: Identifier, ty: Ty) {
+        self.0.add(name, ty)
     }
 
-    /// get a type alias by name
-    pub fn get(&self, name: &Identifier) -> Option<&Rc<Ty>> {
-        self.env.get(name)
-    }
-
-    /// make alias type
-    pub fn alias_ty(&self, name: &Identifier) -> Option<Alias> {
-        self.get(name).map(|ty| Alias {
+    /// get alias by name
+    pub fn get(&self, name: &Identifier) -> Result<Alias, ErrorVariableNotFound> {
+        let ty = self.0.get(name)?;
+        Ok(Alias {
             name: name.clone(),
-            ty: ty.clone(),
-            loc: UNKNOWN_LOCATION,
+            ty: Box::new(ty.clone()),
         })
     }
 }

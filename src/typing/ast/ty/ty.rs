@@ -1,7 +1,7 @@
-use super::super::super::error::ErrorUnexpectedType;
+use super::super::super::error::{ErrorUnexpectedType, ErrorVariableNotFound};
 use super::alias::Alias;
 use super::builtin::Builtin;
-use crate::typing::ast::Identifier;
+use crate::typing::ast::{ExpressionDefinition, Identifier, VariableEnv};
 use crate::utils::location::Located;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -20,11 +20,14 @@ pub enum Ty {
 
 impl Ty {
     //// get map of aliases
-    pub fn aliases(&self) -> HashMap<Identifier, Rc<Ty>> {
-        fn aux(ty: &Ty, mut acc: HashMap<Identifier, Rc<Ty>>) -> HashMap<Identifier, Rc<Ty>> {
+    pub fn aliases<'a>(&'a self) -> HashMap<Identifier, &'a Ty> {
+        fn aux<'a>(
+            ty: &'a Ty,
+            mut acc: HashMap<Identifier, &'a Ty>,
+        ) -> HashMap<Identifier, &'a Ty> {
             match ty {
                 Ty::Alias(alias) => {
-                    acc.insert(alias.name().clone(), alias.rc_ty());
+                    acc.insert(alias.name().clone(), alias.ty());
                     aux(alias.ty(), acc)
                 }
                 Ty::Builtin(_) => acc,
@@ -44,6 +47,18 @@ impl Ty {
     /// type is compatible with another type
     pub fn is_compatible(&self, other: &Self) -> bool {
         *self == *other
+    }
+}
+
+impl From<Builtin> for Ty {
+    fn from(builtin: Builtin) -> Self {
+        Ty::Builtin(builtin)
+    }
+}
+
+impl From<Alias> for Ty {
+    fn from(alias: Alias) -> Self {
+        Ty::Alias(alias)
     }
 }
 
@@ -97,25 +112,26 @@ pub trait Typed {
 // ==========================================================================
 // Type Environment
 // ==========================================================================
-struct TypeEnv {
-    /// map of identifiers to types
-    env: HashMap<Identifier, Ty>,
-}
+pub struct TyEnv(HashMap<Identifier, Ty>);
 
-impl TypeEnv {
+impl TyEnv {
     /// create a new type environment
     pub fn new() -> Self {
-        Self {
-            env: HashMap::new(),
-        }
-    }
-    /// insert a type into the environment
-    pub fn insert(&mut self, name: Identifier, ty: Ty) {
-        self.env.insert(name, ty);
+        Self(HashMap::new())
     }
 
-    /// get a type from the environment
-    pub fn get(&self, name: &Identifier) -> Option<&Ty> {
-        self.env.get(name)
+    /// insert a type into the environment
+    pub fn add(&mut self, name: Identifier, ty: Ty) {
+        match self.0.insert(name.clone(), ty) {
+            Some(_) => panic!("Identifier {name:#?} already exists in environment"),
+            None => (),
+        }
+    }
+
+    /// Get type of identifier
+    pub fn get(&self, identifier: &Identifier) -> Result<&Ty, ErrorVariableNotFound> {
+        self.0
+            .get(identifier)
+            .ok_or_else(|| ErrorVariableNotFound::new(identifier.clone()))
     }
 }

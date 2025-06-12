@@ -10,8 +10,8 @@ use crate::utils::theme::{Doc, Theme};
 // ==========================================================================
 
 pub enum Expression {
-    Const(Constant),
-    Var(Variable),
+    Constant(Constant),
+    Variable(Variable),
 }
 
 pub mod sealed_mut_ty {
@@ -19,8 +19,8 @@ pub mod sealed_mut_ty {
     impl TypedMut for Expression {
         fn ty_mut(&mut self) -> &mut Ty {
             match self {
-                Expression::Const(c) => c.ty_mut(),
-                Expression::Var(v) => v.ty_mut(),
+                Expression::Constant(c) => c.ty_mut(),
+                Expression::Variable(v) => v.ty_mut(),
             }
         }
     }
@@ -29,8 +29,8 @@ pub mod sealed_mut_ty {
 impl Typed for Expression {
     fn ty(&self) -> &Ty {
         match self {
-            Expression::Const(c) => c.ty(),
-            Expression::Var(v) => v.ty(),
+            Expression::Constant(c) => c.ty(),
+            Expression::Variable(v) => v.ty(),
         }
     }
 }
@@ -38,8 +38,8 @@ impl Typed for Expression {
 impl Located for Expression {
     fn loc(&self) -> &Location {
         match self {
-            Expression::Const(c) => c.loc(),
-            Expression::Var(v) => v.loc(),
+            Expression::Constant(c) => c.loc(),
+            Expression::Variable(v) => v.loc(),
         }
     }
 }
@@ -47,8 +47,8 @@ impl Located for Expression {
 impl LocatedSet for Expression {
     fn set_loc(&mut self, loc: &impl Located) {
         match self {
-            Expression::Const(c) => c.set_loc(loc),
-            Expression::Var(v) => v.set_loc(loc),
+            Expression::Constant(c) => c.set_loc(loc),
+            Expression::Variable(v) => v.set_loc(loc),
         }
     }
 }
@@ -56,8 +56,8 @@ impl LocatedSet for Expression {
 impl Pretty for Expression {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Expression::Const(c) => c.pretty(theme),
-            Expression::Var(v) => v.pretty(theme),
+            Expression::Constant(c) => c.pretty(theme),
+            Expression::Variable(v) => v.pretty(theme),
         }
     }
 }

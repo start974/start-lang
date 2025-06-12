@@ -41,15 +41,15 @@ impl Parser {
     }
 
     fn check<F>(&self, node: &Node, expect: &str, f: F) -> Result<()>
-        where F: Fn(&str, Location) -> Error
-        {
+    where
+        F: Fn(&str, Location) -> Error,
+    {
         if node.grammar_name() != expect {
             Err(f(expect, self.loc(node)))
         } else {
             Ok(())
         }
     }
-
 
     fn ident(&self, node: &Node) -> Result<Identifier> {
         self.check(node, "ident", Error::kind)?;
@@ -82,7 +82,7 @@ impl Parser {
                 let n = self.number_n(&child)?;
                 let loc = self.loc(&child);
                 Ok(Constant::n(n, loc))
-            },
+            }
             _ => Err(Error::kind("constant", self.loc(node))),
         }
     }

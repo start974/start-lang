@@ -1,12 +1,13 @@
+use std::rc::Rc;
+
 use super::super::error::ErrorVariableNotFound;
 use super::identifier::Identifier;
 use super::ty::{Ty, Typed, TypedMut};
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
-use std::rc::Rc;
 
-use super::ExpressionDefinition;
+use super::{ExpressionDefinition, TyEnv};
 // ==========================================================================
 // Variable
 // ==========================================================================
@@ -54,29 +55,25 @@ impl Pretty for Variable {
 // ==========================================================================
 // Variable Builder
 // ==========================================================================
-pub trait VariableEnv {
-    /// Add definition to builder
-    fn add_definition(&mut self, def: ExpressionDefinition);
+pub struct VariableEnv(TyEnv);
 
-    /// with definition
-    fn with_definition(mut self, def: ExpressionDefinition) -> Self
-    where
-        Self: Sized,
-    {
-        self.add_definition(def);
-        self
+impl VariableEnv {
+    /// create a new type environment
+    pub fn new() -> Self {
+        Self(TyEnv::new())
     }
 
-    /// get type of identifier
-    fn get_ty(&self, identifier: &Identifier) -> Option<&Ty>;
+    /// insert a type into the environment
+    pub fn add(&mut self, identifier: Identifier, ty: Ty) {
+        self.0.add(identifier, ty);
+    }
 
-    /// make a new variable with identifier and type
-    fn get_var(&self, identifier: &Identifier) -> Result<Variable, ErrorVariableNotFound> {
-        self.get_ty(&identifier)
-            .map(|ty| Variable {
-                identifier: identifier.clone(),
-                ty: ty.clone(),
-            })
-            .ok_or_else(|| ErrorVariableNotFound::new(identifier.clone()))
+    /// Get type of identifier
+    pub fn get(&self, identifier: &Identifier) -> Result<Variable, ErrorVariableNotFound> {
+        let ty = self.0.get(identifier)?;
+        Ok(Variable {
+            identifier: identifier.clone(),
+            ty: ty.clone(),
+        })
     }
 }
