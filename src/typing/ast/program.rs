@@ -1,8 +1,5 @@
-use super::super::error::ErrorUnexpectedType;
-use super::expression::{Expression, ExpressionDefinition};
-use super::identifier::{Identifier, IdentifierBuilder};
-use super::ty::{Ty, TyBuiltin, Typed};
-use super::variable::VariableEnv;
+use super::expression::ExpressionDefinition;
+use super::identifier::Identifier;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use std::collections::HashMap;
@@ -15,7 +12,6 @@ use std::rc::Rc;
 pub struct Program {
     env: HashMap<Rc<Identifier>, ExpressionDefinition>,
     ordered_env: Vec<Rc<Identifier>>,
-    main: Option<Expression>,
 }
 
 impl Program {
@@ -24,7 +20,6 @@ impl Program {
         Self {
             env: HashMap::new(),
             ordered_env: Vec::new(),
-            main: None,
         }
     }
 
@@ -41,22 +36,15 @@ impl Program {
         }
     }
 
-    /// set main expression
-    pub fn set_main(&mut self, expr: Expression) -> Result<(), Box<ErrorUnexpectedType>> {
-        let main_ty = Ty::Builtin(TyBuiltin::N);
-        let expr = expr.constraint_ty(main_ty)?;
-        self.main = Some(expr);
-        Ok(())
-    }
-
     /// iter on environment (without main)
     pub fn iter(&self) -> impl Iterator<Item = &ExpressionDefinition> {
         self.ordered_env.iter().map(|id| self.env.get(id).unwrap())
     }
+}
 
-    /// get main expression definition
-    pub fn get_main(&self) -> Option<&Expression> {
-        self.main.as_ref()
+impl Default for Program {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

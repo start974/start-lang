@@ -1,5 +1,5 @@
 use crate::typing::error::ErrorVariableNotFound;
-use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
+use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -24,15 +24,15 @@ impl Alias {
         &self.ty
     }
 
-    /// name of alias
-    pub fn name(&self) -> &Identifier {
-        &self.name
-    }
+    ///// name of alias
+    //pub fn name(&self) -> &Identifier {
+        //&self.name
+    //}
 }
 
 impl Located for Alias {
     fn loc(&self) -> &Location {
-        &self.name.loc()
+        self.name.loc()
     }
 }
 
@@ -71,5 +71,11 @@ impl TyAliasEnv {
             name: name.clone(),
             ty: Box::new(ty.clone()),
         })
+    }
+}
+
+impl Default for TyAliasEnv {
+    fn default() -> Self {
+        Self::new()
     }
 }

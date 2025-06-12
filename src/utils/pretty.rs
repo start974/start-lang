@@ -1,11 +1,6 @@
-use std::collections::VecDeque;
-
+use super::theme::{ColorInfo, Doc, Theme};
 use pretty::{Render, RenderAnnotated};
-
-use super::{
-    theme::{ColorInfo, Doc, Theme},
-    writer::StringPrettyWriter,
-};
+use std::collections::VecDeque;
 
 // ===========================================================================
 // Pretty Trait

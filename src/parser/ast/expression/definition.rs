@@ -43,12 +43,6 @@ impl ExpressionDefinition {
     pub fn set_ty(&mut self, ty: Ty) {
         self.ty = Some(ty);
     }
-
-    /// with type
-    pub fn with_ty(mut self, ty: Ty) -> Self {
-        self.set_ty(ty);
-        self
-    }
 }
 
 impl Located for ExpressionDefinition {

@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use super::super::ty::{Ty, TyBuiltin, Typed, TypedMut};
 use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
 use crate::utils::pretty::Pretty;
@@ -10,7 +8,7 @@ pub type NConst = BigUint;
 
 pub enum ConstantKind {
     N(NConst),
-    B(bool),
+    //B(bool),
 }
 
 pub struct Constant {
@@ -32,14 +30,14 @@ impl Constant {
         }
     }
 
-    /// create boolean constant
-    pub fn b(b: bool) -> Self {
-        Self {
-            ty: Ty::Builtin(TyBuiltin::B),
-            loc: UNKNOWN_LOCATION,
-            kind: ConstantKind::B(b),
-        }
-    }
+/*    /// create boolean constant*/
+    /*pub fn b(b: bool) -> Self {*/
+        /*Self {*/
+            /*ty: Ty::Builtin(TyBuiltin::B),*/
+            /*loc: UNKNOWN_LOCATION,*/
+            /*kind: ConstantKind::B(b),*/
+        /*}*/
+    /*}*/
 
     /// get kind of the constant
     pub fn kind(&self) -> &ConstantKind {
@@ -63,7 +61,7 @@ impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self.kind() {
             ConstantKind::N(n) => theme.constant(n),
-            ConstantKind::B(b) => theme.constant(b),
+            //ConstantKind::B(b) => theme.constant(b),
         }
     }
 }

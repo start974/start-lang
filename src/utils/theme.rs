@@ -218,8 +218,3 @@ impl AsRef<Theme> for &Theme {
         self
     }
 }
-
-pub trait ThemeGet {
-    /// get theme
-    fn theme(&self) -> &Theme;
-}

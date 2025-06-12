@@ -64,13 +64,13 @@ impl ReplCache {
     /// get content with an offset
     /// if offset is lower than buffer content is get with source (but no contain buffer)
     fn get(&self, offset: &usize) -> &str {
-        if *offset == self.source.len() {
-            &self.buffer
-        } else if *offset > self.source.len() {
-            let offset = offset - self.source.len();
-            &self.buffer[offset..]
-        } else {
-            &self.source.text()[*offset..]
+        match offset.cmp(&self.source.len()) {
+            std::cmp::Ordering::Less => &self.source.text()[*offset..],
+            std::cmp::Ordering::Equal => &self.buffer,
+            std::cmp::Ordering::Greater => {
+                let offset = offset - self.source.len();
+                &self.buffer[offset..]
+            }
         }
     }
 }
@@ -158,6 +158,12 @@ impl SourceCache {
     }
 }
 
+impl Default for SourceCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Cache<SourceId> for SourceCache {
     type Storage = String;
 
@@ -200,21 +206,6 @@ impl Location {
     /// Create a new location with the given start and end positions in the source.
     pub fn new(start: usize, end: usize, source: SourceId) -> Self {
         Self { start, end, source }
-    }
-
-    /// union of location (fail if path is different)
-    pub fn union(&self, other: &Self) -> Self {
-        if self.source != other.source {
-            panic!(
-                "Cannot union locations from different sources ({} ≠ {})",
-                self.source, other.source
-            );
-        }
-        Self {
-            source: self.source.clone(),
-            start: self.start.min(other.start),
-            end: self.end.max(other.end),
-        }
     }
 }
 

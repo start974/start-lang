@@ -42,17 +42,6 @@ impl Expression {
     pub fn ty(&self) -> &Option<Ty> {
         &self.ty
     }
-
-    /// set the type of the expression
-    pub fn set_ty(&mut self, ty: Ty) {
-        self.ty = Some(ty);
-    }
-
-    /// set the type of the expression and return self
-    pub fn with_ty(mut self, ty: Ty) -> Self {
-        self.set_ty(ty);
-        self
-    }
 }
 
 impl Located for Expression {

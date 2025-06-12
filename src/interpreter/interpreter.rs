@@ -7,7 +7,7 @@ use crate::typing::from_parser::FromParser;
 use crate::utils::error::Error;
 use crate::utils::location::{SourceCache, SourceId};
 use crate::utils::theme::Theme;
-use crate::utils::writer::{StderrErrorWriter, StderrPrettyWriter};
+use crate::utils::writer::{StderrErrorWriter, StdoutPrettyWriter};
 use crate::vm::env::Env as EnvVm;
 
 use super::error::ErrorFileRead;
@@ -83,7 +83,7 @@ impl Interpreter {
 
     /// eval program
     fn eval(&mut self, program: &typing_ast::Program) {
-        let mut printer = StderrPrettyWriter::make(&self.theme);
+        let mut printer = StdoutPrettyWriter::make(&self.theme);
         for def in program.iter() {
             self.vm_env.add_definition(def);
             if self.repl_mod {

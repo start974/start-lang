@@ -7,7 +7,7 @@ use std::hash::Hash;
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum Name {
-    Fresh,
+    //Fresh,
     Named(String),
 }
 
@@ -22,7 +22,7 @@ impl Identifier {
     /// get name of Identifier
     pub fn name(&self) -> &str {
         match &self.name {
-            Name::Fresh => &"__fresh__",
+            //Name::Fresh => &"__fresh__",
             Name::Named(s) => s,
         }
     }
@@ -33,9 +33,9 @@ impl Identifier {
     }
 }
 
-impl ToString for Identifier {
-    fn to_string(&self) -> String {
-        format!("{}_{}", self.name(), self.id())
+impl std::fmt::Display for Identifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}_{}", self.name(), self.id())
     }
 }
 
@@ -73,8 +73,8 @@ impl Hash for Identifier {
 #[derive(Debug)]
 pub struct IdentifierBuilder {
     table: std::collections::HashMap<String, usize>,
-    fresh_id: usize,
-    snapshot: Box<Option<IdentifierBuilder>>,
+    //fresh_id: usize,
+    //snapshot: Box<Option<IdentifierBuilder>>,
 }
 
 impl IdentifierBuilder {
@@ -82,30 +82,30 @@ impl IdentifierBuilder {
     pub fn new() -> Self {
         Self {
             table: std::collections::HashMap::new(),
-            fresh_id: 1,
-            snapshot: Box::new(None),
+            //fresh_id: 1,
+            //snapshot: Box::new(None),
         }
     }
 
-    /// crate fresh identifier
-    pub fn fresh(&mut self) -> Identifier {
-        let id = self.fresh_id;
-        self.fresh_id += 1;
-        Identifier {
-            name: Name::Fresh,
-            id,
-            loc: UNKNOWN_LOCATION,
-        }
-    }
+    ///// crate fresh identifier
+/*    pub fn fresh(&mut self) -> Identifier {*/
+        /*let id = self.fresh_id;*/
+        /*self.fresh_id += 1;*/
+        /*Identifier {*/
+            /*name: Name::Fresh,*/
+            /*id,*/
+            /*loc: UNKNOWN_LOCATION,*/
+        /*}*/
+    /*}*/
 
     fn identifier_id(&self, name: &str) -> Option<usize> {
         self.table
             .get(name)
             .cloned()
-            .or_else(|| match self.snapshot.as_ref() {
-                Some(builder) => builder.identifier_id(name),
-                None => None,
-            })
+/*            .or_else(|| match self.snapshot.as_ref() {*/
+                /*Some(builder) => builder.identifier_id(name),*/
+                /*None => None,*/
+            /*})*/
     }
 
     /// create a new identifier
@@ -129,17 +129,23 @@ impl IdentifierBuilder {
         }
     }
 
-    /// take a snapshot of the current state
-    pub fn snapshot(self) -> Self {
-        Self {
-            table: std::collections::HashMap::new(),
-            fresh_id: self.fresh_id,
-            snapshot: Box::new(Some(self)),
-        }
-    }
+/*    /// take a snapshot of the current state*/
+    /*pub fn snapshot(self) -> Self {*/
+        /*Self {*/
+            /*table: std::collections::HashMap::new(),*/
+            /*//fresh_id: self.fresh_id,*/
+            /*snapshot: Box::new(Some(self)),*/
+        /*}*/
+    /*}*/
 
-    /// restore the snapshot
-    pub fn restore(self) -> Self {
-        self.snapshot.expect("No snapshot to restore")
+    /*/// restore the snapshot*/
+    /*pub fn restore(self) -> Self {*/
+        /*self.snapshot.expect("No snapshot to restore")*/
+    /*}*/
+}
+
+impl Default for IdentifierBuilder {
+    fn default() -> Self {
+        Self::new()
     }
 }
