@@ -1,22 +1,25 @@
-use std::io::Write;
-
 use crate::interpreter::summary::SummaryDefinition;
 use crate::parser::{ast as parser_ast, Parser};
 use crate::typing::ast as typing_ast;
 use crate::typing::from_parser::FromParser;
-use crate::utils::error::Error;
+use crate::utils::error::{ErrorCode, ErrorPrint};
 use crate::utils::location::{SourceCache, SourceId};
+use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
-use crate::utils::writer::{StderrErrorWriter, StdoutPrettyWriter};
 use crate::vm::env::Env as EnvVm;
 
 use super::error::ErrorFileRead;
 
 pub struct Interpreter {
+    /// cache of interpreter
     cache: SourceCache,
+    /// theme used
     theme: Theme,
+    /// type checker
     typer: FromParser,
+    /// virtual machine environment
     vm_env: EnvVm,
+    /// print summary for repl
     repl_mod: bool,
 }
 
@@ -39,8 +42,11 @@ impl Interpreter {
         self.repl_mod = repl_mod;
     }
 
-    fn fail(&mut self, error: &impl Error) -> i32 {
-        StderrErrorWriter::make(&self.theme, &mut self.cache).eprint(error);
+    fn fail<E>(&mut self, error: &E) -> i32
+    where
+        E: ErrorPrint + ErrorCode,
+    {
+        error.eprint(&self.theme, &mut self.cache).unwrap();
         error.code()
     }
 
@@ -76,21 +82,22 @@ impl Interpreter {
 
     /// type check the program and return the typed program
     fn typing(&mut self, program: parser_ast::Program) -> Result<typing_ast::Program> {
-        self.typer
+        let program_typed = self.typer
             .program(&program)
-            .map_err(|error| self.fail(&error))
+            .map_err(|error| self.fail(&error))?;
+        //println!("{}", self.typer.to_string(&self.theme));
+        Ok(program_typed)
     }
 
     /// eval program
     fn eval(&mut self, program: &typing_ast::Program) {
-        let mut printer = StdoutPrettyWriter::make(&self.theme);
         for def in program.iter() {
             self.vm_env.add_definition(def);
             if self.repl_mod {
-                let _ = printer.print(&SummaryDefinition::from(def));
+                let summary = SummaryDefinition::from(def);
+                println!("{}", summary.to_string(&self.theme));
             }
         }
-        printer.flush().unwrap()
     }
 
     /// run the interpreter on the given source id

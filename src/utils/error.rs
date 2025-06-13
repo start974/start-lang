@@ -2,38 +2,6 @@ use super::location::{Located, SourceCache};
 use super::location::{Report, ReportBuilder};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
-use crate::utils::writer::StringPrettyWriter;
-
-// ===========================================================================
-// Error Writer
-// ===========================================================================
-
-pub struct ErrorWriter<C, W, T> {
-    cache: C,
-    writer: W,
-    theme: T,
-}
-
-impl<C, W, T> ErrorWriter<C, W, T> {
-    pub fn new(theme: T, writer: W, cache: C) -> Self {
-        Self {
-            cache,
-            theme,
-            writer,
-        }
-    }
-}
-impl<C, W, T> ErrorWriter<C, W, T>
-where
-    W: std::io::Write,
-    T: AsRef<Theme>,
-    C: AsMut<SourceCache>,
-{
-    /// print error with writer
-    pub fn eprint(&mut self, e: &impl ErrorWrite) {
-        e.write(self.theme.as_ref(), self.cache.as_mut(), &mut self.writer);
-    }
-}
 
 // ===========================================================================
 // Message
@@ -68,17 +36,7 @@ impl Message {
 
     /// add message from pretty
     pub fn of_pretty(self, p: &impl Pretty) -> Self {
-        let theme = Theme::default();
-        let mut writer = StringPrettyWriter::make(&theme);
-        let _ = writer.print(p);
-        self.text(writer.writer_mut().get_str())
-    }
-
-    /// string of message
-    pub fn to_string(&self, theme: &Theme) -> String {
-        let mut writer = StringPrettyWriter::make(&theme);
-        let _ = writer.print(self);
-        writer.writer_mut().get_str().to_string()
+        self.text(&p.to_string(&Theme::default()))
     }
 }
 
@@ -103,12 +61,10 @@ pub trait ErrorCode {
     fn code(&self) -> i32;
 }
 
-pub trait ErrorWrite {
+pub trait ErrorPrint {
     /// write error
-    fn write(&self, theme: &Theme, cache: &mut SourceCache, writer: &mut dyn std::io::Write);
+    fn eprint(&self, theme: &Theme, cache: &mut SourceCache) -> std::io::Result<()>;
 }
-
-pub trait Error: ErrorCode + ErrorWrite {}
 
 pub trait ErrorReport: ErrorCode + Located {
     /// finalize report
@@ -128,12 +84,12 @@ pub trait ErrorReport: ErrorCode + Located {
     }
 }
 
-impl<T> ErrorWrite for T
+impl<E> ErrorPrint for E
 where
-    T: ErrorReport,
+    E: ErrorReport,
 {
-    fn write(&self, theme: &Theme, cache: &mut SourceCache, writer: &mut dyn std::io::Write) {
-        self.report(theme).write(cache, writer).unwrap(); // Use unwrap or proper error handling
+    fn eprint(&self, theme: &Theme, cache: &mut SourceCache) -> std::io::Result<()> {
+        self.report(theme).eprint(cache)
     }
 }
 
@@ -162,8 +118,6 @@ where
     }
 }
 
-impl<E> Error for Box<E> where E: ErrorReport + ErrorCode {}
-
 // ===========================================================================
 // Error Pair
 // ===========================================================================
@@ -184,23 +138,15 @@ where
     }
 }
 
-impl<E1, E2> ErrorWrite for (E1, E2)
+impl<E1, E2> ErrorPrint for (E1, E2)
 where
-    E1: ErrorWrite,
-    E2: ErrorWrite,
+    E1: ErrorPrint,
+    E2: ErrorPrint,
 {
-    fn write(&self, theme: &Theme, cache: &mut SourceCache, writer: &mut dyn std::io::Write) {
-        self.0.write(theme, cache, writer);
-        writer.write_all(b"\n").unwrap();
-        self.1.write(theme, cache, writer);
+    fn eprint(&self, theme: &Theme, cache: &mut SourceCache) -> std::io::Result<()> {
+        self.0.eprint(theme, cache)?;
+        self.1.eprint(theme, cache)
     }
-}
-
-impl<E1, E2> Error for (E1, E2)
-where
-    E1: ErrorReport + ErrorCode,
-    E2: ErrorReport + ErrorCode,
-{
 }
 
 // ===========================================================================
@@ -221,18 +167,15 @@ where
     }
 }
 
-impl<E> ErrorWrite for Vec<E>
+impl<E> ErrorPrint for Vec<E>
 where
-    E: ErrorWrite,
+    E: ErrorPrint,
 {
-    fn write(&self, theme: &Theme, cache: &mut SourceCache, writer: &mut dyn std::io::Write) {
-        for (i, error) in self.iter().enumerate() {
-            if i > 0 {
-                writer.write_all(b"\n").unwrap();
-            }
-            error.write(theme, cache, writer);
+    fn eprint(&self, theme: &Theme, cache: &mut SourceCache) -> std::io::Result<()> {
+        for error in self {
+            error.eprint(theme, cache)?;
+            eprintln!();
         }
+        Ok(())
     }
 }
-
-impl<E> Error for Vec<E> where E: ErrorReport + ErrorCode {}

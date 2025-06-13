@@ -2,6 +2,8 @@ use super::ast::{self as ast_typed, IdentifierBuilder, Ty, TyAliasEnv, Typed, Va
 use super::error::ErrorFromParser;
 use crate::parser::ast as ast_parser;
 use crate::utils::location::LocatedSet;
+use crate::utils::pretty::Pretty;
+use crate::utils::theme::{Doc, Theme};
 
 pub struct FromParser {
     var_env: VariableEnv,
@@ -137,5 +139,23 @@ impl FromParser {
 impl Default for FromParser {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Pretty for FromParser {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::nil()
+            .append(Doc::line_())
+            .append(Doc::text("Env var:"))
+            .append(Doc::line_())
+            .append(self.var_env.pretty(theme))
+            .append(Doc::line_())
+            .append(Doc::text("Env ty alias:"))
+            .append(Doc::line_())
+            .append(self.ty_alias.pretty(theme))
+            .append(Doc::line_())
+            .append(Doc::text("Identifier Builder:"))
+            .append(Doc::line_())
+            .append(self.id_builder.pretty(theme))
     }
 }
