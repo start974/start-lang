@@ -19,20 +19,20 @@ pub enum Ty {
 
 impl Ty {
     //// get map of aliases
-/*    pub fn aliases(&self) -> HashMap<Identifier, &'_ Ty> {*/
-        /*fn aux<'a>(*/
-            /*ty: &'a Ty,*/
-            /*mut acc: HashMap<Identifier, &'a Ty>,*/
-        /*) -> HashMap<Identifier, &'a Ty> {*/
-            /*match ty {*/
-                /*Ty::Alias(alias) => {*/
-                    /*acc.insert(alias.name().clone(), alias.ty());*/
-                    /*aux(alias.ty(), acc)*/
-                /*}*/
-                /*Ty::Builtin(_) => acc,*/
-            /*}*/
-        /*}*/
-        /*aux(self, HashMap::new())*/
+    /*    pub fn aliases(&self) -> HashMap<Identifier, &'_ Ty> {*/
+    /*fn aux<'a>(*/
+    /*ty: &'a Ty,*/
+    /*mut acc: HashMap<Identifier, &'a Ty>,*/
+    /*) -> HashMap<Identifier, &'a Ty> {*/
+    /*match ty {*/
+    /*Ty::Alias(alias) => {*/
+    /*acc.insert(alias.name().clone(), alias.ty());*/
+    /*aux(alias.ty(), acc)*/
+    /*}*/
+    /*Ty::Builtin(_) => acc,*/
+    /*}*/
+    /*}*/
+    /*aux(self, HashMap::new())*/
     /*}*/
 
     ///// remove alias from type
@@ -131,6 +131,11 @@ impl TyEnv {
         self.0
             .get(identifier)
             .ok_or_else(|| ErrorVariableNotFound::new(identifier.clone()))
+    }
+
+    /// iter on the environment
+    pub fn iter(&self) -> impl Iterator<Item = (&Identifier, &Ty)> {
+        self.0.iter()
     }
 }
 

@@ -1,6 +1,7 @@
 use super::ast::{Identifier, Ty};
-use crate::utils::error::{Error, ErrorCode, ErrorReport, Message};
+use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder};
+use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
 use ariadne::Label;
 
@@ -49,8 +50,6 @@ impl ErrorReport for ErrorVariableNotFound {
         Message::nil().text("Variable not found.")
     }
 }
-
-impl Error for ErrorVariableNotFound {}
 
 // =======================================================================
 // Error Unexpected Type
@@ -166,5 +165,3 @@ impl ErrorReport for ErrorFromParser {
         }
     }
 }
-
-impl Error for ErrorFromParser {}

@@ -26,7 +26,7 @@ impl Alias {
 
     ///// name of alias
     //pub fn name(&self) -> &Identifier {
-        //&self.name
+    //&self.name
     //}
 }
 
@@ -77,5 +77,29 @@ impl TyAliasEnv {
 impl Default for TyAliasEnv {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Pretty for TyAliasEnv {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::nil()
+            .append(Doc::text("{"))
+            .append(Doc::space())
+            .append(Doc::group(
+                Doc::intersperse(
+                    self.0.iter().map(|(name, ty)| {
+                        Doc::group(
+                            Doc::nil()
+                                .append(theme.ty_var(name))
+                                .append(Doc::space())
+                                .append(theme.op_eq_def())
+                                .append(Doc::space())
+                                .append(ty.pretty(theme)),
+                        )
+                    }),
+                    Doc::line_(),
+                )
+            ))
+            .append(Doc::text("}"))
     }
 }

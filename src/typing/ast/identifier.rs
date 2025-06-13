@@ -1,4 +1,4 @@
-use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
+use crate::utils::{location::{Located, LocatedSet, Location, UNKNOWN_LOCATION}, pretty::Pretty, theme::{Doc, Theme}};
 use std::hash::Hash;
 
 // ==========================================================================
@@ -121,7 +121,7 @@ impl IdentifierBuilder {
 
     /// get identifier by name
     pub fn get(&self, name: &str) -> Identifier {
-        let id = self.identifier_id(name).unwrap_or(0);
+        let id = self.identifier_id(name).map(|id| id - 1).unwrap_or(0);
         Identifier {
             name: Name::Named(name.to_string()),
             id,
@@ -147,5 +147,27 @@ impl IdentifierBuilder {
 impl Default for IdentifierBuilder {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Pretty for IdentifierBuilder {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::nil()
+            .append(Doc::text("{"))
+            .append(Doc::space())
+            .append(Doc::group(Doc::intersperse(
+                self.table.iter().map(|(name, id)| {
+                    Doc::group(
+                        Doc::nil()
+                            .append(theme.expr_var(name))
+                            .append(Doc::space())
+                            .append(theme.op_typed_by())
+                            .append(Doc::space())
+                            .append(theme.constant(id)),
+                    )
+                }),
+                Doc::text(",").append(Doc::space()),
+            )))
+            .append(Doc::text("}"))
     }
 }

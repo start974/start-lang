@@ -8,56 +8,25 @@ use std::collections::VecDeque;
 pub trait Pretty: Sized {
     /// pretty print
     fn pretty(&self, theme: &Theme) -> Doc<'_>;
-}
 
-// ===========================================================================
-// Pretty Writer
-// ===========================================================================
-pub struct PrettyWriter<W, T> {
-    writer: W,
-    theme: T,
-}
-
-impl<W, T> std::io::Write for PrettyWriter<W, T>
-where
-    W: std::io::Write,
-{
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.writer.write(buf)
-    }
-    fn flush(&mut self) -> std::io::Result<()> {
-        self.writer.flush()
-    }
-}
-
-impl<W, T> PrettyWriter<W, T>
-where
-    W: std::io::Write,
-    T: AsRef<Theme>,
-{
-    /// print object with pretty and theme
-    pub fn print(&mut self, o: &impl Pretty) -> std::io::Result<()> {
-        let theme = self.theme.as_ref();
-        o.pretty(theme)
-            .render_raw(theme.width, &mut StreamColored::new(&mut self.writer))?;
-        self.writer.flush()
+    /// write with fmt
+    fn fmt(&self, theme: &Theme, fmt: &mut impl std::fmt::Write) -> std::fmt::Result {
+        let mut stream = StreamColored::new(fmt);
+        self.pretty(theme).render_raw(theme.width, &mut stream)
     }
 
-    pub fn writer_mut(&mut self) -> &mut W {
-        &mut self.writer
-    }
-}
-
-impl<W, T> PrettyWriter<W, T> {
-    pub fn new(theme: T, writer: W) -> Self {
-        Self { writer, theme }
+    /// get colored string
+    fn to_string(&self, theme: &Theme) -> String {
+        let mut buffer = String::new();
+        self.fmt(theme, &mut buffer).unwrap();
+        buffer
     }
 }
 
 // ===========================================================================
 // Stream Colored
 // ===========================================================================
-pub struct StreamColored<'w, W> {
+struct StreamColored<'w, W> {
     upstream: &'w mut W,
     color_info_stack: VecDeque<ColorInfo>,
 }
@@ -73,31 +42,30 @@ impl<'w, W> StreamColored<'w, W> {
 
 impl<W> Render for StreamColored<'_, W>
 where
-    W: std::io::Write,
+    W: std::fmt::Write,
 {
-    type Error = std::io::Error;
+    type Error = std::fmt::Error;
 
     fn write_str_all(&mut self, s: &str) -> Result<(), Self::Error> {
         if let Some(color_info) = self.color_info_stack.front() {
-            let s = format!("{}", color_info.colorize(s));
-            self.upstream.write_all(s.as_bytes())
+            write!(self.upstream, "{}", color_info.colorize(s))
         } else {
-            Ok(())
+            self.upstream.write_str(s)
         }
     }
 
     fn write_str(&mut self, s: &str) -> Result<usize, Self::Error> {
-        self.write_str_all(s).map(|_| s.len())
+        self.write_str_all(s).map(|()| s.len())
     }
 
     fn fail_doc(&self) -> Self::Error {
-        Self::Error::new(std::io::ErrorKind::Other, "fail to write doc")
+        std::fmt::Error
     }
 }
 
 impl<W> RenderAnnotated<'_, ColorInfo> for StreamColored<'_, W>
 where
-    W: std::io::Write,
+    W: std::fmt::Write,
 {
     fn push_annotation(&mut self, annot: &ColorInfo) -> Result<(), Self::Error> {
         self.color_info_stack.push_front(annot.clone());
@@ -105,7 +73,9 @@ where
     }
 
     fn pop_annotation(&mut self) -> Result<(), Self::Error> {
-        self.color_info_stack.pop_front();
-        Ok(())
+        self.color_info_stack
+            .pop_front()
+            .map(|_| ())
+            .ok_or_else(|| self.fail_doc())
     }
 }

@@ -65,7 +65,7 @@ pub struct VariableEnv(TyEnv);
 impl VariableEnv {
     /// create a new type environment
     pub fn new() -> Self {
-       Self(TyEnv::new())
+        Self(TyEnv::new())
     }
 
     /// insert a type into the environment
@@ -86,5 +86,27 @@ impl VariableEnv {
 impl Default for VariableEnv {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Pretty for VariableEnv {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::nil()
+            .append(Doc::text("{"))
+            .append(Doc::space())
+            .append(Doc::group(Doc::intersperse(
+                self.0.iter().map(|(name, ty)| {
+                    Doc::group(
+                        Doc::nil()
+                            .append(theme.expr_var(name))
+                            .append(Doc::space())
+                            .append(theme.op_typed_by())
+                            .append(Doc::space())
+                            .append(ty.pretty(theme)),
+                    )
+                }),
+                Doc::text(",").append(Doc::space()),
+            )))
+            .append(Doc::text("}"))
     }
 }

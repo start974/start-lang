@@ -1,7 +1,8 @@
 use ariadne::Label;
 
-use crate::utils::error::{self, ErrorCode, ErrorReport, Message};
+use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder};
+use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
 
 // =======================================================================
@@ -86,5 +87,3 @@ impl ErrorReport for Error {
             .text(".")
     }
 }
-
-impl error::Error for Error {}
