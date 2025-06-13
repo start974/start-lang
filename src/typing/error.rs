@@ -1,4 +1,4 @@
-use super::ast::{Identifier, Ty};
+use super::ast::{Identifier, Type};
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder};
 use crate::utils::pretty::Pretty;
@@ -55,13 +55,13 @@ impl ErrorReport for ErrorVariableNotFound {
 // Error Unexpected Type
 // =======================================================================
 pub struct ErrorUnexpectedType {
-    expected: Ty,
-    found: Ty,
+    expected: Type,
+    found: Type,
     location: Location,
 }
 
 impl ErrorUnexpectedType {
-    pub fn new(expected: &Ty, found: &Ty, location: &Location) -> Self {
+    pub fn new(expected: &Type, found: &Type, location: &Location) -> Self {
         Self {
             expected: expected.clone(),
             found: found.clone(),

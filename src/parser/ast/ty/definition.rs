@@ -1,51 +1,20 @@
+use super::super::identifier::Identifier;
+use super::super::ty::Type;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
-use super::identifier::Identifier;
-
-// ==========================================================================
-// Type
-// ==========================================================================
-/// constant types
-pub enum Ty {
-    Var(Identifier),
-}
-
-impl Ty {
-    /// make variable type
-    pub fn var(ident: Identifier) -> Self {
-        Self::Var(ident)
-    }
-}
-
-impl Located for Ty {
-    fn loc(&self) -> &Location {
-        match self {
-            Ty::Var(ident) => ident.loc(),
-        }
-    }
-}
-
-impl Pretty for Ty {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        match self {
-            Ty::Var(ident) => theme.ty_var(ident),
-        }
-    }
-}
-
 // ==========================================================================
 // Definition Type
 // ==========================================================================
-pub struct TyDefinition {
+pub struct Definition {
     name: Identifier,
-    ty: Ty,
+    ty: Type,
 }
 
-impl TyDefinition {
+impl Definition {
     /// make a new type definition
-    pub fn new(name: Identifier, ty: Ty) -> Self {
+    pub fn new(name: Identifier, ty: Type) -> Self {
         Self { name, ty }
     }
 
@@ -55,19 +24,19 @@ impl TyDefinition {
     }
 
     /// get type of type definition
-    pub fn ty(&self) -> &Ty {
+    pub fn ty(&self) -> &Type {
         &self.ty
     }
 }
 
-impl Located for TyDefinition {
+impl Located for Definition {
     /// location is at name of definition
     fn loc(&self) -> &Location {
         self.name.loc()
     }
 }
 
-impl Pretty for TyDefinition {
+impl Pretty for Definition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::group(
             Doc::nil()

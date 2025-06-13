@@ -1,5 +1,5 @@
 use super::super::identifier::Identifier;
-use super::super::ty::{Ty, Typed, TypedMut};
+use super::super::ty::{Type, Typed, TypedMut};
 use super::Expression;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
@@ -46,13 +46,13 @@ impl LocatedSet for Definition {
 pub mod sealed_mut_ty {
     use super::*;
     impl TypedMut for Definition {
-        fn ty_mut(&mut self) -> &mut Ty {
+        fn ty_mut(&mut self) -> &mut Type {
             self.body.ty_mut()
         }
     }
 }
 impl Typed for Definition {
-    fn ty(&self) -> &Ty {
+    fn ty(&self) -> &Type {
         self.body.ty()
     }
 }

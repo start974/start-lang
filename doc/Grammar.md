@@ -19,18 +19,12 @@ number :=
 ## Command
 ```
 command :=
-| ("Definition" | "Def") definition
+| ("Definition" | "Def") expr_definition
+| ("Type" | "Ty") type_definition
+| ("Eval" | "$") expr
 | ("Grammar" | "Gram") grammar
 | ("TypeOf" | "?:") expr
-| ("Eval" | "$") expr
 
-```
-
-## Definition
-```
-definition :=
-  ident [type_restr] ":=" expr
-  "Type" ident ":=" type
 ```
 
 ### Expression
@@ -46,7 +40,9 @@ type_restr := ":" type
 
 ### Type
 ```
-type_def := ident ":=" type
+type_definition := ident ":=" type
+
+type := ident
 ```
 
 ## Grammar
