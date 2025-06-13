@@ -1,11 +1,9 @@
+use super::super::Identifier;
+use super::{TypeEnv, Type, Typed};
 use crate::typing::error::ErrorVariableNotFound;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
-
-use super::super::Identifier;
-use super::ty::Ty;
-use super::TyEnv;
 
 // ==========================================================================
 // alias Ty
@@ -15,19 +13,13 @@ pub struct Alias {
     /// name of alias
     name: Identifier,
     /// type of alias
-    ty: Box<Ty>,
+    ty: Box<Type>,
 }
 
-impl Alias {
-    /// get type of alias
-    pub fn ty(&self) -> &Ty {
+impl Typed for Alias {
+    fn ty(&self) -> &Type {
         &self.ty
     }
-
-    ///// name of alias
-    //pub fn name(&self) -> &Identifier {
-    //&self.name
-    //}
 }
 
 impl Located for Alias {
@@ -51,16 +43,16 @@ impl Pretty for Alias {
 // ==========================================================================
 // Type alias environment
 // ==========================================================================
-pub struct TyAliasEnv(TyEnv);
+pub struct TypeAliasEnv(TypeEnv);
 
-impl TyAliasEnv {
+impl TypeAliasEnv {
     /// create type alias environment
     pub fn new() -> Self {
-        TyAliasEnv(TyEnv::new())
+        TypeAliasEnv(TypeEnv::new())
     }
 
     /// add alias to environment
-    pub fn add(&mut self, name: Identifier, ty: Ty) {
+    pub fn add(&mut self, name: Identifier, ty: Type) {
         self.0.add(name, ty)
     }
 
@@ -74,32 +66,30 @@ impl TyAliasEnv {
     }
 }
 
-impl Default for TyAliasEnv {
+impl Default for TypeAliasEnv {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Pretty for TyAliasEnv {
+impl Pretty for TypeAliasEnv {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
             .append(Doc::text("{"))
             .append(Doc::space())
-            .append(Doc::group(
-                Doc::intersperse(
-                    self.0.iter().map(|(name, ty)| {
-                        Doc::group(
-                            Doc::nil()
-                                .append(theme.ty_var(name))
-                                .append(Doc::space())
-                                .append(theme.op_eq_def())
-                                .append(Doc::space())
-                                .append(ty.pretty(theme)),
-                        )
-                    }),
-                    Doc::line_(),
-                )
-            ))
+            .append(Doc::group(Doc::intersperse(
+                self.0.iter().map(|(name, ty)| {
+                    Doc::group(
+                        Doc::nil()
+                            .append(theme.ty_var(name))
+                            .append(Doc::space())
+                            .append(theme.op_eq_def())
+                            .append(Doc::space())
+                            .append(ty.pretty(theme)),
+                    )
+                }),
+                Doc::line_(),
+            )))
             .append(Doc::text("}"))
     }
 }

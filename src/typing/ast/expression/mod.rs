@@ -1,9 +1,7 @@
 mod constant;
+mod definition;
+mod expression;
 pub use constant::Constant;
 pub use constant::ConstantKind;
-
-mod expression;
-pub use expression::Expression;
-
-mod definition;
 pub use definition::Definition as ExpressionDefinition;
+pub use expression::Expression;

@@ -1,4 +1,4 @@
-use super::super::{Identifier, Ty};
+use super::super::{Identifier, Type};
 use super::Expression;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
@@ -8,13 +8,13 @@ use crate::utils::theme::{Doc, Theme};
 // Expression Definition
 // ==========================================================
 
-pub struct ExpressionDefinition {
+pub struct Definition {
     name: Identifier,
     body: Expression,
-    ty: Option<Ty>,
+    ty: Option<Type>,
 }
 
-impl ExpressionDefinition {
+impl Definition {
     /// Create a new expression definition
     pub fn new(name: Identifier, body: Expression) -> Self {
         Self {
@@ -35,24 +35,24 @@ impl ExpressionDefinition {
     }
 
     /// Get the type of the expression definition
-    pub fn ty(&self) -> &Option<Ty> {
+    pub fn ty(&self) -> &Option<Type> {
         &self.ty
     }
 
     /// Set type
-    pub fn set_ty(&mut self, ty: Ty) {
+    pub fn set_ty(&mut self, ty: Type) {
         self.ty = Some(ty);
     }
 }
 
-impl Located for ExpressionDefinition {
+impl Located for Definition {
     /// location is at name of definition
     fn loc(&self) -> &Location {
         self.name.loc()
     }
 }
 
-impl Pretty for ExpressionDefinition {
+impl Pretty for Definition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         let doc_ty = match &self.ty {
             Some(ty) => Doc::nil()

@@ -1,4 +1,4 @@
-use super::super::ty::{Ty, Typed, TypedMut};
+use super::super::ty::{Type, Typed, TypedMut};
 use super::super::variable::Variable;
 use super::constant::Constant;
 use crate::utils::location::{Located, LocatedSet, Location};
@@ -17,7 +17,7 @@ pub enum Expression {
 pub mod sealed_mut_ty {
     use super::*;
     impl TypedMut for Expression {
-        fn ty_mut(&mut self) -> &mut Ty {
+        fn ty_mut(&mut self) -> &mut Type {
             match self {
                 Expression::Constant(c) => c.ty_mut(),
                 Expression::Variable(v) => v.ty_mut(),
@@ -27,7 +27,7 @@ pub mod sealed_mut_ty {
 }
 
 impl Typed for Expression {
-    fn ty(&self) -> &Ty {
+    fn ty(&self) -> &Type {
         match self {
             Expression::Constant(c) => c.ty(),
             Expression::Variable(v) => v.ty(),

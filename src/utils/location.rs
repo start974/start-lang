@@ -207,6 +207,17 @@ impl Location {
     pub fn new(start: usize, end: usize, source: SourceId) -> Self {
         Self { start, end, source }
     }
+
+    pub fn union(&self, other: &Location) -> Location {
+        if self.source != other.source {
+            panic!("Cannot union locations from different sources");
+        }
+        Location {
+            start: self.start.min(other.start),
+            end: self.end.max(other.end),
+            source: self.source.clone(),
+        }
+    }
 }
 
 pub const UNKNOWN_LOCATION: Location = Location {

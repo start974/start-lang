@@ -1,10 +1,10 @@
-use crate::interpreter::summary::SummaryDefinition;
-use crate::parser::{ast as parser_ast, Parser};
-use crate::typing::ast as typing_ast;
+//use crate::interpreter::summary::SummaryDefinition;
+//use crate::parser::{ast as parser_ast};
+//use crate::typing::ast as typing_ast;
 use crate::typing::from_parser::FromParser;
 use crate::utils::error::{ErrorCode, ErrorPrint};
 use crate::utils::location::{SourceCache, SourceId};
-use crate::utils::pretty::Pretty;
+//use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
 use crate::vm::env::Env as EnvVm;
 
@@ -15,6 +15,8 @@ pub struct Interpreter {
     cache: SourceCache,
     /// theme used
     theme: Theme,
+    /// parser
+    //parser: Parser,
     /// type checker
     typer: FromParser,
     /// virtual machine environment
@@ -74,37 +76,39 @@ impl Interpreter {
         self.cache.last_repl_source_id()
     }
 
-    /// parse source code and return the program
-    fn parse(&mut self, source_id: SourceId) -> Result<parser_ast::Program> {
-        let parser = Parser::new(&self.cache, source_id);
-        parser.parse().map_err(|error| self.fail(&error))
-    }
+/*    /// parse source code and return the program*/
+    /*fn parse(&mut self, source_id: SourceId) -> Result<Command> {*/
+        /*let parser = Parser::new(&self.cache, source_id);*/
+        /*parser.parse().map_err(|error| self.fail(&error))*/
+    /*}*/
 
-    /// type check the program and return the typed program
-    fn typing(&mut self, program: parser_ast::Program) -> Result<typing_ast::Program> {
-        let program_typed = self.typer
-            .program(&program)
-            .map_err(|error| self.fail(&error))?;
-        //println!("{}", self.typer.to_string(&self.theme));
-        Ok(program_typed)
-    }
+/*    /// type check the program and return the typed program*/
+    /*fn typing(&mut self, program: parser_ast::Program) -> Result<typing_ast::Program> {*/
+        /*let program_typed = self.typer*/
+            /*.program(&program)*/
+            /*.map_err(|error| self.fail(&error))?;*/
+        /*//println!("{}", self.typer.to_string(&self.theme));*/
+        /*Ok(program_typed)*/
+    /*}*/
 
-    /// eval program
-    fn eval(&mut self, program: &typing_ast::Program) {
-        for def in program.iter() {
-            self.vm_env.add_definition(def);
-            if self.repl_mod {
-                let summary = SummaryDefinition::from(def);
-                println!("{}", summary.to_string(&self.theme));
-            }
-        }
-    }
+    /*/// eval program*/
+    /*fn eval(&mut self, program: &typing_ast::Program) {*/
+        /*for def in program.iter() {*/
+            /*self.vm_env.add_definition(def);*/
+            /*if self.repl_mod {*/
+                /*let summary = SummaryDefinition::from(def);*/
+                /*println!("{}", summary.to_string(&self.theme));*/
+            /*}*/
+        /*}*/
+    /*}*/
 
     /// run the interpreter on the given source id
     pub fn run(&mut self, source_id: SourceId) -> Result<()> {
-        let program_parse = self.parse(source_id)?;
-        let program_typed = self.typing(program_parse)?;
-        self.eval(&program_typed);
-        Ok(())
+        // parse loop
+        todo!();
+        //let program_parse = self.parse(source_id)?;
+        //let program_typed = self.typing(program_parse)?;
+        //self.eval(&program_typed);
+        //Ok(())
     }
 }

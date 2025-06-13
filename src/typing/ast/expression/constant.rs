@@ -1,4 +1,4 @@
-use super::super::ty::{Ty, TyBuiltin, Typed, TypedMut};
+use super::super::ty::{Type, TypeBuiltin, Typed, TypedMut};
 use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -13,7 +13,7 @@ pub enum ConstantKind {
 
 pub struct Constant {
     /// type of constant
-    ty: Ty,
+    ty: Type,
     /// location of the constant
     loc: Location,
     /// kind of the constant
@@ -24,19 +24,19 @@ impl Constant {
     /// create natural number constant
     pub fn n(v: NConst) -> Self {
         Self {
-            ty: Ty::Builtin(TyBuiltin::N),
+            ty: Type::Builtin(TypeBuiltin::N),
             loc: UNKNOWN_LOCATION,
             kind: ConstantKind::N(v),
         }
     }
 
-/*    /// create boolean constant*/
+    /*    /// create boolean constant*/
     /*pub fn b(b: bool) -> Self {*/
-        /*Self {*/
-            /*ty: Ty::Builtin(TyBuiltin::B),*/
-            /*loc: UNKNOWN_LOCATION,*/
-            /*kind: ConstantKind::B(b),*/
-        /*}*/
+    /*Self {*/
+    /*ty: Ty::Builtin(TyBuiltin::B),*/
+    /*loc: UNKNOWN_LOCATION,*/
+    /*kind: ConstantKind::B(b),*/
+    /*}*/
     /*}*/
 
     /// get kind of the constant
@@ -69,14 +69,14 @@ impl Pretty for Constant {
 pub mod sealed_ty_mut {
     use super::*;
     impl TypedMut for Constant {
-        fn ty_mut(&mut self) -> &mut Ty {
+        fn ty_mut(&mut self) -> &mut Type {
             &mut self.ty
         }
     }
 }
 
 impl Typed for Constant {
-    fn ty(&self) -> &Ty {
+    fn ty(&self) -> &Type {
         &self.ty
     }
 }

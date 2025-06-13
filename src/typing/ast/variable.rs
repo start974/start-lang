@@ -1,7 +1,7 @@
 use super::super::error::ErrorVariableNotFound;
 use super::identifier::Identifier;
-use super::ty::{Ty, Typed, TypedMut};
-use super::TyEnv;
+use super::ty::{Type, Typed, TypedMut};
+use super::TypeEnv;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -14,7 +14,7 @@ pub struct Variable {
     /// identifier of the variable
     identifier: Identifier,
     /// type of the variable
-    ty: Ty,
+    ty: Type,
 }
 
 impl Variable {
@@ -27,14 +27,14 @@ impl Variable {
 pub mod sealed_mut_ty {
     use super::*;
     impl TypedMut for Variable {
-        fn ty_mut(&mut self) -> &mut Ty {
+        fn ty_mut(&mut self) -> &mut Type {
             &mut self.ty
         }
     }
 }
 
 impl Typed for Variable {
-    fn ty(&self) -> &Ty {
+    fn ty(&self) -> &Type {
         &self.ty
     }
 }
@@ -60,16 +60,16 @@ impl Pretty for Variable {
 // ==========================================================================
 // Variable Builder
 // ==========================================================================
-pub struct VariableEnv(TyEnv);
+pub struct VariableEnv(TypeEnv);
 
 impl VariableEnv {
     /// create a new type environment
     pub fn new() -> Self {
-        Self(TyEnv::new())
+        Self(TypeEnv::new())
     }
 
     /// insert a type into the environment
-    pub fn add(&mut self, identifier: Identifier, ty: Ty) {
+    pub fn add(&mut self, identifier: Identifier, ty: Type) {
         self.0.add(identifier, ty);
     }
 

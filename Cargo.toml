@@ -11,6 +11,7 @@ pretty_assertions = "1.4.0"
 
 [dependencies]
 ariadne = { version = "0.5.1", features = ["auto-color"] }
+chumsky = "0.10.1"
 color-print = "0.3.6"
 colored = "2.1.0"
 lazy_static = "1.5.0"

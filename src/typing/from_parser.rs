@@ -1,4 +1,4 @@
-use super::ast::{self as ast_typed, IdentifierBuilder, Ty, TyAliasEnv, Typed, VariableEnv};
+use super::ast::{self as ast_typed, IdentifierBuilder, Type, TypeAliasEnv, Typed, VariableEnv};
 use super::error::ErrorFromParser;
 use crate::parser::ast as ast_parser;
 use crate::utils::location::LocatedSet;
@@ -7,7 +7,7 @@ use crate::utils::theme::{Doc, Theme};
 
 pub struct FromParser {
     var_env: VariableEnv,
-    ty_alias: TyAliasEnv,
+    ty_alias: TypeAliasEnv,
     id_builder: IdentifierBuilder,
 }
 
@@ -19,7 +19,7 @@ impl FromParser {
     pub fn new() -> Self {
         Self {
             var_env: VariableEnv::new(),
-            ty_alias: TyAliasEnv::new(),
+            ty_alias: TypeAliasEnv::new(),
             id_builder: IdentifierBuilder::new(),
         }
     }
@@ -35,33 +35,31 @@ impl FromParser {
 
     /// convert expression
     pub fn expression(&self, expression: &ast_parser::Expression) -> Result<ast_typed::Expression> {
-        let expr = match expression.kind() {
-            ast_parser::ExpressionKind::Constant(c) => {
+        match expression {
+            ast_parser::Expression::Constant(c) => {
                 let c_ty = self.constant(c);
-                ast_typed::Expression::Constant(c_ty)
+                Ok(ast_typed::Expression::Constant(c_ty))
             }
-            ast_parser::ExpressionKind::Variable(x) => {
+            ast_parser::Expression::Variable(x) => {
                 let id = self.id_builder.get(x.name()).with_loc(x);
                 let var = self.var_env.get(&id).map_err(Error::from)?;
-                ast_typed::Expression::Variable(var)
+                Ok(ast_typed::Expression::Variable(var))
             }
-        }
-        .with_loc(expression);
-        match expression.ty() {
-            Some(ty) => {
-                let ty = self.ty(ty)?;
-                expr.constraint_ty(ty).map_err(Error::from)
+            ast_parser::Expression::TypeRestriction(ty_restr) => {
+                // TODO: make multiple error
+                let expr = self.expression(ty_restr.expression())?;
+                let ty = self.ty(ty_restr.ty())?;
+                expr.restrict_ty(ty).map_err(Error::from)
             }
-            None => Ok(expr),
         }
     }
 
     /// convert typ
-    pub fn ty(&self, ty: &ast_parser::Ty) -> Result<ast_typed::Ty> {
+    pub fn ty(&self, ty: &ast_parser::Type) -> Result<ast_typed::Type> {
         match ty {
-            ast_parser::Ty::Var(ident) => {
+            ast_parser::Type::Var(ident) => {
                 let id = self.id_builder.get(ident.name()).with_loc(ident);
-                self.ty_alias.get(&id).map_err(Error::from).map(Ty::from)
+                self.ty_alias.get(&id).map_err(Error::from).map(Type::from)
             }
         }
     }
@@ -82,7 +80,7 @@ impl FromParser {
                 self.var_env.add(name.clone(), ty.clone());
                 let body = self.expression(definition.body())?;
                 ast_typed::ExpressionDefinition::new(name, body)
-                    .constraint_ty(ty)
+                    .restrict_ty(ty)
                     .map_err(Error::from)
             }
             None => {
@@ -94,7 +92,7 @@ impl FromParser {
     }
 
     /// add ty definition
-    pub fn ty_definition(&mut self, definition: &ast_parser::TyDefinition) -> Result<()> {
+    pub fn ty_definition(&mut self, definition: &ast_parser::TypeDefinition) -> Result<()> {
         let name_parse = definition.name();
         let name = self
             .id_builder
@@ -103,36 +101,6 @@ impl FromParser {
         let ty = self.ty(definition.ty())?;
         self.ty_alias.add(name.clone(), ty.clone());
         Ok(())
-    }
-
-    /// convert program from parser to typed
-    pub fn program(
-        &mut self,
-        program: &ast_parser::Program,
-    ) -> Result<ast_typed::Program, Vec<Error>> {
-        let mut errors = Vec::new();
-        let mut program_typed = ast_typed::Program::new();
-        for item in program.iter() {
-            match item {
-                ast_parser::ProgramItem::TyDef(def) => {
-                    self.ty_definition(def).unwrap_or_else(|e| errors.push(e))
-                }
-                ast_parser::ProgramItem::ExprDef(def) => match self.expression_definition(def) {
-                    Ok(def) => {
-                        let def_name = def.name().clone();
-                        program_typed = program_typed
-                            .with_definition(def)
-                            .unwrap_or_else(|| panic!("Definition {:#?} already add.", def_name))
-                    }
-                    Err(e) => errors.push(e),
-                },
-            }
-        }
-        if errors.is_empty() {
-            Ok(program_typed)
-        } else {
-            Err(errors)
-        }
     }
 }
 
