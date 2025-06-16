@@ -1,3 +1,8 @@
+use super::identifier::Identifier;
+use crate::utils::location::{Located, Location};
+use crate::utils::pretty::Pretty;
+use crate::utils::theme::{Doc, Theme};
+
 mod constant;
 mod definition;
 mod type_restriction;
@@ -5,11 +10,6 @@ mod type_restriction;
 pub use constant::*;
 pub use definition::Definition as ExpressionDefinition;
 pub use type_restriction::*;
-
-use super::identifier::Identifier;
-use crate::utils::location::{Located, Location};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
 
 pub enum Expression {
     Constant(Constant),

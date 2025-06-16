@@ -14,7 +14,7 @@ pub enum Value {
 impl Pretty for Value {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Self::Constant(c) => c.pretty(theme)
+            Self::Constant(c) => c.pretty(theme),
         }
     }
 }

@@ -76,30 +76,30 @@ impl Interpreter {
         self.cache.last_repl_source_id()
     }
 
-/*    /// parse source code and return the program*/
+    /*    /// parse source code and return the program*/
     /*fn parse(&mut self, source_id: SourceId) -> Result<Command> {*/
-        /*let parser = Parser::new(&self.cache, source_id);*/
-        /*parser.parse().map_err(|error| self.fail(&error))*/
+    /*let parser = Parser::new(&self.cache, source_id);*/
+    /*parser.parse().map_err(|error| self.fail(&error))*/
     /*}*/
 
-/*    /// type check the program and return the typed program*/
+    /*    /// type check the program and return the typed program*/
     /*fn typing(&mut self, program: parser_ast::Program) -> Result<typing_ast::Program> {*/
-        /*let program_typed = self.typer*/
-            /*.program(&program)*/
-            /*.map_err(|error| self.fail(&error))?;*/
-        /*//println!("{}", self.typer.to_string(&self.theme));*/
-        /*Ok(program_typed)*/
+    /*let program_typed = self.typer*/
+    /*.program(&program)*/
+    /*.map_err(|error| self.fail(&error))?;*/
+    /*//println!("{}", self.typer.to_string(&self.theme));*/
+    /*Ok(program_typed)*/
     /*}*/
 
     /*/// eval program*/
     /*fn eval(&mut self, program: &typing_ast::Program) {*/
-        /*for def in program.iter() {*/
-            /*self.vm_env.add_definition(def);*/
-            /*if self.repl_mod {*/
-                /*let summary = SummaryDefinition::from(def);*/
-                /*println!("{}", summary.to_string(&self.theme));*/
-            /*}*/
-        /*}*/
+    /*for def in program.iter() {*/
+    /*self.vm_env.add_definition(def);*/
+    /*if self.repl_mod {*/
+    /*let summary = SummaryDefinition::from(def);*/
+    /*println!("{}", summary.to_string(&self.theme));*/
+    /*}*/
+    /*}*/
     /*}*/
 
     /// run the interpreter on the given source id

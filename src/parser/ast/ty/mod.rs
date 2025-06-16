@@ -1,10 +1,11 @@
-mod definition;
-pub use definition::Definition as TypeDefinition;
-
 use super::identifier::Identifier;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
+
+mod definition;
+
+pub use definition::Definition as TypeDefinition;
 
 // ==========================================================================
 // Type

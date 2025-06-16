@@ -1,5 +1,5 @@
 use super::super::Identifier;
-use super::{TypeEnv, Type, Typed};
+use super::{Type, TypeEnv, Typed};
 use crate::typing::error::ErrorVariableNotFound;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
