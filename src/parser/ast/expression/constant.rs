@@ -19,8 +19,8 @@ impl Constant {
     }
 
     //pub fn b(v: bool, loc: Location) -> Self {
-        //let data = ConstantKind::B(v);
-        //Self(Loc::new(data, loc))
+    //let data = ConstantKind::B(v);
+    //Self(Loc::new(data, loc))
     //}
 
     pub fn kind(&self) -> &ConstantKind {

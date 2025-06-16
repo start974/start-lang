@@ -14,7 +14,7 @@ pub struct TypeRestriction {
     /// The type to which the restriction applies
     ty: Type,
     /// location of type restriction
-    loc: Location
+    loc: Location,
 }
 
 impl TypeRestriction {

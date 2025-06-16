@@ -1,4 +1,8 @@
-use crate::utils::{location::{Located, LocatedSet, Location, UNKNOWN_LOCATION}, pretty::Pretty, theme::{Doc, Theme}};
+use crate::utils::{
+    location::{Located, LocatedSet, Location, UNKNOWN_LOCATION},
+    pretty::Pretty,
+    theme::{Doc, Theme},
+};
 use std::hash::Hash;
 
 // ==========================================================================
@@ -88,24 +92,22 @@ impl IdentifierBuilder {
     }
 
     ///// crate fresh identifier
-/*    pub fn fresh(&mut self) -> Identifier {*/
-        /*let id = self.fresh_id;*/
-        /*self.fresh_id += 1;*/
-        /*Identifier {*/
-            /*name: Name::Fresh,*/
-            /*id,*/
-            /*loc: UNKNOWN_LOCATION,*/
-        /*}*/
+    /*    pub fn fresh(&mut self) -> Identifier {*/
+    /*let id = self.fresh_id;*/
+    /*self.fresh_id += 1;*/
+    /*Identifier {*/
+    /*name: Name::Fresh,*/
+    /*id,*/
+    /*loc: UNKNOWN_LOCATION,*/
+    /*}*/
     /*}*/
 
     fn identifier_id(&self, name: &str) -> Option<usize> {
-        self.table
-            .get(name)
-            .cloned()
-/*            .or_else(|| match self.snapshot.as_ref() {*/
-                /*Some(builder) => builder.identifier_id(name),*/
-                /*None => None,*/
-            /*})*/
+        self.table.get(name).cloned()
+        /*            .or_else(|| match self.snapshot.as_ref() {*/
+        /*Some(builder) => builder.identifier_id(name),*/
+        /*None => None,*/
+        /*})*/
     }
 
     /// create a new identifier
@@ -129,18 +131,18 @@ impl IdentifierBuilder {
         }
     }
 
-/*    /// take a snapshot of the current state*/
+    /*    /// take a snapshot of the current state*/
     /*pub fn snapshot(self) -> Self {*/
-        /*Self {*/
-            /*table: std::collections::HashMap::new(),*/
-            /*//fresh_id: self.fresh_id,*/
-            /*snapshot: Box::new(Some(self)),*/
-        /*}*/
+    /*Self {*/
+    /*table: std::collections::HashMap::new(),*/
+    /*//fresh_id: self.fresh_id,*/
+    /*snapshot: Box::new(Some(self)),*/
+    /*}*/
     /*}*/
 
     /*/// restore the snapshot*/
     /*pub fn restore(self) -> Self {*/
-        /*self.snapshot.expect("No snapshot to restore")*/
+    /*self.snapshot.expect("No snapshot to restore")*/
     /*}*/
 }
 

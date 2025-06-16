@@ -69,6 +69,9 @@ pub struct Theme {
     /// operator color
     pub operator: ColorInfo,
 
+    /// grammar rule color
+    pub grammar_rule: ColorInfo,
+
     /// var definition color
     pub def_var: ColorInfo,
 
@@ -117,6 +120,11 @@ impl Theme {
                 fg_color: Some(Color::Yellow),
                 bg_color: None,
                 styles: vec![Styles::Italic],
+            },
+            grammar_rule: ColorInfo {
+                fg_color: Some(Color::Cyan),
+                bg_color: None,
+                styles: vec![Styles::Bold],
             },
         }
     }
@@ -197,6 +205,11 @@ impl Theme {
     pub fn op_typed_by<'a>(&self) -> Doc<'a> {
         self.operator(&":")
     }
+
+    /// print grammar rule
+    pub fn grammar_rule<'a>(&self, rule: &impl ToString) -> Doc<'a> {
+        Doc::text(rule.to_string()).annotate(self.grammar_rule.clone())
+    }
 }
 
 impl Default for Theme {
@@ -209,6 +222,7 @@ impl Default for Theme {
             expr_var: ColorInfo::default(),
             constant: ColorInfo::default(),
             ty_var: ColorInfo::default(),
+            grammar_rule: ColorInfo::default(),
         }
     }
 }

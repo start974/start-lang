@@ -1,9 +1,3 @@
-mod alias;
-mod builtin;
-pub use alias::Alias as TypeAlias;
-pub use alias::TypeAliasEnv as TypeAliasEnv;
-pub use builtin::Builtin as TypeBuiltin;
-
 use super::super::error::{ErrorUnexpectedType, ErrorVariableNotFound};
 use crate::typing::ast::Identifier;
 use crate::utils::location::Located;
@@ -11,9 +5,12 @@ use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use std::collections::HashMap;
 
-// ==========================================================================
-// Type
-// ==========================================================================
+mod alias;
+mod builtin;
+
+pub use alias::Alias as TypeAlias;
+pub use alias::TypeAliasEnv;
+pub use builtin::Builtin as TypeBuiltin;
 
 #[derive(Debug, Clone)]
 pub enum Type {
