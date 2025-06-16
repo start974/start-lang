@@ -2,9 +2,11 @@
 
 ## Identifier
 ```
-identifier := (letter | _) (letter | 0..9 | _ | ')*
+identifier := "_"* letter  (letter | 0..9 | _)* "'"*
 
-letter := uppercase-letter | lowercase-letter | unicode-letter
+letter := uppercase_letter | lowercase_letter | unicode_letter
+uppercase_letter := [a..Z]
+lowercase_letter := [A..Z]
 ```
 
 ## Number

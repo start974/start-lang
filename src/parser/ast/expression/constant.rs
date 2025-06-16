@@ -3,17 +3,15 @@ use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use num_bigint::BigUint;
 
-pub type NConst = BigUint;
-
 pub enum ConstantKind {
-    N(NConst),
+    N(BigUint),
     //B(bool),
 }
 
 pub struct Constant(Loc<ConstantKind>);
 
 impl Constant {
-    pub fn n(v: NConst, loc: Location) -> Self {
+    pub fn n(v: BigUint, loc: Location) -> Self {
         let data = ConstantKind::N(v);
         Self(Loc::new(data, loc))
     }
