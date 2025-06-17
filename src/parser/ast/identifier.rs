@@ -1,5 +1,6 @@
 use crate::utils::location::{Loc, Located, Location};
 
+#[derive(Debug)]
 pub struct Identifier(Loc<String>);
 
 impl Identifier {

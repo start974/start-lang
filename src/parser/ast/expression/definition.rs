@@ -8,6 +8,7 @@ use crate::utils::theme::{Doc, Theme};
 // Expression Definition
 // ==========================================================
 
+#[derive(Debug)]
 pub struct Definition {
     name: Identifier,
     body: Expression,

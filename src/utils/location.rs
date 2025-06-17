@@ -101,9 +101,9 @@ impl Cache<usize> for ReplCache {
     }
 
     fn fetch(&mut self, id: &usize) -> Result<&Source<Self::Storage>, impl std::fmt::Debug> {
-        if *id == self.source.len() {
+        if *id >= self.source.len() {
             self.update_source();
-        }
+        };
         if *id >= self.source.len() {
             Err(format!(
                 "REPL source index {} is out of bounds (max: {})",
@@ -306,6 +306,7 @@ pub trait LocatedSet {
 // ==========================================================================
 // Localised
 // ==========================================================================
+#[derive(Debug)]
 pub struct Loc<T> {
     /// location of a node
     pub loc: Location,

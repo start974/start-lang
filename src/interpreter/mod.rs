@@ -1,6 +1,6 @@
 mod error;
 mod file;
-mod interpreter;
+mod interpret;
 mod repl;
 mod summary;
 
