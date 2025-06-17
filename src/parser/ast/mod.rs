@@ -1,6 +1,6 @@
 mod command;
 mod expression;
-mod grammar;
+//mod grammar;
 mod identifier;
 mod ty;
 

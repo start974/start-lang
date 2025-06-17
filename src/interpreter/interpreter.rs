@@ -105,6 +105,7 @@ impl Interpreter {
                             let summary = SummaryDefinition::from(&def);
                             println!("{}", summary.to_string(&self.theme));
                         }
+                        self.vm_env.add_definition(&def)
                     })
                     .unwrap_or_else(|e| self.fail(e)),
                 parser_ast::Command::TypeDefinition(def) => {
