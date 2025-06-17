@@ -94,13 +94,12 @@ fn number_base<'src>(
     digit: impl Parser<'src, &'src str, char>,
 ) -> impl Parser<'src, &'src str, BigUint> {
     let prefix = just("0")
-        .then(just(prefix_lower).or(just(prefix_upper)))
-        .ignored();
+        .then(just(prefix_lower).or(just(prefix_upper)));
     let digit = Rc::new(digit);
     let underscore = just('_');
 
     prefix
-        .then(digit.clone())
+        .ignore_then(digit.clone())
         .then(
             (digit.clone())
                 .or(underscore)
@@ -108,7 +107,7 @@ fn number_base<'src>(
                 .collect::<String>(),
         )
         .then(digit)
-        .map(move |((((), digit1), digits2), digit3)| {
+        .map(move |((digit1, digits2), digit3)| {
             let digits2 = digits2.replace('_', "");
             let number_str = format!("{}{}{}", digit1, digits2, digit3);
             BigUint::parse_bytes(number_str.as_bytes(), radix).expect("Failed to parse number")
@@ -128,6 +127,12 @@ pub fn number_oct<'src>() -> impl Parser<'src, &'src str, BigUint> {
 /// parse binary number `"0" ("b" | "B") digit_bin ( digit_bin | _)* digit_bin`
 pub fn number_bin<'src>() -> impl Parser<'src, &'src str, BigUint> {
     number_base('b', 'B', 2, digit_bin())
+}
+
+/// parse number
+pub fn number<'src>() -> impl Parser<'src, &'src str, BigUint> {
+    // parse decimal number or hexadecimal or octal or binary
+    choice((number_dec(), number_hex(), number_oct(), number_bin()))
 }
 
 // ===========================================================================
@@ -152,11 +157,11 @@ pub fn type_definition<'src>(
     source_id: SourceId,
 ) -> impl Parser<'src, &'src str, ast::TypeDefinition> {
     let name = identifier(source_id.clone());
-    let op_eq_def = just(":=").ignored();
+    let op_eq_def = just(":=");
     let ty = ty(source_id);
-    name.then(op_eq_def)
+    name.then_ignore(op_eq_def)
         .then(ty)
-        .map(move |((name, ()), ty)| ast::TypeDefinition::new(name, ty))
+        .map(move |(name, ty)| ast::TypeDefinition::new(name, ty))
         .padded()
 }
 
@@ -169,9 +174,9 @@ pub fn type_definition<'src>(
 /// type_restr := ":" type
 ///```
 pub fn type_restriction<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Type> {
-    let op_colon = just(':').ignored();
+    let op_colon = just(':');
     let ty = ty(source_id.clone());
-    op_colon.then(ty).map(move |((), ty)| ty).padded()
+    op_colon.ignore_then(ty).padded()
 }
 
 /// parse constant
@@ -180,12 +185,12 @@ pub fn type_restriction<'src>(source_id: SourceId) -> impl Parser<'src, &'src st
 /// | number
 ///```
 pub fn constant<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Constant> {
-    let number = number_dec();
-    number.map_with(move |number, e| {
+    let number = number().map_with(move |number, e| {
         let spen = e.span();
         let loc = Location::new(spen.start, spen.end, source_id.clone());
         ast::Constant::n(number, loc)
-    })
+    });
+    number
 }
 
 /// parse expression
@@ -205,13 +210,12 @@ pub fn expression<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast
             .map(|(expr, ty)| ast::TypeRestriction::new(expr, ty))
             .map(ast::Expression::from)
             .padded();
-        let parens = (just('(').ignored())
-            .then(expr)
-            .then(just(')').ignored())
-            .map(|(((), expr), ())| expr)
+        let parens = (just('('))
+            .ignore_then(expr)
+            .then_ignore(just(')'))
             .padded();
 
-        choice((identifier, constant, type_restriction))
+        choice((identifier, constant, type_restriction, parens))
             .padded()
             .boxed()
     })
@@ -226,13 +230,13 @@ pub fn expression_definition<'src>(
 ) -> impl Parser<'src, &'src str, ast::ExpressionDefinition> {
     let identifier = identifier(source_id.clone());
     let type_restriction = type_restriction(source_id.clone()).or_not();
-    let op_eq_def = just(":=").ignored();
+    let op_eq_def = just(":=");
     let expr = expression(source_id);
     identifier
         .then(type_restriction)
-        .then(op_eq_def)
+        .then_ignore(op_eq_def)
         .then(expr)
-        .map(|(((name, opt_ty), ()), expr)| {
+        .map(|((name, opt_ty), expr)| {
             let def = ast::ExpressionDefinition::new(name, expr);
             match opt_ty {
                 Some(ty) => def.with_ty(ty),
@@ -254,28 +258,38 @@ pub fn expression_definition<'src>(
 /// | ("TypeOf" | "?:") expr
 ///```
 pub fn command<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Command> {
-    let def_expr = (just("Definition").or(just("Def")).ignored())
-        .then(expression_definition(source_id.clone()))
-        .map(|((), def)| ast::Command::ExpressionDefinition(def));
+    let def_expr = (just("Definition").or(just("Def")))
+        .ignore_then(expression_definition(source_id.clone()))
+        .map(ast::Command::ExpressionDefinition);
 
-    let def_type = (just("Type").or(just("Ty")).ignored())
-        .then(type_definition(source_id.clone()))
-        .map(|((), def)| ast::Command::TypeDefinition(def));
+    let def_type = (just("Type").or(just("Ty")))
+        .ignore_then(type_definition(source_id.clone()))
+        .map(ast::Command::TypeDefinition);
 
-    let eval = (just("Eval").or(just("$")).ignored())
-        .then(expression(source_id.clone()))
-        .map(|((), expr)| ast::Command::Eval(expr));
+    let eval = (just("Eval").or(just("$")))
+        .ignore_then(expression(source_id.clone()))
+        .map(ast::Command::Eval);
 
-    let type_of = (just("TypeOf").or(just("?:")).ignored())
-        .then(expression(source_id))
-        .map(|((), expr)| ast::Command::TypeOf(expr));
+    let type_of = (just("TypeOf").or(just("?:")))
+        .ignore_then(expression(source_id))
+        .map(ast::Command::TypeOf);
 
     choice((def_expr, def_type, eval, type_of)).padded()
+}
+
+/// parse command with dot
+///```
+/// command_dot := command "."?
+///```
+pub fn command_dot<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Command> {
+    let cmd = command(source_id);
+    let dot = just('.').or_not();
+    cmd.then_ignore(dot).padded()
 }
 
 /// parse command and return also offset of end
 pub fn command_offset<'src>(
     source_id: SourceId,
 ) -> impl Parser<'src, &'src str, (ast::Command, usize)> {
-    command(source_id).map_with(|cmd, e| (cmd, e.span().end))
+    command_dot(source_id).map_with(|cmd, e| (cmd, e.span().end))
 }

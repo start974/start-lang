@@ -85,6 +85,8 @@ group_char := [0..9] | [a..z] | [A..Z]
 
 ## Command
 ```
+command_dot := command "."?
+
 command :=
 | ("Definition" | "Def") expr_definition
 | ("Type" | "Ty") type_definition
@@ -96,7 +98,7 @@ command :=
 
 ## Program
 ```
-prgm := (command ".")*
+prgm := command_dot*
 ```
 
 ## Other

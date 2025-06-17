@@ -1,5 +1,4 @@
 use super::error::Error;
-use crate::utils::error::{ErrorCode, ErrorReport};
 use crate::utils::location::SourceId;
 use chumsky::Parser;
 
@@ -30,7 +29,7 @@ impl<'src> IncrementalParser<'src> {
             None
         } else {
             let parser = super::parsing::command_offset(self.source_id.clone());
-            match (parser.parse(&self.source).into_result()) {
+            match parser.parse(self.source).into_result() {
                 Ok((command, offset)) => {
                     self.source_id.add_offset(offset);
                     self.source = &self.source[self.source_id.offset()..];
