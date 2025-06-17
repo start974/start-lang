@@ -10,15 +10,34 @@ use ariadne::{Cache, Source, Span};
 pub enum SourceId {
     Unknown,
     Repl { offset: usize },
-    Path(PathBuf),
+    File { offset: usize, path: PathBuf },
+}
+
+impl SourceId {
+    /// source id with offset
+    pub fn add_offset(&mut self, o: usize) {
+        match self {
+            SourceId::Unknown => (),
+            SourceId::Repl { offset } | SourceId::File { offset, .. } => {
+                *offset += o;
+            }
+        }
+    }
+    pub fn offset(&self) -> usize {
+        match self {
+            SourceId::Unknown => 0,
+            SourceId::Repl { offset } => *offset,
+            SourceId::File { offset, .. } => *offset,
+        }
+    }
 }
 
 impl std::fmt::Display for SourceId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
             SourceId::Unknown => write!(f, "unknown"),
-            SourceId::Repl { offset: _ } => write!(f, "REPL"),
-            SourceId::Path(path) => write!(f, "{}", path.display()),
+            SourceId::Repl { .. } => write!(f, "REPL"),
+            SourceId::File { path, .. } => write!(f, "{}", path.display()),
         }
     }
 }
@@ -126,7 +145,7 @@ impl SourceCache {
         match id {
             SourceId::Unknown => panic!("cannot get unkow content"),
             SourceId::Repl { offset } => self.repl.get(offset),
-            SourceId::Path(path) => {
+            SourceId::File { path, .. } => {
                 if let Some(source) = self.files.get(path) {
                     source.text()
                 } else {
@@ -154,7 +173,7 @@ impl SourceCache {
     /// set file content
     pub fn set_file(&mut self, path: PathBuf, content: String) -> SourceId {
         self.files.insert(path.clone(), Source::from(content));
-        SourceId::Path(path)
+        SourceId::File { path, offset: 0 }
     }
 }
 
@@ -178,7 +197,7 @@ impl Cache<SourceId> for SourceCache {
                 .repl
                 .fetch(offset)
                 .map_err(|e| Box::new(format!("{:?}", e))),
-            SourceId::Path(path) => self
+            SourceId::File { path, .. } => self
                 .files
                 .get(path)
                 .ok_or(Box::new(format!("Source not found in cache: {}", id))),
@@ -231,13 +250,15 @@ impl Span for Location {
     fn start(&self) -> usize {
         match self.source {
             SourceId::Repl { offset } => offset + self.start,
-            _ => self.start,
+            SourceId::File { offset, .. } => offset + self.start,
+            SourceId::Unknown => 0,
         }
     }
     fn end(&self) -> usize {
         match self.source {
             SourceId::Repl { offset } => offset + self.end,
-            _ => self.end,
+            SourceId::File { offset, .. } => offset + self.end,
+            SourceId::Unknown => 0,
         }
     }
     fn source(&self) -> &Self::SourceId {
