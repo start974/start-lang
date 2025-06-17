@@ -37,9 +37,7 @@ fn digit_bin<'src>() -> impl Parser<'src, &'src str, char> {
 // ===========================================================================
 
 /// parse `"_"* letter  (letter | digit | _)* "'"*`
-pub fn identifier<'src>(
-    source_id: &SourceId,
-) -> impl Parser<'src, &'src str, ast::Identifier> + use<'src, '_> {
+pub fn identifier<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Identifier> {
     let letter = Rc::new(letter());
     let underscore = Rc::new(just('_'));
     let digit = digit();
@@ -141,7 +139,7 @@ pub fn number_bin<'src>() -> impl Parser<'src, &'src str, BigUint> {
 /// type :=
 /// | identifier
 /// ```
-pub fn ty<'src>(source_id: &SourceId) -> impl Parser<'src, &'src str, ast::Type> + use<'src, '_> {
+pub fn ty<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Type> {
     let identifier = identifier(source_id);
     identifier.map(ast::Type::Var)
 }
@@ -151,12 +149,98 @@ pub fn ty<'src>(source_id: &SourceId) -> impl Parser<'src, &'src str, ast::Type>
 /// type_definition := identifier ":=" type
 /// ```
 pub fn type_definition<'src>(
-    source_id: &SourceId,
-) -> impl Parser<'src, &'src str, ast::TypeDefinition> + use<'src, '_> {
-    let name = identifier(source_id);
+    source_id: SourceId,
+) -> impl Parser<'src, &'src str, ast::TypeDefinition> {
+    let name = identifier(source_id.clone());
     let op_eq_def = just(":=").ignored();
     let ty = ty(source_id);
     name.then(op_eq_def)
         .then(ty)
         .map(move |((name, ()), ty)| ast::TypeDefinition::new(name, ty))
+        .padded()
+}
+
+// ===========================================================================
+// Expression
+// ===========================================================================
+
+// parse type restriction
+//```
+// type_restr := ":" type
+//```
+pub fn type_restriction<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Type> {
+    let op_colon = just(':').ignored();
+    let ty = ty(source_id.clone());
+    op_colon.then(ty).map(move |((), ty)| ty).padded()
+}
+
+// parse constant
+//```
+// constant :=
+// | number
+//```
+pub fn constant<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Constant> {
+    let number = number_dec();
+    number.map_with(move |number, e| {
+        let spen = e.span();
+        let loc = Location::new(spen.start, spen.end, source_id.clone());
+        ast::Constant::n(number, loc)
+    })
+}
+
+// parse expression
+//```
+// expr :=
+// | "(" expr ")"
+// | identifier
+// | constant
+// | expr type_restiction
+//```
+pub fn expression<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Expression> {
+    recursive(move |expr| {
+        let identifier = Rc::new(identifier(source_id.clone()).map(ast::Expression::from));
+        let constant = Rc::new(constant(source_id.clone()).map(ast::Expression::from));
+        let type_restriction = (expr.clone())
+            .then(type_restriction(source_id))
+            .map(|(expr, ty)| ast::TypeRestriction::new(expr, ty))
+            .map(ast::Expression::from)
+            .padded();
+        let parens = (just('(').ignored())
+            .then(expr)
+            .then(just(')').ignored())
+            .map(|(((), expr), ())| expr)
+            .padded();
+
+        parens
+            .or(identifier)
+            .or(constant)
+            .or(type_restriction)
+            .padded()
+            .boxed()
+    })
+}
+
+// parse expression definition
+//```
+//expr_definition := identifier type_rest? ":=" expr
+//```
+pub fn expression_definition<'src>(
+    source_id: SourceId,
+) -> impl Parser<'src, &'src str, ast::ExpressionDefinition> {
+    let identifier = identifier(source_id.clone());
+    let type_restriction = type_restriction(source_id.clone()).or_not();
+    let op_eq_def = just(":=").ignored();
+    let expr = expression(source_id);
+    identifier
+        .then(type_restriction)
+        .then(op_eq_def)
+        .then(expr)
+        .map(|(((name, opt_ty), ()), expr)| {
+            let def = ast::ExpressionDefinition::new(name, expr);
+            match opt_ty {
+                Some(ty) => def.with_ty(ty),
+                None => def
+            }
+        })
+        .padded()
 }

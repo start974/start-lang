@@ -19,7 +19,7 @@ pub struct TypeRestriction {
 
 impl TypeRestriction {
     /// Creates a new type restriction with the given type and expression.
-    pub fn new(ty: Type, expr: Expression) -> Self {
+    pub fn new(expr: Expression, ty: Type) -> Self {
         let loc = ty.loc().union(expr.loc());
         Self {
             ty,

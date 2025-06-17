@@ -33,26 +33,18 @@ digit_bit := [0..1]
 
 After this section all element of grammar is padded
 
-## Command
-```
-command :=
-| ("Definition" | "Def") expr_definition
-| ("Type" | "Ty") type_definition
-| ("Eval" | "$") expr
-| ("Grammar" | "Gram") grammar
-| ("TypeOf" | "?:") expr
-
-```
-
 ### Expression
 ```
-expr :=
-  "(" expr ")"
-  expr type_rest
-  identifier
-  constant
+type_restriction := ":" type
 
-type_restr := ":" type
+constant :=
+| number
+
+expr :=
+|  "(" expr ")"
+|  identifier
+|  constant
+|  expr type_restiction
 
 expr_definition := identifier type_rest? ":=" expr
 ```
@@ -89,6 +81,17 @@ grammar_syntax :=
 
 
 group_char := [0..9] | [a..z] | [A..Z]
+```
+
+## Command
+```
+command :=
+| ("Definition" | "Def") expr_definition
+| ("Type" | "Ty") type_definition
+| ("Eval" | "$") expr
+| ("Grammar" | "Gram") grammar
+| ("TypeOf" | "?:") expr
+
 ```
 
 ## Program
