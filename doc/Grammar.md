@@ -89,7 +89,7 @@ command :=
 | ("Definition" | "Def") expr_definition
 | ("Type" | "Ty") type_definition
 | ("Eval" | "$") expr
-| ("Grammar" | "Gram") grammar
+| ("Grammar" | "Gram") grammar              // Not yet implemented
 | ("TypeOf" | "?:") expr
 
 ```
