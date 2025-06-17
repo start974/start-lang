@@ -164,21 +164,21 @@ pub fn type_definition<'src>(
 // Expression
 // ===========================================================================
 
-// parse type restriction
-//```
-// type_restr := ":" type
-//```
+/// parse type restriction
+///```
+/// type_restr := ":" type
+///```
 pub fn type_restriction<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Type> {
     let op_colon = just(':').ignored();
     let ty = ty(source_id.clone());
     op_colon.then(ty).map(move |((), ty)| ty).padded()
 }
 
-// parse constant
-//```
-// constant :=
-// | number
-//```
+/// parse constant
+///```
+/// constant :=
+/// | number
+///```
 pub fn constant<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Constant> {
     let number = number_dec();
     number.map_with(move |number, e| {
@@ -188,14 +188,14 @@ pub fn constant<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::
     })
 }
 
-// parse expression
-//```
-// expr :=
-// | "(" expr ")"
-// | identifier
-// | constant
-// | expr type_restiction
-//```
+/// parse expression
+///```
+/// expr :=
+/// | "(" expr ")"
+/// | identifier
+/// | constant
+/// | expr type_restiction
+///```
 pub fn expression<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Expression> {
     recursive(move |expr| {
         let identifier = Rc::new(identifier(source_id.clone()).map(ast::Expression::from));
@@ -211,19 +211,16 @@ pub fn expression<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast
             .map(|(((), expr), ())| expr)
             .padded();
 
-        parens
-            .or(identifier)
-            .or(constant)
-            .or(type_restriction)
+        choice((identifier, constant, type_restriction))
             .padded()
             .boxed()
     })
 }
 
-// parse expression definition
-//```
-//expr_definition := identifier type_rest? ":=" expr
-//```
+/// parse expression definition
+///```
+///expr_definition := identifier type_rest? ":=" expr
+///```
 pub fn expression_definition<'src>(
     source_id: SourceId,
 ) -> impl Parser<'src, &'src str, ast::ExpressionDefinition> {
@@ -239,8 +236,39 @@ pub fn expression_definition<'src>(
             let def = ast::ExpressionDefinition::new(name, expr);
             match opt_ty {
                 Some(ty) => def.with_ty(ty),
-                None => def
+                None => def,
             }
         })
         .padded()
+}
+
+// ===========================================================================
+// Command
+// ===========================================================================
+/// parse command
+///```
+/// command :=
+/// | ("Definition" | "Def") expr_definition
+/// | ("Type" | "Ty") type_definition
+/// | ("Eval" | "$") expr
+/// | ("TypeOf" | "?:") expr
+///```
+pub fn command<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Command> {
+    let def_expr = (just("Definition").or(just("Def")).ignored())
+        .then(expression_definition(source_id.clone()))
+        .map(|((), def)| ast::Command::ExpressionDefinition(def));
+
+    let def_type = (just("Type").or(just("Ty")).ignored())
+        .then(type_definition(source_id.clone()))
+        .map(|((), def)| ast::Command::TypeDefinition(def));
+
+    let eval = (just("Eval").or(just("$")).ignored())
+        .then(expression(source_id.clone()))
+        .map(|((), expr)| ast::Command::Eval(expr));
+
+    let type_of = (just("TypeOf").or(just("?:")).ignored())
+        .then(expression(source_id))
+        .map(|((), expr)| ast::Command::TypeOf(expr));
+
+    choice((def_expr, def_type, eval, type_of)).padded()
 }
