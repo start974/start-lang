@@ -43,6 +43,12 @@ impl Definition {
     pub fn set_ty(&mut self, ty: Type) {
         self.ty = Some(ty);
     }
+
+    /// with type
+    pub fn with_ty(mut self, ty: Type) -> Self {
+        self.set_ty(ty);
+        self
+    }
 }
 
 impl Located for Definition {

@@ -17,6 +17,24 @@ pub enum Expression {
     TypeRestriction(TypeRestriction),
 }
 
+impl From<Constant> for Expression {
+    fn from(constant: Constant) -> Self {
+        Expression::Constant(constant)
+    }
+}
+
+impl From<Identifier> for Expression {
+    fn from(variable: Identifier) -> Self {
+        Expression::Variable(variable)
+    }
+}
+
+impl From<TypeRestriction> for Expression {
+    fn from(ty_restr: TypeRestriction) -> Self {
+        Expression::TypeRestriction(ty_restr)
+    }
+}
+
 impl Located for Expression {
     fn loc(&self) -> &Location {
         match self {
@@ -28,7 +46,7 @@ impl Located for Expression {
 }
 
 impl Pretty for Expression {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+    fn pretty(&self, theme: &Theme) -> Doc {
         match self {
             Expression::Constant(constant) => constant.pretty(theme),
             Expression::Variable(variable) => theme.expr_var(variable),
