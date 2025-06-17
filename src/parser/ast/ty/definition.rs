@@ -40,8 +40,6 @@ impl Pretty for Definition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::group(
             Doc::nil()
-                .append(theme.kw_type())
-                .append(Doc::space())
                 .append(theme.def_var(&self.name))
                 .append(Doc::space())
                 .append(theme.op_eq_def())

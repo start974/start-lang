@@ -53,6 +53,8 @@ expr :=
   constant
 
 type_restr := ":" type
+
+expr_definition := identifier type_rest? ":=" expr
 ```
 
 ### Type
@@ -64,12 +66,11 @@ type :=
 ```
 
 ## Grammar
-*WIP*
+*WIP* Not implement yet (need to implement function and library on parser ast)
 
 ```
 grammar :=
-| "Add" ("Expression" | "Expr") grammar_syntax ":" grammar_rule ":=" expr
-| "Add" ("Type" | "Ty") grammar_syntax ":" grammar_rule ":=" ty
+| "Add" grammar_syntax ":" grammar_rule ":=" expr
 | "New" identifier
 | ("Remove" | "Rm") identifier
 

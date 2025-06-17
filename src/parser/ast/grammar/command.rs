@@ -4,41 +4,18 @@ use super::syntax::Syntax;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
-pub enum Command<T> {
+pub enum Command {
     Add {
         syntax: Syntax,
         rule_name: RuleName,
-        template: T,
+        template: Expression,
     },
     Rm {
         rule_name: RuleName,
     },
 }
 
-pub type CommandExpression = Command<Expression>;
-pub type CommandType = Command<Type>;
-
-trait CommandName {
-    fn name(&self) -> &'static str;
-}
-
-impl CommandName for CommandExpression {
-    fn name(&self) -> &'static str {
-        "Expression"
-    }
-}
-
-impl CommandName for CommandType {
-    fn name(&self) -> &'static str {
-        "Type"
-    }
-}
-
-impl<T> Pretty for Command<T>
-where
-    T: Pretty,
-    Self: CommandName,
-{
+impl Pretty for Command {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             Command::Add {
@@ -47,8 +24,6 @@ where
                 template,
             } => Doc::nil()
                 .append(theme.keyword(&"Add"))
-                .append(Doc::space())
-                .append(self.name())
                 .append(Doc::space())
                 .append(Doc::group(syntax.pretty(theme)))
                 .append(Doc::space())
@@ -66,20 +41,6 @@ where
                 .append(theme.keyword(&"Rm"))
                 .append(Doc::space())
                 .append(rule_name.pretty(theme)),
-        }
-    }
-}
-
-pub enum Commands {
-    Expression(CommandExpression),
-    Type(CommandType),
-}
-
-impl Pretty for Commands {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        match self {
-            Commands::Expression(cmd) => cmd.pretty(theme),
-            Commands::Type(cmd) => cmd.pretty(theme),
         }
     }
 }
