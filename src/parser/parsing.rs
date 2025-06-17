@@ -272,3 +272,10 @@ pub fn command<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::C
 
     choice((def_expr, def_type, eval, type_of)).padded()
 }
+
+/// parse command and return also offset of end
+pub fn command_offset<'src>(
+    source_id: SourceId,
+) -> impl Parser<'src, &'src str, (ast::Command, usize)> {
+    command(source_id).map_with(|cmd, e| (cmd, e.span().end))
+}

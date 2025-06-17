@@ -11,7 +11,7 @@ fn finish(rl: &mut Editor<(), FileHistory>) {
 /// run code
 pub fn run(interpreter: &mut Interpreter) {
     let source_id = interpreter.last_repl_source_id();
-    interpreter.run(source_id).unwrap_or(());
+    interpreter.run(source_id);
     interpreter.update_repl();
 }
 

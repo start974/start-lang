@@ -5,7 +5,7 @@ use crate::utils::location::LocatedSet;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
-pub struct FromParser {
+pub struct Typer {
     var_env: VariableEnv,
     ty_alias: TypeAliasEnv,
     id_builder: IdentifierBuilder,
@@ -14,7 +14,7 @@ pub struct FromParser {
 type Error = ErrorFromParser;
 type Result<T, E = Error> = std::result::Result<T, E>;
 
-impl FromParser {
+impl Typer {
     /// make a new structure to from parser
     pub fn new() -> Self {
         Self {
@@ -91,8 +91,8 @@ impl FromParser {
         }
     }
 
-    /// add ty definition
-    pub fn ty_definition(&mut self, definition: &ast_parser::TypeDefinition) -> Result<()> {
+    /// add type definition
+    pub fn type_definition(&mut self, definition: &ast_parser::TypeDefinition) -> Result<()> {
         let name_parse = definition.name();
         let name = self
             .id_builder
@@ -104,13 +104,13 @@ impl FromParser {
     }
 }
 
-impl Default for FromParser {
+impl Default for Typer {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Pretty for FromParser {
+impl Pretty for Typer {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
             .append(Doc::line_())
