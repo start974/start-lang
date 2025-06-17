@@ -2,21 +2,36 @@
 
 ## Identifier
 ```
-identifier := "_"* letter  (letter | 0..9 | _)* "'"*
+identifier := "_"* letter  (letter | digit | _)* "'"*
 
-letter := uppercase_letter | lowercase_letter | unicode_letter
-uppercase_letter := [a..Z]
-lowercase_letter := [A..Z]
+letter := Alphabetic
+digit := [0..9]
 ```
+
+*Alphabetic* is described in Chapter 4 (Character Properties) of the
+[Unicode Standard](https://www.unicode.org/versions/latest/) and
+specified in the
+[Unicode Character Database](https://www.unicode.org/reports/tr44/)
+[`DerivedCoreProperties.txt`](https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt).
 
 ## Number
 ```
-number :=
-| [0..9] ( [0..9] | _)*
-| ("0x" | "0X") ([0..9] | [A..F] | [a..f]) { [0..9] | [A-F] | [a..f] | _}
-| ("0o" | "0O") ([0..7] ) { [0..7] | _}
-| ("0b" | "0B") ([0..1] ) { [0..1] | _}
+number := number_dec | number_hex | number_oct | number_bit
+
+number_dec := digit ( digit | _)* digit
+
+number_hex := "0" ("x" | "X") digit_hex (digit_hex | _)* digit_hex
+digit_hex := digit | [A..F] | [a..f]
+
+number_oct := "0" ("o" | "O") digit_oct (digit_oct | _)* digit_oct
+digit_oct := [0..7]
+
+number_bit := "0" ("b" | "B") digit_bit ( digit_bit | _)* digit_bit
+digit_bit := [0..1]
+
 ```
+
+After this section all element of grammar is padded
 
 ## Command
 ```
@@ -49,9 +64,12 @@ type :=
 ```
 
 ## Grammar
+*WIP*
+
 ```
 grammar :=
-| "Add" grammar_syntax ":" grammar_rule ":=" template
+| "Add" ("Expression" | "Expr") grammar_syntax ":" grammar_rule ":=" expr
+| "Add" ("Type" | "Ty") grammar_syntax ":" grammar_rule ":=" ty
 | "New" identifier
 | ("Remove" | "Rm") identifier
 
@@ -70,22 +88,6 @@ grammar_syntax :=
 
 
 group_char := [0..9] | [a..z] | [A..Z]
-```
-
-## Template
-```
-template := {template_part}
-
-template_part :=
-| template_text
-| template_var
-
-template_text := (~template_escape | template_escape)+
-template_escape := '\' ('\' | '{' | '}')
-
-template_var :=
-| '{' identifier '}'
-
 ```
 
 ## Program

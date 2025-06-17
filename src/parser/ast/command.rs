@@ -1,16 +1,12 @@
-use super::Expression;
-use super::ExpressionDefinition;
-use super::GrammarCommand;
-use super::TypeDefinition;
+use super::{grammar, Expression, ExpressionDefinition, TypeDefinition};
 use crate::utils::pretty::Pretty;
-use crate::utils::theme::Doc;
-use crate::utils::theme::Theme;
+use crate::utils::theme::{Doc, Theme};
 
 pub enum Command {
     ExpressionDefinition(ExpressionDefinition),
     TypeDefinition(TypeDefinition),
     Eval(Expression),
-    Grammar(GrammarCommand),
+    Grammar(grammar::command::Commands),
     TypeOf(Expression),
 }
 
