@@ -11,6 +11,8 @@ pub struct IncrementalParser<'src> {
     source_id: SourceId,
     /// end of source
     end: bool,
+    /// offset
+    offset : usize,
 }
 
 impl<'src> IncrementalParser<'src> {
@@ -20,11 +22,12 @@ impl<'src> IncrementalParser<'src> {
             source,
             source_id,
             end: false,
+            offset: 0,
         }
     }
 
     /// parse next command
-    pub fn parse(&mut self) -> Option<Result<Command, Error>> {
+    pub fn parse(&mut self) -> Option<Result<Command, Vec<Error>>> {
         if self.end {
             None
         } else {
@@ -32,14 +35,19 @@ impl<'src> IncrementalParser<'src> {
             match parser.parse(self.source).into_result() {
                 Ok((command, offset)) => {
                     self.source_id.add_offset(offset);
-                    self.source = &self.source[self.source_id.offset()..];
+                    self.offset += offset;
+                    self.source = &self.source[offset..];
                     if self.source.is_empty() {
                         self.end = true;
                     }
                     Some(Ok(command))
                 }
-                Err(_errs) => {
-                    todo!()
+                Err(errs) => {
+                    self.end = true;
+                    let errs = errs.iter().map(|err| {
+                        Error::new(err.clone(), self.source_id.clone())
+                    }).collect::<Vec<_>>();
+                    Some(Err(errs))
                 }
             }
         }

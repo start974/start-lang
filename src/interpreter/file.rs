@@ -1,4 +1,4 @@
-use super::interpreter::Interpreter;
+use super::interpret::Interpreter;
 
 pub fn file(path: &str) -> i32 {
     let mut interpreter = Interpreter::new();

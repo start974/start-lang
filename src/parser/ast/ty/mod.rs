@@ -11,6 +11,7 @@ pub use definition::Definition as TypeDefinition;
 // Type
 // ==========================================================================
 /// constant types
+#[derive(Debug)]
 pub enum Type {
     Var(Identifier),
 }

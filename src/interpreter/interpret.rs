@@ -43,8 +43,14 @@ impl Interpreter {
         self.repl_mod = repl_mod;
     }
 
+    /// get error code
     pub fn get_err_code(&self) -> i32 {
         self.err_code
+    }
+
+    /// reset error code
+    pub fn reset_err_code(&mut self) {
+        self.err_code = 0;
     }
 
     fn eprint<E>(&mut self, error: E) -> i32

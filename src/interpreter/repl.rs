@@ -1,4 +1,4 @@
-use super::interpreter::Interpreter;
+use super::interpret::Interpreter;
 use rustyline::{history::FileHistory, DefaultEditor, Editor};
 
 const HISTORY_FILE: &str = ".start-history.txt";
@@ -13,6 +13,7 @@ pub fn run(interpreter: &mut Interpreter) {
     let source_id = interpreter.last_repl_source_id();
     interpreter.run(source_id);
     interpreter.update_repl();
+    interpreter.reset_err_code()
 }
 
 /// make promp string

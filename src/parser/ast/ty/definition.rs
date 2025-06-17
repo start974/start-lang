@@ -7,6 +7,7 @@ use crate::utils::theme::{Doc, Theme};
 // ==========================================================================
 // Definition Type
 // ==========================================================================
+#[derive(Debug)]
 pub struct Definition {
     name: Identifier,
     ty: Type,

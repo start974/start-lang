@@ -11,6 +11,7 @@ pub use constant::*;
 pub use definition::Definition as ExpressionDefinition;
 pub use type_restriction::*;
 
+#[derive(Debug)]
 pub enum Expression {
     Constant(Constant),
     Variable(Identifier),

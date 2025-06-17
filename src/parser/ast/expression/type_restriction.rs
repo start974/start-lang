@@ -8,6 +8,7 @@ use crate::{
     },
 };
 
+#[derive(Debug)]
 pub struct TypeRestriction {
     /// The expression that must conform to the type
     expr: Box<Expression>,

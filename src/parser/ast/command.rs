@@ -2,6 +2,7 @@ use super::{Expression, ExpressionDefinition, TypeDefinition};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
+#[derive(Debug)]
 pub enum Command {
     ExpressionDefinition(ExpressionDefinition),
     TypeDefinition(TypeDefinition),

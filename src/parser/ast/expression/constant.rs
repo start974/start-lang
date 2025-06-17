@@ -3,11 +3,13 @@ use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use num_bigint::BigUint;
 
+#[derive(Debug)]
 pub enum ConstantKind {
     N(BigUint),
     //B(bool),
 }
 
+#[derive(Debug)]
 pub struct Constant(Loc<ConstantKind>);
 
 impl Constant {

@@ -10,14 +10,16 @@ mod vm;
 
 fn main() {
     let args = env::args().collect::<Vec<_>>();
-    if args.len() > 1 {
-        eprintln!("Usage: {} <file_name>", args[0]);
-        std::process::exit(1);
-    } else if args.len() == 2 {
-        let path = args.get(1).unwrap();
-        let code = interpreter::file(path);
-        exit(code);
-    } else {
-        interpreter::repl()
+    match args.len() {
+        1 => interpreter::repl(),
+        2 => {
+            let path = args.get(1).unwrap();
+            let code = interpreter::file(path);
+            exit(code)
+        }
+        _ => {
+            eprintln!("Usage: {} [file.st]", args[0]);
+            std::process::exit(1)
+        }
     }
 }
