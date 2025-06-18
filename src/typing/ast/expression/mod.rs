@@ -1,6 +1,6 @@
 use super::ty::{Type, Typed, TypedMut};
 use super::variable::Variable;
-use crate::utils::location::{Located, LocatedSet, Location};
+use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -46,15 +46,6 @@ impl Located for Expression {
         match self {
             Expression::Constant(c) => c.loc(),
             Expression::Variable(v) => v.loc(),
-        }
-    }
-}
-
-impl LocatedSet for Expression {
-    fn set_loc(&mut self, loc: &impl Located) {
-        match self {
-            Expression::Constant(c) => c.set_loc(loc),
-            Expression::Variable(v) => v.set_loc(loc),
         }
     }
 }

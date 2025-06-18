@@ -25,7 +25,7 @@ impl Constant {
     /// create natural number constant
     pub fn n(v: NConst) -> Self {
         Self {
-            ty: Type::from(TypeBuiltin::n()),
+            ty: Type::from(TypeBuiltin::N),
             loc: UNKNOWN_LOCATION,
             kind: ConstantKind::N(v),
         }
