@@ -64,7 +64,7 @@ impl Typer {
                     .get(&id)
                     .map(Type::from)
                     .or_else(|e| match ident.name() {
-                        "ℕ" => {
+                        "__TYPE_N__" => {
                             let ty_builtin = ast_typed::TypeBuiltin::n().with_loc(ident);
                             Ok(ast_typed::Type::from(ty_builtin))
                         }

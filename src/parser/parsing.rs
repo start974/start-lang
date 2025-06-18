@@ -190,35 +190,46 @@ pub fn constant<'src>(
 
 /// parse expression
 /// ```ebfn
-/// expr :=
-/// | "(" expr ")"
+/// expr0 :=
+/// | "(" expr@1 ")"
 /// | identifier
 /// | constant
-/// | expr type_restiction
+///
+/// expr@1 :=
+/// | expr@0 type_restiction
+/// | expr@0
 ///```
 pub fn expression<'src>(
     source_id: SourceId,
 ) -> impl Parser<'src, &'src str, ast::Expression, Error<'src>> {
-    recursive(move |expr| {
-        let identifier = identifier(source_id.clone())
-            .map(ast::Expression::from)
-            .boxed();
-        let constant = constant(source_id.clone())
-            .map(ast::Expression::from)
-            .boxed();
-        //let type_restriction = (expr0.clone())
-        //.then(type_restriction(source_id))
-        //.map(|(expr, ty)| ast::TypeRestriction::new(expr, ty))
-        //.map(ast::Expression::from)
-        //.padded();
-        let parens = (just('(').labelled("("))
-            .padded()
-            .ignore_then(expr)
-            .padded()
-            .then_ignore(just(')').labelled(")"));
+    recursive(move |expr1| {
+        let expr0 = {
+            let identifier = identifier(source_id.clone())
+                .map(ast::Expression::from)
+                .boxed();
+            let constant = constant(source_id.clone())
+                .map(ast::Expression::from)
+                .boxed();
+            let parens = (just('(').labelled("("))
+                .padded()
+                .ignore_then(expr1)
+                .padded()
+                .then_ignore(just(')').labelled(")"));
+            choice((identifier, constant, parens)).boxed()
+        };
 
-        choice((identifier, constant, parens)).labelled("expression")
+        let expr1 = {
+            let type_restriction = (expr0.clone())
+                .padded()
+                .then(type_restriction(source_id.clone()))
+                .map(|(expr, ty)| ast::TypeRestriction::new(expr, ty))
+                .map(ast::Expression::from);
+            choice((type_restriction, expr0)).boxed()
+        };
+
+        expr1
     })
+    .labelled("expression")
 }
 
 /// parse expression definition
