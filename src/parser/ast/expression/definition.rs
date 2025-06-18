@@ -61,21 +61,22 @@ impl Located for Definition {
 
 impl Pretty for Definition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        let doc_ty = match &self.ty {
-            Some(ty) => Doc::nil()
-                .append(Doc::line())
-                .append(theme.op_typed_by())
-                .append(Doc::space())
-                .append(ty.pretty(theme)),
-            None => Doc::nil(),
-        };
         Doc::nil()
-            .append(theme.kw_def()) // NOTE: rm when command definition implemented
+            .append(theme.def_var(&self.name))
+            .append(
+                (match &self.ty {
+                    Some(ty) => Doc::line()
+                        .append(theme.op_typed_by())
+                        .append(Doc::space())
+                        .append(ty.pretty(theme).group())
+                        .group()
+                        .nest(4),
+                    None => Doc::nil(),
+                })
+                .group(),
+            )
             .append(Doc::space())
-            .append(theme.def_var(&self.name)) // NOTE: change if using in let
-            .append(Doc::group(doc_ty))
             .append(theme.op_eq_def())
-            .append(Doc::line())
-            .append(Doc::group(self.body.pretty(theme)))
+            .append(Doc::line().append(self.body.pretty(theme).group()).nest(2))
     }
 }

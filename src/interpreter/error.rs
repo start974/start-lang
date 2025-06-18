@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use crate::parser::ast::Identifier;
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder, UNKNOWN_LOCATION};
 
@@ -19,7 +20,7 @@ impl ErrorFileRead {
 
 impl ErrorCode for ErrorFileRead {
     fn code(&self) -> i32 {
-        102
+        101
     }
 }
 impl Located for ErrorFileRead {
@@ -40,5 +41,46 @@ impl ErrorReport for ErrorFileRead {
             .text("Cannot read file ")
             .quoted(&self.path.to_string_lossy())
             .text(".")
+    }
+}
+
+// =======================================================================
+// Unknown Option
+// =======================================================================
+
+pub struct UnknownOption {
+    option: Identifier,
+}
+
+impl From<Identifier> for UnknownOption {
+    fn from(option: Identifier) -> Self {
+        Self { option }
+    }
+}
+
+impl ErrorCode for UnknownOption {
+    fn code(&self) -> i32 {
+        103
+    }
+}
+impl Located for UnknownOption {
+    fn loc(&self) -> &Location {
+        self.option.loc()
+    }
+}
+
+impl ErrorReport for UnknownOption {
+    fn finalize<'a>(
+        &self,
+        _: &crate::utils::theme::Theme,
+        report: ReportBuilder<'a>,
+    ) -> Report<'a> {
+        report.finish()
+    }
+    fn message(&self) -> Message {
+        Message::nil()
+            .text("Option ")
+            .quoted(self.option.name())
+            .text(" is unknown.")
     }
 }

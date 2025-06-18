@@ -1,4 +1,5 @@
 use super::super::ty::{Type, TypeBuiltin, Typed, TypedMut};
+use crate::utils::format_number;
 use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -60,7 +61,7 @@ impl LocatedSet for Constant {
 impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self.kind() {
-            ConstantKind::N(n) => theme.constant(n),
+            ConstantKind::N(n) => theme.constant(&format_number(n)),
             //ConstantKind::B(b) => theme.constant(b),
         }
     }

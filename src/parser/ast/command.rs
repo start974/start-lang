@@ -1,4 +1,4 @@
-use super::{Expression, ExpressionDefinition, TypeDefinition};
+use super::{Expression, ExpressionDefinition, Identifier, TypeDefinition};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -9,6 +9,7 @@ pub enum Command {
     Eval(Expression),
     //Grammar(GrammarCommand),
     TypeOf(Expression),
+    Set(bool, Identifier),
 }
 
 impl Pretty for Command {
@@ -34,6 +35,11 @@ impl Pretty for Command {
                 .append(theme.keyword(&"TypeOf"))
                 .append(Doc::space())
                 .append(expr.pretty(theme)),
+            Command::Set(set, identifier) => Doc::nil()
+                .append(theme.keyword(&if *set { "Set" } else { "Unset" }))
+                .append(Doc::space())
+                .append(theme.keyword(&identifier.name().to_string())),
         }
+        .append(Doc::text("."))
     }
 }

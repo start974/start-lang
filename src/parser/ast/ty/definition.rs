@@ -44,8 +44,7 @@ impl Pretty for Definition {
                 .append(theme.def_var(&self.name))
                 .append(Doc::space())
                 .append(theme.op_eq_def())
-                .append(Doc::line())
-                .append(Doc::group(self.ty.pretty(theme))),
+                .append(Doc::line().append(self.ty.pretty(theme).group()).nest(2)),
         )
     }
 }

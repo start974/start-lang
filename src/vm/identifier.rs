@@ -15,12 +15,6 @@ impl From<&ast::Identifier> for Identifier {
     }
 }
 
-impl From<ast::Identifier> for Identifier {
-    fn from(value: ast::Identifier) -> Self {
-        Self::from(&value)
-    }
-}
-
 impl From<&ast::Variable> for Identifier {
     fn from(value: &ast::Variable) -> Self {
         Self::from(value.identifier())

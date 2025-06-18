@@ -4,16 +4,25 @@
 
 ```
 $ startlang file_not_exist.rs
-? 102
-[102] Error: Cannot read file "file_not_exist.rs".
+? 101
+[101] Error: Cannot read file "file_not_exist.rs".
+
+```
+
+## Option not found
+
+```
+$ startlang option.st
+? 103
+[103] Error: Option "UknownOption" is unknown.
 
 ```
 
 ## Error on command
 ```
 $ startlang command.st
-? 101
-[101] Error: Parsing error
+? 201
+[201] Error: Parsing error
    ╭─[ command.st:1:1 ]
    │
  1 │ 3.
@@ -26,8 +35,8 @@ $ startlang command.st
 
 ```
 $ startlang last_command.st
-? 101
-[101] Error: Parsing error
+? 201
+[201] Error: Parsing error
    ╭─[ last_command.st:5:1 ]
    │
  5 │ a.
@@ -41,8 +50,8 @@ $ startlang last_command.st
 
 ```
 $ startlang definition_name.st
-? 101
-[101] Error: Parsing error
+? 201
+[201] Error: Parsing error
    ╭─[ definition_name.st:1:12 ]
    │
  1 │ Definition 1 := 3.
@@ -56,8 +65,8 @@ $ startlang definition_name.st
 
 ```
 $ startlang definition_not_end.st
-? 101
-[101] Error: Parsing error
+? 201
+[201] Error: Parsing error
    ╭─[ definition_not_end.st:1:14 ]
    │
  1 │ Definition a
@@ -70,8 +79,8 @@ $ startlang definition_not_end.st
 
 ```
 $ startlang definition_expr_ty.st
-? 101
-[101] Error: Parsing error
+? 201
+[201] Error: Parsing error
    ╭─[ definition_expr_ty.st:1:16 ]
    │
  1 │ Definition a : 1 := 1.
@@ -86,8 +95,8 @@ $ startlang definition_expr_ty.st
 
 ```
 $ startlang definition_no_expression.st
-? 101
-[101] Error: Parsing error
+? 201
+[201] Error: Parsing error
    ╭─[ definition_no_expression.st:1:17 ]
    │
  1 │ Definition a :=
@@ -100,8 +109,8 @@ $ startlang definition_no_expression.st
 
 ```
 $ startlang definition_ty.st
-? 101
-[101] Error: Parsing error
+? 201
+[201] Error: Parsing error
    ╭─[ definition_ty.st:1:6 ]
    │
  1 │ Type 1 := N.
