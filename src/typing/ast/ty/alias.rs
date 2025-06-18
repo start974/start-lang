@@ -1,7 +1,6 @@
 use super::super::Identifier;
 use super::{Type, TypeEnv, Typed};
 use crate::typing::error::ErrorVariableNotFound;
-use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -19,18 +18,6 @@ pub struct Alias {
 impl Typed for Alias {
     fn ty(&self) -> &Type {
         &self.ty
-    }
-}
-
-impl Located for Alias {
-    fn loc(&self) -> &Location {
-        self.name.loc()
-    }
-}
-
-impl LocatedSet for Alias {
-    fn set_loc(&mut self, loc: &impl Located) {
-        self.name.set_loc(loc);
     }
 }
 

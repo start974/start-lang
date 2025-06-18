@@ -62,10 +62,7 @@ impl Typer {
                     .get(&id)
                     .map(Type::from)
                     .or_else(|e| match ident.name() {
-                        "__TYPE_N__" => {
-                            let ty_builtin = ast_typed::TypeBuiltin::n().with_loc(ident);
-                            Ok(ast_typed::Type::from(ty_builtin))
-                        }
+                        "__TYPE_N__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::N)),
                         _ => Err(e),
                     })
                     .map_err(Error::from)
