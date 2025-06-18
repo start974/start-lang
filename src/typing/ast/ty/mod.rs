@@ -1,6 +1,6 @@
 use super::super::error::{ErrorUnexpectedType, ErrorVariableNotFound};
 use crate::typing::ast::Identifier;
-use crate::utils::location::Located;
+use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use std::collections::HashMap;
@@ -59,6 +59,24 @@ impl From<TypeBuiltin> for Type {
 impl From<TypeAlias> for Type {
     fn from(alias: TypeAlias) -> Self {
         Type::Alias(alias)
+    }
+}
+
+impl Located for Type {
+    fn loc(&self) -> &Location {
+        match self {
+            Type::Builtin(builtin) => builtin.loc(),
+            Type::Alias(alias) => alias.loc(),
+        }
+    }
+}
+
+impl LocatedSet for Type {
+    fn set_loc(&mut self, loc: &impl Located) {
+        match self {
+            Type::Builtin(builtin) => builtin.set_loc(loc),
+            Type::Alias(alias) => alias.set_loc(loc),
+        }
     }
 }
 

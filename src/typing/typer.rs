@@ -25,7 +25,7 @@ impl Typer {
     }
 
     /// convert constant
-    fn constant(&self, constant: &ast_parser::Constant) -> ast_typed::Constant {
+    pub fn constant(&self, constant: &ast_parser::Constant) -> ast_typed::Constant {
         match constant.kind() {
             ast_parser::ConstantKind::N(n) => ast_typed::Constant::n(n.clone()),
             //ast_parser::ConstantKind::B(b) => ast_typed::Constant::b(*b),
@@ -58,8 +58,19 @@ impl Typer {
     pub fn ty(&self, ty: &ast_parser::Type) -> Result<ast_typed::Type> {
         match ty {
             ast_parser::Type::Var(ident) => {
-                let id = self.id_builder.get(ident.name()).with_loc(ident);
-                self.ty_alias.get(&id).map_err(Error::from).map(Type::from)
+                let name = ident.name();
+                let id = self.id_builder.get(name).with_loc(ident);
+                self.ty_alias
+                    .get(&id)
+                    .map(Type::from)
+                    .or_else(|e| match ident.name() {
+                        "ℕ" => {
+                            let ty_builtin = ast_typed::TypeBuiltin::n().with_loc(ident);
+                            Ok(ast_typed::Type::from(ty_builtin))
+                        }
+                        _ => Err(e),
+                    })
+                    .map_err(Error::from)
             }
         }
     }
