@@ -26,6 +26,8 @@ pub struct Interpreter {
     debug_parser: bool,
     /// debug typer
     debug_typer: bool,
+    /// typer env
+    debug_typer_env: bool,
 }
 
 impl Interpreter {
@@ -40,6 +42,7 @@ impl Interpreter {
             err_code: 0,
             debug_parser: false,
             debug_typer: false,
+            debug_typer_env: false,
         };
         this.set_std_library();
         this
@@ -108,6 +111,68 @@ impl Interpreter {
         self.cache.last_repl_source_id()
     }
 
+    /// type and run expression definition
+    fn run_expr_definition(&mut self, def: parser_ast::ExpressionDefinition) {
+        self.typer
+            .expression_definition(&def)
+            .map(|def| {
+                if self.debug_typer {
+                    println!("{}", def.to_string(&self.theme));
+                }
+                if self.repl_mod {
+                    let summary = SummaryDefinition::from(&def);
+                    println!("{}", summary.to_string(&self.theme));
+                }
+                self.vm_env.add_definition(&def)
+            })
+            .unwrap_or_else(|e| self.fail(e))
+    }
+
+    /// run type definition
+    fn run_type_definition(&mut self, def: parser_ast::TypeDefinition) {
+        if let Err(e) = self.typer.type_definition(&def) {
+            self.fail(e);
+        }
+    }
+
+    /// run evaluation
+    fn run_eval(&mut self, expr: parser_ast::Expression) {
+        self.typer
+            .expression(&expr)
+            .map(|expr| {
+                if self.debug_typer {
+                    println!("{}", expr.to_string(&self.theme));
+                }
+                let value = self.vm_env.eval(&expr);
+                println!("{}", value.to_string(&self.theme));
+            })
+            .unwrap_or_else(|e| self.fail(e))
+    }
+
+    /// run type of expression
+    fn run_typeof(&mut self, expr: parser_ast::Expression) {
+        self.typer
+            .expression(&expr)
+            .map(|expr| {
+                if self.debug_typer {
+                    println!("{}", expr.to_string(&self.theme));
+                }
+                let ty = expr.ty();
+                println!("{}", ty.to_string(&self.theme));
+            })
+            .unwrap_or_else(|e| self.fail(e))
+    }
+
+    /// run set command
+    fn run_set(&mut self, b: bool, identifier: parser_ast::Identifier) {
+        match identifier.name() {
+            "DebugParser" => self.debug_parser = b,
+            "DebugTyper" => self.debug_typer = b,
+            "DebugTyperEnv" => self.debug_typer_env = b,
+            _ => self.fail(error::UnknownOption::from(identifier)),
+        }
+    }
+
     /// run the interpreter in REPL mode
     pub fn run(&mut self, source_id: SourceId) {
         let source = self.cache.get(&source_id).to_string();
@@ -122,52 +187,14 @@ impl Interpreter {
                     println!("{}", cmd.to_string(&self.theme));
                 }
                 match cmd {
-                    parser_ast::Command::ExpressionDefinition(def) => self
-                        .typer
-                        .expression_definition(&def)
-                        .map(|def| {
-                            if self.debug_typer {
-                                println!("{}", def.to_string(&self.theme));
-                            }
-                            if self.repl_mod {
-                                let summary = SummaryDefinition::from(&def);
-                                println!("{}", summary.to_string(&self.theme));
-                            }
-                            self.vm_env.add_definition(&def)
-                        })
-                        .unwrap_or_else(|e| self.fail(e)),
-                    parser_ast::Command::TypeDefinition(def) => {
-                        if let Err(e) = self.typer.type_definition(&def) {
-                            self.fail(e);
-                        }
-                    }
-                    parser_ast::Command::Eval(expr) => self
-                        .typer
-                        .expression(&expr)
-                        .map(|expr| {
-                            if self.debug_typer {
-                                println!("{}", expr.to_string(&self.theme));
-                            }
-                            let value = self.vm_env.eval(&expr);
-                            println!("{}", value.to_string(&self.theme));
-                        })
-                        .unwrap_or_else(|e| self.fail(e)),
-                    parser_ast::Command::TypeOf(expr) => self
-                        .typer
-                        .expression(&expr)
-                        .map(|expr| {
-                            if self.debug_typer {
-                                println!("{}", expr.to_string(&self.theme));
-                            }
-                            let ty = expr.ty();
-                            println!("{}", ty.to_string(&self.theme));
-                        })
-                        .unwrap_or_else(|e| self.fail(e)),
-                    parser_ast::Command::Set(b, identifier) => match identifier.name() {
-                        "DebugParser" => self.debug_parser = b,
-                        "DebugTyper" => self.debug_typer = b,
-                        _ => self.fail(error::UnknownOption::from(identifier)),
-                    },
+                    parser_ast::Command::ExpressionDefinition(def) => self.run_expr_definition(def),
+                    parser_ast::Command::TypeDefinition(def) => self.run_type_definition(def),
+                    parser_ast::Command::Eval(expr) => self.run_eval(expr),
+                    parser_ast::Command::TypeOf(expr) => self.run_typeof(expr),
+                    parser_ast::Command::Set(b, id) => self.run_set(b, id),
+                }
+                if self.debug_typer_env {
+                    println!("Typer Env:\n{:#?}", self.typer);
                 }
             })
             .unwrap_or_else(|e| self.fail(e));

@@ -293,7 +293,7 @@ pub fn command<'src>(
         .ignore_then(expression(source_id.clone()))
         .map(ast::Command::TypeOf);
 
-    let set = (just("Set").or(just("Unset")))
+    let set = (just("Set"))
         .padded()
         .ignore_then(identifier(source_id.clone()))
         .map(|id| ast::Command::Set(true, id));

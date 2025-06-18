@@ -60,6 +60,7 @@ impl Pretty for Variable {
 // ==========================================================================
 // Variable Builder
 // ==========================================================================
+#[derive(Debug)]
 pub struct VariableEnv(TypeEnv);
 
 impl VariableEnv {

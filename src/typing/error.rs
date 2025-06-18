@@ -98,18 +98,15 @@ impl ErrorReport for ErrorUnexpectedType {
                 Message::nil()
                     .text("Expected type: ")
                     .of_pretty(&self.expected)
-                    .to_string(theme),
-            )
-            .with_note(
-                Message::nil()
-                    .text("Found type:     ")
+                    .text(".\n")
+                    .text("Found type:    ")
                     .of_pretty(&self.found)
                     .to_string(theme),
             )
             .finish()
     }
     fn message(&self) -> crate::utils::error::Message {
-        Message::nil().text("Unexpected type.")
+        Message::nil().text("Type mismatch.")
     }
 }
 

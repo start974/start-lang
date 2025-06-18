@@ -9,7 +9,7 @@ pub type NConst = BigUint;
 
 pub enum ConstantKind {
     N(NConst),
-    //B(bool),
+    B(bool),
 }
 
 pub struct Constant {
@@ -31,14 +31,14 @@ impl Constant {
         }
     }
 
-    /*    /// create boolean constant*/
-    /*pub fn b(b: bool) -> Self {*/
-    /*Self {*/
-    /*ty: Ty::Builtin(TyBuiltin::B),*/
-    /*loc: UNKNOWN_LOCATION,*/
-    /*kind: ConstantKind::B(b),*/
-    /*}*/
-    /*}*/
+    /// create boolean constant
+    pub fn b(b: bool) -> Self {
+        Self {
+            ty: Type::Builtin(TypeBuiltin::B),
+            loc: UNKNOWN_LOCATION,
+            kind: ConstantKind::B(b),
+        }
+    }
 
     /// get kind of the constant
     pub fn kind(&self) -> &ConstantKind {
@@ -62,7 +62,7 @@ impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self.kind() {
             ConstantKind::N(n) => theme.constant(&format_number(n)),
-            //ConstantKind::B(b) => theme.constant(b),
+            ConstantKind::B(b) => theme.constant(b),
         }
     }
 }

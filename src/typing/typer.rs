@@ -3,6 +3,7 @@ use super::error::ErrorFromParser;
 use crate::parser::ast as ast_parser;
 use crate::utils::location::LocatedSet;
 
+#[derive(Debug)]
 pub struct Typer {
     var_env: VariableEnv,
     ty_alias: TypeAliasEnv,
@@ -26,7 +27,6 @@ impl Typer {
     pub fn constant(&self, constant: &ast_parser::Constant) -> ast_typed::Constant {
         match constant.kind() {
             ast_parser::ConstantKind::N(n) => ast_typed::Constant::n(n.clone()),
-            //ast_parser::ConstantKind::B(b) => ast_typed::Constant::b(*b),
         }
         .with_loc(constant)
     }
@@ -40,8 +40,19 @@ impl Typer {
             }
             ast_parser::Expression::Variable(x) => {
                 let id = self.id_builder.get(x.name()).with_loc(x);
-                let var = self.var_env.get(&id).map_err(Error::from)?;
-                Ok(ast_typed::Expression::Variable(var))
+                self.var_env
+                    .get(&id)
+                    .map_err(Error::from)
+                    .map(ast_typed::Expression::from)
+                    .or_else(|e| match x.name() {
+                        "__Constant_true__" => {
+                            Ok(ast_typed::Expression::from(ast_typed::Constant::b(true)))
+                        }
+                        "__Constant_false__" => {
+                            Ok(ast_typed::Expression::from(ast_typed::Constant::b(false)))
+                        }
+                        _ => Err(e),
+                    })
             }
             ast_parser::Expression::TypeRestriction(ty_restr) => {
                 // TODO: make multiple error
@@ -62,7 +73,8 @@ impl Typer {
                     .get(&id)
                     .map(Type::from)
                     .or_else(|e| match ident.name() {
-                        "__TYPE_N__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::N)),
+                        "__Type_N__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::N)),
+                        "__Type_B__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::B)),
                         _ => Err(e),
                     })
                     .map_err(Error::from)
