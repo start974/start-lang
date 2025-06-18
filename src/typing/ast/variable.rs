@@ -24,7 +24,7 @@ impl Variable {
     }
 }
 
-pub mod sealed_mut_ty {
+mod sealed_mut_ty {
     use super::*;
     impl TypedMut for Variable {
         fn ty_mut(&mut self) -> &mut Type {

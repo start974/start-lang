@@ -20,7 +20,7 @@ pub enum Expression {
     Variable(Variable),
 }
 
-pub mod sealed_mut_ty {
+mod sealed_mut_ty {
     use super::*;
     impl TypedMut for Expression {
         fn ty_mut(&mut self) -> &mut Type {

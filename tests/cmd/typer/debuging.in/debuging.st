@@ -6,9 +6,9 @@ Def long_number
     : N1 :=
   333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_331.
 
-Def b := (3 : N).
+Def a := (3 : N).
 Def b := 3 : N.
-Def b := ((3 : N)).
+Def b := ((a : N)).
 
 Type LongType_NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN :=
   N1.

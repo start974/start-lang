@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use super::error;
 use crate::interpreter::summary::SummaryDefinition;
 use crate::parser::{ast as parser_ast, Parser};
