@@ -2,8 +2,6 @@ use super::ast::{self as ast_typed, IdentifierBuilder, Type, TypeAliasEnv, Typed
 use super::error::ErrorFromParser;
 use crate::parser::ast as ast_parser;
 use crate::utils::location::LocatedSet;
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
 
 pub struct Typer {
     var_env: VariableEnv,

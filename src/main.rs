@@ -2,7 +2,6 @@ use std::{env, process::exit};
 
 mod interpreter;
 mod parser;
-mod repl;
 mod stdlib;
 mod typing;
 mod utils;
