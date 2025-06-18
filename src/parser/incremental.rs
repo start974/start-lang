@@ -12,7 +12,7 @@ pub struct IncrementalParser<'src> {
     /// end of source
     end: bool,
     /// offset
-    offset : usize,
+    offset: usize,
 }
 
 impl<'src> IncrementalParser<'src> {
@@ -21,7 +21,7 @@ impl<'src> IncrementalParser<'src> {
         Self {
             source,
             source_id,
-            end: false,
+            end: source.is_empty(),
             offset: 0,
         }
     }
@@ -44,9 +44,10 @@ impl<'src> IncrementalParser<'src> {
                 }
                 Err(errs) => {
                     self.end = true;
-                    let errs = errs.iter().map(|err| {
-                        Error::new(err.clone(), self.source_id.clone())
-                    }).collect::<Vec<_>>();
+                    let errs = errs
+                        .iter()
+                        .map(|err| Error::new(err.clone(), self.source_id.clone()))
+                        .collect::<Vec<_>>();
                     Some(Err(errs))
                 }
             }

@@ -1,5 +1,6 @@
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder, SourceId};
+use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
 use ariadne::Label;
 use chumsky::error::Rich;
@@ -34,9 +35,20 @@ impl Located for Error<'_> {
 }
 
 impl ErrorReport for Error<'_> {
-    fn finalize<'a>(&self, _theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
+    fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
+        let mut msg = Message::nil().text("Expected ");
+        for (i, c) in self.err.expected().enumerate() {
+            if i > 0 {
+                msg = msg.text(", ");
+            }
+            msg = msg.quoted(&c.to_string());
+        }
+        if let Some(found) = self.err.found() {
+            msg = msg.text(", found ").quoted(&found.to_string());
+        }
+        msg = msg.text(".");
         report
-            .with_label(Label::new(self.loc().clone()).with_message(self.err.to_string()))
+            .with_label(Label::new(self.loc().clone()).with_message(msg.to_string(theme)))
             .finish()
     }
 

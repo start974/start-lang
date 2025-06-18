@@ -40,13 +40,13 @@ type_restriction := ":" type
 constant :=
 | number
 
-expr :=
-|  "(" expr ")"
+expression :=
+|  "(" expression ")"
 |  identifier
 |  constant
-|  expr type_restiction
+|  expression type_restiction
 
-expr_definition := identifier type_rest? ":=" expr
+expr_definition := identifier type_rest? ":=" expression
 ```
 
 ### Type
@@ -62,7 +62,7 @@ type :=
 
 ```
 grammar :=
-| "Add" grammar_syntax ":" grammar_rule ":=" expr
+| "Add" grammar_syntax ":" grammar_rule ":=" expression
 | "New" identifier
 | ("Remove" | "Rm") identifier
 
