@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use super::error;
 use crate::interpreter::summary::SummaryDefinition;
 use crate::parser::{ast as parser_ast, Parser};
@@ -31,7 +33,7 @@ pub struct Interpreter {
 impl Interpreter {
     /// Create a new interpreter instance
     pub fn new() -> Self {
-        Self {
+        let mut this = Self {
             cache: SourceCache::new(),
             theme: Theme::default_theme(),
             typer: Typer::new(),
@@ -40,7 +42,17 @@ impl Interpreter {
             err_code: 0,
             debug_parser: false,
             debug_typer: false,
-        }
+        };
+        this.set_std_library();
+        this
+    }
+
+    fn set_std_library(&mut self) {
+        // Load the standard library definitions into the environment
+        let content = include_str!("../../assets/stdlib.st");
+        let path = std::path::PathBuf::from("../../assets/stdlib.st");
+        let source_id = self.cache.set_file(path, content.to_string());
+        self.run(source_id);
     }
 
     /// update repl module

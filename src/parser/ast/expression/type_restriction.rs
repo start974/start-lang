@@ -50,7 +50,9 @@ impl Pretty for TypeRestriction {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
             .append(self.expr.pretty(theme))
+            .append(Doc::space())
             .append(theme.op_typed_by())
+            .append(Doc::space())
             .append(self.ty.pretty(theme))
     }
 }
