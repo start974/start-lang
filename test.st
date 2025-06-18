@@ -1,2 +1,5 @@
-Def b := 11.
-Eval b.
+Set DebugTyperEnv.
+
+Def a : N := 1.
+
+Unset DebugTyperEnv.

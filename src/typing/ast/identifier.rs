@@ -131,6 +131,11 @@ impl IdentifierBuilder {
         }
     }
 
+    // iter over identifiers
+    //pub fn iter(&self) -> impl Iterator<Item = (&String, &usize)> {
+        //self.table.iter()
+    //}
+
     /*    /// take a snapshot of the current state*/
     /*pub fn snapshot(self) -> Self {*/
     /*Self {*/
@@ -149,27 +154,5 @@ impl IdentifierBuilder {
 impl Default for IdentifierBuilder {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-impl Pretty for IdentifierBuilder {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        Doc::nil()
-            .append(Doc::text("{"))
-            .append(Doc::space())
-            .append(Doc::group(Doc::intersperse(
-                self.table.iter().map(|(name, id)| {
-                    Doc::group(
-                        Doc::nil()
-                            .append(theme.expr_var(name))
-                            .append(Doc::space())
-                            .append(theme.op_typed_by())
-                            .append(Doc::space())
-                            .append(theme.constant(id)),
-                    )
-                }),
-                Doc::text(",").append(Doc::space()),
-            )))
-            .append(Doc::text("}"))
     }
 }

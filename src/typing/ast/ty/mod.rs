@@ -111,6 +111,7 @@ pub trait Typed {
 // ==========================================================================
 // Type Environment
 // ==========================================================================
+#[derive(Debug)]
 pub struct TypeEnv(HashMap<Identifier, Type>);
 
 impl TypeEnv {

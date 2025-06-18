@@ -11,15 +11,15 @@ pub enum Builtin {
     ///// relative number type
     //Z,
     ///// boolean type
-    //B,
+    B,
 }
 
 impl Pretty for Builtin {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             Builtin::N => theme.ty_var(&"ℕ"),
+            Builtin::B => theme.ty_var(&"𝔹"),
             //Kind::Z => theme.ty_var(&"ℤ"),
-            //Kind::B => theme.ty_var(&"𝔹"),
         }
     }
 }

@@ -21,6 +21,6 @@ Eval long_number.
 TypeOf b.
 N
 Set DebugTyper.
-Set DebugParser.
+Unset DebugParser.
 
 ```

@@ -20,6 +20,18 @@ pub enum Expression {
     Variable(Variable),
 }
 
+impl From<Constant> for Expression {
+    fn from(constant: Constant) -> Self {
+        Expression::Constant(constant)
+    }
+}
+
+impl From<Variable> for Expression {
+    fn from(variable: Variable) -> Self {
+        Expression::Variable(variable)
+    }
+}
+
 mod sealed_mut_ty {
     use super::*;
     impl TypedMut for Expression {
