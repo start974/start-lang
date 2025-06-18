@@ -1,5 +1,14 @@
 # Error
 
+## File not found
+
+```
+$ startlang file_not_exist.rs
+? 102
+[102] Error: Cannot read file "file_not_exist.rs".
+
+```
+
 ## Error on command
 ```
 $ startlang command.st

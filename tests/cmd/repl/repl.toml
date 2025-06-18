@@ -1,0 +1,13 @@
+bin.name = "startlang"
+status.code = 0
+
+stdin = """
+Def a := 3.
+Eval a.
+"""
+
+
+stdout = """
+a : ℕ
+3
+"""
