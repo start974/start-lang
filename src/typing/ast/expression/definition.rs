@@ -59,19 +59,22 @@ impl Typed for Definition {
 
 impl Pretty for Definition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        let ty = self.ty();
-        let doc_ty = Doc::nil()
-            .append(Doc::line())
-            .append(theme.op_typed_by())
-            .append(Doc::space())
-            .append(ty.pretty(theme));
         Doc::nil()
-            .append(theme.kw_def()) // NOTE: rm when command definition implemented
+            .append(theme.kw_def())
             .append(Doc::space())
-            .append(theme.def_var(&self.name)) // NOTE: change if using in let
-            .append(Doc::group(doc_ty))
+            .append(theme.def_var(&self.name))
+            .append(Doc::group(
+                Doc::nil().append(
+                    Doc::line()
+                        .append(theme.op_typed_by())
+                        .append(Doc::space())
+                        .append(self.ty().pretty(theme))
+                        .group()
+                        .nest(4),
+                ),
+            ))
+            .append(Doc::space())
             .append(theme.op_eq_def())
-            .append(Doc::line())
-            .append(Doc::group(self.body.pretty(theme)))
+            .append(Doc::line().append(self.body.pretty(theme).group()).nest(2))
     }
 }

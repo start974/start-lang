@@ -120,21 +120,3 @@ impl Default for Typer {
         Self::new()
     }
 }
-
-impl Pretty for Typer {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        Doc::nil()
-            .append(Doc::line_())
-            .append(Doc::text("Env var:"))
-            .append(Doc::line_())
-            .append(self.var_env.pretty(theme))
-            .append(Doc::line_())
-            .append(Doc::text("Env ty alias:"))
-            .append(Doc::line_())
-            .append(self.ty_alias.pretty(theme))
-            .append(Doc::line_())
-            .append(Doc::text("Identifier Builder:"))
-            .append(Doc::line_())
-            .append(self.id_builder.pretty(theme))
-    }
-}

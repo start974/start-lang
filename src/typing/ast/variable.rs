@@ -88,25 +88,3 @@ impl Default for VariableEnv {
         Self::new()
     }
 }
-
-impl Pretty for VariableEnv {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        Doc::nil()
-            .append(Doc::text("{"))
-            .append(Doc::space())
-            .append(Doc::group(Doc::intersperse(
-                self.0.iter().map(|(name, ty)| {
-                    Doc::group(
-                        Doc::nil()
-                            .append(theme.expr_var(name))
-                            .append(Doc::space())
-                            .append(theme.op_typed_by())
-                            .append(Doc::space())
-                            .append(ty.pretty(theme)),
-                    )
-                }),
-                Doc::text(",").append(Doc::space()),
-            )))
-            .append(Doc::text("}"))
-    }
-}

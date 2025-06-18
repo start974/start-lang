@@ -132,7 +132,7 @@ pub fn number<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
 /// ```
 pub fn ty<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Type, Error<'src>> {
     let identifier = identifier(source_id);
-    identifier.map(ast::Type::Var).labelled("type")
+    identifier.map(ast::Type::from).labelled("type")
 }
 
 /// parse type definition
@@ -279,10 +279,20 @@ pub fn command<'src>(
 
     let type_of = (just("TypeOf").or(just("?:")))
         .padded()
-        .ignore_then(expression(source_id))
+        .ignore_then(expression(source_id.clone()))
         .map(ast::Command::TypeOf);
 
-    choice((def_expr, def_type, eval, type_of)).labelled("command")
+    let set = (just("Set").or(just("Unset")))
+        .padded()
+        .ignore_then(identifier(source_id.clone()))
+        .map(|id| ast::Command::Set(true, id));
+
+    let unset = (just("Unset"))
+        .padded()
+        .ignore_then(identifier(source_id))
+        .map(|id| ast::Command::Set(false, id));
+
+    choice((def_expr, def_type, eval, type_of, set, unset)).labelled("command")
 }
 
 /// parse command with dot

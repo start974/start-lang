@@ -24,7 +24,7 @@ impl<'src> Error<'src> {
 
 impl ErrorCode for Error<'_> {
     fn code(&self) -> i32 {
-        101
+        201
     }
 }
 
