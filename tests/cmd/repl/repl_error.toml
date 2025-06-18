@@ -1,0 +1,21 @@
+bin.name = "startlang"
+status.code = 0
+
+stdin = """
+Def a := 3. Eval not_exits. Eval a.
+"""
+
+
+stdout = """
+a : ℕ
+"""
+
+stderr = """
+[301] Error: Variable not found.
+   ╭─[ REPL:1:18 ]
+   │
+ 1 │ Def a := 3. Eval not_exits. Eval a.
+   │                  ────┬────  
+   │                      ╰────── Variable "not_exits" not found in the current scope.
+───╯
+"""

@@ -118,7 +118,7 @@ pub fn number_bin<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> 
 /// parse number
 pub fn number<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
     // parse decimal number or hexadecimal or octal or binary
-    choice((number_dec(), number_hex(), number_oct(), number_bin())).labelled("number")
+    choice((number_hex(), number_oct(), number_bin(), number_dec())).labelled("number")
 }
 
 // ===========================================================================

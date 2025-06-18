@@ -14,6 +14,7 @@ impl Pretty for SummaryDefinition<'_> {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
             .append(theme.def_var(&self.0.name().name()))
+            .append(Doc::space())
             .append(theme.op_typed_by())
             .append(Doc::space())
             .append(self.0.ty().pretty(theme))
