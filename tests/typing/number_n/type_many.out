@@ -1,4 +1,0 @@
-def a : N := 1
-def b : N := 2
-def a : N := 3
-def c : N := 5

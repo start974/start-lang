@@ -11,27 +11,37 @@ pub type Error<'a> = extra::Err<Rich<'a, char>>;
 // ===========================================================================
 /// parse unicode alphabetic characters
 fn letter<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
-    any().filter(|c: &char| c.is_alphabetic())
+    any()
+        .filter(|c: &char| c.is_alphabetic())
+        .labelled("letter")
 }
 
 /// parse ascii digits
 fn digit<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
-    any().filter(|c: &char| c.is_ascii_digit())
+    any()
+        .filter(|c: &char| c.is_ascii_digit())
+        .labelled("digit")
 }
 
 /// parse ascii hexadecimal digits
 fn digit_hex<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
-    any().filter(|c: &char| c.is_ascii_hexdigit())
+    any()
+        .filter(|c: &char| c.is_ascii_hexdigit())
+        .labelled("digit_hex")
 }
 
 /// parse ascii octal digits (0-7)
 fn digit_oct<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
-    digit().filter(|c: &char| *c != '8' && *c != '9')
+    digit()
+        .filter(|c: &char| *c != '8' && *c != '9')
+        .labelled("digit_oct")
 }
 
 /// parse ascii binary digits (0-1)
 fn digit_bin<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
-    any().filter(|c: &char| *c == '0' || *c == '1')
+    any()
+        .filter(|c: &char| *c == '0' || *c == '1')
+        .labelled("digit_bin")
 }
 
 // ===========================================================================
@@ -65,6 +75,7 @@ pub fn identifier<'src>(
                 ast::Identifier::new(&name, loc)
             },
         )
+        .labelled("identifier")
 }
 
 // ===========================================================================
@@ -107,27 +118,27 @@ fn number_base_prefixed<'src>(
 
 /// parse number `digit ( digit | _)*
 fn number_dec<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
-    number_base(10, digit())
+    number_base(10, digit()).labelled("number_dec")
 }
 /// parse hexadecimal number `"0" ("x" | "X") digit_hex ( digit_hex | _)*`
 pub fn number_hex<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
-    number_base_prefixed('x', 'X', 16, digit_hex())
+    number_base_prefixed('x', 'X', 16, digit_hex()).labelled("number_hex")
 }
 
 /// parse octal number `"0" ("o" | "O") digit_oct ( digit_oct | _)*`
 pub fn number_oct<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
-    number_base_prefixed('o', 'O', 8, digit_oct())
+    number_base_prefixed('o', 'O', 8, digit_oct()).labelled("number_oct")
 }
 
 /// parse binary number `"0" ("b" | "B") digit_bin ( digit_bin | _)*`
 pub fn number_bin<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
-    number_base_prefixed('b', 'B', 2, digit_bin())
+    number_base_prefixed('b', 'B', 2, digit_bin()).labelled("number_bin")
 }
 
 /// parse number
 pub fn number<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
     // parse decimal number or hexadecimal or octal or binary
-    choice((number_dec(), number_hex(), number_oct(), number_bin()))
+    choice((number_dec(), number_hex(), number_oct(), number_bin())).labelled("number")
 }
 
 // ===========================================================================
@@ -135,17 +146,17 @@ pub fn number<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
 // ===========================================================================
 
 /// parse type
-/// ```
+/// ```ebfn
 /// type :=
 /// | identifier
 /// ```
 pub fn ty<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Type, Error<'src>> {
     let identifier = identifier(source_id);
-    identifier.map(ast::Type::Var)
+    identifier.map(ast::Type::Var).labelled("type")
 }
 
 /// parse type definition
-/// ```
+/// ```ebfn
 /// type_definition := identifier ":=" type
 /// ```
 pub fn type_definition<'src>(
@@ -158,6 +169,7 @@ pub fn type_definition<'src>(
         .then(ty)
         .map(move |(name, ty)| ast::TypeDefinition::new(name, ty))
         .padded()
+        .labelled("type_definition")
 }
 
 // ===========================================================================
@@ -165,7 +177,7 @@ pub fn type_definition<'src>(
 // ===========================================================================
 
 /// parse type restriction
-///```
+/// ```ebfn
 /// type_restr := ":" type
 ///```
 pub fn type_restriction<'src>(
@@ -173,11 +185,14 @@ pub fn type_restriction<'src>(
 ) -> impl Parser<'src, &'src str, ast::Type, Error<'src>> {
     let op_colon = just(':');
     let ty = ty(source_id.clone());
-    op_colon.padded().ignore_then(ty)
+    op_colon
+        .padded()
+        .ignore_then(ty)
+        .labelled("type_restriction")
 }
 
 /// parse constant
-///```
+/// ```ebfn
 /// constant :=
 /// | number
 ///```
@@ -189,11 +204,11 @@ pub fn constant<'src>(
         let loc = Location::new(span.start, span.end, source_id.clone());
         ast::Constant::n(number, loc)
     });
-    number
+    number.labelled("constant")
 }
 
 /// parse expression
-///```
+/// ```ebfn
 /// expr :=
 /// | "(" expr ")"
 /// | identifier
@@ -218,12 +233,12 @@ pub fn expression<'src>(
             .then_ignore(just(')'))
             .padded();
 
-        choice((identifier, constant, parens))
+        choice((identifier, constant, parens)).labelled("expression")
     })
 }
 
 /// parse expression definition
-///```
+/// ```ebfn
 ///expr_definition := identifier type_rest? ":=" expr
 ///```
 pub fn expression_definition<'src>(
@@ -247,13 +262,14 @@ pub fn expression_definition<'src>(
                 None => def,
             }
         })
+        .labelled("expression_definition")
 }
 
 // ===========================================================================
 // Command
 // ===========================================================================
 /// parse command
-///```
+/// ```ebfn
 /// command :=
 /// | ("Definition" | "Def") expr_definition
 /// | ("Type" | "Ty") type_definition
@@ -280,11 +296,13 @@ pub fn command<'src>(
         .ignore_then(expression(source_id))
         .map(ast::Command::TypeOf);
 
-    choice((def_expr, def_type, eval, type_of)).padded()
+    choice((def_expr, def_type, eval, type_of))
+        .padded()
+        .labelled("command")
 }
 
 /// parse command with dot
-///```
+/// ```ebfn
 /// command_dot := command "."
 ///```
 pub fn command_dot<'src>(
@@ -302,4 +320,5 @@ pub fn command_offset<'src>(
     command_dot(source_id)
         .map_with(|cmd, e| (cmd, e.span().end))
         .then_ignore(any().repeated())
+        .then_ignore(end())
 }

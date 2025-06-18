@@ -1,3 +1,0 @@
-Error[303]: tests/typing/error/var_not_exist.st:1:10
-1 | def a := b
-             ^ Variable "b" not found.

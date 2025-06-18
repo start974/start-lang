@@ -227,6 +227,7 @@ impl Location {
         Self { start, end, source }
     }
 
+    /// union of location
     pub fn union(&self, other: &Location) -> Location {
         if self.source != other.source {
             panic!("Cannot union locations from different sources");
