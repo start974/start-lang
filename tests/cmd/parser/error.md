@@ -14,6 +14,20 @@ $ startlang command.st
 
 
 ```
+
+```
+$ startlang last_command.st
+? 101
+[101] Error: Parsing error
+   ╭─[ last_command.st:5:1 ]
+   │
+ 5 │ a.
+   │ ┬  
+   │ ╰── Expected "command", found "a".
+───╯
+
+
+```
 ## Error Expression Definition
 
 ```

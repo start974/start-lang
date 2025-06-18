@@ -36,7 +36,7 @@ impl LocatedSet for Alias {
 
 impl Pretty for Alias {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        theme.ty_var(&self.name)
+        theme.ty_var(&self.name.name())
     }
 }
 

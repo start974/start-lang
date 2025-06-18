@@ -145,11 +145,12 @@ pub fn type_definition<'src>(
     let name = identifier(source_id.clone());
     let op_eq_def = just(":=").labelled(":=");
     let ty = ty(source_id);
-    name.then_ignore(op_eq_def)
+    name.padded()
+        .then_ignore(op_eq_def)
+        .padded()
         .then(ty)
         .map(move |(name, ty)| ast::TypeDefinition::new(name, ty))
         .padded()
-        .labelled("type_definition")
 }
 
 // ===========================================================================
@@ -267,20 +268,21 @@ pub fn command<'src>(
         .map(ast::Command::ExpressionDefinition);
 
     let def_type = (just("Type").or(just("Ty")))
+        .padded()
         .ignore_then(type_definition(source_id.clone()))
         .map(ast::Command::TypeDefinition);
 
     let eval = (just("Eval").or(just("$")))
+        .padded()
         .ignore_then(expression(source_id.clone()))
         .map(ast::Command::Eval);
 
     let type_of = (just("TypeOf").or(just("?:")))
+        .padded()
         .ignore_then(expression(source_id))
         .map(ast::Command::TypeOf);
 
-    choice((def_expr, def_type, eval, type_of))
-        .padded()
-        .labelled("command")
+    choice((def_expr, def_type, eval, type_of)).labelled("command")
 }
 
 /// parse command with dot
@@ -291,7 +293,7 @@ pub fn command_dot<'src>(
     source_id: SourceId,
 ) -> impl Parser<'src, &'src str, ast::Command, Error<'src>> {
     let cmd = command(source_id);
-    let dot = just('.');
+    let dot = just('.').labelled(".");
     cmd.padded().then_ignore(dot).padded()
 }
 
