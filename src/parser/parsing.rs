@@ -9,13 +9,6 @@ pub type Error<'a> = extra::Err<Rich<'a, char>>;
 // ===========================================================================
 // Utils
 // ===========================================================================
-/// parse unicode alphabetic characters
-fn letter<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
-    any()
-        .filter(|c: &char| c.is_alphabetic())
-        .labelled("letter")
-}
-
 /// parse ascii digits
 fn digit<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
     any()
@@ -48,33 +41,20 @@ fn digit_bin<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
 // Identifier
 // ===========================================================================
 
-/// parse `"_"* letter (letter | digit | _)* "'"*`
+/// parse identifier defined in
+/// [Unicode Standard Annex #31](https://www.unicode.org/reports/tr31/)
+/// follwing by quotes
 pub fn identifier<'src>(
     source_id: SourceId,
 ) -> impl Parser<'src, &'src str, ast::Identifier, Error<'src>> {
-    let letter = Rc::new(letter());
-    let underscore = Rc::new(just('_'));
-    let digit = digit();
-    let quote = just('\'');
-
-    (underscore.clone().repeated().collect::<String>())
-        .then(letter.clone())
-        .then(
-            letter
-                .or(digit)
-                .or(underscore)
-                .repeated()
-                .collect::<String>(),
-        )
-        .then(quote.repeated().collect::<String>())
-        .map_with(
-            move |(((underscores, first_letter), mid), apostrophes), e| {
-                let span = e.span();
-                let name = format!("{}{}{}{}", underscores, first_letter, mid, apostrophes);
-                let loc = Location::new(span.start, span.end, source_id.clone());
-                ast::Identifier::new(&name, loc)
-            },
-        )
+    text::unicode::ident()
+        .then(just('\'').repeated().collect::<String>())
+        .map(|(ident, quotes)| format!("{}{}", ident, quotes))
+        .map_with(move |name, e| {
+            let span: SimpleSpan = e.span();
+            let loc = Location::new(span.start, span.end, source_id.clone());
+            ast::Identifier::new(&name, loc)
+        })
         .labelled("identifier")
 }
 
@@ -163,7 +143,7 @@ pub fn type_definition<'src>(
     source_id: SourceId,
 ) -> impl Parser<'src, &'src str, ast::TypeDefinition, Error<'src>> {
     let name = identifier(source_id.clone());
-    let op_eq_def = just(":=");
+    let op_eq_def = just(":=").labelled(":=");
     let ty = ty(source_id);
     name.then_ignore(op_eq_def)
         .then(ty)
@@ -204,7 +184,7 @@ pub fn constant<'src>(
         let loc = Location::new(span.start, span.end, source_id.clone());
         ast::Constant::n(number, loc)
     });
-    number.labelled("constant")
+    number
 }
 
 /// parse expression
@@ -219,19 +199,22 @@ pub fn expression<'src>(
     source_id: SourceId,
 ) -> impl Parser<'src, &'src str, ast::Expression, Error<'src>> {
     recursive(move |expr| {
-        let identifier = Rc::new(identifier(source_id.clone()).map(ast::Expression::from));
-        let constant = Rc::new(constant(source_id.clone()).map(ast::Expression::from));
+        let identifier = identifier(source_id.clone())
+            .map(ast::Expression::from)
+            .boxed();
+        let constant = constant(source_id.clone())
+            .map(ast::Expression::from)
+            .boxed();
         //let type_restriction = (expr0.clone())
         //.then(type_restriction(source_id))
         //.map(|(expr, ty)| ast::TypeRestriction::new(expr, ty))
         //.map(ast::Expression::from)
         //.padded();
-        let parens = (just('('))
+        let parens = (just('(').labelled("("))
             .padded()
             .ignore_then(expr)
             .padded()
-            .then_ignore(just(')'))
-            .padded();
+            .then_ignore(just(')').labelled(")"));
 
         choice((identifier, constant, parens)).labelled("expression")
     })
@@ -246,7 +229,7 @@ pub fn expression_definition<'src>(
 ) -> impl Parser<'src, &'src str, ast::ExpressionDefinition, Error<'src>> {
     let identifier = identifier(source_id.clone());
     let type_restriction = type_restriction(source_id.clone()).or_not();
-    let op_eq_def = just(":=");
+    let op_eq_def = just(":=").labelled(":=");
     let expr = expression(source_id);
     identifier
         .padded()
@@ -262,7 +245,6 @@ pub fn expression_definition<'src>(
                 None => def,
             }
         })
-        .labelled("expression_definition")
 }
 
 // ===========================================================================
