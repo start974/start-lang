@@ -62,7 +62,7 @@ pub trait ErrorCode {
 }
 
 pub trait ErrorPrint {
-    /// write error
+    /// print error on stderr
     fn eprint(&self, theme: &Theme, cache: &mut SourceCache) -> std::io::Result<()>;
 }
 
