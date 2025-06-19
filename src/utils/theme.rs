@@ -63,25 +63,32 @@ impl ColorInfo {
 pub struct Theme {
     /// limit to try to align
     pub width: usize,
-
     /// keyword color
     pub keyword: ColorInfo,
     /// operator color
     pub operator: ColorInfo,
-
-    /// grammar rule color
-    pub grammar_rule: ColorInfo,
-
     /// var definition color
     pub def_var: ColorInfo,
-
     /// expression var color
     pub expr_var: ColorInfo,
     /// constant color
     pub constant: ColorInfo,
-
     /// type var
     pub ty_var: ColorInfo,
+}
+
+impl Default for Theme {
+    fn default() -> Self {
+        Self {
+            width: 80,
+            keyword: ColorInfo::default(),
+            operator: ColorInfo::default(),
+            def_var: ColorInfo::default(),
+            expr_var: ColorInfo::default(),
+            constant: ColorInfo::default(),
+            ty_var: ColorInfo::default(),
+        }
+    }
 }
 
 pub type Doc<'a> = RcDoc<'a, ColorInfo>;
@@ -91,51 +98,17 @@ impl Theme {
     pub fn default_theme() -> Self {
         Self {
             width: 80,
-            keyword: ColorInfo {
-                fg_color: Some(Color::Magenta),
-                bg_color: None,
-                styles: vec![],
-            },
-            operator: ColorInfo {
-                fg_color: Some(Color::Red),
-                bg_color: None,
-                styles: vec![],
-            },
-            def_var: ColorInfo {
-                fg_color: Some(Color::Blue),
-                bg_color: None,
-                styles: vec![Styles::Bold],
-            },
-            expr_var: ColorInfo {
-                fg_color: Some(Color::Blue),
-                bg_color: None,
-                styles: vec![],
-            },
-            constant: ColorInfo {
-                fg_color: Some(Color::Green),
-                bg_color: None,
-                styles: vec![],
-            },
-            ty_var: ColorInfo {
-                fg_color: Some(Color::Yellow),
-                bg_color: None,
-                styles: vec![Styles::Italic],
-            },
-            grammar_rule: ColorInfo {
-                fg_color: Some(Color::Cyan),
-                bg_color: None,
-                styles: vec![Styles::Bold],
-            },
+            keyword: ColorInfo::default().fg_color(Color::Magenta),
+            operator: ColorInfo::default().fg_color(Color::Red),
+            def_var: ColorInfo::default()
+                .fg_color(Color::Blue)
+                .styles(vec![Styles::Bold]),
+            expr_var: ColorInfo::default().fg_color(Color::Blue),
+            constant: ColorInfo::default().fg_color(Color::Green),
+            ty_var: ColorInfo::default()
+                .fg_color(Color::Yellow)
+                .styles(vec![Styles::Italic]),
         }
-    }
-
-    /// print title
-    pub fn title1<'a>(&self, title: &impl ToString) -> Doc<'a> {
-        Doc::text(title.to_string()).annotate(ColorInfo {
-            fg_color: Some(Color::Cyan),
-            bg_color: None,
-            styles: vec![Styles::Bold],
-        })
     }
 
     /// error message
@@ -194,26 +167,6 @@ impl Theme {
     /// pprint opertor typed by ":"
     pub fn op_typed_by<'a>(&self) -> Doc<'a> {
         self.operator(&":")
-    }
-
-    /// print grammar rule
-    pub fn grammar_rule<'a>(&self, rule: &impl ToString) -> Doc<'a> {
-        Doc::text(rule.to_string()).annotate(self.grammar_rule.clone())
-    }
-}
-
-impl Default for Theme {
-    fn default() -> Self {
-        Self {
-            width: 80,
-            keyword: ColorInfo::default(),
-            operator: ColorInfo::default(),
-            def_var: ColorInfo::default(),
-            expr_var: ColorInfo::default(),
-            constant: ColorInfo::default(),
-            ty_var: ColorInfo::default(),
-            grammar_rule: ColorInfo::default(),
-        }
     }
 }
 
