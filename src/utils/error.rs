@@ -119,37 +119,6 @@ where
 }
 
 // ===========================================================================
-// Error Pair
-// ===========================================================================
-
-impl<E1, E2> ErrorCode for (E1, E2)
-where
-    E1: ErrorCode,
-    E2: ErrorCode,
-{
-    fn code(&self) -> i32 {
-        let code1 = self.0.code();
-        let code2 = self.1.code();
-        if code1 == code2 {
-            code1
-        } else {
-            1
-        }
-    }
-}
-
-impl<E1, E2> ErrorPrint for (E1, E2)
-where
-    E1: ErrorPrint,
-    E2: ErrorPrint,
-{
-    fn eprint(&self, theme: &Theme, cache: &mut SourceCache) -> std::io::Result<()> {
-        self.0.eprint(theme, cache)?;
-        self.1.eprint(theme, cache)
-    }
-}
-
-// ===========================================================================
 // Error Vec
 // ===========================================================================
 impl<E> ErrorCode for Vec<E>

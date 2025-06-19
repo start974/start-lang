@@ -60,7 +60,7 @@ impl Typed for Definition {
 impl Pretty for Definition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
-            .append(theme.kw_def())
+            .append(theme.keyword(&"Definition"))
             .append(Doc::space())
             .append(theme.def_var(&self.name))
             .append(Doc::group(
