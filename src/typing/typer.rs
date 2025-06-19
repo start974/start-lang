@@ -11,7 +11,7 @@ pub struct Typer {
 }
 
 type Error = ErrorFromParser;
-type Result<T, E = Error> = std::result::Result<T, E>;
+type Result<T, E = Box<Error>> = std::result::Result<T, E>;
 
 impl Typer {
     /// make a new structure to from parser
@@ -46,10 +46,12 @@ impl Typer {
                     .map(ast_typed::Expression::from)
                     .or_else(|e| match x.name() {
                         "__Constant_true__" => {
-                            Ok(ast_typed::Expression::from(ast_typed::Constant::b(true)))
+                            let b = ast_typed::Constant::b(true);
+                            Ok(ast_typed::Expression::from(b))
                         }
                         "__Constant_false__" => {
-                            Ok(ast_typed::Expression::from(ast_typed::Constant::b(false)))
+                            let b = ast_typed::Constant::b(false);
+                            Ok(ast_typed::Expression::from(b))
                         }
                         _ => Err(e),
                     })
@@ -58,9 +60,10 @@ impl Typer {
                 // TODO: make multiple error
                 let expr = self.expression(ty_restr.expression())?;
                 let ty = self.ty(ty_restr.ty())?;
-                expr.restrict_ty(ty).map_err(Error::from)
+                expr.restrict_ty(ty).map_err(|e| Error::from(*e))
             }
         }
+        .map_err(Box::new)
     }
 
     /// convert typ
@@ -78,6 +81,7 @@ impl Typer {
                         _ => Err(e),
                     })
                     .map_err(Error::from)
+                    .map_err(Box::new)
             }
         }
     }
@@ -99,7 +103,8 @@ impl Typer {
                 let body = self.expression(definition.body())?;
                 ast_typed::ExpressionDefinition::new(name, body)
                     .restrict_ty(ty)
-                    .map_err(Error::from)
+                    .map_err(|e| Error::from(*e))
+                    .map_err(Box::new)
             }
             None => {
                 let body = self.expression(definition.body())?;

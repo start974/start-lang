@@ -95,7 +95,7 @@ pub trait Typed {
     fn ty(&self) -> &Type;
 
     /// restrict object type to other type
-    fn restrict_ty(mut self, ty: Type) -> Result<Self, ErrorUnexpectedType>
+    fn restrict_ty(mut self, ty: Type) -> Result<Self, Box<ErrorUnexpectedType>>
     where
         Self: Located + Sized + TypedMut,
     {
@@ -103,7 +103,11 @@ pub trait Typed {
             *self.ty_mut() = ty;
             Ok(self)
         } else {
-            Err(ErrorUnexpectedType::new(self.ty(), &ty, self.loc()))
+            Err(Box::new(ErrorUnexpectedType::new(
+                self.ty(),
+                &ty,
+                self.loc(),
+            )))
         }
     }
 }
