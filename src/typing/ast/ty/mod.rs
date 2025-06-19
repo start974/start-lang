@@ -133,11 +133,6 @@ impl TypeEnv {
             .get(identifier)
             .ok_or_else(|| ErrorVariableNotFound::new(identifier.clone()))
     }
-
-    /// iter on the environment
-    pub fn iter(&self) -> impl Iterator<Item = (&Identifier, &Type)> {
-        self.0.iter()
-    }
 }
 
 impl Default for TypeEnv {

@@ -1,8 +1,4 @@
-use crate::utils::{
-    location::{Located, LocatedSet, Location, UNKNOWN_LOCATION},
-    pretty::Pretty,
-    theme::{Doc, Theme},
-};
+use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
 use std::hash::Hash;
 
 // ==========================================================================
@@ -133,7 +129,7 @@ impl IdentifierBuilder {
 
     // iter over identifiers
     //pub fn iter(&self) -> impl Iterator<Item = (&String, &usize)> {
-        //self.table.iter()
+    //self.table.iter()
     //}
 
     /*    /// take a snapshot of the current state*/
