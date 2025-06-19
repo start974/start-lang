@@ -186,16 +186,6 @@ impl Theme {
         Doc::text(var.to_string()).annotate(self.ty_var.clone())
     }
 
-    /// pprint keyword type
-    pub fn kw_type<'a>(&self) -> Doc<'a> {
-        self.keyword(&"type")
-    }
-
-    /// pprint keyword type
-    pub fn kw_def<'a>(&self) -> Doc<'a> {
-        self.keyword(&"def")
-    }
-
     /// pprint operator eqdef
     pub fn op_eq_def<'a>(&self) -> Doc<'a> {
         self.operator(&":=")

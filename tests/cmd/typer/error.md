@@ -50,11 +50,11 @@ $ startlang type_mismatch.st
 ? 101
 Definition a : N :=
   1.
-def a_0 : N :=
+Definition a_0 : N :=
   1
 Definition b : B :=
   true.
-def b_0 : B :=
+Definition b_0 : B :=
   true_0
 Definition c : N :=
   b.
@@ -83,7 +83,7 @@ Definition c' : B :=
 Type N1 := N.
 Definition d : N1 :=
   c.
-def d_0 : N1 :=
+Definition d_0 : N1 :=
   c_0
 
 thread 'main' panicked at src/vm/env.rs:34:29:

@@ -23,13 +23,6 @@ impl SourceId {
             }
         }
     }
-    pub fn offset(&self) -> usize {
-        match self {
-            SourceId::Unknown => 0,
-            SourceId::Repl { offset } => *offset,
-            SourceId::File { offset, .. } => *offset,
-        }
-    }
 }
 
 impl std::fmt::Display for SourceId {
@@ -320,18 +313,6 @@ impl<T> Loc<T> {
     /// Create a new localised node with the given data and location.
     pub fn new(data: T, loc: Location) -> Self {
         Self { data, loc }
-    }
-}
-
-impl<T> Located for Loc<T> {
-    fn loc(&self) -> &Location {
-        &self.loc
-    }
-}
-
-impl<T> LocatedSet for Loc<T> {
-    fn set_loc(&mut self, loc: &impl Located) {
-        self.loc = loc.loc().clone();
     }
 }
 
