@@ -90,7 +90,7 @@ impl ReplCache {
 impl Cache<usize> for ReplCache {
     type Storage = String;
     fn display<'a>(&self, _: &'a usize) -> std::option::Option<impl std::fmt::Display + 'a> {
-        None::<u8>
+        None::<char>
     }
 
     fn fetch(&mut self, id: &usize) -> Result<&Source<Self::Storage>, impl std::fmt::Debug> {

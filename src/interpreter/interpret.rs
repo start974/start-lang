@@ -123,7 +123,9 @@ impl Interpreter {
                     let summary = SummaryDefinition::from(&def);
                     println!("{}", summary.to_string(&self.theme));
                 }
-                self.vm_env.add_definition(&def)
+                if self.err_code == 0 {
+                    self.vm_env.add_definition(&def)
+                }
             })
             .unwrap_or_else(|e| self.fail(e))
     }
@@ -143,8 +145,10 @@ impl Interpreter {
                 if self.debug_typer {
                     println!("{}", expr.to_string(&self.theme));
                 }
-                let value = self.vm_env.eval(&expr);
-                println!("{}", value.to_string(&self.theme));
+                if self.err_code == 0 {
+                    let value = self.vm_env.eval(&expr);
+                    println!("{}", value.to_string(&self.theme));
+                }
             })
             .unwrap_or_else(|e| self.fail(e))
     }

@@ -8,8 +8,9 @@ use num_bigint::BigUint;
 pub type NConst = BigUint;
 
 pub enum ConstantKind {
-    N(NConst),
-    B(bool),
+    Nat(NConst),
+    Bool(bool),
+    Char(char),
 }
 
 pub struct Constant {
@@ -23,20 +24,29 @@ pub struct Constant {
 
 impl Constant {
     /// create natural number constant
-    pub fn n(v: NConst) -> Self {
+    pub fn nat(v: NConst) -> Self {
         Self {
-            ty: Type::from(TypeBuiltin::N),
+            ty: Type::from(TypeBuiltin::Nat),
             loc: UNKNOWN_LOCATION,
-            kind: ConstantKind::N(v),
+            kind: ConstantKind::Nat(v),
         }
     }
 
     /// create boolean constant
-    pub fn b(b: bool) -> Self {
+    pub fn boolean(b: bool) -> Self {
         Self {
-            ty: Type::Builtin(TypeBuiltin::B),
+            ty: Type::Builtin(TypeBuiltin::Bool),
             loc: UNKNOWN_LOCATION,
-            kind: ConstantKind::B(b),
+            kind: ConstantKind::Bool(b),
+        }
+    }
+
+    /// create a character constant
+    pub fn character(c: char) -> Self {
+        Self {
+            ty: Type::Builtin(TypeBuiltin::Char),
+            loc: UNKNOWN_LOCATION,
+            kind: ConstantKind::Char(c),
         }
     }
 
@@ -61,8 +71,9 @@ impl LocatedSet for Constant {
 impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self.kind() {
-            ConstantKind::N(n) => theme.constant(&format_number(n)),
-            ConstantKind::B(b) => theme.constant(b),
+            ConstantKind::Nat(n) => theme.constant(&format_number(n)),
+            ConstantKind::Bool(b) => theme.constant(b),
+            ConstantKind::Char(c) => theme.constant(&format!("'{}'", c.escape_default())),
         }
     }
 }
