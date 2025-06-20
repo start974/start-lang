@@ -1,24 +1,20 @@
 # Grammar
 
+- *IDENT* is define as [Unicode Standard Annex #31](https://www.unicode.org/reports/tr31/)
+- *ANY* is any character
+- *SPACE* is all whitespace
+
 ## Identifier
 ```
-identifier := "_"* letter  (letter | digit | _)* "'"*
-
-letter := Alphabetic
-digit := [0..9]
+identifier := IDENT "'"*
 ```
-
-*Alphabetic* is described in Chapter 4 (Character Properties) of the
-[Unicode Standard](https://www.unicode.org/versions/latest/) and
-specified in the
-[Unicode Character Database](https://www.unicode.org/reports/tr44/)
-[`DerivedCoreProperties.txt`](https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt).
 
 ## Number
 ```
 number := number_dec | number_hex | number_oct | number_bit
 
 number_dec := digit ( digit | _)* digit
+digit := [0..9]
 
 number_hex := "0" ("x" | "X") digit_hex (digit_hex | _)* digit_hex
 digit_hex := digit | [A..F] | [a..f]
@@ -31,6 +27,18 @@ digit_bit := [0..1]
 
 ```
 
+## Character
+```
+character := "'" char "'"
+
+character_literal := [U+0000 .. U+D7FF] | [U+E000 .. U+10FFFF] | escape_char
+
+escape_char := "\"
+    ("\\" | "\"" | "\'" | "n" | "r" | "t"
+    | digit{3} | "x" digit_hex{2} | "o" digit_oct{3}
+    | "u{" digit_hex+ "}")
+```
+
 After this section all element of grammar is padded
 
 ### Expression
@@ -39,6 +47,7 @@ type_restriction := ":" type
 
 constant :=
 | number
+| character
 
 expression :=
 |  "(" expression ")"
@@ -62,8 +71,8 @@ type :=
 
 ```
 grammar :=
-| "Add" grammar_syntax ":" grammar_rule ":=" expression
-| "New" identifier
+| "Add" SPACE grammar_syntax ":" grammar_rule ":=" expression
+| "New" SPACE identifier
 | ("Remove" | "Rm") identifier
 
 grammar_rule := identifier "@" number
@@ -88,11 +97,11 @@ group_char := [0..9] | [a..z] | [A..Z]
 command_dot := command "."?
 
 command :=
-| ("Definition" | "Def") expr_definition
-| ("Type" | "Ty") type_definition
-| ("Eval" | "$") expr
-| ("Grammar" | "Gram") grammar              // Not yet implemented
-| ("TypeOf" | "?:") expr
+| ("Definition" | "Def") SPACE expr_definition
+| ("Type" | "Ty") SPACE type_definition
+| ("Eval" | "$") SPACE expr
+| ("Grammar" | "Gram") SPACE grammar              // Not yet implemented
+| ("TypeOf" | "?:") SPACE expr
 
 ```
 

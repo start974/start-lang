@@ -3,6 +3,7 @@ use rustyline::{history::FileHistory, DefaultEditor, Editor};
 
 const HISTORY_FILE: &str = ".start-history.txt";
 fn finish(rl: &mut Editor<(), FileHistory>) {
+    println!("Exiting REPL...");
     if rl.save_history(HISTORY_FILE).is_err() {
         eprintln!("Failed to save history");
     }
@@ -36,7 +37,7 @@ pub fn prompt_string(line_num: usize, many_line: bool) -> String {
 
 pub fn repl() {
     let mut rl = DefaultEditor::new().unwrap();
-    let _ = rl.load_history(HISTORY_FILE);
+    rl.load_history(HISTORY_FILE).unwrap();
     let mut interpreter = Interpreter::new();
     interpreter.set_repl_mod(true);
     let mut line_num = 1;
@@ -45,6 +46,7 @@ pub fn repl() {
         let ps = prompt_string(line_num, many_line);
         match rl.readline(&ps) {
             Ok(line) => {
+                rl.add_history_entry(&line).unwrap();
                 interpreter.add_repl(&line);
                 if line.ends_with(".") {
                     run(&mut interpreter);

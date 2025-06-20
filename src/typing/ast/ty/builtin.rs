@@ -7,19 +7,22 @@ use crate::utils::theme::{Doc, Theme};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Builtin {
     /// natural number type
-    N,
+    Nat,
     ///// relative number type
     //Z,
-    ///// boolean type
-    B,
+    /// boolean type
+    Bool,
+
+    /// character type
+    Char,
 }
 
 impl Pretty for Builtin {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Builtin::N => theme.ty_var(&"ℕ"),
-            Builtin::B => theme.ty_var(&"𝔹"),
-            //Kind::Z => theme.ty_var(&"ℤ"),
+            Builtin::Nat => theme.ty_var(&"ℕ"),
+            Builtin::Bool => theme.ty_var(&"𝔹"),
+            Builtin::Char => theme.ty_var(&"Char"),
         }
     }
 }

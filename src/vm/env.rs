@@ -4,6 +4,7 @@ use super::identifier::Identifier;
 use super::value::{Constant, Value};
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct Env(HashMap<Identifier, Value>);
 
 impl Env {
@@ -31,7 +32,9 @@ impl Env {
                 let id = Identifier::from(id_ty);
                 match self.get(&id) {
                     Some(value) => value.clone(),
-                    None => panic!("Variable {} not found", id_ty),
+                    None => {
+                        panic!("Variable {} not found", id_ty)
+                    }
                 }
             }
         }

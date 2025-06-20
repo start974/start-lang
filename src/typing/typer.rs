@@ -26,7 +26,8 @@ impl Typer {
     /// convert constant
     pub fn constant(&self, constant: &ast_parser::Constant) -> ast_typed::Constant {
         match constant.kind() {
-            ast_parser::ConstantKind::N(n) => ast_typed::Constant::n(n.clone()),
+            ast_parser::ConstantKind::Nat(n) => ast_typed::Constant::nat(n.clone()),
+            ast_parser::ConstantKind::Char(c) => ast_typed::Constant::character(*c),
         }
         .with_loc(constant)
     }
@@ -46,11 +47,11 @@ impl Typer {
                     .map(ast_typed::Expression::from)
                     .or_else(|e| match x.name() {
                         "__Constant_true__" => {
-                            let b = ast_typed::Constant::b(true);
+                            let b = ast_typed::Constant::boolean(true);
                             Ok(ast_typed::Expression::from(b))
                         }
                         "__Constant_false__" => {
-                            let b = ast_typed::Constant::b(false);
+                            let b = ast_typed::Constant::boolean(false);
                             Ok(ast_typed::Expression::from(b))
                         }
                         _ => Err(e),
@@ -76,8 +77,9 @@ impl Typer {
                     .get(&id)
                     .map(Type::from)
                     .or_else(|e| match ident.name() {
-                        "__Type_N__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::N)),
-                        "__Type_B__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::B)),
+                        "__Type_Nat__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::Nat)),
+                        "__Type_Bool__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::Bool)),
+                        "__Type_Char__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::Char)),
                         _ => Err(e),
                     })
                     .map_err(Error::from)

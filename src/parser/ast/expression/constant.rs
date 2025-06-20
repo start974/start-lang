@@ -6,24 +6,27 @@ use num_bigint::BigUint;
 
 #[derive(Debug)]
 pub enum ConstantKind {
-    N(BigUint),
-    //B(bool),
+    Nat(BigUint),
+    Char(char),
 }
 
 #[derive(Debug)]
 pub struct Constant(Loc<ConstantKind>);
 
 impl Constant {
-    pub fn n(v: BigUint, loc: Location) -> Self {
-        let data = ConstantKind::N(v);
+    /// make a nat constant
+    pub fn nat(v: BigUint, loc: Location) -> Self {
+        let data = ConstantKind::Nat(v);
         Self(Loc::new(data, loc))
     }
 
-    //pub fn b(v: bool, loc: Location) -> Self {
-    //let data = ConstantKind::B(v);
-    //Self(Loc::new(data, loc))
-    //}
+    /// make a char constant
+    pub fn char(c: char, loc: Location) -> Self {
+        let data = ConstantKind::Char(c);
+        Self(Loc::new(data, loc))
+    }
 
+    /// get the kind of the constant
     pub fn kind(&self) -> &ConstantKind {
         &self.0.data
     }
@@ -38,8 +41,8 @@ impl Located for Constant {
 impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self.kind() {
-            ConstantKind::N(n) => theme.constant(&format_number(n)),
-            //ConstantKind::B(b) => theme.constant(b),
+            ConstantKind::Nat(n) => theme.constant(&format_number(n)),
+            ConstantKind::Char(c) => theme.constant(&format!("'{}'", c.escape_default())),
         }
     }
 }

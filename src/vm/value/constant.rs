@@ -6,15 +6,17 @@ use num_bigint::BigUint;
 
 #[derive(Debug, Clone)]
 pub enum Constant {
-    B(bool),
-    N(BigUint),
+    Nat(BigUint),
+    Bool(bool),
+    Char(char),
 }
 
 impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Self::N(n) => theme.constant(&format_number(n)),
-            Self::B(b) => theme.constant(b),
+            Self::Nat(n) => theme.constant(&format_number(n)),
+            Self::Bool(b) => theme.constant(b),
+            Self::Char(c) => theme.constant(&format!("'{}'", c.escape_default())),
         }
     }
 }
@@ -22,8 +24,9 @@ impl Pretty for Constant {
 impl From<&ast::Constant> for Constant {
     fn from(c: &ast::Constant) -> Self {
         match c.kind() {
-            ast::ConstantKind::N(n) => Constant::N(n.clone()),
-            ast::ConstantKind::B(b) => Constant::B(*b),
+            ast::ConstantKind::Nat(n) => Constant::Nat(n.clone()),
+            ast::ConstantKind::Bool(b) => Constant::Bool(*b),
+            ast::ConstantKind::Char(c) => Constant::Char(*c),
         }
     }
 }
