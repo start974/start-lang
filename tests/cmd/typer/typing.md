@@ -12,7 +12,7 @@ B1
 ```
 $ startlang bool.st
 ℕ
-N
+Nat
 N1
 
 ```

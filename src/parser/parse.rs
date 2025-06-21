@@ -46,13 +46,14 @@ fn digit_bin<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
 /// follwing by quotes
 pub fn identifier<'src>(
     source_id: SourceId,
+    offset: usize,
 ) -> impl Parser<'src, &'src str, ast::Identifier, Error<'src>> {
     text::unicode::ident()
         .then(just('\'').repeated().collect::<String>())
         .map(|(ident, quotes)| format!("{}{}", ident, quotes))
         .map_with(move |name, e| {
             let span: SimpleSpan = e.span();
-            let loc = Location::new(span.start, span.end, source_id.clone());
+            let loc = Location::new(source_id.clone(), span.start, span.end).with_offset(offset);
             ast::Identifier::new(&name, loc)
         })
         .labelled("identifier")
@@ -222,9 +223,10 @@ pub fn character<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
 ///```
 pub fn type_restriction<'src>(
     source_id: SourceId,
+    offset: usize,
 ) -> impl Parser<'src, &'src str, ast::Type, Error<'src>> {
     let op_colon = just(':');
-    let ty = ty(source_id.clone());
+    let ty = ty(source_id.clone(), offset);
     op_colon
         .padded()
         .ignore_then(ty)
@@ -239,12 +241,13 @@ pub fn type_restriction<'src>(
 ///```
 pub fn constant<'src>(
     source_id: SourceId,
+    offset: usize,
 ) -> impl Parser<'src, &'src str, ast::Constant, Error<'src>> {
     let number = {
         let source_id = source_id.clone();
         number().map_with(move |number, e| {
             let span = e.span();
-            let loc = Location::new(span.start, span.end, source_id.clone());
+            let loc = Location::new(source_id.clone(), span.start, span.end).with_offset(offset);
             ast::Constant::nat(number, loc)
         })
     };
@@ -253,7 +256,7 @@ pub fn constant<'src>(
         let source_id = source_id.clone();
         character().map_with(move |c, e| {
             let span = e.span();
-            let loc = Location::new(span.start, span.end, source_id.clone());
+            let loc = Location::new(source_id.clone(), span.start, span.end).with_offset(offset);
             ast::Constant::char(c, loc)
         })
     };
@@ -274,13 +277,14 @@ pub fn constant<'src>(
 ///```
 pub fn expression<'src>(
     source_id: SourceId,
+    offset: usize,
 ) -> impl Parser<'src, &'src str, ast::Expression, Error<'src>> {
     recursive(move |expr1| {
         let expr0 = {
-            let identifier = identifier(source_id.clone())
+            let identifier = identifier(source_id.clone(), offset)
                 .map(ast::Expression::from)
                 .boxed();
-            let constant = constant(source_id.clone())
+            let constant = constant(source_id.clone(), offset)
                 .map(ast::Expression::from)
                 .boxed();
             let parens = (just('(').labelled("("))
@@ -294,7 +298,7 @@ pub fn expression<'src>(
         let expr1 = {
             let type_restriction = (expr0.clone())
                 .padded()
-                .then(type_restriction(source_id.clone()))
+                .then(type_restriction(source_id.clone(), offset))
                 .map(|(expr, ty)| ast::TypeRestriction::new(expr, ty))
                 .map(ast::Expression::from);
             choice((type_restriction, expr0)).boxed()
@@ -311,11 +315,12 @@ pub fn expression<'src>(
 ///```
 pub fn expression_definition<'src>(
     source_id: SourceId,
+    offset: usize,
 ) -> impl Parser<'src, &'src str, ast::ExpressionDefinition, Error<'src>> {
-    let identifier = identifier(source_id.clone());
-    let type_restriction = type_restriction(source_id.clone()).or_not();
+    let identifier = identifier(source_id.clone(), offset);
+    let type_restriction = type_restriction(source_id.clone(), offset).or_not();
     let op_eq_def = just(":=").labelled(":=");
-    let expr = expression(source_id);
+    let expr = expression(source_id, offset);
     identifier
         .padded()
         .then(type_restriction)
@@ -341,8 +346,11 @@ pub fn expression_definition<'src>(
 /// type :=
 /// | identifier
 /// ```
-pub fn ty<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Type, Error<'src>> {
-    let identifier = identifier(source_id);
+pub fn ty<'src>(
+    source_id: SourceId,
+    offset: usize,
+) -> impl Parser<'src, &'src str, ast::Type, Error<'src>> {
+    let identifier = identifier(source_id, offset);
     identifier.map(ast::Type::from).labelled("type")
 }
 
@@ -352,10 +360,11 @@ pub fn ty<'src>(source_id: SourceId) -> impl Parser<'src, &'src str, ast::Type, 
 /// ```
 pub fn type_definition<'src>(
     source_id: SourceId,
+    offset: usize,
 ) -> impl Parser<'src, &'src str, ast::TypeDefinition, Error<'src>> {
-    let name = identifier(source_id.clone());
+    let name = identifier(source_id.clone(), offset);
     let op_eq_def = just(":=").labelled(":=");
-    let ty = ty(source_id);
+    let ty = ty(source_id, offset);
     name.padded()
         .then_ignore(op_eq_def)
         .padded()
@@ -377,44 +386,41 @@ pub fn type_definition<'src>(
 ///```
 pub fn command<'src>(
     source_id: SourceId,
+    offset: usize,
 ) -> impl Parser<'src, &'src str, ast::Command, Error<'src>> {
     let def_expr = (choice((just("Definition"), just("Def")))
         .labelled("Definition")
-        .then(whitespace()))
-    .padded()
-    .ignore_then(expression_definition(source_id.clone()))
+        .then(whitespace().at_least(1)))
+    .ignore_then(expression_definition(source_id.clone(), offset))
     .map(ast::Command::ExpressionDefinition);
 
     let def_type = (choice((just("Type"), just("Ty")))
         .labelled("Type")
-        .then(whitespace()))
-    .padded()
-    .ignore_then(type_definition(source_id.clone()))
+        .then(whitespace().at_least(1)))
+    .ignore_then(type_definition(source_id.clone(), offset))
     .map(ast::Command::TypeDefinition);
 
     let eval = (choice((just("Eval"), just("$")))
         .labelled("Eval")
-        .then(whitespace()))
-    .padded()
-    .ignore_then(expression(source_id.clone()))
+        .then(whitespace().at_least(1)))
+    .ignore_then(expression(source_id.clone(), offset))
     .map(ast::Command::Eval);
 
     let type_of = (choice((just("TypeOf"), just("?:")))
         .labelled("TypeOf")
-        .then(whitespace()))
-    .padded()
-    .ignore_then(expression(source_id.clone()))
+        .then(whitespace().at_least(1)))
+    .ignore_then(expression(source_id.clone(), offset))
     .map(ast::Command::TypeOf);
 
-    let set = (just("Set").labelled("Set").then(whitespace()))
-        .padded()
-        .ignore_then(identifier(source_id.clone()))
+    let set = (just("Set").labelled("Set").then(whitespace().at_least(1)))
+        .ignore_then(identifier(source_id.clone(), offset))
         .map(|id| ast::Command::Set(true, id));
 
-    let unset = (just("Unset").labelled("Unset").then(whitespace()))
-        .padded()
-        .ignore_then(identifier(source_id))
-        .map(|id| ast::Command::Set(false, id));
+    let unset = (just("Unset")
+        .labelled("Unset")
+        .then(whitespace().at_least(1)))
+    .ignore_then(identifier(source_id, offset))
+    .map(|id| ast::Command::Set(false, id));
 
     choice((def_expr, def_type, eval, type_of, set, unset)).labelled("command")
 }
@@ -425,8 +431,9 @@ pub fn command<'src>(
 ///```
 pub fn command_dot<'src>(
     source_id: SourceId,
+    offset: usize,
 ) -> impl Parser<'src, &'src str, ast::Command, Error<'src>> {
-    let cmd = command(source_id);
+    let cmd = command(source_id, offset);
     let dot = just('.').labelled(".");
     cmd.padded().then_ignore(dot)
 }
@@ -434,8 +441,9 @@ pub fn command_dot<'src>(
 /// parse command and return also offset of end
 pub fn command_offset<'src>(
     source_id: SourceId,
+    offset: usize,
 ) -> impl Parser<'src, &'src str, (ast::Command, usize), Error<'src>> {
-    command_dot(source_id)
+    command_dot(source_id, offset)
         .padded()
         .map_with(|cmd, e| (cmd, e.span().end))
         .then_ignore(any().repeated())

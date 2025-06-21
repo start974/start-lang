@@ -1,7 +1,8 @@
-use super::location::{Located, SourceCache};
+use super::location::{Located, SourceId};
 use super::location::{Report, ReportBuilder};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
+use ariadne::{Cache, Config, IndexType, ReportKind};
 
 // ===========================================================================
 // Message
@@ -63,7 +64,7 @@ pub trait ErrorCode {
 
 pub trait ErrorPrint {
     /// print error on stderr
-    fn eprint(&self, theme: &Theme, cache: &mut SourceCache) -> std::io::Result<()>;
+    fn eprint(&self, theme: &Theme, cache: &mut impl Cache<SourceId>) -> std::io::Result<()>;
 }
 
 pub trait ErrorReport: ErrorCode + Located {
@@ -77,7 +78,8 @@ pub trait ErrorReport: ErrorCode + Located {
     fn report(&self, theme: &Theme) -> Report {
         self.finalize(
             theme,
-            Report::build(ariadne::ReportKind::Error, self.loc().clone())
+            Report::build(ReportKind::Error, self.loc().clone())
+                .with_config(Config::default().with_index_type(IndexType::Byte))
                 .with_code(self.code())
                 .with_message(self.message().to_string(theme)),
         )
@@ -88,7 +90,7 @@ impl<E> ErrorPrint for E
 where
     E: ErrorReport,
 {
-    fn eprint(&self, theme: &Theme, cache: &mut SourceCache) -> std::io::Result<()> {
+    fn eprint(&self, theme: &Theme, cache: &mut impl Cache<SourceId>) -> std::io::Result<()> {
         self.report(theme).eprint(cache)
     }
 }
@@ -140,7 +142,7 @@ impl<E> ErrorPrint for Vec<E>
 where
     E: ErrorPrint,
 {
-    fn eprint(&self, theme: &Theme, cache: &mut SourceCache) -> std::io::Result<()> {
+    fn eprint(&self, theme: &Theme, cache: &mut impl Cache<SourceId>) -> std::io::Result<()> {
         for error in self {
             error.eprint(theme, cache)?;
             eprintln!();

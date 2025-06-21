@@ -9,14 +9,6 @@ fn finish(rl: &mut Editor<(), FileHistory>) {
     }
 }
 
-/// run code
-pub fn run(interpreter: &mut Interpreter) {
-    let source_id = interpreter.last_repl_source_id();
-    interpreter.run(source_id);
-    interpreter.update_repl();
-    interpreter.reset_err_code()
-}
-
 /// make promp string
 pub fn prompt_string(line_num: usize, many_line: bool) -> String {
     let line_num_str = line_num.to_string();
@@ -39,7 +31,6 @@ pub fn repl() {
     let mut rl = DefaultEditor::new().unwrap();
     rl.load_history(HISTORY_FILE).unwrap();
     let mut interpreter = Interpreter::new();
-    interpreter.set_repl_mod(true);
     let mut line_num = 1;
     let mut many_line = false;
     loop {
@@ -49,7 +40,8 @@ pub fn repl() {
                 rl.add_history_entry(&line).unwrap();
                 interpreter.add_repl(&line);
                 if line.ends_with(".") {
-                    run(&mut interpreter);
+                    interpreter.run();
+                    interpreter.reset_err_code();
                     many_line = false;
                 } else {
                     many_line = true;

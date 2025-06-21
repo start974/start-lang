@@ -47,47 +47,43 @@ $ startlang def_type_not_found.st
 
 ```
 $ startlang type_mismatch.st
-? 101
-Definition a : N :=
+? 1
+Definition a : ℕ :=
   1.
-Definition a_0 : N :=
+Definition a_0 : ℕ :=
   1
-Definition b : B :=
+Definition b : 𝔹 :=
   true.
-Definition b_0 : B :=
+Definition b_0 : 𝔹 :=
   true_0
-Definition c : N :=
+Definition c : ℕ :=
   b.
 [302] Error: Type mismatch.
    ╭─[ type_mismatch.st:8:5 ]
    │
- 8 │ Def c : N := b.
+ 8 │ Def c : ℕ := b.
    │     ┬  
-   │     ╰── Expect Type B.
+   │     ╰── Expect Type 𝔹.
    │ 
-   │ Note: Expected type: B.
-   │       Found type:    N
+   │ Note: Expected type: 𝔹.
+   │       Found type:    ℕ
 ───╯
-Definition c' : B :=
-  a : B.
+Definition c' : 𝔹 :=
+  a : Bool.
 [302] Error: Type mismatch.
     ╭─[ type_mismatch.st:10:16 ]
     │
- 10 │ Def c' : B := (a : B).
+ 10 │ Def c' : 𝔹 := (a : Bool).
     │                ┬  
-    │                ╰── Expect Type N.
+    │                ╰── Expect Type ℕ.
     │ 
-    │ Note: Expected type: N.
-    │       Found type:    B
+    │ Note: Expected type: ℕ.
+    │       Found type:    Bool
 ────╯
-Type N1 := N.
+Type N1 := Nat.
 Definition d : N1 :=
   c.
 Definition d_0 : N1 :=
   c_0
-
-thread 'main' panicked at src/vm/env.rs:34:29:
-Variable c_0 not found
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 
 ```

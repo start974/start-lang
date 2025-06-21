@@ -8,18 +8,18 @@ Type LongType_NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN :=
 Definition long_number : N1 :=
   333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_331.
 Definition b :=
-  3 : N.
+  3 : ℕ.
 Definition b :=
-  3 : N.
+  3 : ℕ.
 Definition b :=
-  3 : N.
+  3 : ℕ.
 Definition c
     : LongType_NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN :=
   long_number.
 Eval long_number.
 333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_331
 TypeOf b.
-N
+ℕ
 Set DebugTyper.
 Unset DebugParser.
 

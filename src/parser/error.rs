@@ -12,9 +12,9 @@ pub struct Error<'src> {
 
 impl<'src> Error<'src> {
     /// make a new error
-    pub fn new(err: Rich<'src, char>, source_id: SourceId) -> Self {
+    pub fn new(err: Rich<'src, char>, source_id: SourceId, offset: usize) -> Self {
         let span = err.span();
-        let location = Location::new(span.start, span.end, source_id);
+        let location = Location::new(source_id, span.start, span.end).with_offset(offset);
         Self {
             location,
             err: err.clone(),

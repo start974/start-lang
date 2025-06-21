@@ -10,4 +10,5 @@ Eval a.
 stdout = """
 a : ℕ
 3
+Exiting REPL...
 """
