@@ -1,5 +1,5 @@
 use super::interpret::Interpreter;
-use rustyline::{history::FileHistory, DefaultEditor, Editor};
+use rustyline::{error::ReadlineError, history::FileHistory, DefaultEditor, Editor};
 
 const HISTORY_FILE: &str = ".start-history.txt";
 fn finish(rl: &mut Editor<(), FileHistory>) {
@@ -29,7 +29,7 @@ pub fn prompt_string(line_num: usize, many_line: bool) -> String {
 
 pub fn repl() {
     let mut rl = DefaultEditor::new().unwrap();
-    rl.load_history(HISTORY_FILE).unwrap();
+    let _ = rl.load_history(HISTORY_FILE);
     let mut interpreter = Interpreter::new();
     let mut line_num = 1;
     let mut many_line = false;
@@ -47,6 +47,12 @@ pub fn repl() {
                     many_line = true;
                 }
             }
+            Err(ReadlineError::Eof) => {
+                interpreter.run();
+                finish(&mut rl);
+                return;
+            }
+
             Err(_) => {
                 finish(&mut rl);
                 return;
