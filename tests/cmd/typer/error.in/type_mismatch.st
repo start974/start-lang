@@ -1,15 +1,15 @@
 Set DebugTyper.
 Set DebugParser.
 
-Def a : N := 1.
+Def a : ℕ := 1.
 
-Def b : B := true.
+Def b : 𝔹 := true.
 
-Def c : N := b.
+Def c : ℕ := b.
 
-Def c' : B := (a : B).
+Def c' : 𝔹 := (a : Bool).
 
-Type N1 := N.
+Type N1 := Nat.
 
 Def d : N1 := c.
 

@@ -8,6 +8,7 @@ Def a := 3. Eval not_exits. Eval a.
 
 stdout = """
 a : ℕ
+Exiting REPL...
 """
 
 stderr = """
