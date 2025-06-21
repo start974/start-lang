@@ -9,9 +9,9 @@ Def long_number
     : N1 :=
   333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_331.
 
-Def b := (3 : ℕ).
-Def b := 3 : ℕ.
-Def b := ((3 : ℕ)).
+Def n := (3 : ℕ).
+Def n := 3 : ℕ.
+Def n := ((3 : ℕ)).
 
 Def c
   : LongType_NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN :=
@@ -19,7 +19,11 @@ Def c
 
 $ long_number.
 
-?: b.
+?: n.
+
+Def b := true.
+
+Def c := '\\'.
 
 Set DebugTyper.
 Unset DebugParser.

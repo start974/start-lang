@@ -11,3 +11,4 @@ Cargo.lock
 **/*.rs.bk
 .start-history.txt
 lcov.info
+test.st

@@ -16,3 +16,9 @@ Nat
 N1
 
 ```
+
+```
+$ startlang char.st
+Char
+
+```
