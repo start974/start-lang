@@ -175,33 +175,39 @@ fn escape_unicode_char<'src>() -> impl Parser<'src, &'src str, char, Error<'src>
 ///    | "u{" digit_hex+ "}")
 ///```
 fn escape_char<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
-    just('\\').ignore_then(choice((
-        just('\\'),
-        just('\"'),
-        just('n').to('\n'),
-        just('r').to('\r'),
-        just('t').to('\t'),
-        escape_number_char(digit(), 3, 10),
-        escape_number_char_prefixed('x', digit_hex(), 2, 16),
-        escape_number_char_prefixed('o', digit_oct(), 3, 8),
-        escape_unicode_char(),
-    )))
+    just('\\')
+        .map(|c| {
+            println!("escape char {}", c);
+            c
+        })
+        .ignore_then(choice((
+            just('\\').to('\\'),
+            just('\"').to('\"'),
+            just('\'').to('\''),
+            just('n').to('\n'),
+            just('r').to('\r'),
+            just('t').to('\t'),
+            escape_number_char(digit(), 3, 10),
+            escape_number_char_prefixed('x', digit_hex(), 2, 16),
+            escape_number_char_prefixed('o', digit_oct(), 3, 8),
+            escape_unicode_char(),
+        )))
 }
 
 /// parse caracter
 /// ```ebnf
 /// character_literal :=
+/// | escape_char
 /// | [U+0000 .. U+D7FF]
 /// | [U+E000 .. U+10FFFF]
-/// | escape_char
 /// ```
 fn character_litteral<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
     choice((
+        escape_char(),
         any().filter(|c: &char| {
             let cp = *c as u32;
             (cp <= 0xD7FF) || (0xE000..=0x10FFFF).contains(&cp)
         }),
-        escape_char(),
     ))
     .labelled("character literal")
 }

@@ -190,8 +190,7 @@ impl Interpreter {
 
     /// run the interpreter in REPL mode
     pub fn run(&mut self) {
-        let mut err_parsing = false;
-        while !err_parsing {
+        loop {
             let content = self.content[(self.offset_source)..].to_string();
             if content.is_empty() || (self.in_repl_mod() && self.err_code != 0) {
                 break;
@@ -206,7 +205,6 @@ impl Interpreter {
                     self.run_cmd(cmd);
                 }
                 Err(errs) => {
-                    err_parsing = true;
                     self.fail(
                         errs.iter()
                             .map(|err| {
@@ -217,7 +215,9 @@ impl Interpreter {
                                 )
                             })
                             .collect::<Vec<_>>(),
-                    )
+                    );
+                    self.offset_source = self.content.len();
+                    break;
                 }
             }
         }

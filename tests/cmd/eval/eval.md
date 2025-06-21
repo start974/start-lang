@@ -3,6 +3,12 @@
 ```
 $ startlang number.st
 42
+42
+42
+42
+42
+42
+42
 
 ```
 
@@ -10,5 +16,23 @@ $ startlang number.st
 $ startlang variable.st
 4
 4
+
+```
+
+```
+$ startlang char.st
+a
+τ
+/
+'
+"
+
+
+	
+
+~
+~
+~
+~
 
 ```
