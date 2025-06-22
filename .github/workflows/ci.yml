@@ -7,7 +7,7 @@ on:
 
 jobs:
   check:
-    name: Format & Clippy & Tests
+    name: Format & Clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,14 +23,7 @@ jobs:
       - name: Clippy check
         run: cargo clippy --workspace --all-targets -- -D warnings
 
-      - name: Clippy check
-        run: cargo clippy --workspace --all-targets -- -D warnings
-
   coverage:
-    status:
-      project:
-        default:
-          target: 80%
     name: Coverage (llvm-cov) + Tests
     runs-on: ubuntu-latest
     steps:
@@ -38,18 +31,19 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          profil: minimal
 
-      - run: cargo install --locked cargo-llvm-cov cargo2junit
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - uses: taiki-e/install-action@nextest
 
-      - name: Run tests and generate junit report
-        run: RUSTC_BOOTSTRAP=1 cargo test -- -Z unstable-options --format json --report-time | cargo2junit > junit.xml
-
-      - name: Generate coverage report
-        run: cargo llvm-cov --workspace --codecov --output-path codecov.json
+      - name: Run coverage tests and generate junit report
+        run: cargo llvm-cov nextest --lcov --output-path core.lcov --workspace --all-features
+      - run: mv target/nextest/default/core-test-results.xml .
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
+          files: ./core.lcov
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: start974/start-lang
 
@@ -57,4 +51,6 @@ jobs:
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
+          files: ./core-test-results.xml
           token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
