@@ -3,7 +3,7 @@ use super::error::ErrorFromParser;
 use crate::parser::ast as ast_parser;
 use crate::utils::location::LocatedSet;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Typer {
     var_env: VariableEnv,
     ty_alias: TypeAliasEnv,
@@ -14,15 +14,6 @@ type Error = ErrorFromParser;
 type Result<T, E = Box<Error>> = std::result::Result<T, E>;
 
 impl Typer {
-    /// make a new structure to from parser
-    pub fn new() -> Self {
-        Self {
-            var_env: VariableEnv::default(),
-            ty_alias: TypeAliasEnv::default(),
-            id_builder: IdentifierBuilder::default(),
-        }
-    }
-
     /// convert constant
     pub fn constant(&self, constant: &ast_parser::Constant) -> ast_typed::Constant {
         match constant.kind() {
@@ -126,11 +117,5 @@ impl Typer {
         let ty = self.ty(definition.ty())?;
         self.ty_alias.add(name.clone(), ty.clone());
         Ok(())
-    }
-}
-
-impl Default for Typer {
-    fn default() -> Self {
-        Self::new()
     }
 }

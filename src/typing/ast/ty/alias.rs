@@ -30,15 +30,10 @@ impl Pretty for Alias {
 // ==========================================================================
 // Type alias environment
 // ==========================================================================
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct TypeAliasEnv(TypeEnv);
 
 impl TypeAliasEnv {
-    /// create type alias environment
-    pub fn new() -> Self {
-        TypeAliasEnv(TypeEnv::new())
-    }
-
     /// add alias to environment
     pub fn add(&mut self, name: Identifier, ty: Type) {
         self.0.add(name, ty)
@@ -51,11 +46,5 @@ impl TypeAliasEnv {
             name: name.clone(),
             ty: Box::new(ty.clone()),
         })
-    }
-}
-
-impl Default for TypeAliasEnv {
-    fn default() -> Self {
-        Self::new()
     }
 }

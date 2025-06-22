@@ -60,15 +60,10 @@ impl Pretty for Variable {
 // ==========================================================================
 // Variable Builder
 // ==========================================================================
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct VariableEnv(TypeEnv);
 
 impl VariableEnv {
-    /// create a new type environment
-    pub fn new() -> Self {
-        Self(TypeEnv::new())
-    }
-
     /// insert a type into the environment
     pub fn add(&mut self, identifier: Identifier, ty: Type) {
         self.0.add(identifier, ty);
@@ -81,11 +76,5 @@ impl VariableEnv {
             identifier: identifier.clone(),
             ty: ty.clone(),
         })
-    }
-}
-
-impl Default for VariableEnv {
-    fn default() -> Self {
-        Self::new()
     }
 }
