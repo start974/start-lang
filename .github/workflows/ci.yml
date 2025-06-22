@@ -7,7 +7,7 @@ on:
 
 jobs:
   check:
-    name: Format & Clippy
+    name: Format & Clippy & Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,14 @@ jobs:
       - name: Clippy check
         run: cargo clippy --workspace --all-targets -- -D warnings
 
+      - name: Clippy check
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
   coverage:
+    status:
+      project:
+        default:
+          target: 80%
     name: Coverage (llvm-cov) + Tests
     runs-on: ubuntu-latest
     steps:
@@ -35,7 +42,7 @@ jobs:
       - run: cargo install --locked cargo-llvm-cov cargo2junit
 
       - name: Run tests and generate junit report
-        run: RUSTC_BOOTSTRAP=1 cargo test -- -Z unstable-options --format json --report-time | cargo2junit > results.xml
+        run: RUSTC_BOOTSTRAP=1 cargo test -- -Z unstable-options --format json --report-time | cargo2junit > junit.xml
 
       - name: Generate coverage report
         run: cargo llvm-cov --workspace --codecov --output-path codecov.json
@@ -44,7 +51,6 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: codecov.json
           slug: start974/start-lang
 
       - name: Upload test results to Codecov
@@ -52,4 +58,3 @@ jobs:
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: result.xml
