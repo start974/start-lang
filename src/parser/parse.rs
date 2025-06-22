@@ -175,23 +175,18 @@ fn escape_unicode_char<'src>() -> impl Parser<'src, &'src str, char, Error<'src>
 ///    | "u{" digit_hex+ "}")
 ///```
 fn escape_char<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
-    just('\\')
-        .map(|c| {
-            println!("escape char {}", c);
-            c
-        })
-        .ignore_then(choice((
-            just('\\').to('\\'),
-            just('\"').to('\"'),
-            just('\'').to('\''),
-            just('n').to('\n'),
-            just('r').to('\r'),
-            just('t').to('\t'),
-            escape_number_char(digit(), 3, 10),
-            escape_number_char_prefixed('x', digit_hex(), 2, 16),
-            escape_number_char_prefixed('o', digit_oct(), 3, 8),
-            escape_unicode_char(),
-        )))
+    just('\\').ignore_then(choice((
+        just('\\').to('\\'),
+        just('\"').to('\"'),
+        just('\'').to('\''),
+        just('n').to('\n'),
+        just('r').to('\r'),
+        just('t').to('\t'),
+        escape_number_char(digit(), 3, 10),
+        escape_number_char_prefixed('x', digit_hex(), 2, 16),
+        escape_number_char_prefixed('o', digit_oct(), 3, 8),
+        escape_unicode_char(),
+    )))
 }
 
 /// parse caracter
