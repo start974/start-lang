@@ -115,15 +115,10 @@ pub trait Typed {
 // ==========================================================================
 // Type Environment
 // ==========================================================================
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct TypeEnv(HashMap<Identifier, Type>);
 
 impl TypeEnv {
-    /// create a new type environment
-    pub fn new() -> Self {
-        Self(HashMap::new())
-    }
-
     /// insert a type into the environment
     pub fn add(&mut self, name: Identifier, ty: Type) {
         if self.0.insert(name.clone(), ty).is_some() {
@@ -136,11 +131,5 @@ impl TypeEnv {
         self.0
             .get(identifier)
             .ok_or_else(|| ErrorVariableNotFound::new(identifier.clone()))
-    }
-}
-
-impl Default for TypeEnv {
-    fn default() -> Self {
-        Self::new()
     }
 }

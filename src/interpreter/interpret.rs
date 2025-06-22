@@ -32,9 +32,8 @@ pub struct Interpreter {
     debug_typer: bool,
 }
 
-impl Interpreter {
-    /// Create a new interpreter instance
-    pub fn new() -> Self {
+impl Default for Interpreter {
+    fn default() -> Self {
         let mut this = Self {
             source_id: SourceId::Unknown,
             content: String::new(),
@@ -49,7 +48,9 @@ impl Interpreter {
         this.set_std_library();
         this
     }
+}
 
+impl Interpreter {
     fn set_std_library(&mut self) {
         // Load the standard library definitions into the environment
         let content = include_str!("../../assets/stdlib.st");

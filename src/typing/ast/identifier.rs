@@ -70,7 +70,7 @@ impl Hash for Identifier {
 // Indentifier Builder
 // ==========================================================================
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct IdentifierBuilder {
     table: std::collections::HashMap<String, usize>,
     //fresh_id: usize,
@@ -78,15 +78,6 @@ pub struct IdentifierBuilder {
 }
 
 impl IdentifierBuilder {
-    /// create a new identifier builder
-    pub fn new() -> Self {
-        Self {
-            table: std::collections::HashMap::new(),
-            //fresh_id: 1,
-            //snapshot: Box::new(None),
-        }
-    }
-
     ///// crate fresh identifier
     /*    pub fn fresh(&mut self) -> Identifier {*/
     /*let id = self.fresh_id;*/
@@ -145,10 +136,4 @@ impl IdentifierBuilder {
     /*pub fn restore(self) -> Self {*/
     /*self.snapshot.expect("No snapshot to restore")*/
     /*}*/
-}
-
-impl Default for IdentifierBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
 }

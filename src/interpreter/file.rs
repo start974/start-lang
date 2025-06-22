@@ -1,7 +1,7 @@
 use super::interpret::Interpreter;
 
 pub fn file(path: &str) -> i32 {
-    let mut interpreter = Interpreter::new();
+    let mut interpreter = Interpreter::default();
     match interpreter.set_file(path) {
         Ok(()) => {
             interpreter.run();

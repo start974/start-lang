@@ -30,7 +30,7 @@ pub fn prompt_string(line_num: usize, many_line: bool) -> String {
 pub fn repl() {
     let mut rl = DefaultEditor::new().unwrap();
     let _ = rl.load_history(HISTORY_FILE);
-    let mut interpreter = Interpreter::new();
+    let mut interpreter = Interpreter::default();
     let mut line_num = 1;
     let mut many_line = false;
     loop {

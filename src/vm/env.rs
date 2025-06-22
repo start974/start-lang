@@ -4,15 +4,10 @@ use super::identifier::Identifier;
 use super::value::{Constant, Value};
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Env(HashMap<Identifier, Value>);
 
 impl Env {
-    /// make a new environment
-    pub fn new() -> Self {
-        Self(HashMap::new())
-    }
-
     /// get environment value
     pub fn get(&self, id: &Identifier) -> Option<&Value> {
         self.0.get(id)
@@ -40,11 +35,5 @@ impl Env {
         let id = Identifier::from(def.name());
         let value = self.eval(def.body()).unwrap();
         self.set(id, value.clone());
-    }
-}
-
-impl Default for Env {
-    fn default() -> Self {
-        Self::new()
     }
 }
