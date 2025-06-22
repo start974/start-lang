@@ -16,37 +16,46 @@ jobs:
           toolchain: stable
           components: rustfmt, clippy
           override: true
+
       - name: Format check
         run: cargo fmt --all -- --check
+
       - name: Clippy check
         run: cargo clippy --workspace --all-targets -- -D warnings
 
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - name: Run tests
-        run: cargo test --workspace --all-targets
 
   coverage:
-    name: Coverage (llvm-cov)
+    name: Coverage (llvm-cov) + Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: cargo install cargo-llvm-cov
-      - run: cargo llvm-cov --workspace --lcov --output-path lcov.info
+      - run: cargo install cargo-llvm-cov cargo2junit
+
+      - name: Run tests and generate junit report
+        run: cargo test --workspace --all-targets --message-format=json | cargo2junit > junit.xml
+
+      - name: Generate coverage report
+        run: cargo llvm-cov --workspace --lcov --output-path lcov.info
+
       - uses: actions/upload-artifact@v4
         with:
-          name: lcov.info
-          path: lcov.info
-      - uses: codecov/codecov-action@v5
+          name: coverage
+          path: |
+            lcov.info
+            junit.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
           slug: start974/start-lang
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
