@@ -1,7 +1,1 @@
-#[test]
-fn cli_tests() {
-    trycmd::TestCases::new()
-        .case("tests/cmd/**/*.md")
-        .case("tests/cmd/**/*.toml")
-        .run();
-}
+include!(concat!(env!("OUT_DIR"), "/generated_cli_tests.rs"));
