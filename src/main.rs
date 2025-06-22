@@ -17,7 +17,7 @@ fn main() {
             exit(code)
         }
         _ => {
-            eprintln!("Usage: {} [file.st]", args[0]);
+            eprintln!("Usage: startlang [file.st]");
             std::process::exit(1)
         }
     }
