@@ -19,6 +19,8 @@ Definition b_0 : 𝔹 :=
   true_0
 Definition c_1 : Char :=
   '//'
+Definition t_0 : 𝔹 :=
+  true
 b_0
 𝔹
 

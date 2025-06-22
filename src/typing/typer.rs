@@ -17,9 +17,9 @@ impl Typer {
     /// make a new structure to from parser
     pub fn new() -> Self {
         Self {
-            var_env: VariableEnv::new(),
-            ty_alias: TypeAliasEnv::new(),
-            id_builder: IdentifierBuilder::new(),
+            var_env: VariableEnv::default(),
+            ty_alias: TypeAliasEnv::default(),
+            id_builder: IdentifierBuilder::default(),
         }
     }
 

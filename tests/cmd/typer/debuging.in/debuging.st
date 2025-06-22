@@ -21,5 +21,6 @@ $ long_number.
 
 Def b := true.
 Def c := '\\'.
+Def t := __Constant_true__.
 
 ?: b.

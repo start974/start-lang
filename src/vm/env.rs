@@ -24,18 +24,13 @@ impl Env {
     }
 
     /// eval expression
-    pub fn eval(&self, expr: &Expression) -> Value {
+    pub fn eval(&self, expr: &Expression) -> Option<Value> {
         match expr {
-            Expression::Constant(c) => Value::from(Constant::from(c)),
+            Expression::Constant(c) => Some(Value::from(Constant::from(c))),
             Expression::Variable(x) => {
                 let id_ty = x.identifier();
                 let id = Identifier::from(id_ty);
-                match self.get(&id) {
-                    Some(value) => value.clone(),
-                    None => {
-                        panic!("Variable {} not found", id_ty)
-                    }
-                }
+                self.get(&id).cloned()
             }
         }
     }
@@ -43,8 +38,8 @@ impl Env {
     /// add a definition to the environment
     pub fn add_definition(&mut self, def: &ExpressionDefinition) {
         let id = Identifier::from(def.name());
-        let value = self.eval(def.body());
-        self.set(id, value);
+        let value = self.eval(def.body()).unwrap();
+        self.set(id, value.clone());
     }
 }
 

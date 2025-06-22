@@ -1,21 +1,9 @@
 # Constant
 
 ```
-$ startlang number.st
-42
-42
-42
-42
-42
-42
-42
-
-```
-
-```
-$ startlang variable.st
-4
-4
+$ startlang bool.st
+true
+false
 
 ```
 
@@ -36,3 +24,25 @@ a
 ~
 
 ```
+
+```
+$ startlang number.st
+42
+42
+42
+42
+42
+42
+42
+
+```
+
+## Variable
+```
+$ startlang variable.st
+4
+4
+
+```
+
+
