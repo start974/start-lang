@@ -287,17 +287,9 @@ pub fn expression<'src>(
 ) -> impl Parser<'src, &'src str, ast::Expression, Error<'src>> {
     recursive(move |expr1| {
         let expr0 = {
-            let identifier = identifier(source_id.clone(), offset)
-                .map(ast::Expression::from)
-                .boxed();
-            let constant = constant(source_id.clone(), offset)
-                .map(ast::Expression::from)
-                .boxed();
-            let parens = (just('(').labelled("("))
-                .padded()
-                .ignore_then(expr1)
-                .padded()
-                .then_ignore(just(')').labelled(")"));
+            let identifier = identifier(source_id.clone(), offset).map(ast::Expression::from);
+            let constant = constant(source_id.clone(), offset).map(ast::Expression::from);
+            let parens = expr1.padded().delimited_by(just('('), just(')'));
             choice((identifier, constant, parens)).boxed()
         };
 
