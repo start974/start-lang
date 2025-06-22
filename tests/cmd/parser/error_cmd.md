@@ -9,6 +9,13 @@ $ startlang file_not_exist.rs
 
 ```
 
+```
+$ startlang file1 file2
+? 1
+Usage: startlang [file.st]
+
+```
+
 ## Option not found
 
 ```
