@@ -9,6 +9,7 @@ use ariadne::Label;
 // Error Variable Not Found
 // =======================================================================
 
+#[derive(Debug)]
 pub struct ErrorVariableNotFound {
     identifier: Identifier,
 }

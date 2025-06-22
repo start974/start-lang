@@ -40,8 +40,8 @@ impl Interpreter {
             content: String::new(),
             offset_source: 0,
             theme: Theme::default_theme(),
-            typer: Typer::new(),
-            vm_env: EnvVm::new(),
+            typer: Typer::default(),
+            vm_env: EnvVm::default(),
             err_code: 0,
             debug_parser: false,
             debug_typer: false,
@@ -148,7 +148,7 @@ impl Interpreter {
                     println!("{}", expr.to_string(&self.theme));
                 }
                 if self.err_code == 0 {
-                    let value = self.vm_env.eval(&expr);
+                    let value = self.vm_env.eval(&expr).unwrap();
                     println!("{}", value.to_string(&self.theme));
                 }
             })
