@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use std::process::exit;
 
 mod file_interpreter;
+mod formatter;
 mod interpreter;
 mod parser;
 mod repl;
@@ -24,7 +25,14 @@ enum Commands {
     /// interpet a file
     Run { path: String },
     /// format a file
-    Format { path: String },
+    Format {
+        path: String,
+
+        #[arg(long)]
+        /// print formatted file
+        print: bool,
+
+    },
 }
 
 fn main() {
@@ -37,8 +45,10 @@ fn main() {
             let code = file_interpreter::run(&path);
             exit(code)
         }
-        Commands::Format { path: _ } => {
-            todo!("Format command not implemented yet");
+        Commands::Format { path, print } => {
+            let path = std::path::PathBuf::from(path);
+            let code = formatter::run(&path, print);
+            exit(code)
         }
     }
 }

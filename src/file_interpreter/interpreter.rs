@@ -36,10 +36,7 @@ impl Interpreter {
             Ok(content) => {
                 interpreter.content = content;
             }
-            Err(_) => interpreter::Interpreter::fail(
-                &mut interpreter,
-                ErrorFileRead::new(path.to_path_buf()),
-            ),
+            Err(_) => interpreter.fail(ErrorFileRead::new(path.to_path_buf())),
         }
         interpreter
     }
@@ -147,7 +144,7 @@ impl interpreter::Interpreter for Interpreter {
         println!("{}", ty.to_string(&self.theme));
     }
 
-    fn eprint<E>(& self, error: &E)
+    fn eprint<E>(&self, error: &E)
     where
         E: ErrorPrint + ErrorCode,
     {
