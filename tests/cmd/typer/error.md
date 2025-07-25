@@ -48,16 +48,13 @@ $ startlang run def_type_not_found.st
 ```
 $ startlang run type_mismatch.st
 ? 1
-Definition a : ℕ :=
-  1.
+Definition a : ℕ := 1.
 Definition a_0 : ℕ :=
   1
-Definition b : 𝔹 :=
-  true.
+Definition b : 𝔹 := true.
 Definition b_0 : 𝔹 :=
   true_0
-Definition c : ℕ :=
-  b.
+Definition c : ℕ := b.
 [302] Error: Type mismatch.
    ╭─[ type_mismatch.st:8:5 ]
    │
@@ -68,8 +65,7 @@ Definition c : ℕ :=
    │ Note: Expected type: 𝔹.
    │       Found type:    ℕ
 ───╯
-Definition c' : 𝔹 :=
-  a : Bool.
+Definition c' : 𝔹 := a : Bool.
 [302] Error: Type mismatch.
     ╭─[ type_mismatch.st:10:16 ]
     │
@@ -81,8 +77,7 @@ Definition c' : 𝔹 :=
     │       Found type:    Bool
 ────╯
 Type N1 := Nat.
-Definition d : N1 :=
-  c.
+Definition d : N1 := c.
 Definition d_0 : N1 :=
   c_0
 

@@ -65,7 +65,7 @@ impl Pretty for Definition {
             .append(theme.def_var(&self.name))
             .append(
                 (match &self.ty {
-                    Some(ty) => Doc::line()
+                    Some(ty) => Doc::softline()
                         .append(theme.op_typed_by())
                         .append(Doc::space())
                         .append(ty.pretty(theme).group())
@@ -77,6 +77,6 @@ impl Pretty for Definition {
             )
             .append(Doc::space())
             .append(theme.op_eq_def())
-            .append(Doc::line().append(self.body.pretty(theme).group()).nest(2))
+            .append(Doc::softline().append(self.body.pretty(theme).group()).nest(2))
     }
 }

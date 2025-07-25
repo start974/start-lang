@@ -18,22 +18,25 @@ pub enum Mode {
     Print,
 }
 
-pub fn diff(original: &str, formatted: &str) {
+pub fn diff(original: &str, formatted: &str) -> bool {
     let diff = TextDiff::from_lines(original, formatted);
-
+    let mut has_diff = false;
     for change in diff.iter_all_changes() {
         match change.tag() {
             ChangeTag::Delete => {
                 print!("{}", format!("-{}", change).red());
+                has_diff = true;
             }
             ChangeTag::Insert => {
                 print!("{}", format!("+{}", change).green());
+                has_diff = true;
             }
             ChangeTag::Equal => {
                 print!(" {}", change);
             }
         }
     }
+    has_diff
 }
 
 fn write_file(path: &Path, content: &str) -> Result<(), std::io::Error> {
@@ -54,7 +57,11 @@ pub fn run(path: &Path, mode: Mode) -> i32 {
                     interpreter.fail(ErrorFileWrite::new(path.to_path_buf()))
                 }
             }
-            Mode::Diff => diff(interpreter.get_content(), &str),
+            Mode::Diff => {
+                if diff(interpreter.get_content(), &str) {
+                    interpreter.set_error_code(1);
+                }
+            }
             Mode::Print => println!("{}", str),
         }
     }
