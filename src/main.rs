@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{ArgGroup, Parser, Subcommand};
 use std::process::exit;
 
 mod file_interpreter;
@@ -24,6 +24,12 @@ enum Commands {
     Repl,
     /// interpet a file
     Run { path: String },
+
+    #[command(group(
+        ArgGroup::new("mode")
+        .args(["print", "diff", "override_"])
+        .multiple(false)
+    ))]
     /// format a file
     Format {
         path: String,
@@ -32,6 +38,13 @@ enum Commands {
         /// print formatted file
         print: bool,
 
+        #[arg(long)]
+        /// diff view of formatted file
+        diff: bool,
+
+        #[arg(long, default_value_t = true)]
+        /// override file
+        override_: bool,
     },
 }
 
@@ -45,9 +58,22 @@ fn main() {
             let code = file_interpreter::run(&path);
             exit(code)
         }
-        Commands::Format { path, print } => {
+        Commands::Format {
+            path,
+            print,
+            diff,
+            override_: _,
+        } => {
             let path = std::path::PathBuf::from(path);
-            let code = formatter::run(&path, print);
+            let mode = if print {
+                formatter::Mode::Print
+            } else if diff {
+                formatter::Mode::Diff
+            } else {
+                // override is true
+                formatter::Mode::Override
+            };
+            let code = formatter::run(&path, mode);
             exit(code)
         }
     }
