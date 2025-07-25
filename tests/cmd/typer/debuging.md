@@ -1,7 +1,7 @@
 # Use debuging option
 
 ```
-$ startlang debuging.st
+$ startlang run debuging.st
 Definition long_number_0 : N1 :=
   333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_331
 Definition a_0 : ℕ :=

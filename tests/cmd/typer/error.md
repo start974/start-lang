@@ -2,7 +2,7 @@
 
 ## Type not found
 ```
-$ startlang def_expr_type_not_found.st
+$ startlang run def_expr_type_not_found.st
 ? 45
 [301] Error: Variable not found.
    ╭─[ def_expr_type_not_found.st:1:9 ]
@@ -17,7 +17,7 @@ $ startlang def_expr_type_not_found.st
 ## Variable not found
 
 ```
-$ startlang var_not_found.st
+$ startlang run var_not_found.st
 ? 45
 [301] Error: Variable not found.
    ╭─[ var_not_found.st:1:6 ]
@@ -31,7 +31,7 @@ $ startlang var_not_found.st
 
 
 ```
-$ startlang def_type_not_found.st
+$ startlang run def_type_not_found.st
 ? 45
 [301] Error: Variable not found.
    ╭─[ def_type_not_found.st:1:11 ]
@@ -46,7 +46,7 @@ $ startlang def_type_not_found.st
 ## Type mismatch
 
 ```
-$ startlang type_mismatch.st
+$ startlang run type_mismatch.st
 ? 1
 Definition a : ℕ :=
   1.

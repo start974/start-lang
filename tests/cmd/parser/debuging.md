@@ -1,7 +1,7 @@
 # Use debuging option
 
 ```
-$ startlang debuging.st
+$ startlang run debuging.st
 Type N1 := ℕ.
 Type LongType_NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN :=
   N1.

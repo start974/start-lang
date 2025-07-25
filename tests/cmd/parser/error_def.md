@@ -1,7 +1,7 @@
 # Error on definition
 
 ```
-$ startlang def_not_space.st
+$ startlang run def_not_space.st
 ? 201
 [201] Error: Parsing error
    ╭─[ def_not_space.st:1:4 ]
@@ -15,7 +15,7 @@ $ startlang def_not_space.st
 ```
 
 ```
-$ startlang no_eq_def.st
+$ startlang run no_eq_def.st
 ? 201
 [201] Error: Parsing error
    ╭─[ no_eq_def.st:1:14 ]
@@ -29,7 +29,7 @@ $ startlang no_eq_def.st
 ```
 
 ```
-$ startlang no_expression.st
+$ startlang run no_expression.st
 ? 201
 [201] Error: Parsing error
    ╭─[ no_expression.st:1:17 ]
@@ -43,7 +43,7 @@ $ startlang no_expression.st
 ```
 
 ```
-$ startlang stop_ident.st
+$ startlang run stop_ident.st
 ? 201
 [201] Error: Parsing error
    ╭─[ stop_ident.st:1:14 ]
@@ -57,7 +57,7 @@ $ startlang stop_ident.st
 ```
 
 ```
-$ startlang wrong_name.st
+$ startlang run wrong_name.st
 ? 201
 [201] Error: Parsing error
    ╭─[ wrong_name.st:1:12 ]
@@ -71,7 +71,7 @@ $ startlang wrong_name.st
 ```
 
 ```
-$ startlang wrong_ty.st
+$ startlang run wrong_ty.st
 ? 201
 [201] Error: Parsing error
    ╭─[ wrong_ty.st:1:16 ]

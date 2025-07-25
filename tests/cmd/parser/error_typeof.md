@@ -1,7 +1,7 @@
 # Error typeof
 
 ```
-$ startlang no_space.st
+$ startlang run no_space.st
 ? 201
 [201] Error: Parsing error
    ╭─[ no_space.st:1:7 ]

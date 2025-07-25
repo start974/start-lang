@@ -3,23 +3,27 @@
 ## File not found
 
 ```
-$ startlang file_not_exist.rs
+$ startlang run file_not_exist.rs
 ? 101
 [101] Error: Cannot read file "file_not_exist.rs".
 
 ```
 
 ```
-$ startlang file1 file2
-? 1
-Usage: startlang [file.st]
+$ startlang run file1 file2
+? 2
+error: unexpected argument 'file2' found
+
+Usage: startlang run <PATH>
+
+For more information, try '--help'.
 
 ```
 
 ## Option not found
 
 ```
-$ startlang option.st
+$ startlang run option.st
 ? 103
 [103] Error: Option "UknownOption" is unknown.
 
@@ -27,7 +31,7 @@ $ startlang option.st
 
 ## Error on command unknown
 ```
-$ startlang command.st
+$ startlang run command.st
 ? 201
 [201] Error: Parsing error
    ╭─[ command.st:1:1 ]
@@ -41,7 +45,7 @@ $ startlang command.st
 ```
 
 ```
-$ startlang last_command.st
+$ startlang run last_command.st
 ? 201
 [201] Error: Parsing error
    ╭─[ last_command.st:5:1 ]
