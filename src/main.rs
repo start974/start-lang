@@ -17,8 +17,11 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// run repl
     Repl,
+    /// interpet a file
     Run { path: String },
+    /// format a file
     Format { path: String },
 }
 

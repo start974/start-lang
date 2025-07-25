@@ -1,4 +1,5 @@
 bin.name = "startlang"
+args = "repl"
 status.code = 0
 
 stdin = """

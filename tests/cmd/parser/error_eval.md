@@ -1,7 +1,7 @@
 # Error eval
 
 ```
-$ startlang no_space.st
+$ startlang run no_space.st
 ? 201
 [201] Error: Parsing error
    ╭─[ no_space.st:1:5 ]
@@ -17,7 +17,7 @@ $ startlang no_space.st
 ## Unclosed char
 
 ```
-$ startlang char_unclosed1.st
+$ startlang run char_unclosed1.st
 ? 201
 [201] Error: Parsing error
    ╭─[ char_unclosed1.st:1:8 ]
@@ -31,7 +31,7 @@ $ startlang char_unclosed1.st
 ```
 
 ```
-$ startlang char_unclosed2.st
+$ startlang run char_unclosed2.st
 ? 201
 [201] Error: Parsing error
    ╭─[ char_unclosed2.st:1:7 ]
@@ -47,7 +47,7 @@ $ startlang char_unclosed2.st
 ## Unclosed parenthesis
 
 ```
-$ startlang parent_unclosed1.st
+$ startlang run parent_unclosed1.st
 ? 201
 [201] Error: Parsing error
    ╭─[ parent_unclosed1.st:1:8 ]
@@ -62,7 +62,7 @@ $ startlang parent_unclosed1.st
 
 
 ```
-$ startlang parent_unclosed2.st
+$ startlang run parent_unclosed2.st
 ? 201
 [201] Error: Parsing error
    ╭─[ parent_unclosed2.st:1:8 ]

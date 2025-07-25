@@ -1,7 +1,7 @@
 # Typing of constant
 
 ```
-$ startlang number.st
+$ startlang run number.st
 𝔹
 𝔹
 𝔹
@@ -10,7 +10,7 @@ B1
 ```
 
 ```
-$ startlang bool.st
+$ startlang run bool.st
 ℕ
 Nat
 N1
@@ -18,7 +18,7 @@ N1
 ```
 
 ```
-$ startlang char.st
+$ startlang run char.st
 Char
 
 ```

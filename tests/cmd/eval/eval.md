@@ -1,14 +1,14 @@
 # Constant
 
 ```
-$ startlang bool.st
+$ startlang run bool.st
 true
 false
 
 ```
 
 ```
-$ startlang char.st
+$ startlang run char.st
 a
 τ
 /
@@ -26,7 +26,7 @@ a
 ```
 
 ```
-$ startlang number.st
+$ startlang run number.st
 42
 42
 42
@@ -39,7 +39,7 @@ $ startlang number.st
 
 ## Variable
 ```
-$ startlang variable.st
+$ startlang run variable.st
 4
 4
 

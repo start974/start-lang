@@ -1,7 +1,7 @@
 # Error Type
 
 ```
-$ startlang no_eq_def.st
+$ startlang run no_eq_def.st
 ? 201
 [201] Error: Parsing error
    ╭─[ no_eq_def.st:1:8 ]
@@ -15,7 +15,7 @@ $ startlang no_eq_def.st
 ```
 
 ```
-$ startlang no_space.st
+$ startlang run no_space.st
 ? 201
 [201] Error: Parsing error
    ╭─[ no_space.st:1:5 ]
@@ -29,7 +29,7 @@ $ startlang no_space.st
 ```
 
 ```
-$ startlang not_end.st
+$ startlang run not_end.st
 ? 201
 [201] Error: Parsing error
    ╭─[ not_end.st:1:8 ]
@@ -42,7 +42,7 @@ $ startlang not_end.st
 
 ```
 ```
-$ startlang wrong_name.st
+$ startlang run wrong_name.st
 ? 201
 [201] Error: Parsing error
    ╭─[ wrong_name.st:1:6 ]
