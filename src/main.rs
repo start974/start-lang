@@ -1,4 +1,5 @@
-use std::{env, process::exit};
+use clap::{Parser, Subcommand};
+use std::process::exit;
 
 mod interpreter;
 mod parser;
@@ -7,18 +8,31 @@ mod typing;
 mod utils;
 mod vm;
 
+#[derive(Parser)]
+#[command(version)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Repl,
+    Run { path: String },
+    Format { path: String },
+}
+
 fn main() {
-    let args = env::args().collect::<Vec<_>>();
-    match args.len() {
-        1 => interpreter::repl(),
-        2 => {
-            let path = args.get(1).unwrap();
-            let code = interpreter::file(path);
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Repl => interpreter::repl(),
+        Commands::Run { path } => {
+            let code = interpreter::file(&path);
             exit(code)
         }
-        _ => {
-            eprintln!("Usage: startlang [file.st]");
-            std::process::exit(1)
+        Commands::Format { path: _ } => {
+            todo!("Format command not implemented yet");
         }
     }
 }
