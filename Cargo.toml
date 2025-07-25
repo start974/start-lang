@@ -13,6 +13,7 @@ trycmd = "0.15.9"
 [dependencies]
 ariadne = { version = "0.5.1", features = ["auto-color"] }
 chumsky = "0.10.1"
+clap = { version = "4.5.41", features = ["derive"] }
 color-print = "0.3.6"
 colored = "2.1.0"
 num-bigint = "0.4.6"
