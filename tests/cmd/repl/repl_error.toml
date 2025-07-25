@@ -3,7 +3,8 @@ args = "repl"
 status.code = 0
 
 stdin = """
-Def a := 3. Eval not_exits. Eval a.
+Def a := 3. Eval not_exits.
+Eval a.
 """
 
 
@@ -17,7 +18,7 @@ stderr = """
 [301] Error: Variable not found.
    ╭─[ REPL:1:18 ]
    │
- 1 │ Def a := 3. Eval not_exits. Eval a.
+ 1 │ Def a := 3. Eval not_exits.
    │                  ────┬────  
    │                      ╰────── Variable "not_exits" not found in the current scope.
 ───╯
