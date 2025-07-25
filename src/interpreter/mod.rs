@@ -1,8 +1,6 @@
 mod error;
-mod file;
 mod interpret;
-mod repl;
-mod summary;
+pub mod flag;
 
-pub use file::file;
-pub use repl::repl;
+pub use interpret::Interpreter;
+

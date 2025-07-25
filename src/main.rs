@@ -1,8 +1,10 @@
 use clap::{Parser, Subcommand};
 use std::process::exit;
 
+mod file_interpreter;
 mod interpreter;
 mod parser;
+mod repl;
 mod stdlib;
 mod typing;
 mod utils;
@@ -29,9 +31,10 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Repl => interpreter::repl(),
+        Commands::Repl => repl::run(),
         Commands::Run { path } => {
-            let code = interpreter::file(&path);
+            let path = std::path::PathBuf::from(path);
+            let code = file_interpreter::run(&path);
             exit(code)
         }
         Commands::Format { path: _ } => {

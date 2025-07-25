@@ -1,5 +1,5 @@
 use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
-use std::hash::Hash;
+use std::{collections::HashMap, hash::Hash};
 
 // ==========================================================================
 // Identifier
@@ -72,7 +72,7 @@ impl Hash for Identifier {
 
 #[derive(Debug, Default)]
 pub struct IdentifierBuilder {
-    table: std::collections::HashMap<String, usize>,
+    table: HashMap<String, usize>,
     //fresh_id: usize,
     //snapshot: Box<Option<IdentifierBuilder>>,
 }

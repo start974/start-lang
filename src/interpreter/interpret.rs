@@ -1,156 +1,114 @@
-use super::error;
-use crate::interpreter::summary::SummaryDefinition;
+use super::error::UnknownOption;
+use super::flag::Flag;
 use crate::parser;
+use crate::typing;
 use crate::typing::ast::Typed;
-use crate::typing::Typer;
 use crate::utils::error::{ErrorCode, ErrorPrint};
-use crate::utils::location::SourceId;
 use crate::utils::pretty::Pretty;
-use crate::utils::theme::Theme;
-use crate::vm::env::Env as EnvVm;
-use ariadne::Source;
-use chumsky::Parser;
+use crate::vm;
 
-pub struct Interpreter {
-    /// content cache
-    source_id: SourceId,
-    /// source
-    content: String,
-    /// offset in source
-    offset_source: usize,
-    /// theme used
-    theme: Theme,
-    /// type checker
-    typer: Typer,
-    /// virtual machine environment
-    vm_env: EnvVm,
-    /// error code occur
-    err_code: i32,
-    /// debug parser
-    debug_parser: bool,
-    /// debug typer
-    debug_typer: bool,
-}
+pub trait Interpreter {
+    /// get content
+    fn get_content(&self) -> &str;
 
-impl Default for Interpreter {
-    fn default() -> Self {
-        let mut this = Self {
-            source_id: SourceId::Unknown,
-            content: String::new(),
-            offset_source: 0,
-            theme: Theme::default_theme(),
-            typer: Typer::default(),
-            vm_env: EnvVm::default(),
-            err_code: 0,
-            debug_parser: false,
-            debug_typer: false,
-        };
-        this.set_std_library();
-        this
-    }
-}
-
-impl Interpreter {
-    fn set_std_library(&mut self) {
-        // Load the standard library definitions into the environment
-        let content = include_str!("../../assets/stdlib.st");
-        let path = std::path::PathBuf::from("../../assets/stdlib.st");
-        self.source_id = SourceId::File { path };
-        self.content = content.to_string();
-        self.offset_source = 0;
-        self.run();
-    }
+    /// set error code
+    fn set_error_code(&mut self, code: i32);
 
     /// get error code
-    pub fn get_err_code(&self) -> i32 {
-        self.err_code
-    }
+    fn get_error_code(&self) -> i32;
 
-    /// reset error code
-    pub fn reset_err_code(&mut self) {
-        self.err_code = 0;
-    }
+    /// continue parsing
+    fn continue_parsing(&self) -> bool;
 
-    fn eprint<E>(&mut self, error: E) -> i32
+    /// parse command at offset
+    fn parse_command<'src>(
+        &mut self,
+        content: &'src str,
+        offset: usize,
+    ) -> Result<(parser::ast::Command, usize), Vec<parser::Error<'src>>>;
+
+    /// type expression defintion
+    fn type_expr_definition(
+        &mut self,
+        def: parser::ast::ExpressionDefinition,
+    ) -> Result<typing::ast::ExpressionDefinition, Box<typing::Error>>;
+
+    /// type type defininition
+    fn type_ty_definition(
+        &mut self,
+        def: parser::ast::TypeDefinition,
+    ) -> Result<(), Box<typing::Error>>;
+
+    /// type expression
+    fn type_expression(
+        &mut self,
+        expr: parser::ast::Expression,
+    ) -> Result<typing::ast::Expression, Box<typing::Error>>;
+
+    /// add definitin in vm
+    fn vm_add_definition(&mut self, def: typing::ast::ExpressionDefinition);
+
+    /// eval expression in vm
+    fn vm_eval_expression(&mut self, expr: typing::ast::Expression) -> vm::Value;
+
+    /// set debug parser
+    fn set_debug(&mut self, b: bool, flag: Flag);
+
+    /// pretty debug
+    fn debug_pretty(&self, flag: Flag, doc: &impl Pretty);
+
+    /// print eval
+    fn print_eval(&mut self, value: &vm::Value);
+
+    /// print type of
+    fn print_typeof(&mut self, ty: &typing::ast::Type);
+
+    /// print error
+    fn eprint<E>(&self, error: &E)
     where
-        E: ErrorPrint + ErrorCode,
-    {
-        let source = Source::from(&self.content);
-        let mut cache = (self.source_id.clone(), source);
-        error.eprint(&self.theme, &mut cache).unwrap();
-        error.code()
-    }
+        E: ErrorPrint + ErrorCode;
 
+    /// fail with error
     fn fail<E>(&mut self, error: E)
     where
         E: ErrorPrint + ErrorCode,
     {
-        let code = self.eprint(error);
-        self.err_code = if self.err_code == 0 { code } else { 1 };
-    }
-
-    /// set file content from a file path
-    pub fn set_file(&mut self, path: &str) -> Result<(), i32> {
-        let path = std::path::PathBuf::from(path);
-        self.content = std::fs::read_to_string(path.clone())
-            .map_err(|_| self.eprint(error::ErrorFileRead::new(path.clone())))?;
-        self.source_id = SourceId::File { path };
-        self.offset_source = 0;
-        Ok(())
-    }
-
-    fn in_repl_mod(&self) -> bool {
-        self.source_id == SourceId::Repl
-    }
-
-    /// set repl content
-    pub fn add_repl(&mut self, content: &str) {
-        self.content = if self.in_repl_mod() {
-            format!("{}\n{}", self.content, content).to_string()
+        self.eprint(&error);
+        let code = if self.get_error_code() == 0 {
+            error.code()
         } else {
-            self.offset_source = 0;
-            self.source_id = SourceId::Repl;
-            content.to_string()
+            1
         };
+        self.set_error_code(code);
     }
 
-    /// type and run expression definition
+    /// run command expr definition
     fn run_expr_definition(&mut self, def: parser::ast::ExpressionDefinition) {
-        self.typer
-            .expression_definition(&def)
+        self.type_expr_definition(def)
             .map(|def| {
-                if self.debug_typer {
-                    println!("{}", def.to_string(&self.theme));
-                }
-                if self.in_repl_mod() {
-                    let summary = SummaryDefinition::from(&def);
-                    println!("{}", summary.to_string(&self.theme));
-                }
-                if self.err_code == 0 {
-                    self.vm_env.add_definition(&def)
+                self.debug_pretty(Flag::DebugTyper, &def);
+                if self.get_error_code() == 0 {
+                    self.vm_add_definition(def)
                 }
             })
             .unwrap_or_else(|e| self.fail(e))
     }
 
-    /// run type definition
+    /// run command type definition
     fn run_type_definition(&mut self, def: parser::ast::TypeDefinition) {
-        if let Err(e) = self.typer.type_definition(&def) {
+        if let Err(e) = self.type_ty_definition(def) {
             self.fail(e);
         }
     }
 
-    /// run evaluation
+    /// run command eval
     fn run_eval(&mut self, expr: parser::ast::Expression) {
-        self.typer
-            .expression(&expr)
+        self.type_expression(expr)
             .map(|expr| {
-                if self.debug_typer {
-                    println!("{}", expr.to_string(&self.theme));
-                }
-                if self.err_code == 0 {
-                    let value = self.vm_env.eval(&expr).unwrap();
-                    println!("{}", value.to_string(&self.theme));
+                self.debug_pretty(Flag::DebugTyper, &expr);
+                if self.get_error_code() == 0 {
+                    let value = self.vm_eval_expression(expr);
+                    self.print_eval(&value);
                 }
             })
             .unwrap_or_else(|e| self.fail(e))
@@ -158,28 +116,25 @@ impl Interpreter {
 
     /// run type of expression
     fn run_typeof(&mut self, expr: parser::ast::Expression) {
-        self.typer
-            .expression(&expr)
+        self.type_expression(expr)
             .map(|expr| {
-                if self.debug_typer {
-                    println!("{}", expr.to_string(&self.theme));
-                }
                 let ty = expr.ty();
-                println!("{}", ty.to_string(&self.theme));
+                self.print_typeof(ty);
             })
             .unwrap_or_else(|e| self.fail(e))
     }
 
-    /// run set command
+    /// run command set and unset
     fn run_set(&mut self, b: bool, identifier: parser::ast::Identifier) {
         match identifier.name() {
-            "DebugParser" => self.debug_parser = b,
-            "DebugTyper" => self.debug_typer = b,
-            _ => self.fail(error::UnknownOption::from(identifier)),
+            "DebugParser" => self.set_debug(b, Flag::DebugParser),
+            "DebugTyper" => self.set_debug(b, Flag::DebugTyper),
+            _ => self.fail(UnknownOption::from(identifier)),
         }
     }
 
-    fn run_cmd(&mut self, cmd: parser::ast::Command) {
+    /// run command
+    fn run_command(&mut self, cmd: parser::ast::Command) {
         match cmd {
             parser::ast::Command::ExpressionDefinition(def) => self.run_expr_definition(def),
             parser::ast::Command::TypeDefinition(def) => self.run_type_definition(def),
@@ -189,35 +144,25 @@ impl Interpreter {
         }
     }
 
-    /// run the interpreter in REPL mode
-    pub fn run(&mut self) {
+    /// run the interpreter
+    fn run(&mut self) {
+        let mut offset = 0;
+        let mut content = self.get_content().to_string();
+
         loop {
-            let content = self.content[(self.offset_source)..].to_string();
-            if content.is_empty() || (self.in_repl_mod() && self.err_code != 0) {
+            if content.is_empty() || !self.continue_parsing() {
                 break;
             }
-            let parser = parser::parse::command_offset(self.source_id.clone(), self.offset_source);
-            match parser.parse(&content).into_result() {
-                Ok((cmd, offset)) => {
-                    self.offset_source += offset;
-                    if self.debug_parser {
-                        println!("{}", cmd.to_string(&self.theme));
-                    }
-                    self.run_cmd(cmd);
+
+            match self.parse_command(&content, offset) {
+                Ok((cmd, add_offset)) => {
+                    offset += add_offset;
+                    content = content[add_offset..].to_string();
+                    self.debug_pretty(Flag::DebugParser, &cmd);
+                    self.run_command(cmd);
                 }
                 Err(errs) => {
-                    self.fail(
-                        errs.iter()
-                            .map(|err| {
-                                parser::error::Error::new(
-                                    err.clone(),
-                                    self.source_id.clone(),
-                                    self.offset_source,
-                                )
-                            })
-                            .collect::<Vec<_>>(),
-                    );
-                    self.offset_source = self.content.len();
+                    self.fail(errs);
                     break;
                 }
             }

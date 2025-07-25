@@ -114,52 +114,52 @@ impl ErrorReport for ErrorUnexpectedType {
 // =======================================================================
 // ErrorFromParser
 // =======================================================================
-pub enum ErrorFromParser {
+pub enum Error {
     VariableNotFound(ErrorVariableNotFound),
     UnexpectedType(ErrorUnexpectedType),
 }
 
-impl From<ErrorVariableNotFound> for ErrorFromParser {
+impl From<ErrorVariableNotFound> for Error {
     fn from(e: ErrorVariableNotFound) -> Self {
-        ErrorFromParser::VariableNotFound(e)
+        Error::VariableNotFound(e)
     }
 }
 
-impl From<ErrorUnexpectedType> for ErrorFromParser {
+impl From<ErrorUnexpectedType> for Error {
     fn from(e: ErrorUnexpectedType) -> Self {
-        ErrorFromParser::UnexpectedType(e)
+        Error::UnexpectedType(e)
     }
 }
 
-impl ErrorCode for ErrorFromParser {
+impl ErrorCode for Error {
     fn code(&self) -> i32 {
         match self {
-            ErrorFromParser::VariableNotFound(e) => e.code(),
-            ErrorFromParser::UnexpectedType(e) => e.code(),
+            Error::VariableNotFound(e) => e.code(),
+            Error::UnexpectedType(e) => e.code(),
         }
     }
 }
 
-impl Located for ErrorFromParser {
+impl Located for Error {
     fn loc(&self) -> &Location {
         match self {
-            ErrorFromParser::VariableNotFound(e) => e.loc(),
-            ErrorFromParser::UnexpectedType(e) => e.loc(),
+            Error::VariableNotFound(e) => e.loc(),
+            Error::UnexpectedType(e) => e.loc(),
         }
     }
 }
 
-impl ErrorReport for ErrorFromParser {
+impl ErrorReport for Error {
     fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
         match self {
-            ErrorFromParser::VariableNotFound(e) => e.finalize(theme, report),
-            ErrorFromParser::UnexpectedType(e) => e.finalize(theme, report),
+            Error::VariableNotFound(e) => e.finalize(theme, report),
+            Error::UnexpectedType(e) => e.finalize(theme, report),
         }
     }
     fn message(&self) -> crate::utils::error::Message {
         match self {
-            ErrorFromParser::VariableNotFound(e) => e.message(),
-            ErrorFromParser::UnexpectedType(e) => e.message(),
+            Error::VariableNotFound(e) => e.message(),
+            Error::UnexpectedType(e) => e.message(),
         }
     }
 }

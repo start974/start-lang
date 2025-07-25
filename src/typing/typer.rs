@@ -1,5 +1,5 @@
 use super::ast::{self as ast_typed, IdentifierBuilder, Type, TypeAliasEnv, Typed, VariableEnv};
-use super::error::ErrorFromParser;
+use super::error::Error;
 use crate::parser::ast as ast_parser;
 use crate::utils::location::LocatedSet;
 
@@ -10,7 +10,6 @@ pub struct Typer {
     id_builder: IdentifierBuilder,
 }
 
-type Error = ErrorFromParser;
 type Result<T, E = Box<Error>> = std::result::Result<T, E>;
 
 impl Typer {
