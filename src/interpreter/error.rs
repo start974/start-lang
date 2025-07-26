@@ -2,8 +2,6 @@ use crate::parser::ast::Identifier;
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder};
 
-
-
 // =======================================================================
 // Unknown Option
 // =======================================================================

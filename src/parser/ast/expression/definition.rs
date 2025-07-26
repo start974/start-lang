@@ -77,6 +77,10 @@ impl Pretty for Definition {
             )
             .append(Doc::space())
             .append(theme.op_eq_def())
-            .append(Doc::softline().append(self.body.pretty(theme).group()).nest(2))
+            .append(
+                Doc::softline()
+                    .append(self.body.pretty(theme).group())
+                    .nest(2),
+            )
     }
 }
