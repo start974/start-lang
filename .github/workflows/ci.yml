@@ -24,10 +24,12 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
 
   coverage:
-    name: Coverage (llvm-cov) + Tests
+    name: Tests & Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -37,13 +39,13 @@ jobs:
       - uses: taiki-e/install-action@nextest
 
       - name: Run coverage tests and generate junit report
-        run: cargo llvm-cov nextest --lcov --output-path core.lcov --workspace --all-features
-      - run: mv target/nextest/default/core-test-results.xml .
+        run: |
+          cargo llvm-cov --no-report nextest --workspace --all-features
+          cargo llvm-cov report --lcov --output-path lcov.info
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: ./core.lcov
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: start974/start-lang
 
@@ -51,6 +53,5 @@ jobs:
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
-          files: ./core-test-results.xml
           token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true
+          slug: start974/start-lang
