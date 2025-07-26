@@ -32,7 +32,7 @@ impl Message {
 
     /// import text quoted
     pub fn quoted(self, text: &str) -> Self {
-        self.important(&format!("\"{}\"", text))
+        self.important(&format!("\"{text}\""))
     }
 
     /// add message from pretty

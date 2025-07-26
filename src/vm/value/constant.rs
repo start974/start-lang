@@ -16,7 +16,7 @@ impl Pretty for Constant {
         match self {
             Self::Nat(n) => theme.constant(&format_number(n)),
             Self::Bool(b) => theme.constant(b),
-            Self::Char(c) => theme.constant(&format!("{}", c)),
+            Self::Char(c) => theme.constant(&format!("{c}")),
         }
     }
 }

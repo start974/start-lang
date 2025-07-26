@@ -24,15 +24,15 @@ pub fn diff(original: &str, formatted: &str) -> bool {
     for change in diff.iter_all_changes() {
         match change.tag() {
             ChangeTag::Delete => {
-                print!("{}", format!("-{}", change).red());
+                print!("{}", format!("-{change}").red());
                 has_diff = true;
             }
             ChangeTag::Insert => {
-                print!("{}", format!("+{}", change).green());
+                print!("{}", format!("+{change}").green());
                 has_diff = true;
             }
             ChangeTag::Equal => {
-                print!(" {}", change);
+                print!(" {change}");
             }
         }
     }
@@ -41,7 +41,7 @@ pub fn diff(original: &str, formatted: &str) -> bool {
 
 fn write_file(path: &Path, content: &str) -> Result<(), std::io::Error> {
     let mut file = File::create(path)?;
-    write!(file, "{}", content)
+    write!(file, "{content}")
 }
 
 /// run formatter on file
@@ -62,7 +62,7 @@ pub fn run(path: &Path, mode: Mode) -> i32 {
                     interpreter.set_error_code(1);
                 }
             }
-            Mode::Print => println!("{}", str),
+            Mode::Print => println!("{str}"),
         }
     }
     interpreter.get_error_code()

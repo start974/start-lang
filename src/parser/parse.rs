@@ -50,7 +50,7 @@ pub fn identifier<'src>(
 ) -> impl Parser<'src, &'src str, ast::Identifier, Error<'src>> {
     text::unicode::ident()
         .then(just('\'').repeated().collect::<String>())
-        .map(|(ident, quotes)| format!("{}{}", ident, quotes))
+        .map(|(ident, quotes)| format!("{ident}{quotes}"))
         .map_with(move |name, e| {
             let span: SimpleSpan = e.span();
             let loc = Location::new(source_id.clone(), span.start, span.end).with_offset(offset);
@@ -81,7 +81,7 @@ fn number_base<'src>(
         )
         .map(move |(digit1, digits2)| {
             let digits2 = digits2.replace('_', "");
-            let number_str = format!("{}{}", digit1, digits2);
+            let number_str = format!("{digit1}{digits2}");
             BigUint::parse_bytes(number_str.as_bytes(), radix).expect("Failed to parse number")
         })
 }

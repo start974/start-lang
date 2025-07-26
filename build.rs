@@ -3,7 +3,7 @@ use std::{env, fs};
 
 fn build_cli_tests() {
     let out_dir = env::var("OUT_DIR").unwrap();
-    let dest_path = format!("{}/generated_cli_tests.rs", out_dir);
+    let dest_path = format!("{out_dir}/generated_cli_tests.rs");
 
     let mut tests = String::new();
 
@@ -27,14 +27,13 @@ fn build_cli_tests() {
 
         tests.push_str(&format!(
             r#"
-                #[test]
-                fn test_{}() {{
-                    trycmd::TestCases::new()
-                    .case("{}")
-                    .run();
-                }}
-                "#,
-            test_name, path_str
+#[test]
+fn test_{test_name}() {{
+    trycmd::TestCases::new()
+    .case("{path_str}")
+    .run();
+}}
+"#
         ));
     }
 
