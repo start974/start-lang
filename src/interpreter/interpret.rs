@@ -135,12 +135,12 @@ pub trait Interpreter {
 
     /// run command
     fn run_command(&mut self, cmd: parser::ast::Command) {
-        match cmd {
-            parser::ast::Command::ExpressionDefinition(def) => self.run_expr_definition(def),
-            parser::ast::Command::TypeDefinition(def) => self.run_type_definition(def),
-            parser::ast::Command::Eval(expr) => self.run_eval(expr),
-            parser::ast::Command::TypeOf(expr) => self.run_typeof(expr),
-            parser::ast::Command::Set(b, id) => self.run_set(b, id),
+        match cmd.kind {
+            parser::ast::CommandKind::ExpressionDefinition(def) => self.run_expr_definition(def),
+            parser::ast::CommandKind::TypeDefinition(def) => self.run_type_definition(def),
+            parser::ast::CommandKind::Eval(expr) => self.run_eval(expr),
+            parser::ast::CommandKind::TypeOf(expr) => self.run_typeof(expr),
+            parser::ast::CommandKind::Set(b, id) => self.run_set(b, id),
         }
     }
 

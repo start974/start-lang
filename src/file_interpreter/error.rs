@@ -21,11 +21,13 @@ impl ErrorCode for ErrorFileRead {
         101
     }
 }
+
 impl Located for ErrorFileRead {
     fn loc(&self) -> &Location {
         &UNKNOWN_LOCATION
     }
 }
+
 impl ErrorReport for ErrorFileRead {
     fn finalize<'a>(
         &self,

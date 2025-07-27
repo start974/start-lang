@@ -5,12 +5,22 @@ status.code = 0
 stdin = """
 Type N1 := Nat.
 Def a : N1 := 3.
+Set DebugParser.
+Set DebugTyper.
 Eval a.
+Unset DebugParser.
+Unset DebugTyper.
+TypeOf a.
 """
 
 
 stdout = """
 a : N1
+Set DebugTyper.
+Eval a.
+a_0
 3
+Unset DebugParser.
+N1
 Exiting REPL...
 """

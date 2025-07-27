@@ -21,10 +21,9 @@ $ startlang format error.st
 ```
 $ startlang format --print good.st
 Definition a := 3.
+Eval a.
 
 Definition b : N := 42.
-
-Eval a.
 
 ```
 
@@ -56,10 +55,9 @@ $ startlang format --print error.st
 ```
 $ startlang format --diff good.st
  Definition a := 3.
+ Eval a.
  
  Definition b : N := 42.
- 
- Eval a.
 
 ```
 
@@ -74,8 +72,7 @@ $ startlang format --diff bad.st
 -  42.
 +Definition b : N := 42.
  
--Eval a.
-+Eval a.
+ Eval a.
 
 ```
 
