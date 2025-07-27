@@ -96,7 +96,7 @@ impl interpreter::Interpreter for Interpreter {
     ) -> Result<typing::ast::ExpressionDefinition, Box<typing::Error>> {
         self.typer.expression_definition(&def).inspect(|def| {
             let summary = SummaryDefinition::from(def);
-            println!("{}", summary.to_string(&self.theme));
+            println!("       {}", summary.to_string(&self.theme));
         })
     }
 

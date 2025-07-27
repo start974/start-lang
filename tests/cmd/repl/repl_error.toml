@@ -9,7 +9,7 @@ Eval a.
 
 
 stdout = """
-a : ℕ
+       a : ℕ
 3
 Exiting REPL...
 """

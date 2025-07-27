@@ -14,20 +14,8 @@ fn finish(rl: &mut Editor<(), FileHistory>) {
 
 /// make promp string
 fn prompt_string(line_num: usize, many_line: bool) -> String {
-    let line_num_str = line_num.to_string();
-    const MAX_LINE_NUM_LEN: usize = 3;
-    let mut res = if line_num_str.len() <= MAX_LINE_NUM_LEN {
-        " ".repeat(MAX_LINE_NUM_LEN - line_num_str.len())
-    } else {
-        String::new()
-    };
-    res.push_str(&line_num_str);
-    if many_line {
-        res.push_str(" ⎮ ");
-    } else {
-        res.push_str(" ∥ ");
-    }
-    res
+    let sep = if many_line { "∥" } else { "⎮" };
+    format!("{line_num:>4} {sep} ")
 }
 
 /// run repl
