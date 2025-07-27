@@ -27,7 +27,7 @@ enum Commands {
 
     #[command(group(
         ArgGroup::new("mode")
-        .args(["print", "diff", "override_"])
+        .args(["print", "diff", "overwrite"])
         .multiple(false)
     ))]
     /// format a file
@@ -43,8 +43,8 @@ enum Commands {
         diff: bool,
 
         #[arg(long, default_value_t = true)]
-        /// override file
-        override_: bool,
+        /// format file inplace
+        overwrite: bool,
     },
 }
 
@@ -62,7 +62,7 @@ fn main() {
             path,
             print,
             diff,
-            override_: _,
+            overwrite: _,
         } => {
             let path = std::path::PathBuf::from(path);
             let mode = if print {
@@ -71,7 +71,7 @@ fn main() {
                 formatter::Mode::Diff
             } else {
                 // override is true
-                formatter::Mode::Override
+                formatter::Mode::Overwrite
             };
             let code = formatter::run(&path, mode);
             exit(code)

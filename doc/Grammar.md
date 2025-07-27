@@ -13,16 +13,16 @@ identifier := IDENT "'"*
 ```
 number := number_dec | number_hex | number_oct | number_bit
 
-number_dec := digit ( digit | _)* digit
+number_dec := (digit ( digit | _)*)? digit
 digit := [0..9]
 
-number_hex := "0" ("x" | "X") digit_hex (digit_hex | _)* digit_hex
+number_hex := "0" ("x" | "X") (digit_hex (digit_hex | _)*)? digit_hex
 digit_hex := digit | [A..F] | [a..f]
 
-number_oct := "0" ("o" | "O") digit_oct (digit_oct | _)* digit_oct
+number_oct := "0" ("o" | "O") (digit_oct (digit_oct | _)*)? digit_oct
 digit_oct := [0..7]
 
-number_bit := "0" ("b" | "B") digit_bit ( digit_bit | _)* digit_bit
+number_bit := "0" ("b" | "B") (digit_bit ( digit_bit | _)*)? digit_bit
 digit_bit := [0..1]
 
 ```
@@ -102,18 +102,18 @@ command :=
 | ("Eval" | "$") SPACE expr
 | ("Grammar" | "Gram") SPACE grammar              // Not yet implemented
 | ("TypeOf" | "?:") SPACE expr
+| ("Set" | "Unset") FLAGS
 
 ```
+
+## Flags
+- `DebugParser` to print parser ast
+- `DebugTyper` to print typing ast
+
 
 ## Program
 ```
 prgm := command_dot*
-```
-
-## Other
-Parser is generated using [tree-sitter](https://tree-sitter.github.io/tree-sitter/)
-in directory
-[tree-sitter-start](../tree-sitter-start)
 ```
 
 

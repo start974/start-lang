@@ -3,13 +3,14 @@ args = "repl"
 status.code = 0
 
 stdin = """
-Def a := 3.
+Type N1 := Nat.
+Def a : N1 := 3.
 Eval a.
 """
 
 
 stdout = """
-a : ℕ
+a : N1
 3
 Exiting REPL...
 """

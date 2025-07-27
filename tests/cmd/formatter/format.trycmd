@@ -1,0 +1,103 @@
+# Overrite
+```
+$ startlang format good.st
+```
+
+```
+$ startlang format error.st
+? 201
+[201] Error: Parsing error
+   ╭─[ error.st:1:14 ]
+   │
+ 1 │ Definition a
+   │              │ 
+   │              ╰─ Expected "type_restriction", ":=".
+───╯
+
+
+```
+
+```
+$ startlang format bad_write.st
+? 102
+[102] Error: Cannot write file "bad_write.st".
+
+```
+
+# Format print
+
+```
+$ startlang format --print good.st
+Definition a := 3.
+
+Definition b : N := 42.
+
+Eval a.
+
+```
+
+```
+$ startlang format --print bad.st
+Definition a := 3.
+
+Definition b : N := 42.
+
+Eval a.
+
+```
+
+```
+$ startlang format --print error.st
+? 201
+[201] Error: Parsing error
+   ╭─[ error.st:1:14 ]
+   │
+ 1 │ Definition a
+   │              │ 
+   │              ╰─ Expected "type_restriction", ":=".
+───╯
+
+
+```
+
+# Format diff
+
+```
+$ startlang format --diff good.st
+ Definition a := 3.
+ 
+ Definition b : N := 42.
+ 
+ Eval a.
+
+```
+
+```
+$ startlang format --diff bad.st
+? 1
+-Definition a :=
+-  3.
++Definition a := 3.
+ 
+-Definition b:N :=
+-  42.
++Definition b : N := 42.
+ 
+-Eval a.
++Eval a.
+
+```
+
+```
+$ startlang format --print error.st
+? 201
+[201] Error: Parsing error
+   ╭─[ error.st:1:14 ]
+   │
+ 1 │ Definition a
+   │              │ 
+   │              ╰─ Expected "type_restriction", ":=".
+───╯
+
+
+```
