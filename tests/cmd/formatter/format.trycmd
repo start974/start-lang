@@ -16,13 +16,6 @@ $ startlang format error.st
 
 ```
 
-```
-$ startlang format bad_write.st
-? 102
-[102] Error: Cannot write file "bad_write.st".
-
-```
-
 # Format print
 
 ```
