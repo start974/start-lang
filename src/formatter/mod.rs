@@ -13,7 +13,7 @@ mod interpreter;
 mod parsed_file;
 
 pub enum Mode {
-    Override,
+    Overwrite,
     Diff,
     Print,
 }
@@ -52,7 +52,7 @@ pub fn run(path: &Path, mode: Mode) -> i32 {
         let theme = Theme::default();
         let str = parsed_file.to_string(&theme);
         match mode {
-            Mode::Override => {
+            Mode::Overwrite => {
                 if write_file(path, &str).is_err() {
                     interpreter.fail(ErrorFileWrite::new(path.to_path_buf()))
                 }

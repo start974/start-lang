@@ -7,7 +7,7 @@ fn build_cli_tests() {
 
     let mut tests = String::new();
 
-    let patterns = ["tests/cmd/**/*.md", "tests/cmd/**/*.toml"];
+    let patterns = ["tests/cmd/**/*.trycmd", "tests/cmd/**/*.toml"];
 
     let files = patterns
         .iter()

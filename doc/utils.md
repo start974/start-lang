@@ -3,6 +3,7 @@ run test with *nextest*
 ```sh
 cargo nextest run
 ```
+or use `cargo test`
 
 overwrite trycmd
 ```sh
