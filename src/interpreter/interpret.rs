@@ -159,7 +159,7 @@ pub trait Interpreter {
                 }
                 Err(errs) => {
                     self.fail(errs);
-                    break
+                    break;
                 }
             }
         }
