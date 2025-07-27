@@ -11,7 +11,6 @@ $ startlang run no_space.st
    │     ╰── Expected "whitespace", found "1".
 ───╯
 
-
 ```
 
 ## Unclosed char
@@ -27,7 +26,6 @@ $ startlang run char_unclosed1.st
    │        ╰── Expected "'", found ".".
 ───╯
 
-
 ```
 
 ```
@@ -40,7 +38,6 @@ $ startlang run char_unclosed2.st
    │       ┬  
    │       ╰── Expected "something else".
 ───╯
-
 
 ```
 
@@ -57,7 +54,6 @@ $ startlang run parent_unclosed1.st
    │        ╰── Expected "something else".
 ───╯
 
-
 ```
 
 
@@ -71,6 +67,5 @@ $ startlang run parent_unclosed2.st
    │        ┬  
    │        ╰── Expected "something else".
 ───╯
-
 
 ```

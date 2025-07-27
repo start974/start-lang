@@ -11,7 +11,6 @@ $ startlang run def_not_space.st
    │    ╰── Expected "''i''", "whitespace", found "a".
 ───╯
 
-
 ```
 
 ```
@@ -24,7 +23,6 @@ $ startlang run no_eq_def.st
    │              ┬  
    │              ╰── Expected "type_restriction", ":=", found "1".
 ───╯
-
 
 ```
 
@@ -39,7 +37,6 @@ $ startlang run no_expression.st
    │                 ╰─ Expected "expression".
 ───╯
 
-
 ```
 
 ```
@@ -52,7 +49,6 @@ $ startlang run stop_ident.st
    │              │ 
    │              ╰─ Expected "type_restriction", ":=".
 ───╯
-
 
 ```
 
@@ -67,7 +63,6 @@ $ startlang run wrong_name.st
    │            ╰── Expected "whitespace", "identifier", found "1".
 ───╯
 
-
 ```
 
 ```
@@ -80,6 +75,5 @@ $ startlang run wrong_ty.st
    │                ┬  
    │                ╰── Expected "type", found "1".
 ───╯
-
 
 ```

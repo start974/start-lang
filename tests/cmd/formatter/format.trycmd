@@ -14,7 +14,6 @@ $ startlang format error.st
    │              ╰─ Expected "type_restriction", ":=".
 ───╯
 
-
 ```
 
 ```
@@ -57,7 +56,6 @@ $ startlang format --print error.st
    │              ╰─ Expected "type_restriction", ":=".
 ───╯
 
-
 ```
 
 # Format diff
@@ -98,6 +96,5 @@ $ startlang format --print error.st
    │              │ 
    │              ╰─ Expected "type_restriction", ":=".
 ───╯
-
 
 ```

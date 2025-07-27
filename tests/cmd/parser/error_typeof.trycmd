@@ -11,6 +11,5 @@ $ startlang run no_space.st
    │       ╰── Expected "whitespace", found "1".
 ───╯
 
-
 ```
 
