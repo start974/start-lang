@@ -143,9 +143,11 @@ where
     E: ErrorPrint,
 {
     fn eprint(&self, theme: &Theme, cache: &mut impl Cache<SourceId>) -> std::io::Result<()> {
-        for error in self {
+        for (i, error) in self.iter().enumerate() {
+            if i > 0 {
+                eprintln!();
+            }
             error.eprint(theme, cache)?;
-            eprintln!();
         }
         Ok(())
     }

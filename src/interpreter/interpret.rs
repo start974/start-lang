@@ -149,11 +149,7 @@ pub trait Interpreter {
         let mut offset = 0;
         let mut content = self.get_content().to_string();
 
-        loop {
-            if content.is_empty() || !self.continue_parsing() {
-                break;
-            }
-
+        while !content.is_empty() && self.continue_parsing() {
             match self.parse_command(&content, offset) {
                 Ok((cmd, add_offset)) => {
                     offset += add_offset;
@@ -163,7 +159,7 @@ pub trait Interpreter {
                 }
                 Err(errs) => {
                     self.fail(errs);
-                    break;
+                    break
                 }
             }
         }

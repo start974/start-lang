@@ -11,7 +11,6 @@ $ startlang run no_eq_def.st
    │        ╰── Expected ":=", found "N".
 ───╯
 
-
 ```
 
 ```
@@ -24,7 +23,6 @@ $ startlang run no_space.st
    │     ┬  
    │     ╰── Expected "whitespace", "''O''", found "N".
 ───╯
-
 
 ```
 
@@ -39,7 +37,6 @@ $ startlang run not_end.st
    │        ╰─ Expected ":=".
 ───╯
 
-
 ```
 ```
 $ startlang run wrong_name.st
@@ -51,6 +48,5 @@ $ startlang run wrong_name.st
    │      ┬  
    │      ╰── Expected "whitespace", "identifier", found "1".
 ───╯
-
 
 ```

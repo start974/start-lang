@@ -41,7 +41,6 @@ $ startlang run command.st
    │ ╰── Expected "command", found "3".
 ───╯
 
-
 ```
 
 ```
@@ -54,6 +53,5 @@ $ startlang run last_command.st
    │ ┬  
    │ ╰── Expected "command", found "a".
 ───╯
-
 
 ```
