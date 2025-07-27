@@ -2,7 +2,7 @@ use clap::{ArgGroup, Parser, Subcommand};
 use std::process::exit;
 
 mod file_interpreter;
-mod formatter;
+mod format;
 mod interpreter;
 mod parser;
 mod repl;
@@ -66,14 +66,14 @@ fn main() {
         } => {
             let path = std::path::PathBuf::from(path);
             let mode = if print {
-                formatter::Mode::Print
+                format::Mode::Print
             } else if diff {
-                formatter::Mode::Diff
+                format::Mode::Diff
             } else {
                 // override is true
-                formatter::Mode::Overwrite
+                format::Mode::Overwrite
             };
-            let code = formatter::run(&path, mode);
+            let code = format::run(&path, mode);
             exit(code)
         }
     }

@@ -1,5 +1,5 @@
 pub mod file_interpreter;
-pub mod formatter;
+pub mod format;
 pub mod interpreter;
 pub mod parser;
 pub mod stdlib;

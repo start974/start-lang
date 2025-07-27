@@ -29,9 +29,7 @@ impl Interpreter {
     pub fn new(path: &Path) -> Self {
         let mut interpreter = Interpreter::stdlib();
         interpreter.run();
-        interpreter.source_id = SourceId::File {
-            path: path.to_path_buf(),
-        };
+        interpreter.source_id = SourceId::File(path.to_path_buf());
         match read_to_string(path) {
             Ok(content) => {
                 interpreter.content = content;
