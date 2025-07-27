@@ -9,7 +9,7 @@ use std::path::PathBuf;
 pub enum SourceId {
     Unknown,
     Repl,
-    File { path: PathBuf },
+    File(PathBuf),
 }
 
 impl std::fmt::Display for SourceId {
@@ -17,7 +17,7 @@ impl std::fmt::Display for SourceId {
         match &self {
             SourceId::Unknown => write!(f, "unknown"),
             SourceId::Repl => write!(f, "REPL"),
-            SourceId::File { path, .. } => write!(f, "{}", path.display()),
+            SourceId::File(path) => write!(f, "{}", path.display()),
         }
     }
 }
