@@ -15,7 +15,7 @@ TypeOf a.
 
 
 stdout = """
-a : N1
+       a : N1
 Set DebugTyper.
 Eval a.
 a_0

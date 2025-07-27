@@ -1,4 +1,4 @@
-use super::diff::diff;
+use super::diff::print_diff;
 use super::error::ErrorFileWrite;
 use super::Mode;
 use crate::file_interpreter::error::ErrorFileRead;
@@ -118,7 +118,7 @@ impl Formatter {
             Mode::Overwrite if std::fs::write(&self.path, &formatted).is_err() => {
                 self.fail(ErrorFileWrite::new(self.path.clone()))
             }
-            Mode::Diff if diff(&self.content, &formatted) => {
+            Mode::Diff if print_diff(&self.content, &formatted) => {
                 self.err_code = 1;
             }
             Mode::Print => print!("{formatted}"),
