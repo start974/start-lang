@@ -26,3 +26,6 @@ use `cargo fmt` to format the code
 
 ## Lint
 use `cargo clippy` to lint the code
+
+## Install
+use `cargo install --path .` to install startlang

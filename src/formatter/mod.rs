@@ -1,22 +1,21 @@
 use crate::file_interpreter::error::ErrorFileRead;
-use crate::parser::{self, ast::Command};
+use crate::parser;
 use crate::utils::error::{ErrorCode, ErrorPrint};
-use crate::utils::location::SourceId;
+use crate::utils::location::{Located as _, SourceId};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
-use ariadne::Source;
+use ariadne::{Source, Span as _};
 use chumsky::Parser as _;
 use colored::Colorize as _;
 use error::ErrorFileWrite;
-use parsed_file::ParsedFile;
 use similar::{ChangeTag, TextDiff};
 use std::fs::{read_to_string, File};
 use std::io::Write;
 use std::path::Path;
 
 mod error;
-mod parsed_file;
 
+#[derive(Debug, Clone, Copy)]
 pub enum Mode {
     Overwrite,
     Diff,
@@ -53,43 +52,42 @@ fn write_file(path: &Path, content: &str) -> Result<(), std::io::Error> {
 pub fn run(path: &Path, mode: Mode) -> i32 {
     let mut interpreter = Formatter::new(path);
     interpreter.run();
-    if let Some(parsed_file) = interpreter.parsed_file() {
-        let theme = Theme::default();
-        let str = parsed_file.to_string(&theme);
+    if let Some(formatted) = interpreter.formatted_content() {
         match mode {
             Mode::Overwrite => {
-                if write_file(path, &str).is_err() {
+                if write_file(path, &formatted).is_err() {
                     interpreter.fail(ErrorFileWrite::new(path.to_path_buf()))
                 }
             }
             Mode::Diff => {
-                if diff(&interpreter.content, &str) {
+                if diff(&interpreter.content, &formatted) {
                     interpreter.err_code = 1;
                 }
             }
-            Mode::Print => println!("{str}"),
+            Mode::Print => print!("{formatted}"),
         }
     }
     interpreter.err_code
 }
 
 struct Formatter {
+    source_id: SourceId,
     content: String,
     err_code: i32,
     theme: Theme,
-    file_parse: ParsedFile,
+    commands: Vec<parser::ast::Command>,
 }
 
 impl Formatter {
     fn new(path: &Path) -> Self {
-        let source_id = SourceId::File {
-            path: path.to_path_buf(),
-        };
         let mut interpreter = Formatter {
+            source_id: SourceId::File {
+                path: path.to_path_buf(),
+            },
             content: String::new(),
             err_code: 0,
             theme: Theme::default_theme(),
-            file_parse: ParsedFile::new(source_id),
+            commands: Vec::new(),
         };
         match read_to_string(path) {
             Ok(content) => {
@@ -100,28 +98,15 @@ impl Formatter {
         interpreter
     }
 
-    /// get parsed file
-    fn parsed_file(&self) -> Option<&ParsedFile> {
-        if self.err_code == 0 {
-            Some(&self.file_parse)
-        } else {
-            None
-        }
-    }
-
-    fn source_id(&self) -> &SourceId {
-        self.file_parse.source_id()
-    }
-
     fn parse_command<'src>(
         &mut self,
         content: &'src str,
         offset: usize,
-    ) -> Result<(Command, usize), Vec<parser::Error<'src>>> {
-        let parser = parser::parse::command_offset(self.source_id().clone(), offset);
+    ) -> Result<(parser::ast::Command, usize), Vec<parser::Error<'src>>> {
+        let parser = parser::parse::command_offset(self.source_id.clone(), offset);
         parser.parse(content).into_result().map_err(|errs| {
             errs.iter()
-                .map(|err| parser::Error::new(err.clone(), self.source_id().clone(), offset))
+                .map(|err| parser::Error::new(err.clone(), self.source_id.clone(), offset))
                 .collect::<Vec<_>>()
         })
     }
@@ -131,9 +116,40 @@ impl Formatter {
     where
         E: ErrorPrint + ErrorCode,
     {
-        let mut cache = (self.source_id().clone(), Source::from(&self.content));
+        let mut cache = (self.source_id.clone(), Source::from(&self.content));
         error.eprint(&self.theme, &mut cache).unwrap();
         self.err_code = if self.err_code == 0 { error.code() } else { 1 };
+    }
+
+    fn format_content(&self) -> String {
+        let mut result = String::new();
+        let mut last_end = 0;
+        let theme = Theme::default();
+
+        for cmd in self.commands.iter() {
+            let loc = cmd.loc();
+            let start = loc.start();
+            let end = loc.end();
+            if start > last_end {
+                result.push_str(&self.content[last_end..start]);
+            }
+            result.push_str(&cmd.to_string(&theme));
+            last_end = end;
+        }
+
+        if last_end < self.content.len() {
+            result.push_str(&self.content[last_end..]);
+        }
+
+        result
+    }
+
+    pub fn formatted_content(&self) -> Option<String> {
+        if self.err_code == 0 {
+            Some(self.format_content())
+        } else {
+            None
+        }
     }
 
     /// run formatter
@@ -146,7 +162,7 @@ impl Formatter {
                 Ok((cmd, add_offset)) => {
                     content = content[add_offset..].to_string();
                     offset += add_offset;
-                    self.file_parse.add_command(cmd);
+                    self.commands.push(cmd);
                 }
                 Err(errs) => {
                     self.fail(errs);

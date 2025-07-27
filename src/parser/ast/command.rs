@@ -1,9 +1,10 @@
 use super::{Expression, ExpressionDefinition, Identifier, TypeDefinition};
+use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
 #[derive(Debug)]
-pub enum Command {
+pub enum CommandKind {
     ExpressionDefinition(ExpressionDefinition),
     TypeDefinition(TypeDefinition),
     Eval(Expression),
@@ -12,18 +13,36 @@ pub enum Command {
     Set(bool, Identifier),
 }
 
-impl Pretty for Command {
+pub struct Command {
+    loc: Location,
+    pub kind: CommandKind,
+}
+
+impl Command {
+    /// Create a new command with the given kind and location
+    pub fn new(kind: CommandKind, loc: Location) -> Self {
+        Self { loc, kind }
+    }
+}
+
+impl Located for Command {
+    fn loc(&self) -> &Location {
+        &self.loc
+    }
+}
+
+impl Pretty for CommandKind {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        match self {
-            Command::ExpressionDefinition(def) => Doc::nil()
+        match &self {
+            CommandKind::ExpressionDefinition(def) => Doc::nil()
                 .append(theme.keyword(&"Definition"))
                 .append(Doc::space())
                 .append(def.pretty(theme)),
-            Command::TypeDefinition(def) => Doc::nil()
+            CommandKind::TypeDefinition(def) => Doc::nil()
                 .append(theme.keyword(&"Type"))
                 .append(Doc::space())
                 .append(def.pretty(theme)),
-            Command::Eval(expr) => Doc::nil()
+            CommandKind::Eval(expr) => Doc::nil()
                 .append(theme.keyword(&"Eval"))
                 .append(Doc::space())
                 .append(expr.pretty(theme)),
@@ -31,15 +50,21 @@ impl Pretty for Command {
             //.append(theme.keyword(&"Grammar"))
             //.append(Doc::space())
             //.append(grammar_cmd.pretty(theme)),
-            Command::TypeOf(expr) => Doc::nil()
+            CommandKind::TypeOf(expr) => Doc::nil()
                 .append(theme.keyword(&"TypeOf"))
                 .append(Doc::space())
                 .append(expr.pretty(theme)),
-            Command::Set(set, identifier) => Doc::nil()
+            CommandKind::Set(set, identifier) => Doc::nil()
                 .append(theme.keyword(&if *set { "Set" } else { "Unset" }))
                 .append(Doc::space())
                 .append(theme.keyword(&identifier.name().to_string())),
         }
         .append(Doc::text("."))
+    }
+}
+
+impl Pretty for Command {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        self.kind.pretty(theme)
     }
 }

@@ -38,6 +38,7 @@ impl Location {
         Self { start, end, id }
     }
 
+    /// add offset to location
     pub fn with_offset(self, offset: usize) -> Self {
         Location {
             start: self.start + offset,

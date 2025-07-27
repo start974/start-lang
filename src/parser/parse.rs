@@ -1,4 +1,4 @@
-use super::ast;
+use super::ast::{self};
 use crate::utils::location::{Location, SourceId};
 use chumsky::{prelude::*, text::whitespace};
 use num_bigint::BigUint;
@@ -380,40 +380,40 @@ pub fn type_definition<'src>(
 pub fn command<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, ast::Command, Error<'src>> {
+) -> impl Parser<'src, &'src str, ast::CommandKind, Error<'src>> {
     let def_expr = (choice((just("Definition"), just("Def")))
         .labelled("Definition")
         .then(whitespace().at_least(1)))
     .ignore_then(expression_definition(source_id.clone(), offset))
-    .map(ast::Command::ExpressionDefinition);
+    .map(ast::CommandKind::ExpressionDefinition);
 
     let def_type = (choice((just("Type"), just("Ty")))
         .labelled("Type")
         .then(whitespace().at_least(1)))
     .ignore_then(type_definition(source_id.clone(), offset))
-    .map(ast::Command::TypeDefinition);
+    .map(ast::CommandKind::TypeDefinition);
 
     let eval = (choice((just("Eval"), just("$")))
         .labelled("Eval")
         .then(whitespace().at_least(1)))
     .ignore_then(expression(source_id.clone(), offset))
-    .map(ast::Command::Eval);
+    .map(ast::CommandKind::Eval);
 
     let type_of = (choice((just("TypeOf"), just("?:")))
         .labelled("TypeOf")
         .then(whitespace().at_least(1)))
     .ignore_then(expression(source_id.clone(), offset))
-    .map(ast::Command::TypeOf);
+    .map(ast::CommandKind::TypeOf);
 
     let set = (just("Set").labelled("Set").then(whitespace().at_least(1)))
         .ignore_then(identifier(source_id.clone(), offset))
-        .map(|id| ast::Command::Set(true, id));
+        .map(|id| ast::CommandKind::Set(true, id));
 
     let unset = (just("Unset")
         .labelled("Unset")
         .then(whitespace().at_least(1)))
     .ignore_then(identifier(source_id, offset))
-    .map(|id| ast::Command::Set(false, id));
+    .map(|id| ast::CommandKind::Set(false, id));
 
     choice((def_expr, def_type, eval, type_of, set, unset)).labelled("command")
 }
@@ -426,9 +426,16 @@ pub fn command_dot<'src>(
     source_id: SourceId,
     offset: usize,
 ) -> impl Parser<'src, &'src str, ast::Command, Error<'src>> {
-    let cmd = command(source_id, offset);
+    let cmd_kind = command(source_id.clone(), offset);
     let dot = just('.').labelled(".");
-    cmd.padded().then_ignore(dot)
+    cmd_kind
+        .padded()
+        .then_ignore(dot)
+        .map_with(move |cmd_kind, e| {
+            let span: SimpleSpan = e.span();
+            let loc = Location::new(source_id.clone(), span.start, span.end).with_offset(offset);
+            ast::Command::new(cmd_kind, loc)
+        })
 }
 
 /// parse command and return also offset of end
