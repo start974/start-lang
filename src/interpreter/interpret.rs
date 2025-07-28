@@ -25,7 +25,7 @@ pub trait Interpreter {
         &mut self,
         content: &'src str,
         offset: usize,
-    ) -> Result<(parser::ast::Command, usize), Vec<parser::Error<'src>>>;
+    ) -> Result<Option<(parser::ast::Command, usize)>, Vec<parser::Error<'src>>>;
 
     /// type expression defintion
     fn type_expr_definition(
@@ -151,12 +151,13 @@ pub trait Interpreter {
 
         while !content.is_empty() && self.continue_parsing() {
             match self.parse_command(&content, offset) {
-                Ok((cmd, add_offset)) => {
+                Ok(Some((cmd, add_offset))) => {
                     offset += add_offset;
                     content = content[add_offset..].to_string();
                     self.debug_pretty(Flag::DebugParser, &cmd);
                     self.run_command(cmd);
                 }
+                Ok(None) => break,
                 Err(errs) => {
                     self.fail(errs);
                     break;

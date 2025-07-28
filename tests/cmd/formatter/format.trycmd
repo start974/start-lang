@@ -50,6 +50,14 @@ $ startlang format --print error.st
 
 ```
 
+
+```
+$ startlang format --print empty.st
+
+
+
+```
+
 # Format diff
 
 ```
@@ -77,7 +85,7 @@ $ startlang format --diff bad.st
 ```
 
 ```
-$ startlang format --print error.st
+$ startlang format --diff error.st
 ? 201
 [201] Error: Parsing error
    ╭─[ error.st:1:14 ]
@@ -86,5 +94,13 @@ $ startlang format --print error.st
    │              │ 
    │              ╰─ Expected "type_restriction", ":=".
 ───╯
+
+```
+
+
+```
+$ startlang format --diff empty.st
+   1    1 | 
+   2    2 | 
 
 ```

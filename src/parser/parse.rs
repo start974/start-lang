@@ -442,10 +442,12 @@ pub fn command_dot<'src>(
 pub fn command_offset<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, (ast::Command, usize), Error<'src>> {
-    command_dot(source_id, offset)
+) -> impl Parser<'src, &'src str, Option<(ast::Command, usize)>, Error<'src>> {
+    let command = command_dot(source_id, offset)
         .padded()
-        .map_with(|cmd, e| (cmd, e.span().end))
+        .map_with(|cmd, e| Some((cmd, e.span().end)))
         .then_ignore(any().repeated())
-        .then_ignore(end())
+        .then_ignore(end());
+    let nothing = end().padded().map(|_| None);
+    choice((command, nothing))
 }
