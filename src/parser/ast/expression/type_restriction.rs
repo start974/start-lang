@@ -1,12 +1,8 @@
 use super::Expression;
-use crate::{
-    parser::ast::Type,
-    utils::{
-        location::{Located, Location},
-        pretty::Pretty,
-        theme::{Doc, Theme},
-    },
-};
+use crate::parser::ast::Type;
+use crate::utils::location::{Located, Location};
+use crate::utils::pretty::Pretty;
+use crate::utils::theme::{Doc, Theme};
 
 #[derive(Debug)]
 pub struct TypeRestriction {
@@ -51,7 +47,7 @@ impl Pretty for TypeRestriction {
         Doc::nil()
             .append(self.expr.pretty(theme))
             .append(Doc::space())
-            .append(theme.op_typed_by())
+            .append(theme.operator(&":"))
             .append(Doc::space())
             .append(self.ty.pretty(theme))
     }

@@ -43,7 +43,7 @@ impl Pretty for Definition {
             Doc::nil()
                 .append(theme.def_var(&self.name))
                 .append(Doc::space())
-                .append(theme.op_eq_def())
+                .append(theme.operator(&":="))
                 .append(Doc::line().append(self.ty.pretty(theme).group()).nest(2)),
         )
     }

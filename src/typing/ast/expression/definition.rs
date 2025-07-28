@@ -66,7 +66,7 @@ impl Pretty for Definition {
             .append(Doc::group(
                 Doc::nil().append(
                     Doc::line()
-                        .append(theme.op_typed_by())
+                        .append(theme.operator(&":"))
                         .append(Doc::space())
                         .append(self.ty().pretty(theme))
                         .group()
@@ -74,7 +74,7 @@ impl Pretty for Definition {
                 ),
             ))
             .append(Doc::space())
-            .append(theme.op_eq_def())
+            .append(theme.operator(&":="))
             .append(Doc::line().append(self.body.pretty(theme).group()).nest(2))
     }
 }
