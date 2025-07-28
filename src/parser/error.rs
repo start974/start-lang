@@ -3,7 +3,7 @@ use crate::utils::location::{Located, Location, Report, ReportBuilder, SourceId}
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
 use ariadne::Label;
-use chumsky::error::Rich;
+use chumsky::error::{Rich, RichPattern};
 
 pub struct Error<'src> {
     location: Location,
@@ -38,6 +38,9 @@ impl ErrorReport for Error<'_> {
     fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
         let mut msg = Message::nil().text("Expected ");
         for (i, c) in self.err.expected().enumerate() {
+            if c == &RichPattern::EndOfInput {
+                continue;
+            }
             if i > 0 {
                 msg = msg.text(", ");
             }

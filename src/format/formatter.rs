@@ -43,7 +43,7 @@ impl Formatter {
         &mut self,
         content: &'src str,
         offset: usize,
-    ) -> Result<(parser::ast::Command, usize), Vec<parser::Error<'src>>> {
+    ) -> Result<Option<(parser::ast::Command, usize)>, Vec<parser::Error<'src>>> {
         let source_id = SourceId::File(self.path.clone());
         let parser = parser::parse::command_offset(source_id.clone(), offset);
         parser.parse(content).into_result().map_err(|errs| {
@@ -70,11 +70,12 @@ impl Formatter {
 
         while !content.is_empty() && self.err_code == 0 {
             match self.parse_command(&content, offset) {
-                Ok((cmd, add_offset)) => {
+                Ok(Some((cmd, add_offset))) => {
                     content = content[add_offset..].to_string();
                     offset += add_offset;
                     self.commands.push(cmd);
                 }
+                Ok(None) => break,
                 Err(errs) => {
                     self.fail(errs);
                 }

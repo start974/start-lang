@@ -80,7 +80,7 @@ impl interpreter::Interpreter for Interpreter {
         &mut self,
         content: &'src str,
         offset: usize,
-    ) -> Result<(parser::ast::Command, usize), Vec<parser::Error<'src>>> {
+    ) -> Result<Option<(parser::ast::Command, usize)>, Vec<parser::Error<'src>>> {
         let offset_source = self.all_content.len() - self.content.len() + offset;
         let parser = parser::parse::command_offset(SourceId::Repl, offset_source);
         parser.parse(content).into_result().map_err(|errs| {
