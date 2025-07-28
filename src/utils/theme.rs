@@ -75,6 +75,8 @@ pub struct Theme {
     pub constant: ColorInfo,
     /// type var
     pub ty_var: ColorInfo,
+    /// comment
+    pub comment: ColorInfo,
 }
 
 impl Default for Theme {
@@ -87,6 +89,7 @@ impl Default for Theme {
             expr_var: ColorInfo::default(),
             constant: ColorInfo::default(),
             ty_var: ColorInfo::default(),
+            comment: ColorInfo::default(),
         }
     }
 }
@@ -108,6 +111,10 @@ impl Theme {
             ty_var: ColorInfo::default()
                 .fg_color(Color::Yellow)
                 .styles(vec![Styles::Italic]),
+            comment: ColorInfo::default()
+                .fg_color(Color::BrightBlack)
+                .styles(vec![Styles::Italic]),
+
         }
     }
 
@@ -159,14 +166,9 @@ impl Theme {
         Doc::text(var.to_string()).annotate(self.ty_var.clone())
     }
 
-    /// pprint operator eqdef
-    pub fn op_eq_def<'a>(&self) -> Doc<'a> {
-        self.operator(&":=")
-    }
-
-    /// pprint opertor typed by ":"
-    pub fn op_typed_by<'a>(&self) -> Doc<'a> {
-        self.operator(&":")
+    /// pprint comment color
+    pub fn comment<'a>(&self, comment: &impl ToString) -> Doc<'a> {
+        Doc::text(comment.to_string()).annotate(self.comment.clone())
     }
 }
 
