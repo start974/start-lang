@@ -4,34 +4,34 @@ use chumsky::{prelude::*, text::whitespace};
 use num_bigint::BigUint;
 use std::rc::Rc;
 
-pub type Error<'a> = extra::Err<Rich<'a, char>>;
+pub type ErrorChumsky<'a> = extra::Err<Rich<'a, char>>;
 
 // ===========================================================================
 // Utils
 // ===========================================================================
 /// parse ascii digits
-fn digit<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
+fn digit<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
     any()
         .filter(|c: &char| c.is_ascii_digit())
         .labelled("digit")
 }
 
 /// parse ascii hexadecimal digits
-fn digit_hex<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
+fn digit_hex<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
     any()
         .filter(|c: &char| c.is_ascii_hexdigit())
         .labelled("digit_hex")
 }
 
 /// parse ascii octal digits (0-7)
-fn digit_oct<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
+fn digit_oct<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
     digit()
         .filter(|c: &char| *c != '8' && *c != '9')
         .labelled("digit_oct")
 }
 
 /// parse ascii binary digits (0-1)
-fn digit_bin<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
+fn digit_bin<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
     any()
         .filter(|c: &char| *c == '0' || *c == '1')
         .labelled("digit_bin")
@@ -47,7 +47,7 @@ fn digit_bin<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
 pub fn identifier<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, ast::Identifier, Error<'src>> {
+) -> impl Parser<'src, &'src str, ast::Identifier, ErrorChumsky<'src>> {
     text::unicode::ident()
         .then(just('\'').repeated().collect::<String>())
         .map(|(ident, quotes)| format!("{ident}{quotes}"))
@@ -66,8 +66,8 @@ pub fn identifier<'src>(
 /// digit (digit | "_")*
 fn number_base<'src>(
     radix: u32,
-    digit: impl Parser<'src, &'src str, char, Error<'src>>,
-) -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
+    digit: impl Parser<'src, &'src str, char, ErrorChumsky<'src>>,
+) -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
     let digit = Rc::new(digit);
     let underscore = just('_');
 
@@ -91,33 +91,33 @@ fn number_base_prefixed<'src>(
     prefix_lower: char,
     prefix_upper: char,
     radix: u32,
-    digit: impl Parser<'src, &'src str, char, Error<'src>>,
-) -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
+    digit: impl Parser<'src, &'src str, char, ErrorChumsky<'src>>,
+) -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
     let prefix = just("0").then(just(prefix_lower).or(just(prefix_upper)));
     prefix.ignore_then(number_base(radix, digit))
 }
 
 /// parse number `digit ( digit | _)*
-fn number_dec<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
+fn number_dec<'src>() -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
     number_base(10, digit()).labelled("number_dec")
 }
 /// parse hexadecimal number `"0" ("x" | "X") digit_hex ( digit_hex | _)*`
-pub fn number_hex<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
+pub fn number_hex<'src>() -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
     number_base_prefixed('x', 'X', 16, digit_hex()).labelled("number_hex")
 }
 
 /// parse octal number `"0" ("o" | "O") digit_oct ( digit_oct | _)*`
-pub fn number_oct<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
+pub fn number_oct<'src>() -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
     number_base_prefixed('o', 'O', 8, digit_oct()).labelled("number_oct")
 }
 
 /// parse binary number `"0" ("b" | "B") digit_bin ( digit_bin | _)*`
-pub fn number_bin<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
+pub fn number_bin<'src>() -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
     number_base_prefixed('b', 'B', 2, digit_bin()).labelled("number_bin")
 }
 
 /// parse number
-pub fn number<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
+pub fn number<'src>() -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
     // parse decimal number or hexadecimal or octal or binary
     choice((number_hex(), number_oct(), number_bin(), number_dec())).labelled("number")
 }
@@ -128,10 +128,10 @@ pub fn number<'src>() -> impl Parser<'src, &'src str, BigUint, Error<'src>> {
 
 /// char with number
 fn escape_number_char<'src>(
-    digit: impl Parser<'src, &'src str, char, Error<'src>>,
+    digit: impl Parser<'src, &'src str, char, ErrorChumsky<'src>>,
     number_digit: usize,
     radix: u32,
-) -> impl Parser<'src, &'src str, char, Error<'src>> {
+) -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
     let digits = digit.repeated().exactly(number_digit).collect::<String>();
 
     digits.try_map(move |digits, span| {
@@ -143,14 +143,14 @@ fn escape_number_char<'src>(
 
 fn escape_number_char_prefixed<'src>(
     prefix: char,
-    digit: impl Parser<'src, &'src str, char, Error<'src>>,
+    digit: impl Parser<'src, &'src str, char, ErrorChumsky<'src>>,
     number_digit: usize,
     radix: u32,
-) -> impl Parser<'src, &'src str, char, Error<'src>> {
+) -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
     just(prefix).ignore_then(escape_number_char(digit, number_digit, radix))
 }
 
-fn escape_unicode_char<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
+fn escape_unicode_char<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
     just('u')
         .ignore_then(
             digit_hex()
@@ -174,7 +174,7 @@ fn escape_unicode_char<'src>() -> impl Parser<'src, &'src str, char, Error<'src>
 ///    | digit{3} | "x" digit_hex{2} | "o" digit_oct{3}
 ///    | "u{" digit_hex+ "}")
 ///```
-fn escape_char<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
+fn escape_char<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
     just('\\').ignore_then(choice((
         just('\\').to('\\'),
         just('\"').to('\"'),
@@ -196,7 +196,7 @@ fn escape_char<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
 /// | [U+0000 .. U+D7FF]
 /// | [U+E000 .. U+10FFFF]
 /// ```
-fn character_litteral<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
+fn character_litteral<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
     choice((
         escape_char(),
         any().filter(|c: &char| {
@@ -207,7 +207,7 @@ fn character_litteral<'src>() -> impl Parser<'src, &'src str, char, Error<'src>>
     .labelled("character literal")
 }
 
-pub fn character<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
+pub fn character<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
     let quote = just('\'').labelled("'");
     character_litteral()
         .delimited_by(quote, quote)
@@ -225,7 +225,7 @@ pub fn character<'src>() -> impl Parser<'src, &'src str, char, Error<'src>> {
 pub fn type_restriction<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, ast::Type, Error<'src>> {
+) -> impl Parser<'src, &'src str, ast::Type, ErrorChumsky<'src>> {
     let op_colon = just(':');
     let ty = ty(source_id.clone(), offset);
     op_colon
@@ -243,7 +243,7 @@ pub fn type_restriction<'src>(
 pub fn constant<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, ast::Constant, Error<'src>> {
+) -> impl Parser<'src, &'src str, ast::Constant, ErrorChumsky<'src>> {
     let number = {
         let source_id = source_id.clone();
         number().map_with(move |number, e| {
@@ -279,7 +279,7 @@ pub fn constant<'src>(
 pub fn expression<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, ast::Expression, Error<'src>> {
+) -> impl Parser<'src, &'src str, ast::Expression, ErrorChumsky<'src>> {
     recursive(move |expr1| {
         let expr0 = {
             let identifier = identifier(source_id.clone(), offset).map(ast::Expression::from);
@@ -309,7 +309,7 @@ pub fn expression<'src>(
 pub fn expression_definition<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, ast::ExpressionDefinition, Error<'src>> {
+) -> impl Parser<'src, &'src str, ast::ExpressionDefinition, ErrorChumsky<'src>> {
     let identifier = identifier(source_id.clone(), offset);
     let type_restriction = type_restriction(source_id.clone(), offset).or_not();
     let op_eq_def = just(":=").labelled(":=");
@@ -342,7 +342,7 @@ pub fn expression_definition<'src>(
 pub fn ty<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, ast::Type, Error<'src>> {
+) -> impl Parser<'src, &'src str, ast::Type, ErrorChumsky<'src>> {
     let identifier = identifier(source_id, offset);
     identifier.map(ast::Type::from).labelled("type")
 }
@@ -354,7 +354,7 @@ pub fn ty<'src>(
 pub fn type_definition<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, ast::TypeDefinition, Error<'src>> {
+) -> impl Parser<'src, &'src str, ast::TypeDefinition, ErrorChumsky<'src>> {
     let name = identifier(source_id.clone(), offset);
     let op_eq_def = just(":=").labelled(":=");
     let ty = ty(source_id, offset);
@@ -380,7 +380,7 @@ pub fn type_definition<'src>(
 pub fn command<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, ast::CommandKind, Error<'src>> {
+) -> impl Parser<'src, &'src str, ast::CommandKind, ErrorChumsky<'src>> {
     let def_expr = (choice((just("Definition"), just("Def")))
         .labelled("Definition")
         .then(whitespace().at_least(1)))
@@ -425,7 +425,7 @@ pub fn command<'src>(
 pub fn command_dot<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, ast::Command, Error<'src>> {
+) -> impl Parser<'src, &'src str, ast::Command, ErrorChumsky<'src>> {
     let cmd_kind = command(source_id.clone(), offset);
     let dot = just('.').labelled(".");
     cmd_kind
@@ -442,7 +442,7 @@ pub fn command_dot<'src>(
 pub fn command_offset<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, Option<(ast::Command, usize)>, Error<'src>> {
+) -> impl Parser<'src, &'src str, Option<(ast::Command, usize)>, ErrorChumsky<'src>> {
     let command = command_dot(source_id, offset)
         .padded()
         .map_with(|cmd, e| Some((cmd, e.span().end)))

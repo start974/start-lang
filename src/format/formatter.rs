@@ -2,13 +2,12 @@ use super::diff::print_diff;
 use super::error::ErrorFileWrite;
 use super::Mode;
 use crate::file_interpreter::error::ErrorFileRead;
-use crate::parser;
 use crate::utils::error::{ErrorCode, ErrorPrint};
 use crate::utils::location::{Located as _, SourceId};
 use crate::utils::pretty::Pretty as _;
 use crate::utils::theme::Theme;
+use crate::{lexer, parser};
 use ariadne::{Source, Span as _};
-use chumsky::Parser as _;
 use std::path::{Path, PathBuf};
 
 pub struct Formatter {
@@ -38,19 +37,8 @@ impl Formatter {
         formatter
     }
 
-    /// parse a command
-    fn parse_command<'src>(
-        &mut self,
-        content: &'src str,
-        offset: usize,
-    ) -> Result<Option<(parser::ast::Command, usize)>, Vec<parser::Error<'src>>> {
-        let source_id = SourceId::File(self.path.clone());
-        let parser = parser::parse::command_offset(source_id.clone(), offset);
-        parser.parse(content).into_result().map_err(|errs| {
-            errs.iter()
-                .map(|err| parser::Error::new(err.clone(), source_id.clone(), offset))
-                .collect::<Vec<_>>()
-        })
+    fn source_id(&self) -> SourceId {
+        SourceId::File(self.path.clone())
     }
 
     /// fail with error
@@ -58,27 +46,49 @@ impl Formatter {
     where
         E: ErrorPrint + ErrorCode,
     {
-        let source_id = SourceId::File(self.path.clone());
-        let mut cache = (source_id, Source::from(&self.content));
+        let mut cache = (self.source_id(), Source::from(&self.content));
         error.eprint(&self.theme, &mut cache).unwrap();
         self.err_code = if self.err_code == 0 { error.code() } else { 1 };
     }
 
-    fn run_parser(&mut self) {
+    /// lexing content
+    fn lex(&mut self, content: &str, offset: usize) -> Option<(Vec<lexer::Token>, usize)> {
+        match lexer::lex(self.source_id(), offset, content) {
+            Ok((tokens, _)) if tokens.is_empty() => None,
+            Ok((tokens, end_offset)) => Some((tokens, end_offset)),
+            Err(errs) => {
+                self.fail(errs);
+                None
+            }
+        }
+    }
+
+    /// parse command with lexer tokens
+    fn parse(&mut self, tokens: &[lexer::Token]) -> Option<parser::ast::Command> {
+        match parser::parse(tokens) {
+            Ok(cmd) => Some(cmd),
+            Err(errs) => {
+                self.fail(errs);
+                None
+            }
+        }
+    }
+
+    /// run the interpreter
+    fn parse_content(&mut self) {
         let mut offset = 0;
-        let mut content = self.content.clone();
+        let mut content = self.content.to_string();
 
         while !content.is_empty() && self.err_code == 0 {
-            match self.parse_command(&content, offset) {
-                Ok(Some((cmd, add_offset))) => {
-                    content = content[add_offset..].to_string();
+            match self.lex(&content, offset) {
+                Some((tokens, add_offset)) => {
                     offset += add_offset;
-                    self.commands.push(cmd);
+                    content = content[add_offset..].to_string();
+                    if let Some(cmd) = self.parse(&tokens) {
+                        self.commands.push(cmd)
+                    }
                 }
-                Ok(None) => break,
-                Err(errs) => {
-                    self.fail(errs);
-                }
+                None => break,
             }
         }
     }
@@ -109,7 +119,7 @@ impl Formatter {
 
     /// run formatter with mode
     pub fn run(&mut self, mode: &Mode) {
-        self.run_parser();
+        self.parse_content();
         if self.err_code != 0 {
             return;
         }
