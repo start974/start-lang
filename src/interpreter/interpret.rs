@@ -1,15 +1,20 @@
 use super::error::UnknownOption;
 use super::flag::Flag;
+use crate::lexer;
 use crate::parser;
 use crate::typing;
 use crate::typing::ast::Typed;
 use crate::utils::error::{ErrorCode, ErrorPrint};
+use crate::utils::location::SourceId;
 use crate::utils::pretty::Pretty;
 use crate::vm;
 
 pub trait Interpreter {
     /// get content
-    fn get_content(&self) -> &str;
+    fn content(&self) -> &str;
+
+    /// get source id
+    fn source_id(&self) -> &SourceId;
 
     /// set error code
     fn set_error_code(&mut self, code: i32);
@@ -20,12 +25,8 @@ pub trait Interpreter {
     /// continue parsing
     fn continue_parsing(&self) -> bool;
 
-    /// parse command at offset
-    fn parse_command<'src>(
-        &mut self,
-        content: &'src str,
-        offset: usize,
-    ) -> Result<Option<(parser::ast::Command, usize)>, Vec<parser::Error<'src>>>;
+    /// get a lexer with offset
+    fn get_offset_source(&self, offset: usize) -> usize;
 
     /// type expression defintion
     fn type_expr_definition(
@@ -144,24 +145,47 @@ pub trait Interpreter {
         }
     }
 
+    /// lexing content
+    fn lex(&mut self, content: &str, offset: usize) -> Option<(Vec<lexer::Token>, usize)> {
+        let offset_source = self.get_offset_source(offset);
+        let source_id = self.source_id();
+        match lexer::lex(source_id.clone(), offset_source, content) {
+            Ok((tokens, _)) if tokens.is_empty() => None,
+            Ok((tokens, end_offset)) => Some((tokens, end_offset)),
+            Err(errs) => {
+                self.fail(errs);
+                None
+            }
+        }
+    }
+
+    /// parse command with lexer tokens
+    fn parse(&mut self, tokens: &[lexer::Token]) -> Option<parser::ast::Command> {
+        match parser::parse(tokens) {
+            Ok(cmd) => Some(cmd),
+            Err(errs) => {
+                self.fail(errs);
+                None
+            }
+        }
+    }
+
     /// run the interpreter
     fn run(&mut self) {
         let mut offset = 0;
-        let mut content = self.get_content().to_string();
+        let mut content = self.content().to_string();
 
         while !content.is_empty() && self.continue_parsing() {
-            match self.parse_command(&content, offset) {
-                Ok(Some((cmd, add_offset))) => {
+            match self.lex(&content, offset) {
+                Some((tokens, add_offset)) => {
                     offset += add_offset;
                     content = content[add_offset..].to_string();
-                    self.debug_pretty(Flag::DebugParser, &cmd);
-                    self.run_command(cmd);
+                    if let Some(cmd) = self.parse(&tokens) {
+                        self.debug_pretty(Flag::DebugParser, &cmd);
+                        self.run_command(cmd);
+                    }
                 }
-                Ok(None) => break,
-                Err(errs) => {
-                    self.fail(errs);
-                    break;
-                }
+                None => break,
             }
         }
     }

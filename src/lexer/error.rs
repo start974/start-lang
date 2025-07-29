@@ -24,7 +24,7 @@ impl<'src> Error<'src> {
 
 impl ErrorCode for Error<'_> {
     fn code(&self) -> i32 {
-        202
+        201
     }
 }
 
@@ -36,7 +36,7 @@ impl Located for Error<'_> {
 
 impl ErrorReport for Error<'_> {
     fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
-        let mut msg = Message::nil().text("Expected ");
+        let mut msg = Message::nil().text("Lexer expected ");
         for (i, c) in self.err.expected().enumerate() {
             if c == &RichPattern::EndOfInput {
                 continue;

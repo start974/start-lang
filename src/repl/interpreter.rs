@@ -11,7 +11,6 @@ use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
 use crate::vm;
 use ariadne::Source;
-use chumsky::Parser;
 
 pub struct Interpreter {
     all_content: String,
@@ -60,8 +59,16 @@ impl Interpreter {
 }
 
 impl interpreter::Interpreter for Interpreter {
-    fn get_content(&self) -> &str {
+    fn content(&self) -> &str {
         &self.content
+    }
+
+    fn source_id(&self) -> &SourceId {
+        &SourceId::Repl
+    }
+
+    fn get_offset_source(&self, offset: usize) -> usize {
+        self.all_content.len() - self.content.len() + offset
     }
 
     fn set_error_code(&mut self, code: i32) {
@@ -74,20 +81,6 @@ impl interpreter::Interpreter for Interpreter {
 
     fn continue_parsing(&self) -> bool {
         self.err_code == 0
-    }
-
-    fn parse_command<'src>(
-        &mut self,
-        content: &'src str,
-        offset: usize,
-    ) -> Result<Option<(parser::ast::Command, usize)>, Vec<parser::Error<'src>>> {
-        let offset_source = self.all_content.len() - self.content.len() + offset;
-        let parser = parser::parse::command_offset(SourceId::Repl, offset_source);
-        parser.parse(content).into_result().map_err(|errs| {
-            errs.iter()
-                .map(|err| parser::Error::new(err.clone(), SourceId::Repl, offset_source))
-                .collect::<Vec<_>>()
-        })
     }
 
     fn type_expr_definition(
@@ -147,7 +140,7 @@ impl interpreter::Interpreter for Interpreter {
     where
         E: ErrorPrint + ErrorCode,
     {
-        let mut cache = (SourceId::Repl, Source::from(&self.all_content));
+        let mut cache = (self.source_id().clone(), Source::from(&self.all_content));
         error.eprint(&self.theme, &mut cache).unwrap();
     }
 }

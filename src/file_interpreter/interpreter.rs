@@ -10,7 +10,6 @@ use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
 use crate::vm;
 use ariadne::Source;
-use chumsky::Parser;
 use std::fs::read_to_string;
 use std::path::Path;
 
@@ -63,8 +62,16 @@ impl Interpreter {
 }
 
 impl interpreter::Interpreter for Interpreter {
-    fn get_content(&self) -> &str {
+    fn source_id(&self) -> &SourceId {
+        &self.source_id
+    }
+
+    fn content(&self) -> &str {
         &self.content
+    }
+
+    fn get_offset_source(&self, offset: usize) -> usize {
+        offset
     }
 
     fn set_error_code(&mut self, code: i32) {
@@ -77,19 +84,6 @@ impl interpreter::Interpreter for Interpreter {
 
     fn continue_parsing(&self) -> bool {
         true
-    }
-
-    fn parse_command<'src>(
-        &mut self,
-        content: &'src str,
-        offset: usize,
-    ) -> Result<Option<(parser::ast::Command, usize)>, Vec<parser::Error<'src>>> {
-        let parser = parser::parse::command_offset(self.source_id.clone(), offset);
-        parser.parse(content).into_result().map_err(|errs| {
-            errs.iter()
-                .map(|err| parser::Error::new(err.clone(), self.source_id.clone(), offset))
-                .collect::<Vec<_>>()
-        })
     }
 
     fn type_expr_definition(
