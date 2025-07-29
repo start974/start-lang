@@ -1,119 +1,107 @@
 # Grammar
+- *<ANY>* is any character
+- *<IDENT>* is define as [Unicode Standard Annex #31](https://www.unicode.org/reports/tr31/)
 
-- *IDENT* is define as [Unicode Standard Annex #31](https://www.unicode.org/reports/tr31/)
-- *ANY* is any character
-- *SPACE* is all whitespace
-
-## Identifier
+## Lexer
+All token in lexer can be separated by space
+### Comment
 ```
-identifier := IDENT "'"*
-```
-
-## Number
-```
-number := number_dec | number_hex | number_oct | number_bit
-
-number_dec := (digit ( digit | _)*)? digit
-digit := [0..9]
-
-number_hex := "0" ("x" | "X") (digit_hex (digit_hex | _)*)? digit_hex
-digit_hex := digit | [A..F] | [a..f]
-
-number_oct := "0" ("o" | "O") (digit_oct (digit_oct | _)*)? digit_oct
-digit_oct := [0..7]
-
-number_bit := "0" ("b" | "B") (digit_bit ( digit_bit | _)*)? digit_bit
-digit_bit := [0..1]
-
+COMMENT := "(*" <ANY>* "*)"
 ```
 
-## Character
+### Identifier
+
 ```
-character := "'" char "'"
+INDENTIFIER := IDENT "'"*
+```
 
-character_literal := [U+0000 .. U+D7FF] | [U+E000 .. U+10FFFF] | escape_char
+### Number
+```
+NUMBER_F(DIGIT) := DIGIT ("_"* DIGIT)*
+```
 
-escape_char := "\"
+```
+NUMBER_DEC := NUMBER_F DIGIT
+DIGIT := [0..9]
+
+NUMBER_HEX := "0" ("x" | "X") NUMBER_F(DIGIT_HEX)
+DIGIT_HEX := DIGIT | [A..F] | [a..f]
+
+NUMBER_OCT := "0" ("o" | "O") NUMBER_F(DIGIT_OCT)
+DigitOct := [0..7]
+
+NUMBER_BIT := "0" ("b" | "B") NUMBER_F(DIGIT_BIT)
+DIGIT_BIT := [0..1]
+
+NUMBER := NUMBER_DEC | NUMBER_HEX | NUMBER_OCT | NUMBER_BIT
+```
+
+### Character
+```
+CHARACTER := "'" CHARACTER_LIT "'"
+
+CHARACTER_LIT := [U+0000 .. U+D7FF] | [U+E000 .. U+10FFFF] | ESCAPE_CHAR
+
+ESCAPE_CHAR := "\"
     ("\\" | "\"" | "\'" | "n" | "r" | "t"
-    | digit{3} | "x" digit_hex{2} | "o" digit_oct{3}
-    | "u{" digit_hex+ "}")
+    | DIGIT{3} | "x" DIGITHEX{2} | "o" DIGITOCT{3}
+    | "u{" DIGITHEX+ "}")
 ```
 
-After this section all element of grammar is padded
+### Operator
+```
+COLON := ":"
+EQ_DEF := ":="
+DOT := "."
+```
+
+### keyword
+```
+DEFINITION := "Definition" | "Def"
+EVAL := "Eval" | "$"
+TYPE := "Type" | "Ty"
+TYPE_OF := "TypeOf" | "?:"
+```
+## Parser
+Parse token (`COMMENT` can be in space)
 
 ### Expression
 ```
-type_restriction := ":" type
+type_restriction := COLON type
 
 constant :=
-| number
-| character
+| NUMBER
+| CHARACTER
 
 expression :=
 |  "(" expression ")"
-|  identifier
+|  IDENTIFIER
 |  constant
 |  expression type_restiction
 
-expr_definition := identifier type_rest? ":=" expression
+expr_definition := IDENTIFIER type_rest? EQ_DEF expression
 ```
 
 ### Type
 ```
-type_definition := identifier ":=" type
+type_definition := IDENTIFIER ":=" type
 
 type :=
-| identifier
-```
-
-## Grammar
-*WIP* Not implement yet (need to implement function and library on parser ast)
-
-```
-grammar :=
-| "Add" SPACE grammar_syntax ":" grammar_rule ":=" expression
-| "New" SPACE identifier
-| ("Remove" | "Rm") identifier
-
-grammar_rule := identifier "@" number
-
-grammar_syntax :=
-| identifier
-| "<" identifier ":" grammar_syntax ">"
-| "[" group_char ".." group_char "]"
-| grammar_syntax "?"
-| grammar_syntax "*"
-| grammar_syntax "+"
-| "~" grammar_syntax
-| "(" grammar_syntax ")"
-| grammar_syntax "|" grammar_syntax
-
-
-group_char := [0..9] | [a..z] | [A..Z]
+| IDENTIFIER
 ```
 
 ## Command
 ```
-command_dot := command "."?
+command_kind :=
+| DEFINITY expr_definition
+| TY type_definition
+| EVAL expr
+| TYPE_OF expr
+| SET IDENTIFIER
+| UNSET IDENTIFIER
 
-command :=
-| ("Definition" | "Def") SPACE expr_definition
-| ("Type" | "Ty") SPACE type_definition
-| ("Eval" | "$") SPACE expr
-| ("Grammar" | "Gram") SPACE grammar              // Not yet implemented
-| ("TypeOf" | "?:") SPACE expr
-| ("Set" | "Unset") FLAGS
-
+command := command_kind DOT
 ```
-
-## Flags
-- `DebugParser` to print parser ast
-- `DebugTyper` to print typing ast
-
 
 ## Program
-```
-prgm := command_dot*
-```
-
-
+A program is a succession of `command`
