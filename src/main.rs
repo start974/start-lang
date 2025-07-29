@@ -5,6 +5,7 @@ mod file_interpreter;
 mod format;
 mod interpreter;
 mod parser;
+mod lexer;
 mod repl;
 mod stdlib;
 mod typing;
