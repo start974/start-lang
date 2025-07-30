@@ -58,7 +58,6 @@ where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     select! {Token::Identifier(id) => id}
-        .labelled("identifier")
         .map_with(move |id, e| {
             let span: SimpleSpan = e.span();
             let loc = Location::new(source_id.clone(), span.start, span.end);
@@ -83,7 +82,8 @@ where
 {
     let variable = identifier(source_id)
         .map(|id| id.map_name(ast::PatternVariableName::from))
-        .map(ast::Pattern::from);
+        .map(ast::Pattern::from)
+        .labelled("pattern variable");
 
     variable.labelled("pattern")
 }
@@ -105,25 +105,21 @@ where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     let number = {
-        select! {Token::Number(n) => n}
-            .labelled("NUMBER")
-            .map_with({
-                let source_id = source_id.clone();
-                move |n, e| {
-                    let span: SimpleSpan = e.span();
-                    let loc = Location::new(source_id.clone(), span.start, span.end);
-                    ast::Constant::nat(n, loc)
-                }
-            })
+        select! {Token::Number(n) => n}.map_with({
+            let source_id = source_id.clone();
+            move |n, e| {
+                let span: SimpleSpan = e.span();
+                let loc = Location::new(source_id.clone(), span.start, span.end);
+                ast::Constant::nat(n, loc)
+            }
+        })
     };
 
-    let character = select! {Token::Character(c) => c}
-        .labelled("CHAR")
-        .map_with(move |c, e| {
-            let span: SimpleSpan = e.span();
-            let loc = Location::new(source_id.clone(), span.start, span.end);
-            ast::Constant::char(c, loc)
-        });
+    let character = select! {Token::Character(c) => c}.map_with(move |c, e| {
+        let span: SimpleSpan = e.span();
+        let loc = Location::new(source_id.clone(), span.start, span.end);
+        ast::Constant::char(c, loc)
+    });
 
     choice((number, character))
         .with_comments()
@@ -143,6 +139,7 @@ where
     identifier(source_id)
         .map(|id| id.map_name(ast::VariableName::from))
         .map(ast::Variable::from)
+        .labelled("variable")
 }
 
 /// parse expression
@@ -231,12 +228,13 @@ where
 {
     identifier(source_id)
         .map(|id| id.map_name(ast::TypeVariableName::from))
+        .labelled("type variable")
 }
 
 /// parse type
 /// ```ebfn
 /// type :=
-/// | identifier
+/// | type_variable
 /// ```
 pub fn ty<'tokens, I>(
     source_id: SourceId,
