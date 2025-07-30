@@ -37,6 +37,7 @@ impl Formatter {
         formatter
     }
 
+    /// content at offset
     fn source_id(&self) -> SourceId {
         SourceId::File(self.path.clone())
     }
@@ -78,18 +79,21 @@ impl Formatter {
     /// run the interpreter
     fn parse_content(&mut self) {
         let mut offset = 0;
-        let mut content = self.content.to_string();
+        let content_copy = self.content.clone();
 
-        while !content.is_empty() {
-            let tokens = self.lex(&content, offset);
+        loop {
+            let content = &content_copy[offset..];
+            if content.is_empty() {
+                break;
+            }
+            let tokens = self.lex(content, offset);
             match tokens.last() {
                 None => break,
                 Some(last_token) => {
                     if let Some(cmd) = self.parse(&tokens) {
                         self.commands.push(cmd)
                     }
-                    offset += last_token.span.end;
-                    content = content[last_token.span.end..].to_string();
+                    offset = last_token.span.end;
                 }
             }
         }

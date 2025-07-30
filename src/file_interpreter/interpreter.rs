@@ -12,6 +12,7 @@ use crate::vm;
 use ariadne::Source;
 use std::fs::read_to_string;
 use std::path::Path;
+use std::path::PathBuf;
 
 pub struct Interpreter {
     source_id: SourceId,
@@ -41,7 +42,7 @@ impl Interpreter {
     /// stdlib environement
     pub fn stdlib() -> Self {
         Interpreter {
-            source_id: SourceId::Unknown,
+            source_id: SourceId::File(PathBuf::from("stdlib.st")),
             content: include_str!("../../assets/stdlib.st").to_string(),
             err_code: 0,
             typer: typing::Typer::default(),
