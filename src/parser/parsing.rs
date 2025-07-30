@@ -16,18 +16,10 @@ pub trait WithCommentsExt<'tokens, I, O>:
     Parser<'tokens, I, O, ErrorChumsky<'tokens>> + Sized
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
+    O: WithComments,
 {
     /// with comment parser
-    fn with_comments(self) -> impl Parser<'tokens, I, ast::WithComments<O>, ErrorChumsky<'tokens>>;
-}
-
-impl<'tokens, I, O, P> WithCommentsExt<'tokens, I, O> for P
-where
-    P: Parser<'tokens, I, O, ErrorChumsky<'tokens>> + Sized,
-    I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
-    ast::ExpressionKind: From<O>,
-{
-    fn with_comments(self) -> impl Parser<'tokens, I, ast::WithComments<O>, ErrorChumsky<'tokens>> {
+    fn with_comments(self) -> impl Parser<'tokens, I, O, ErrorChumsky<'tokens>> {
         let comments = select! {Token::Comment(c) => c}
             .map(ast::Comment::from)
             .repeated()
@@ -37,11 +29,19 @@ where
             .then(self)
             .then(comments)
             .map(|((comments_before, value), comments_after)| {
-                WithComments::from(value)
-                    .with_before(comments_before)
-                    .with_after(comments_after)
+                value
+                    .with_comments_before(comments_before)
+                    .with_comments_after(comments_after)
             })
     }
+}
+
+impl<'tokens, I, O, P> WithCommentsExt<'tokens, I, O> for P
+where
+    P: Parser<'tokens, I, O, ErrorChumsky<'tokens>> + Sized,
+    I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
+    O: WithComments,
+{
 }
 
 // ===========================================================================
@@ -103,7 +103,7 @@ where
             ast::Constant::char(c, loc)
         });
 
-    choice((number, character)).labelled("constant")
+    choice((number, character)).with_comments().labelled("constant")
 }
 
 /// parse expression
@@ -126,11 +126,9 @@ where
     recursive(move |expr1| {
         let expr0 = {
             let identifier = identifier(source_id.clone())
-                .map(ast::ExpressionKind::from)
-                .with_comments();
+                .map(ast::Expression::from);
             let constant = constant(source_id.clone())
-                .map(ast::ExpressionKind::from)
-                .with_comments();
+                .map(ast::Expression::from);
             let parens = expr1.delimited_by(
                 just(Token::Operator(Operator::LParen)).labelled("("),
                 just(Token::Operator(Operator::RParen)).labelled(")"),
@@ -144,8 +142,7 @@ where
                 .then_ignore(just(Token::Operator(Operator::Colon)).labelled("Colon"))
                 .then(ty(source_id.clone()))
                 .map(|(expr, ty)| ast::TypeRestriction::new(expr, ty))
-                .map(ast::ExpressionKind::from)
-                .with_comments();
+                .map(ast::Expression::from);
             choice((type_restriction, expr0))
         }
         .boxed();

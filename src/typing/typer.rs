@@ -24,12 +24,12 @@ impl Typer {
 
     /// convert expression
     pub fn expression(&self, expression: &ast_parser::Expression) -> Result<ast_typed::Expression> {
-        match expression.value() {
-            ast_parser::ExpressionKind::Constant(c) => {
+        match expression {
+            ast_parser::Expression::Constant(c) => {
                 let c_ty = self.constant(c);
                 Ok(ast_typed::Expression::Constant(c_ty))
             }
-            ast_parser::ExpressionKind::Variable(var) => {
+            ast_parser::Expression::Variable(var) => {
                 let var_name = var.name();
                 let id = self.id_builder.get(var_name).with_loc(var);
                 self.var_env
@@ -48,7 +48,7 @@ impl Typer {
                         _ => Err(e),
                     })
             }
-            ast_parser::ExpressionKind::TypeRestriction(ty_restr) => {
+            ast_parser::Expression::TypeRestriction(ty_restr) => {
                 // TODO: make multiple error
                 let expr = self.expression(ty_restr.expression())?;
                 let ty = self.ty(ty_restr.ty())?;
