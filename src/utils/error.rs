@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use super::location::{Located, SourceId};
 use super::location::{Report, ReportBuilder};
 use crate::utils::pretty::Pretty;
@@ -19,25 +21,25 @@ impl Message {
     }
 
     /// text message
-    pub fn text(mut self, text: &str) -> Self {
+    pub fn text(mut self, text: impl Display) -> Self {
         self.0.push(MessageKind::Text(text.to_string()));
         self
     }
 
     /// important message part
-    pub fn important(mut self, text: &str) -> Self {
+    pub fn important(mut self, text: impl Display) -> Self {
         self.0.push(MessageKind::Important(text.to_string()));
         self
     }
 
     /// import text quoted
-    pub fn quoted(self, text: &str) -> Self {
-        self.important(&format!("\"{text}\""))
+    pub fn quoted(self, text: impl Display) -> Self {
+        self.important(format!("\"{text}\""))
     }
 
     /// add message from pretty
     pub fn of_pretty(self, p: &impl Pretty) -> Self {
-        self.text(&p.to_string(&Theme::default()))
+        self.text(p.to_string(&Theme::default()))
     }
 }
 

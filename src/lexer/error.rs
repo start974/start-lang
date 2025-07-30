@@ -3,7 +3,7 @@ use crate::utils::location::{Located, Location, Report, ReportBuilder, SourceId}
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
 use ariadne::Label;
-use chumsky::error::{Rich, RichPattern};
+use chumsky::error::Rich;
 
 pub struct Error<'src> {
     location: Location,
@@ -14,8 +14,6 @@ impl<'src> Error<'src> {
     /// make a new error
     pub fn new(err: Rich<'src, char>, source_id: SourceId, offset: usize) -> Self {
         let span = err.span();
-        println!("Error span: {span:?}");
-        println!("Error expected: {err:?}");
         let location = Location::new(source_id, span.start, span.end).with_offset(offset);
         Self {
             location,
@@ -38,26 +36,24 @@ impl Located for Error<'_> {
 
 impl ErrorReport for Error<'_> {
     fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
-        let mut msg = Message::nil().text("Lexer expected ");
-        for (i, c) in self.err.expected().enumerate() {
-            if c == &RichPattern::EndOfInput {
-                continue;
+        let msg = if self.err.expected().len() == 1 {
+            let expect = self.err.expected().next().unwrap();
+            let mut msg = Message::nil()
+                .text("Lexer expected ")
+                .quoted(expect.to_string());
+            if let Some(found) = self.err.found() {
+                msg = msg.text(", found ").quoted(found.to_string()).text(".");
             }
-            if i > 0 {
-                msg = msg.text(", ");
-            }
-            msg = msg.quoted(&c.to_string());
-        }
-        if let Some(found) = self.err.found() {
-            msg = msg.text(", found ").quoted(&found.to_string());
-        }
-        msg = msg.text(".");
+            msg
+        } else {
+            Message::nil().text("Lexer unknow token.")
+        };
         report
             .with_label(Label::new(self.loc().clone()).with_message(msg.to_string(theme)))
             .finish()
     }
 
     fn message(&self) -> Message {
-        Message::nil().text("Parsing error")
+        Message::nil().text("Lexing error")
     }
 }

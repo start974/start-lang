@@ -26,7 +26,7 @@ impl Typer {
     pub fn expression(&self, expression: &ast_parser::Expression) -> Result<ast_typed::Expression> {
         match &expression.kind {
             ast_parser::ExpressionKind::Constant(c) => {
-                let c_ty = self.constant(&c);
+                let c_ty = self.constant(c);
                 Ok(ast_typed::Expression::Constant(c_ty))
             }
             ast_parser::ExpressionKind::Variable(x) => {

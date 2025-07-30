@@ -22,12 +22,12 @@ where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     select! {Token::Identifier(id) => id}
+        .labelled("identifier")
         .map_with(move |id, e| {
             let span: SimpleSpan = e.span();
             let loc = Location::new(source_id.clone(), span.start, span.end);
             ast::Identifier::new(&id, loc)
         })
-        .labelled("identifier")
 }
 // ===========================================================================
 // Expression
@@ -46,21 +46,25 @@ where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     let number = {
-        select! {Token::Number(n) => n}.map_with({
-            let source_id = source_id.clone();
-            move |n, e| {
-                let span: SimpleSpan = e.span();
-                let loc = Location::new(source_id.clone(), span.start, span.end);
-                ast::Constant::nat(n, loc)
-            }
-        })
+        select! {Token::Number(n) => n}
+            .labelled("NUMBER")
+            .map_with({
+                let source_id = source_id.clone();
+                move |n, e| {
+                    let span: SimpleSpan = e.span();
+                    let loc = Location::new(source_id.clone(), span.start, span.end);
+                    ast::Constant::nat(n, loc)
+                }
+            })
     };
 
-    let character = select! {Token::Character(c) => c}.map_with(move |c, e| {
-        let span: SimpleSpan = e.span();
-        let loc = Location::new(source_id.clone(), span.start, span.end);
-        ast::Constant::char(c, loc)
-    });
+    let character = select! {Token::Character(c) => c}
+        .labelled("CHAR")
+        .map_with(move |c, e| {
+            let span: SimpleSpan = e.span();
+            let loc = Location::new(source_id.clone(), span.start, span.end);
+            ast::Constant::char(c, loc)
+        });
 
     choice((number, character)).labelled("constant")
 }
@@ -87,15 +91,15 @@ where
             let identifier = identifier(source_id.clone()).map(ast::Expression::from);
             let constant = constant(source_id.clone()).map(ast::Expression::from);
             let parens = expr1.delimited_by(
-                just(Token::Operator(Operator::LParen)),
-                just(Token::Operator(Operator::RParen)),
+                just(Token::Operator(Operator::LParen)).labelled("("),
+                just(Token::Operator(Operator::RParen)).labelled(")"),
             );
             choice((identifier, constant, parens)).boxed()
         };
 
         let expr1 = {
             let type_restriction = (expr0.clone())
-                .then_ignore(just(Token::Operator(Operator::Colon)))
+                .then_ignore(just(Token::Operator(Operator::Colon)).labelled("Colon"))
                 .then(ty(source_id))
                 .map(|(expr, ty)| ast::TypeRestriction::new(expr, ty))
                 .map(ast::Expression::from);
@@ -119,11 +123,11 @@ where
 {
     identifier(source_id.clone())
         .then(
-            just(Token::Operator(Operator::Colon))
+            (just(Token::Operator(Operator::Colon)).labelled(":"))
                 .ignore_then(ty(source_id.clone()))
                 .or_not(),
         )
-        .then_ignore(just(Token::Operator(Operator::EqDef)))
+        .then_ignore(just(Token::Operator(Operator::EqDef)).labelled(":="))
         .then(expression(source_id))
         .map(|((id, opt_ty), body)| {
             let def = ast::ExpressionDefinition::new(id, body);
@@ -163,7 +167,7 @@ where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     identifier(source_id.clone())
-        .then_ignore(just(Token::Operator(Operator::EqDef)))
+        .then_ignore(just(Token::Operator(Operator::EqDef)).labelled(":="))
         .then(ty(source_id))
         .map(|(name, ty)| ast::TypeDefinition::new(name, ty))
 }
@@ -188,26 +192,36 @@ where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     let def_expr = just(Token::Keyword(Keyword::Definition))
+        .labelled("Definition")
         .ignore_then(expression_definition(source_id.clone()))
         .map(ast::CommandKind::ExpressionDefinition);
 
     let def_type = just(Token::Keyword(Keyword::Type))
+        .labelled("Type")
         .ignore_then(type_definition(source_id.clone()))
         .map(ast::CommandKind::TypeDefinition);
 
     let eval = just(Token::Keyword(Keyword::Eval))
+        .labelled("Eval")
         .ignore_then(expression(source_id.clone()))
         .map(ast::CommandKind::Eval);
 
     let type_of = just(Token::Keyword(Keyword::TypeOf))
+        .labelled("TypeOf")
         .ignore_then(expression(source_id.clone()))
         .map(ast::CommandKind::TypeOf);
 
-    let set = (select! {Token::Keyword(Keyword::Set(b)) => b})
-        .then(identifier(source_id.clone()))
-        .map(|(b, id)| ast::CommandKind::Set(b, id));
+    let set = just(Token::Keyword(Keyword::Set(true)))
+        .labelled("Set")
+        .ignore_then(identifier(source_id.clone()))
+        .map(|id| ast::CommandKind::Set(true, id));
 
-    choice((def_expr, def_type, eval, type_of, set))
+    let unset = just(Token::Keyword(Keyword::Set(false)))
+        .labelled("Unset")
+        .ignore_then(identifier(source_id.clone()))
+        .map(|id| ast::CommandKind::Set(false, id));
+
+    choice((def_expr, def_type, eval, type_of, set, unset))
 }
 
 /// parse command with dot

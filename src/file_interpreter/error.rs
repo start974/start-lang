@@ -39,7 +39,7 @@ impl ErrorReport for ErrorFileRead {
     fn message(&self) -> Message {
         Message::nil()
             .text("Cannot read file ")
-            .quoted(&self.path.to_string_lossy())
+            .quoted(self.path.to_string_lossy())
             .text(".")
     }
 }

@@ -1,5 +1,5 @@
 use super::{token, ErrorChumsky};
-use chumsky::prelude::*;
+use chumsky::{prelude::*, text::whitespace};
 use num_bigint::BigUint;
 use std::rc::Rc;
 
@@ -211,7 +211,6 @@ fn character_lit<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src
             (cp <= 0xD7FF) || (0xE000..=0x10FFFF).contains(&cp)
         }),
     ))
-    .labelled("character literal")
 }
 
 /// lex character
@@ -231,12 +230,12 @@ pub fn character<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src
 
 fn command_keyword<'src>() -> impl Parser<'src, &'src str, token::Keyword, ErrorChumsky<'src>> {
     choice((
-        choice((just("Definition"), just("Def"))).to(token::Keyword::Definition),
-        choice((just("Eval"), just("$"))).to(token::Keyword::Eval),
-        choice((just("Type"), just("Ty"))).to(token::Keyword::Type),
-        choice((just("TypeOf"), just("?:"))).to(token::Keyword::TypeOf),
-        just("Set").to(token::Keyword::Set(true)),
-        just("UnSet").to(token::Keyword::Set(false)),
+        choice((just("Definition"), just("Def"))).then_ignore(whitespace()).to(token::Keyword::Definition),
+        choice((just("Eval").then_ignore(whitespace()), just("$"))).to(token::Keyword::Eval),
+        choice((just("TypeOf").then_ignore(whitespace()), just("?:"))).to(token::Keyword::TypeOf),
+        choice((just("Type"), just("Ty"))).then_ignore(whitespace()).to(token::Keyword::Type),
+        just("Set").then_ignore(whitespace()).to(token::Keyword::Set(true)),
+        just("Unset").to(token::Keyword::Set(false)),
     ))
     .labelled("command keyword")
 }
