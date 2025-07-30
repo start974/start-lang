@@ -125,16 +125,16 @@ impl interpreter::Interpreter for Interpreter {
 
     fn debug_pretty(&self, flag: Flag, doc: &impl Pretty) {
         if self.get_flag(flag) {
-            println!("{}", doc.to_string(&self.theme));
+            println!("{}", doc.make_string(&self.theme));
         }
     }
 
     fn print_eval(&mut self, value: &vm::Value) {
-        println!("{}", value.to_string(&self.theme));
+        println!("{}", value.make_string(&self.theme));
     }
 
     fn print_typeof(&mut self, ty: &typing::ast::Type) {
-        println!("{}", ty.to_string(&self.theme));
+        println!("{}", ty.make_string(&self.theme));
     }
 
     fn eprint<E>(&self, error: &E)

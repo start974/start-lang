@@ -48,7 +48,7 @@ impl ErrorReport for Error<'_> {
         }
         msg = msg.text(".");
         report
-            .with_label(Label::new(self.loc().clone()).with_message(msg.to_string(theme)))
+            .with_label(Label::new(self.loc().clone()).with_message(msg.make_string(theme)))
             .finish()
     }
 

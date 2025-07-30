@@ -1,4 +1,4 @@
-use crate::parser::ast::Identifier;
+use crate::parser::ast::Variable;
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder};
 
@@ -7,11 +7,11 @@ use crate::utils::location::{Located, Location, Report, ReportBuilder};
 // =======================================================================
 
 pub struct UnknownOption {
-    option: Identifier,
+    option: Variable,
 }
 
-impl From<Identifier> for UnknownOption {
-    fn from(option: Identifier) -> Self {
+impl From<Variable> for UnknownOption {
+    fn from(option: Variable) -> Self {
         Self { option }
     }
 }
@@ -38,7 +38,7 @@ impl ErrorReport for UnknownOption {
     fn message(&self) -> Message {
         Message::nil()
             .text("Option ")
-            .quoted(self.option.name())
+            .quoted(self.option.to_string())
             .text(" is unknown.")
     }
 }

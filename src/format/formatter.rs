@@ -112,7 +112,7 @@ impl Formatter {
             if start > last_end {
                 result.push_str(&self.content[last_end..start]);
             }
-            result.push_str(&cmd.to_string(&theme));
+            result.push_str(&cmd.make_string(&theme));
             last_end = end;
         }
 

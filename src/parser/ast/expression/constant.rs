@@ -1,5 +1,4 @@
-use super::super::{Comments,WithComments};
-use crate::parser::ast::{Comment, PrettyWithComment};
+use super::super::{Comment, Comments, PrettyWithComments, WithComments};
 use crate::utils::format_number;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
@@ -79,7 +78,7 @@ impl WithComments for Constant {
     }
 }
 
-impl PrettyWithComment for Constant {
+impl PrettyWithComments for Constant {
     type Value = Kind;
 
     fn value_between_comments(&self) -> &Self::Value {

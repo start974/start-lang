@@ -53,7 +53,7 @@ where
 /// ```
 pub fn identifier<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::Identifier, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, ast::Identifier<String>, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
@@ -62,8 +62,30 @@ where
         .map_with(move |id, e| {
             let span: SimpleSpan = e.span();
             let loc = Location::new(source_id.clone(), span.start, span.end);
-            ast::Identifier::new(&id, loc)
+            ast::Identifier::new(id, loc)
         })
+        .with_comments()
+}
+
+// ===========================================================================
+// Pattern
+// ===========================================================================
+/// parse pattern
+/// ```ebfn
+/// constant :=
+/// | IDENTIFIER
+///```
+pub fn pattern<'tokens, I>(
+    source_id: SourceId,
+) -> impl Parser<'tokens, I, ast::Pattern, ErrorChumsky<'tokens>>
+where
+    I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
+{
+    let variable = identifier(source_id)
+        .map(|id| id.map_name(ast::PatternVariableName::from))
+        .map(ast::Pattern::from);
+
+    variable.labelled("pattern")
 }
 
 // ===========================================================================
@@ -103,14 +125,31 @@ where
             ast::Constant::char(c, loc)
         });
 
-    choice((number, character)).with_comments().labelled("constant")
+    choice((number, character))
+        .with_comments()
+        .labelled("constant")
+}
+
+/// parse variable
+/// ```ebfn
+/// variable := IDENTIFIER
+///```
+pub fn variable<'tokens, I>(
+    source_id: SourceId,
+) -> impl Parser<'tokens, I, ast::Variable, ErrorChumsky<'tokens>>
+where
+    I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
+{
+    identifier(source_id)
+        .map(|id| id.map_name(ast::VariableName::from))
+        .map(ast::Variable::from)
 }
 
 /// parse expression
 /// ```ebfn
 /// expr0 :=
 /// | "(" expr@1 ")"
-/// | identifier
+/// | variable
 /// | constant
 ///
 /// expr@1 :=
@@ -125,15 +164,13 @@ where
 {
     recursive(move |expr1| {
         let expr0 = {
-            let identifier = identifier(source_id.clone())
-                .map(ast::Expression::from);
-            let constant = constant(source_id.clone())
-                .map(ast::Expression::from);
+            let variable = variable(source_id.clone()).map(ast::Expression::from);
+            let constant = constant(source_id.clone()).map(ast::Expression::from);
             let parens = expr1.delimited_by(
                 just(Token::Operator(Operator::LParen)).labelled("("),
                 just(Token::Operator(Operator::RParen)).labelled(")"),
             );
-            choice((identifier, constant, parens))
+            choice((variable, constant, parens))
         }
         .boxed();
 
@@ -154,7 +191,7 @@ where
 
 /// parse expression definition
 /// ```ebfn
-/// expr_definition := identifier (COLON type)? EQ_DEF expression
+/// expr_definition := pattern (COLON type)? EQ_DEF expression
 ///```
 pub fn expression_definition<'tokens, I>(
     source_id: SourceId,
@@ -162,7 +199,7 @@ pub fn expression_definition<'tokens, I>(
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
-    identifier(source_id.clone())
+    pattern(source_id.clone())
         .then(
             (just(Token::Operator(Operator::Colon)).labelled(":"))
                 .ignore_then(ty(source_id.clone()))
@@ -182,6 +219,19 @@ where
 // ===========================================================================
 // Type
 // ===========================================================================
+/// parse type
+/// ```ebfn
+/// type_variable := IDENTIFIER
+/// ```
+pub fn ty_variable<'tokens, I>(
+    source_id: SourceId,
+) -> impl Parser<'tokens, I, ast::TypeVariable, ErrorChumsky<'tokens>>
+where
+    I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
+{
+    identifier(source_id)
+        .map(|id| id.map_name(ast::TypeVariableName::from))
+}
 
 /// parse type
 /// ```ebfn
@@ -194,12 +244,12 @@ pub fn ty<'tokens, I>(
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
-    identifier(source_id).map(ast::Type::from).labelled("type")
+    ty_variable(source_id).map(ast::Type::from).labelled("type")
 }
 
 /// parse type definition
 /// ```ebfn
-/// type_definition := identifier EQ_DEF type
+/// type_definition := type_variable EQ_DEF type
 /// ```
 pub fn type_definition<'tokens, I>(
     source_id: SourceId,
@@ -207,7 +257,7 @@ pub fn type_definition<'tokens, I>(
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
-    identifier(source_id.clone())
+    ty_variable(source_id.clone())
         .then_ignore(just(Token::Operator(Operator::EqDef)).labelled(":="))
         .then(ty(source_id))
         .map(|(name, ty)| ast::TypeDefinition::new(name, ty))
@@ -224,7 +274,7 @@ where
 /// | ("Eval" | EVAL_OP) expr
 /// | ("TypeOf" | TYPE_OF_OP) expr
 /// | ("Type" | "Ty") type_definition
-/// | ("Set") | "Unset") IDENTIFIER
+/// | ("Set") | "Unset") variable
 ///```
 pub fn command_kind<'tokens, I>(
     source_id: SourceId,
@@ -268,8 +318,8 @@ where
         }
         .labelled("Unset"),
     ))
-    .then(identifier(source_id.clone()))
-    .map(|(b, id)| ast::CommandKind::Set(b, id));
+    .then(variable(source_id.clone()))
+    .map(|(b, var)| ast::CommandKind::Set(b, var));
 
     choice((def_expr, eval, type_of, def_type, set_unset))
 }

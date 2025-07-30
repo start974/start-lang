@@ -16,7 +16,7 @@ pub trait Pretty: Sized {
     }
 
     /// get colored string
-    fn to_string(&self, theme: &Theme) -> String {
+    fn make_string(&self, theme: &Theme) -> String {
         let mut buffer = String::new();
         self.fmt(theme, &mut buffer).unwrap();
         buffer

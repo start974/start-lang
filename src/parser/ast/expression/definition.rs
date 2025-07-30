@@ -1,5 +1,5 @@
-use super::super::{Identifier, Type};
-use super::Expression;
+use super::super::Type;
+use super::{Expression, Pattern};
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -10,24 +10,24 @@ use crate::utils::theme::{Doc, Theme};
 
 #[derive(Debug)]
 pub struct Definition {
-    name: Identifier,
+    pattern: Pattern,
     body: Expression,
     ty: Option<Type>,
 }
 
 impl Definition {
     /// Create a new expression definition
-    pub fn new(name: Identifier, body: Expression) -> Self {
+    pub fn new(pattern: Pattern, body: Expression) -> Self {
         Self {
-            name,
+            pattern,
             body,
             ty: None,
         }
     }
 
-    /// Get the name of the expression definition
-    pub fn name(&self) -> &Identifier {
-        &self.name
+    /// Get pattern
+    pub fn pattern(&self) -> &Pattern {
+        &self.pattern
     }
 
     /// Get the body of the expression definition
@@ -55,14 +55,14 @@ impl Definition {
 impl Located for Definition {
     /// location is at name of definition
     fn loc(&self) -> &Location {
-        self.name.loc()
+        self.pattern.loc()
     }
 }
 
 impl Pretty for Definition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
-            .append(theme.def_var(&self.name))
+            .append(self.pattern.pretty(theme))
             .append(
                 (match &self.ty {
                     Some(ty) => Doc::softline()

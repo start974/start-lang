@@ -119,25 +119,6 @@ pub trait LocatedSet {
 }
 
 // ==========================================================================
-// Localised
-// ==========================================================================
-#[derive(Debug)]
-pub struct Loc<T> {
-    /// location of a node
-    pub loc: Location,
-
-    /// the node itself
-    pub data: T,
-}
-
-impl<T> Loc<T> {
-    /// Create a new localised node with the given data and location.
-    pub fn new(data: T, loc: Location) -> Self {
-        Self { data, loc }
-    }
-}
-
-// ==========================================================================
 // Report
 // ==========================================================================
 pub type Report<'a> = ariadne::Report<'a, Location>;
