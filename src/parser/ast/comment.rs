@@ -31,54 +31,93 @@ impl Pretty for Comment {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct WithComments<T> {
-    pub value: T,
+#[derive(Debug, Default)]
+pub struct Comments {
     pub before: Vec<Comment>,
     pub after: Vec<Comment>,
 }
 
-impl<T> From<T> for WithComments<T> {
-    fn from(value: T) -> Self {
-        Self {
-            value,
-            before: Vec::new(),
-            after: Vec::new(),
-        }
-    }
-}
-impl<T> WithComments<T> {
-    /// with commments befor
-    pub fn with_before(mut self, comments: Vec<Comment>) -> Self {
+impl WithComments for Comments {
+    /// with comments before
+    fn with_comments_before(mut self, comments: Vec<Comment>) -> Self {
         self.before = comments;
         self
     }
 
-    /// with comments afer
-    pub fn with_after(mut self, comments: Vec<Comment>) -> Self {
+    /// with comments after
+    fn with_comments_after(mut self, comments: Vec<Comment>) -> Self {
         self.after = comments;
         self
     }
 
-    /// get value
-    pub fn value(&self) -> &T {
-        &self.value
+    /// get the comments before
+    fn comments_before(&self) -> &[Comment] {
+        &self.before
+    }
+
+    /// get the comments after
+    fn comments_after(&self) -> &[Comment] {
+        &self.after
     }
 }
 
-impl<T> Pretty for WithComments<T>
+pub trait WithComments {
+    /// with commments befor
+    fn with_comments_before(self, comments: Vec<Comment>) -> Self;
+
+    /// with comments afer
+    fn with_comments_after(self, comments: Vec<Comment>) -> Self;
+
+    /// get the comments before
+    fn comments_before(&self) -> &[Comment];
+
+    /// get the comments after
+    fn comments_after(&self) -> &[Comment];
+}
+
+pub trait PrettyWithComment: WithComments {
+    type Value: Pretty;
+
+    /// Renvoie la valeur sans les commentaires
+    fn value_between_comments(&self) -> &Self::Value;
+
+    fn pretty_with_comments(&self, theme: &Theme) -> Doc<'_> {
+        let value = self.value_between_comments();
+
+        let before = Doc::intersperse(
+            self.comments_before().iter().map(|c| c.pretty(theme)),
+            Doc::line(),
+        );
+
+        let after = Doc::intersperse(
+            self.comments_after().iter().map(|c| c.pretty(theme)),
+            Doc::line(),
+        );
+
+        Doc::nil()
+            .append(before)
+            .append(if self.comments_before().is_empty() {
+                Doc::nil()
+            } else {
+                Doc::line()
+            })
+            .append(value.pretty(theme))
+            .append(if self.comments_after().is_empty() {
+                Doc::nil()
+            } else {
+                Doc::line()
+            })
+            .append(after)
+            .group()
+    }
+}
+
+impl<T> Pretty for T
 where
-    T: Pretty,
+    T: PrettyWithComment,
+    T::Value: Pretty,
 {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        let mut doc = Doc::nil();
-        for comment in &self.before {
-            doc = doc.append(comment.pretty(theme)).append(Doc::line());
-        }
-        doc = doc.append(self.value.pretty(theme));
-        for comment in &self.after {
-            doc = doc.append(Doc::line()).append(comment.pretty(theme));
-        }
-        doc
+        self.pretty_with_comments(theme)
     }
 }
