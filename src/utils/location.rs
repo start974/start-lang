@@ -69,19 +69,13 @@ pub const UNKNOWN_LOCATION: Location = Location {
 impl Span for Location {
     type SourceId = SourceId;
     fn start(&self) -> usize {
-        match self.id {
-            SourceId::Repl => self.start,
-            SourceId::File { .. } => self.start,
-            SourceId::Unknown => 0,
-        }
+        self.start
     }
+
     fn end(&self) -> usize {
-        match self.id {
-            SourceId::Repl => self.end,
-            SourceId::File { .. } => self.end,
-            SourceId::Unknown => 0,
-        }
+        self.end
     }
+
     fn source(&self) -> &Self::SourceId {
         &self.id
     }

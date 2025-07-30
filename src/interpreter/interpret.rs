@@ -172,10 +172,15 @@ pub trait Interpreter {
     /// run the interpreter
     fn run(&mut self) {
         let mut offset = 0;
-        let mut content = self.content().to_string();
+        let content_copy = self.content().to_string();
 
-        while !content.is_empty() && self.continue_parsing() {
-            let tokens = self.lex(&content, self.get_offset_source(offset));
+        while self.continue_parsing() {
+            let content = &content_copy[offset..];
+            if content.is_empty() {
+                break;
+            }
+            let offset_source = self.get_offset_source(offset);
+            let tokens = self.lex(content, offset_source);
             match tokens.last() {
                 None => break,
                 Some(last_token) => {
@@ -183,8 +188,8 @@ pub trait Interpreter {
                         self.debug_pretty(Flag::DebugParser, &cmd);
                         self.run_command(cmd);
                     }
-                    offset += last_token.span.end;
-                    content = content[last_token.span.end..].to_string();
+                    let add_offset = last_token.span.end - offset_source;
+                    offset += add_offset;
                 }
             }
         }

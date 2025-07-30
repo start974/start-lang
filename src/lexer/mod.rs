@@ -16,12 +16,12 @@ pub fn lexer<'src>(
 ) -> impl Parser<'src, &'src str, Vec<token::TokenSpanned>, ErrorChumsky<'src>> {
     use token::{Token, TokenSpanned};
     let tokens = choice((
+        lexing::keyword().map(Token::Keyword),
         lexing::comment().map(Token::Comment),
+        lexing::operator().map(Token::Operator),
         lexing::identifier().map(Token::Identifier),
         lexing::number().map(Token::Number),
         lexing::character().map(Token::Character),
-        lexing::keyword().map(Token::Keyword),
-        lexing::operator().map(Token::Operator),
     ))
     .map_with(move |kind, e| {
         let span_e: SimpleSpan = e.span();
@@ -51,7 +51,7 @@ pub fn lexer<'src>(
             }
         })
         .padded()
-        .then_ignore(any().then(end()));
+        .then_ignore(any().repeated().then(end()));
 
     let token_command = tokens.then(end_command).map(|(mut tokens, end)| {
         tokens.push(end.clone());

@@ -248,47 +248,12 @@ pub fn keyword<'src>() -> impl Parser<'src, &'src str, token::Keyword, ErrorChum
 // ===========================================================================
 // Operator
 // ===========================================================================
-
-/// colon operator
-/// ```ebnf
-/// COLON := ":"
-/// ```
-pub fn operator_colon<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>> {
-    just(':').to(token::Operator::Colon)
-}
-
-/// definition operator
-/// ```ebnf
-/// EQ_DEF := ":="
-/// ```
-pub fn operator_eq_def<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>>
-{
-    just(":=").to(token::Operator::EqDef)
-}
-
-/// lparent operator
-/// ```ebnf
-/// LParent := "("
-/// ```
-pub fn operator_lparent<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>>
-{
-    just('(').to(token::Operator::LParen)
-}
-/// lparent operator
-/// ```ebnf
-/// RParent := "("
-/// ```
-pub fn operator_rparent<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>>
-{
-    just(')').to(token::Operator::RParen)
-}
-
-/// lex operator
+/// lex operators
 pub fn operator<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>> {
     choice((
-        operator_colon(),
-        operator_eq_def(),
-        operator_lparent(),
-        operator_rparent(),
+        just(":=").to(token::Operator::EqDef),
+        just(':').to(token::Operator::Colon),
+        just('(').to(token::Operator::LParen),
+        just(')').to(token::Operator::RParen),
     ))
 }

@@ -14,6 +14,8 @@ impl<'src> Error<'src> {
     /// make a new error
     pub fn new(err: Rich<'src, char>, source_id: SourceId, offset: usize) -> Self {
         let span = err.span();
+        println!("Error span: {span:?}");
+        println!("Error expected: {err:?}");
         let location = Location::new(source_id, span.start, span.end).with_offset(offset);
         Self {
             location,

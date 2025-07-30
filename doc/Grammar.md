@@ -50,8 +50,8 @@ ESCAPE_CHAR := "\"
 
 ### Operator
 ```
-COLON := ":"
 EQ_DEF := ":="
+COLON := ":"
 DOT := "."
 ```
 
@@ -99,9 +99,9 @@ type :=
 ```
 command_kind :=
 | DEFINITY expr_definition
-| TY type_definition
 | EVAL expr
 | TYPE_OF expr
+| TY type_definition
 | SET IDENTIFIER
 | UNSET IDENTIFIER
 
