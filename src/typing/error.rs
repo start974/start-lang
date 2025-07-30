@@ -41,7 +41,7 @@ impl ErrorReport for ErrorVariableNotFound {
                         .text("Variable ")
                         .quoted(self.identifier.name())
                         .text(" not found in the current scope.")
-                        .to_string(theme),
+                        .make_string(theme),
                 ),
             )
             .finish()
@@ -92,7 +92,7 @@ impl ErrorReport for ErrorUnexpectedType {
                         .text("Expect Type ")
                         .of_pretty(&self.expected)
                         .text(".")
-                        .to_string(theme),
+                        .make_string(theme),
                 ),
             )
             .with_note(
@@ -102,7 +102,7 @@ impl ErrorReport for ErrorUnexpectedType {
                     .text(".\n")
                     .text("Found type:    ")
                     .of_pretty(&self.found)
-                    .to_string(theme),
+                    .make_string(theme),
             )
             .finish()
     }

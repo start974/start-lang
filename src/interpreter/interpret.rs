@@ -126,11 +126,11 @@ pub trait Interpreter {
     }
 
     /// run command set and unset
-    fn run_set(&mut self, b: bool, identifier: parser::ast::Identifier) {
-        match identifier.name() {
+    fn run_set(&mut self, b: bool, var: parser::ast::Variable) {
+        match var.to_string().as_str() {
             "DebugParser" => self.set_debug(b, Flag::DebugParser),
             "DebugTyper" => self.set_debug(b, Flag::DebugTyper),
-            _ => self.fail(UnknownOption::from(identifier)),
+            _ => self.fail(UnknownOption::from(var)),
         }
     }
 

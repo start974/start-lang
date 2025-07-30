@@ -39,7 +39,7 @@ impl Message {
 
     /// add message from pretty
     pub fn of_pretty(self, p: &impl Pretty) -> Self {
-        self.text(p.to_string(&Theme::default()))
+        self.text(p.make_string(&Theme::default()))
     }
 }
 
@@ -83,7 +83,7 @@ pub trait ErrorReport: ErrorCode + Located {
             Report::build(ReportKind::Error, self.loc().clone())
                 .with_config(Config::default().with_index_type(IndexType::Byte))
                 .with_code(self.code())
-                .with_message(self.message().to_string(theme)),
+                .with_message(self.message().make_string(theme)),
         )
     }
 }

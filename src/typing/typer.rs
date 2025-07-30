@@ -30,13 +30,13 @@ impl Typer {
                 Ok(ast_typed::Expression::Constant(c_ty))
             }
             ast_parser::Expression::Variable(var) => {
-                let var_name = var.name();
-                let id = self.id_builder.get(var_name).with_loc(var);
+                let var_name = var.to_string();
+                let id = self.id_builder.get(&var_name).with_loc(var);
                 self.var_env
                     .get(&id)
                     .map_err(Error::from)
                     .map(ast_typed::Expression::from)
-                    .or_else(|e| match var_name {
+                    .or_else(|e| match var_name.as_str() {
                         "__Constant_true__" => {
                             let b = ast_typed::Constant::boolean(true);
                             Ok(ast_typed::Expression::from(b))
@@ -62,12 +62,12 @@ impl Typer {
     pub fn ty(&self, ty: &ast_parser::Type) -> Result<ast_typed::Type> {
         match ty {
             ast_parser::Type::Var(ident) => {
-                let name = ident.name();
-                let id = self.id_builder.get(name).with_loc(ident);
+                let name = ident.to_string();
+                let id = self.id_builder.get(&name).with_loc(ident);
                 self.ty_alias
                     .get(&id)
                     .map(Type::from)
-                    .or_else(|e| match ident.name() {
+                    .or_else(|e| match name.as_str() {
                         "__Type_Nat__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::Nat)),
                         "__Type_Bool__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::Bool)),
                         "__Type_Char__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::Char)),
@@ -84,25 +84,26 @@ impl Typer {
         &mut self,
         definition: &ast_parser::ExpressionDefinition,
     ) -> Result<ast_typed::ExpressionDefinition> {
-        let name_parse = definition.name();
-        let name = self
-            .id_builder
-            .build(name_parse.name())
-            .with_loc(name_parse);
-        match definition.ty() {
-            Some(ty) => {
-                let ty = self.ty(ty)?;
-                self.var_env.add(name.clone(), ty.clone());
-                let body = self.expression(definition.body())?;
-                ast_typed::ExpressionDefinition::new(name, body)
-                    .restrict_ty(ty)
-                    .map_err(|e| Error::from(*e))
-                    .map_err(Box::new)
-            }
-            None => {
-                let body = self.expression(definition.body())?;
-                self.var_env.add(name.clone(), body.ty().clone());
-                Ok(ast_typed::ExpressionDefinition::new(name, body))
+        match definition.pattern() {
+            ast_parser::Pattern::Variable(var) => {
+                let name_parse = var.to_string();
+                let name = self.id_builder.build(&name_parse).with_loc(var);
+                match definition.ty() {
+                    Some(ty) => {
+                        let ty = self.ty(ty)?;
+                        self.var_env.add(name.clone(), ty.clone());
+                        let body = self.expression(definition.body())?;
+                        ast_typed::ExpressionDefinition::new(name, body)
+                            .restrict_ty(ty)
+                            .map_err(|e| Error::from(*e))
+                            .map_err(Box::new)
+                    }
+                    None => {
+                        let body = self.expression(definition.body())?;
+                        self.var_env.add(name.clone(), body.ty().clone());
+                        Ok(ast_typed::ExpressionDefinition::new(name, body))
+                    }
+                }
             }
         }
     }
@@ -112,7 +113,7 @@ impl Typer {
         let name_parse = definition.name();
         let name = self
             .id_builder
-            .build(name_parse.name())
+            .build(&name_parse.to_string())
             .with_loc(name_parse);
         let ty = self.ty(definition.ty())?;
         self.ty_alias.add(name.clone(), ty.clone());

@@ -62,9 +62,10 @@ DOT := "."
 ## Parser
 All element in quotes is keyword in "IDENTIFIER"
 
-### Identifier
+### Pattern
 ```ebnf
-identifier := IDENTIFIER
+pattern :=
+| IDENTIFIER
 ```
 
 ### Expression
@@ -74,16 +75,18 @@ constant :=
 | NUMBER
 | CHARACTER
 
+variable := IDENTIFIER
+
 expression@0 :=
 |  LPAR expression RPAR
-|  identifier
+|  variable
 |  constant
 
 expression@1 :=
 | expression@0 COLON type
 | expression@0
 
-expr_definition := identifier (COLON type)? EQ_DEF expression
+expr_definition := pattern (COLON type)? EQ_DEF expression
 ```
 
 ### Type
@@ -102,7 +105,7 @@ command_kind :=
 | ("Eval" | EVAL_OP) expr
 | ("TypeOf" | TYPE_OF_OP) expr
 | ("Type" | "Ty") type_definition
-| ("Set") | "Unset") IDENTIFIER
+| ("Set") | "Unset") variable
 
 command := command_kind DOT
 ```

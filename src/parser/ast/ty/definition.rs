@@ -1,5 +1,5 @@
-use super::super::identifier::Identifier;
 use super::super::ty::Type;
+use super::TypeVariable;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -9,18 +9,18 @@ use crate::utils::theme::{Doc, Theme};
 // ==========================================================================
 #[derive(Debug)]
 pub struct Definition {
-    name: Identifier,
+    name: TypeVariable,
     ty: Type,
 }
 
 impl Definition {
     /// make a new type definition
-    pub fn new(name: Identifier, ty: Type) -> Self {
+    pub fn new(name: TypeVariable, ty: Type) -> Self {
         Self { name, ty }
     }
 
     /// get name of type
-    pub fn name(&self) -> &Identifier {
+    pub fn name(&self) -> &TypeVariable {
         &self.name
     }
 

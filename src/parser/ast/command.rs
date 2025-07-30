@@ -1,4 +1,4 @@
-use super::{Expression, ExpressionDefinition, Identifier, TypeDefinition};
+use super::{Expression, ExpressionDefinition, TypeDefinition, Variable};
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -10,7 +10,7 @@ pub enum CommandKind {
     Eval(Expression),
     //Grammar(GrammarCommand),
     TypeOf(Expression),
-    Set(bool, Identifier),
+    Set(bool, Variable),
 }
 
 pub struct Command {
@@ -54,10 +54,10 @@ impl Pretty for CommandKind {
                 .append(theme.keyword(&"TypeOf"))
                 .append(Doc::space())
                 .append(expr.pretty(theme)),
-            CommandKind::Set(set, identifier) => Doc::nil()
+            CommandKind::Set(set, var) => Doc::nil()
                 .append(theme.keyword(&if *set { "Set" } else { "Unset" }))
                 .append(Doc::space())
-                .append(theme.keyword(&identifier.name().to_string())),
+                .append(var.pretty(theme)),
         }
         .append(Doc::text("."))
     }

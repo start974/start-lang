@@ -1,11 +1,12 @@
-use super::identifier::Identifier;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
 mod definition;
+mod variable;
 
 pub use definition::Definition as TypeDefinition;
+pub use variable::{Variable as TypeVariable, VariableName as TypeVariableName};
 
 // ==========================================================================
 // Type
@@ -13,11 +14,11 @@ pub use definition::Definition as TypeDefinition;
 /// constant types
 #[derive(Debug)]
 pub enum Type {
-    Var(Identifier),
+    Var(TypeVariable),
 }
 
-impl From<Identifier> for Type {
-    fn from(ident: Identifier) -> Self {
+impl From<TypeVariable> for Type {
+    fn from(ident: TypeVariable) -> Self {
         Type::Var(ident)
     }
 }

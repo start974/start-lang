@@ -75,7 +75,7 @@ pub trait WithComments {
     fn comments_after(&self) -> &[Comment];
 }
 
-pub trait PrettyWithComment: WithComments {
+pub trait PrettyWithComments: WithComments {
     type Value: Pretty;
 
     /// Renvoie la valeur sans les commentaires
@@ -114,7 +114,7 @@ pub trait PrettyWithComment: WithComments {
 
 impl<T> Pretty for T
 where
-    T: PrettyWithComment,
+    T: PrettyWithComments,
     T::Value: Pretty,
 {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
