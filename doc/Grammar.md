@@ -5,22 +5,22 @@
 ## Lexer
 All token in lexer can be separated by space
 ### Comment
-```
+```ebnf
 COMMENT := "(*" <ANY>* "*)"
 ```
 
 ### Identifier
 
-```
+```ebnf
 INDENTIFIER := IDENT "'"*
 ```
 
 ### Number
-```
+```ebnf
 NUMBER_F(DIGIT) := DIGIT ("_"* DIGIT)*
 ```
 
-```
+```ebnf
 NUMBER_DEC := NUMBER_F DIGIT
 DIGIT := [0..9]
 
@@ -37,7 +37,7 @@ NUMBER := NUMBER_DEC | NUMBER_HEX | NUMBER_OCT | NUMBER_BIT
 ```
 
 ### Character
-```
+```ebnf
 CHARACTER := "'" CHARACTER_LIT "'"
 
 CHARACTER_LIT := [U+0000 .. U+D7FF] | [U+E000 .. U+10FFFF] | ESCAPE_CHAR
@@ -49,28 +49,27 @@ ESCAPE_CHAR := "\"
 ```
 
 ### Operator
-```
+```ebnf
+EVAL_OP := "$"
+TYPE_OF_OP := "?:"
 EQ_DEF := ":="
 COLON := ":"
 DOT := "."
+
 ```
 
-### keyword
-```
-DEFINITION := "Definition" | "Def"
-EVAL := "Eval" | "$"
-TYPE := "Type" | "Ty"
-TYPE_OF := "TypeOf" | "?:"
-```
+
 ## Parser
+All element in quotes is keyword in "IDENTIFIER"
 
 ### Identifier
-```
+```ebnf
 identifier := IDENTIFIER
 ```
 
 ### Expression
-```
+
+```ebnf
 constant :=
 | NUMBER
 | CHARACTER
@@ -88,22 +87,22 @@ expr_definition := identifier (COLON type)? EQ_DEF expression
 ```
 
 ### Type
-```
-type_definition := IDENTIFIER ":=" type
+```ebnf
+type_definition := IDENTIFIER EQ_DEF type
 
 type :=
 | IDENTIFIER
 ```
 
 ## Command
-```
+
+```ebnf
 command_kind :=
-| DEFINITY expr_definition
-| EVAL expr
-| TYPE_OF expr
-| TY type_definition
-| SET IDENTIFIER
-| UNSET IDENTIFIER
+| ("Definition" | "Def") expr_definition
+| ("Eval" | EVAL_OP) expr
+| ("TypeOf" | TYPE_OF_OP) expr
+| ("Type" | "Ty") type_definition
+| ("Set") | "Unset") IDENTIFIER
 
 command := command_kind DOT
 ```

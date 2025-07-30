@@ -1,6 +1,5 @@
 use super::ast;
 use super::ErrorChumsky;
-use crate::lexer::token::Keyword;
 use crate::lexer::token::Operator;
 use crate::lexer::token::Token;
 use crate::utils::location::Location;
@@ -175,15 +174,15 @@ where
 // ===========================================================================
 // Command
 // ===========================================================================
+
 /// parse command
 /// ```ebfn
 /// command_kind :=
-/// | DEFINITY expr_definition
-/// | TY type_definition
-/// | EVAL expr
-/// | TYPE_OF expr
-/// | SET IDENTIFIER
-/// | UNSET IDENTIFIER
+/// | ("Definition" | "Def") expr_definition
+/// | ("Eval" | EVAL_OP) expr
+/// | ("TypeOf" | TYPE_OF_OP) expr
+/// | ("Type" | "Ty") type_definition
+/// | ("Set") | "Unset") IDENTIFIER
 ///```
 pub fn command_kind<'tokens, I>(
     source_id: SourceId,
@@ -191,37 +190,46 @@ pub fn command_kind<'tokens, I>(
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
-    let def_expr = just(Token::Keyword(Keyword::Definition))
+    let def_expr = select! {Token::Identifier(id) if id == "Def" || id == "Definition" => ()}
         .labelled("Definition")
         .ignore_then(expression_definition(source_id.clone()))
         .map(ast::CommandKind::ExpressionDefinition);
 
-    let def_type = just(Token::Keyword(Keyword::Type))
+    let eval = select! {
+        Token::Identifier(id) if id == "Eval" => (),
+        Token::Operator(Operator::Eval) => ()
+    }
+    .labelled("Eval")
+    .ignore_then(expression(source_id.clone()))
+    .map(ast::CommandKind::Eval);
+
+    let type_of = select! {
+        Token::Identifier(id) if id == "TypeOf"  => (),
+        Token::Operator(Operator::TypeOf) => ()
+    }
+    .labelled("TypeOf")
+    .ignore_then(expression(source_id.clone()))
+    .map(ast::CommandKind::TypeOf);
+
+    let def_type = select! {Token::Identifier(id) if id == "Ty" || id == "Type" => ()}
         .labelled("Type")
         .ignore_then(type_definition(source_id.clone()))
         .map(ast::CommandKind::TypeDefinition);
 
-    let eval = just(Token::Keyword(Keyword::Eval))
-        .labelled("Eval")
-        .ignore_then(expression(source_id.clone()))
-        .map(ast::CommandKind::Eval);
+    let set_unset = choice((
+        select! {
+            Token::Identifier(id) if id == "Set" => true
+        }
+        .labelled("Set"),
+        select! {
+        Token::Identifier(id) if id == "Unset" => false
+        }
+        .labelled("Unset"),
+    ))
+    .then(identifier(source_id.clone()))
+    .map(|(b, id)| ast::CommandKind::Set(b, id));
 
-    let type_of = just(Token::Keyword(Keyword::TypeOf))
-        .labelled("TypeOf")
-        .ignore_then(expression(source_id.clone()))
-        .map(ast::CommandKind::TypeOf);
-
-    let set = just(Token::Keyword(Keyword::Set(true)))
-        .labelled("Set")
-        .ignore_then(identifier(source_id.clone()))
-        .map(|id| ast::CommandKind::Set(true, id));
-
-    let unset = just(Token::Keyword(Keyword::Set(false)))
-        .labelled("Unset")
-        .ignore_then(identifier(source_id.clone()))
-        .map(|id| ast::CommandKind::Set(false, id));
-
-    choice((def_expr, def_type, eval, type_of, set, unset))
+    choice((def_expr, eval, type_of, def_type, set_unset))
 }
 
 /// parse command with dot

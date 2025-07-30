@@ -2,51 +2,60 @@
 
 ```
 $ startlang run no_eq_def.st
-? 201
-[201] Error: Parsing error
+? 202
+[202] Error: Parsing error
    ╭─[ no_eq_def.st:1:8 ]
    │
  1 │ Type N Nat.
-   │        ┬  
-   │        ╰── Expected ":=", found "N".
+   │        ─┬─  
+   │         ╰─── Expected ":=", found "Nat".
 ───╯
 
 ```
 
 ```
 $ startlang run no_space.st
-? 201
-[201] Error: Parsing error
-   ╭─[ no_space.st:1:5 ]
+? 202
+[202] Error: Parsing error
+   ╭─[ no_space.st:1:1 ]
    │
  1 │ TypeN := Nat.
-   │     ┬  
-   │     ╰── Expected "whitespace", "''O''", found "N".
+   │ ──┬──  
+   │   ╰──── Expected "command", found "TypeN".
 ───╯
 
 ```
 
-```
-$ startlang run not_end.st
-? 201
-[201] Error: Parsing error
-   ╭─[ not_end.st:1:8 ]
-   │
- 1 │ Type N
-   │        │ 
-   │        ╰─ Expected ":=".
-───╯
 
-```
 ```
 $ startlang run wrong_name.st
-? 201
-[201] Error: Parsing error
+? 202
+[202] Error: Parsing error
    ╭─[ wrong_name.st:1:6 ]
    │
  1 │ Type 1 := ℕ.
    │      ┬  
-   │      ╰── Expected "whitespace", "identifier", found "1".
+   │      ╰── Expected "identifier", found "1".
+───╯
+
+```
+
+```
+$ startlang run just_keyword.st
+? 1
+[202] Error: Parsing error
+   ╭─[ just_keyword.st:1:5 ]
+   │
+ 1 │ Type.
+   │     ┬  
+   │     ╰── Expected "identifier", found ".".
+───╯
+[202] Error: Parsing error
+   ╭─[ just_keyword.st:2:3 ]
+   │
+ 2 │ Ty.
+   │   ┬  
+   │   ╰── Expected "identifier", found ".".
 ───╯
 
 ```

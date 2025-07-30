@@ -2,14 +2,33 @@
 
 ```
 $ startlang run no_space.st
-? 201
-[201] Error: Parsing error
-   ╭─[ no_space.st:1:7 ]
+? 202
+[202] Error: Parsing error
+   ╭─[ no_space.st:1:1 ]
    │
  1 │ TypeOf1.
-   │       ┬  
-   │       ╰── Expected "whitespace", found "1".
+   │ ───┬───  
+   │    ╰───── Expected "command", found "TypeOf1".
 ───╯
 
 ```
 
+```
+$ startlang run just_keyword.st
+? 1
+[202] Error: Parsing error
+   ╭─[ just_keyword.st:1:7 ]
+   │
+ 1 │ TypeOf.
+   │       ┬  
+   │       ╰── Expected "expression", found ".".
+───╯
+[201] Error: Lexing error
+   ╭─[ just_keyword.st:2:3 ]
+   │
+ 2 │ :?.
+   │   ┬  
+   │   ╰── Lexer unknow token, found ".".
+───╯
+
+```

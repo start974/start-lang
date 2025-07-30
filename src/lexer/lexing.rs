@@ -1,5 +1,5 @@
 use super::{token, ErrorChumsky};
-use chumsky::{prelude::*, text::whitespace};
+use chumsky::prelude::*;
 use num_bigint::BigUint;
 use std::rc::Rc;
 
@@ -228,28 +228,14 @@ pub fn character<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src
 // Keyword
 // ===========================================================================
 
-fn command_keyword<'src>() -> impl Parser<'src, &'src str, token::Keyword, ErrorChumsky<'src>> {
-    choice((
-        choice((just("Definition"), just("Def"))).then_ignore(whitespace()).to(token::Keyword::Definition),
-        choice((just("Eval").then_ignore(whitespace()), just("$"))).to(token::Keyword::Eval),
-        choice((just("TypeOf").then_ignore(whitespace()), just("?:"))).to(token::Keyword::TypeOf),
-        choice((just("Type"), just("Ty"))).then_ignore(whitespace()).to(token::Keyword::Type),
-        just("Set").then_ignore(whitespace()).to(token::Keyword::Set(true)),
-        just("Unset").to(token::Keyword::Set(false)),
-    ))
-    .labelled("command keyword")
-}
-
-pub fn keyword<'src>() -> impl Parser<'src, &'src str, token::Keyword, ErrorChumsky<'src>> {
-    command_keyword()
-}
-
 // ===========================================================================
 // Operator
 // ===========================================================================
 /// lex operators
 pub fn operator<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>> {
     choice((
+        just("?:").to(token::Operator::TypeOf),
+        just('$').to(token::Operator::Eval),
         just(":=").to(token::Operator::EqDef),
         just(':').to(token::Operator::Colon),
         just('(').to(token::Operator::LParen),
