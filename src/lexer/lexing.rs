@@ -229,50 +229,20 @@ pub fn character<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src
 // Keyword
 // ===========================================================================
 
-/// Definition keyword
-/// ```ebnf
-/// DEFINITION := "Definition" | "Def"
-/// ```
-pub fn keyword_definition<'src>() -> impl Parser<'src, &'src str, token::Keyword, ErrorChumsky<'src>> {
-    choice((just("Definition"), just("Def"))).to(token::Keyword::Definition)
-}
-
-/// Definition keyword
-/// ```ebnf
-/// EVAL := "Eval" | "$"
-/// ```
-pub fn keyword_eval<'src>() -> impl Parser<'src, &'src str, token::Keyword, ErrorChumsky<'src>> {
-    choice((just("Eval"), just("$"))).to(token::Keyword::Eval)
-}
-
-/// Type keyword
-/// ```ebnf
-/// TYPE := "Type" | "Ty"
-/// ```
-pub fn keyword_type<'src>() -> impl Parser<'src, &'src str, token::Keyword, ErrorChumsky<'src>> {
-    choice((just("Type"), just("Ty"))).to(token::Keyword::Type)
-}
-
-/// Type of keyword
-/// ```ebnf
-/// TYPE_OF := "TypeOf" | "?:"
-/// ```
-pub fn keyword_type_of<'src>() -> impl Parser<'src, &'src str, token::Keyword, ErrorChumsky<'src>> {
-    choice((just("TypeOf"), just("?:"))).to(token::Keyword::TypeOf)
-}
-
-fn command_keyord<'src>() -> impl Parser<'src, &'src str, token::Keyword, ErrorChumsky<'src>> {
+fn command_keyword<'src>() -> impl Parser<'src, &'src str, token::Keyword, ErrorChumsky<'src>> {
     choice((
-        keyword_definition(),
-        keyword_eval(),
-        keyword_type(),
-        keyword_type_of(),
+        choice((just("Definition"), just("Def"))).to(token::Keyword::Definition),
+        choice((just("Eval"), just("$"))).to(token::Keyword::Eval),
+        choice((just("Type"), just("Ty"))).to(token::Keyword::Type),
+        choice((just("TypeOf"), just("?:"))).to(token::Keyword::TypeOf),
+        just("Set").to(token::Keyword::Set(true)),
+        just("UnSet").to(token::Keyword::Set(false)),
     ))
     .labelled("command keyword")
 }
 
 pub fn keyword<'src>() -> impl Parser<'src, &'src str, token::Keyword, ErrorChumsky<'src>> {
-    command_keyord()
+    command_keyword()
 }
 
 // ===========================================================================
@@ -291,7 +261,8 @@ pub fn operator_colon<'src>() -> impl Parser<'src, &'src str, token::Operator, E
 /// ```ebnf
 /// EQ_DEF := ":="
 /// ```
-pub fn operator_eq_def<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>> {
+pub fn operator_eq_def<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>>
+{
     just(":=").to(token::Operator::EqDef)
 }
 
@@ -299,14 +270,16 @@ pub fn operator_eq_def<'src>() -> impl Parser<'src, &'src str, token::Operator, 
 /// ```ebnf
 /// LParent := "("
 /// ```
-pub fn operator_lparent<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>> {
+pub fn operator_lparent<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>>
+{
     just('(').to(token::Operator::LParen)
 }
 /// lparent operator
 /// ```ebnf
 /// RParent := "("
 /// ```
-pub fn operator_rparent<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>> {
+pub fn operator_rparent<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>>
+{
     just(')').to(token::Operator::RParen)
 }
 

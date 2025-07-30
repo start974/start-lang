@@ -114,7 +114,6 @@ impl Theme {
             comment: ColorInfo::default()
                 .fg_color(Color::BrightBlack)
                 .styles(vec![Styles::Italic]),
-
         }
     }
 

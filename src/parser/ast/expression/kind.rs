@@ -1,8 +1,8 @@
 use super::super::identifier::Identifier;
+use super::{Constant, TypeRestriction};
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
-use super::{Constant, TypeRestriction};
 
 #[derive(Debug)]
 pub enum Kind {

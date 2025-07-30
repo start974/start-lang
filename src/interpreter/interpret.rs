@@ -146,22 +146,21 @@ pub trait Interpreter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset: usize) -> Option<(Vec<lexer::Token>, usize)> {
-        let offset_source = self.get_offset_source(offset);
+    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::token::TokenSpanned> {
         let source_id = self.source_id();
         match lexer::lex(source_id.clone(), offset_source, content) {
-            Ok((tokens, _)) if tokens.is_empty() => None,
-            Ok((tokens, end_offset)) => Some((tokens, end_offset)),
+            Ok(tokens) => tokens,
             Err(errs) => {
                 self.fail(errs);
-                None
+                Vec::new()
             }
         }
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: &[lexer::Token]) -> Option<parser::ast::Command> {
-        match parser::parse(tokens) {
+    fn parse(&mut self, tokens: &[lexer::token::TokenSpanned]) -> Option<parser::ast::Command> {
+        let source_id = self.source_id();
+        match parser::parse(source_id.clone(), tokens) {
             Ok(cmd) => Some(cmd),
             Err(errs) => {
                 self.fail(errs);
@@ -176,16 +175,17 @@ pub trait Interpreter {
         let mut content = self.content().to_string();
 
         while !content.is_empty() && self.continue_parsing() {
-            match self.lex(&content, offset) {
-                Some((tokens, add_offset)) => {
-                    offset += add_offset;
-                    content = content[add_offset..].to_string();
+            let tokens = self.lex(&content, self.get_offset_source(offset));
+            match tokens.last() {
+                None => break,
+                Some(last_token) => {
                     if let Some(cmd) = self.parse(&tokens) {
                         self.debug_pretty(Flag::DebugParser, &cmd);
                         self.run_command(cmd);
                     }
+                    offset += last_token.span.end;
+                    content = content[last_token.span.end..].to_string();
                 }
-                None => break,
             }
         }
     }

@@ -1,3 +1,4 @@
+use crate::lexer::token::Token;
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder, SourceId};
 use crate::utils::pretty::Pretty;
@@ -5,16 +6,16 @@ use crate::utils::theme::Theme;
 use ariadne::Label;
 use chumsky::error::{Rich, RichPattern};
 
-pub struct Error<'src> {
+pub struct Error<'tokens> {
     location: Location,
-    err: Rich<'src, char>,
+    err: Rich<'tokens, Token>,
 }
 
-impl<'src> Error<'src> {
+impl<'tokens> Error<'tokens> {
     /// make a new error
-    pub fn new(err: Rich<'src, char>, source_id: SourceId, offset: usize) -> Self {
+    pub fn new(err: Rich<'tokens, Token>, source_id: SourceId) -> Self {
         let span = err.span();
-        let location = Location::new(source_id, span.start, span.end).with_offset(offset);
+        let location = Location::new(source_id, span.start, span.end);
         Self {
             location,
             err: err.clone(),
