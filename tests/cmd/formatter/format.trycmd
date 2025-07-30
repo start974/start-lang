@@ -6,12 +6,12 @@ $ startlang format good.st
 ```
 $ startlang format error.st
 ? 201
-[201] Error: Parsing error
+[201] Error: Lexing error
    ╭─[ error.st:1:14 ]
    │
  1 │ Definition a
    │              │ 
-   │              ╰─ Expected "type_restriction", ":=".
+   │              ╰─ Lexer unknow token.
 ───╯
 
 ```
@@ -40,12 +40,12 @@ Eval a.
 ```
 $ startlang format --print error.st
 ? 201
-[201] Error: Parsing error
+[201] Error: Lexing error
    ╭─[ error.st:1:14 ]
    │
  1 │ Definition a
    │              │ 
-   │              ╰─ Expected "type_restriction", ":=".
+   │              ╰─ Lexer unknow token.
 ───╯
 
 ```
@@ -87,12 +87,12 @@ $ startlang format --diff bad.st
 ```
 $ startlang format --diff error.st
 ? 201
-[201] Error: Parsing error
+[201] Error: Lexing error
    ╭─[ error.st:1:14 ]
    │
  1 │ Definition a
    │              │ 
-   │              ╰─ Expected "type_restriction", ":=".
+   │              ╰─ Lexer unknow token.
 ───╯
 
 ```

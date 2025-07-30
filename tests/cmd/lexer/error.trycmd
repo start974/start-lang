@@ -1,0 +1,71 @@
+# Error lexing
+
+## Definition
+```
+$ startlang run no_expression.st
+? 201
+[201] Error: Lexing error
+   ╭─[ no_expression.st:1:17 ]
+   │
+ 1 │ Definition a :=
+   │                 │ 
+   │                 ╰─ Lexer unknow token.
+───╯
+
+```
+
+```
+$ startlang run stop_ident.st
+? 201
+[201] Error: Lexing error
+   ╭─[ stop_ident.st:1:14 ]
+   │
+ 1 │ Definition a
+   │              │ 
+   │              ╰─ Lexer unknow token.
+───╯
+
+```
+
+## Unclosed char
+
+```
+$ startlang run char_unclosed1.st
+? 201
+[201] Error: Lexing error
+   ╭─[ char_unclosed1.st:1:8 ]
+   │
+ 1 │ Eval '1.
+   │        ┬  
+   │        ╰── Lexer expected "'", found ".".
+───╯
+
+```
+
+```
+$ startlang run char_unclosed2.st
+? 201
+[201] Error: Lexing error
+   ╭─[ char_unclosed2.st:1:9 ]
+   │
+ 1 │ Eval 1'.
+   │         ┬  
+   │         ╰── Lexer expected "'", found "
+".
+───╯
+
+```
+
+## Type
+```
+$ startlang run not_end.st
+? 201
+[201] Error: Lexing error
+   ╭─[ not_end.st:1:8 ]
+   │
+ 1 │ Type N
+   │        │ 
+   │        ╰─ Lexer unknow token.
+───╯
+
+```

@@ -2,41 +2,13 @@
 
 ```
 $ startlang run no_space.st
-? 201
-[201] Error: Parsing error
-   ╭─[ no_space.st:1:5 ]
+? 202
+[202] Error: Parsing error
+   ╭─[ no_space.st:1:1 ]
    │
  1 │ Eval1.
-   │     ┬  
-   │     ╰── Expected "whitespace", found "1".
-───╯
-
-```
-
-## Unclosed char
-
-```
-$ startlang run char_unclosed1.st
-? 201
-[201] Error: Parsing error
-   ╭─[ char_unclosed1.st:1:8 ]
-   │
- 1 │ Eval '1.
-   │        ┬  
-   │        ╰── Expected "'", found ".".
-───╯
-
-```
-
-```
-$ startlang run char_unclosed2.st
-? 201
-[201] Error: Parsing error
-   ╭─[ char_unclosed2.st:1:7 ]
-   │
- 1 │ Eval 1'.
-   │       ┬  
-   │       ╰── Expected "something else".
+   │ ──┬──  
+   │   ╰──── Expected "command", found "Eval1".
 ───╯
 
 ```
@@ -45,13 +17,13 @@ $ startlang run char_unclosed2.st
 
 ```
 $ startlang run parent_unclosed1.st
-? 201
-[201] Error: Parsing error
+? 202
+[202] Error: Parsing error
    ╭─[ parent_unclosed1.st:1:8 ]
    │
  1 │ Eval (1.
    │        ┬  
-   │        ╰── Expected "something else".
+   │        ╰── Expected "Colon" or ")", found ".".
 ───╯
 
 ```
@@ -59,13 +31,33 @@ $ startlang run parent_unclosed1.st
 
 ```
 $ startlang run parent_unclosed2.st
-? 201
-[201] Error: Parsing error
+? 202
+[202] Error: Parsing error
    ╭─[ parent_unclosed2.st:1:8 ]
    │
  1 │ Eval (1.
    │        ┬  
-   │        ╰── Expected "something else".
+   │        ╰── Expected "Colon" or ")", found ".".
+───╯
+
+```
+
+```
+$ startlang run just_keyword.st
+? 1
+[202] Error: Parsing error
+   ╭─[ just_keyword.st:1:5 ]
+   │
+ 1 │ Eval.
+   │     ┬  
+   │     ╰── Expected "expression", found ".".
+───╯
+[202] Error: Parsing error
+   ╭─[ just_keyword.st:2:2 ]
+   │
+ 2 │ $.
+   │  ┬  
+   │  ╰── Expected "expression", found ".".
 ───╯
 
 ```

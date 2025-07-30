@@ -2,78 +2,72 @@
 
 ```
 $ startlang run def_not_space.st
-? 201
-[201] Error: Parsing error
-   ╭─[ def_not_space.st:1:4 ]
+? 202
+[202] Error: Parsing error
+   ╭─[ def_not_space.st:1:1 ]
    │
  1 │ Defa := 1.
-   │    ┬  
-   │    ╰── Expected "''i''", "whitespace", found "a".
+   │ ──┬─  
+   │   ╰─── Expected "command", found "Defa".
 ───╯
 
 ```
 
 ```
 $ startlang run no_eq_def.st
-? 201
-[201] Error: Parsing error
+? 202
+[202] Error: Parsing error
    ╭─[ no_eq_def.st:1:14 ]
    │
  1 │ Definition a 1.
    │              ┬  
-   │              ╰── Expected "type_restriction", ":=", found "1".
-───╯
-
-```
-
-```
-$ startlang run no_expression.st
-? 201
-[201] Error: Parsing error
-   ╭─[ no_expression.st:1:17 ]
-   │
- 1 │ Definition a :=
-   │                 │ 
-   │                 ╰─ Expected "expression".
-───╯
-
-```
-
-```
-$ startlang run stop_ident.st
-? 201
-[201] Error: Parsing error
-   ╭─[ stop_ident.st:1:14 ]
-   │
- 1 │ Definition a
-   │              │ 
-   │              ╰─ Expected "type_restriction", ":=".
+   │              ╰── Expected ":" or ":=", found "1".
 ───╯
 
 ```
 
 ```
 $ startlang run wrong_name.st
-? 201
-[201] Error: Parsing error
+? 202
+[202] Error: Parsing error
    ╭─[ wrong_name.st:1:12 ]
    │
  1 │ Definition 1 := 3.
    │            ┬  
-   │            ╰── Expected "whitespace", "identifier", found "1".
+   │            ╰── Expected "identifier", found "1".
 ───╯
 
 ```
 
 ```
 $ startlang run wrong_ty.st
-? 201
-[201] Error: Parsing error
+? 202
+[202] Error: Parsing error
    ╭─[ wrong_ty.st:1:16 ]
    │
  1 │ Definition a : 1 := 1.
    │                ┬  
    │                ╰── Expected "type", found "1".
+───╯
+
+```
+
+```
+$ startlang run just_keyword.st
+? 1
+[202] Error: Parsing error
+   ╭─[ just_keyword.st:1:11 ]
+   │
+ 1 │ Definition.
+   │           ┬  
+   │           ╰── Expected "identifier", found ".".
+───╯
+[202] Error: Parsing error
+   ╭─[ just_keyword.st:2:4 ]
+   │
+ 2 │ Def.
+   │    ┬  
+   │    ╰── Expected "identifier", found ".".
 ───╯
 
 ```
