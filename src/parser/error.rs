@@ -43,12 +43,12 @@ impl ErrorReport for Error<'_> {
                 continue;
             }
             if i > 0 {
-                msg = msg.text(", ");
+                msg = msg.text(" or ");
             }
-            msg = msg.quoted(&c.to_string());
+            msg = msg.quoted(c.to_string());
         }
         if let Some(found) = self.err.found() {
-            msg = msg.text(", found ").quoted(&found.to_string());
+            msg = msg.text(", found ").quoted(found.to_string());
         }
         msg = msg.text(".");
         report

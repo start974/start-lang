@@ -37,7 +37,7 @@ impl ErrorReport for ErrorFileWrite {
     fn message(&self) -> Message {
         Message::nil()
             .text("Cannot write file ")
-            .quoted(&self.path.to_string_lossy())
+            .quoted(self.path.to_string_lossy())
             .text(".")
     }
 }
