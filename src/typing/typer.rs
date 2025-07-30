@@ -24,18 +24,19 @@ impl Typer {
 
     /// convert expression
     pub fn expression(&self, expression: &ast_parser::Expression) -> Result<ast_typed::Expression> {
-        match &expression.kind {
+        match expression.value() {
             ast_parser::ExpressionKind::Constant(c) => {
                 let c_ty = self.constant(c);
                 Ok(ast_typed::Expression::Constant(c_ty))
             }
-            ast_parser::ExpressionKind::Variable(x) => {
-                let id = self.id_builder.get(x.name()).with_loc(x);
+            ast_parser::ExpressionKind::Variable(var) => {
+                let var_name = var.name();
+                let id = self.id_builder.get(var_name).with_loc(var);
                 self.var_env
                     .get(&id)
                     .map_err(Error::from)
                     .map(ast_typed::Expression::from)
-                    .or_else(|e| match x.name() {
+                    .or_else(|e| match var_name {
                         "__Constant_true__" => {
                             let b = ast_typed::Constant::boolean(true);
                             Ok(ast_typed::Expression::from(b))

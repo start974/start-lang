@@ -1,13 +1,13 @@
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Comment {
     content: Vec<String>,
 }
 
-impl Comment {
-    pub fn new(content: &str) -> Self {
+impl From<String> for Comment {
+    fn from(content: String) -> Self {
         Self {
             content: content.split("\n").map(|s| s.trim().to_string()).collect(),
         }
@@ -31,25 +31,54 @@ impl Pretty for Comment {
     }
 }
 
-pub trait WithComment {
-    /// add commment before
-    fn add_comment_before(&mut self, comment: Comment);
+#[derive(Debug, Clone)]
+pub struct WithComments<T> {
+    pub value: T,
+    pub before: Vec<Comment>,
+    pub after: Vec<Comment>,
+}
 
-    /// add commment after
-    fn add_comment_after(&mut self, comment: Comment);
-
-    /// with comment before and after
-    fn with_comments<I>(mut self, before: I, after: I) -> Self
-    where
-        I: IntoIterator<Item = Comment>,
-        Self: Sized,
-    {
-        for comment in before {
-            self.add_comment_before(comment);
+impl<T> From<T> for WithComments<T> {
+    fn from(value: T) -> Self {
+        Self {
+            value,
+            before: Vec::new(),
+            after: Vec::new(),
         }
-        for comment in after {
-            self.add_comment_after(comment);
-        }
+    }
+}
+impl<T> WithComments<T> {
+    /// with commments befor
+    pub fn with_before(mut self, comments: Vec<Comment>) -> Self {
+        self.before = comments;
         self
+    }
+
+    /// with comments afer
+    pub fn with_after(mut self, comments: Vec<Comment>) -> Self {
+        self.after = comments;
+        self
+    }
+
+    /// get value
+    pub fn value(&self) -> &T {
+        &self.value
+    }
+}
+
+impl<T> Pretty for WithComments<T>
+where
+    T: Pretty,
+{
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        let mut doc = Doc::nil();
+        for comment in &self.before {
+            doc = doc.append(comment.pretty(theme)).append(Doc::line());
+        }
+        doc = doc.append(self.value.pretty(theme));
+        for comment in &self.after {
+            doc = doc.append(Doc::line()).append(comment.pretty(theme));
+        }
+        doc
     }
 }
