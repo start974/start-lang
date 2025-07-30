@@ -35,7 +35,7 @@ $ startlang run wrong_name.st
    │
  1 │ Type 1 := ℕ.
    │      ┬  
-   │      ╰── Expected "identifier", found "1".
+   │      ╰── Expected "type variable", found "1".
 ───╯
 
 ```
@@ -48,14 +48,14 @@ $ startlang run just_keyword.st
    │
  1 │ Type.
    │     ┬  
-   │     ╰── Expected "identifier", found ".".
+   │     ╰── Expected "type variable", found ".".
 ───╯
 [202] Error: Parsing error
    ╭─[ just_keyword.st:2:3 ]
    │
  2 │ Ty.
    │   ┬  
-   │   ╰── Expected "identifier", found ".".
+   │   ╰── Expected "type variable", found ".".
 ───╯
 
 ```
