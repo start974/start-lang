@@ -38,12 +38,15 @@ impl Located for Error<'_> {
 impl ErrorReport for Error<'_> {
     fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
         let mut msg = Message::nil().text("Expected ");
-        for (i, c) in self.err.expected().enumerate() {
-            if c == &RichPattern::EndOfInput {
+        let mut use_or = false;
+        for c in self.err.expected() {
+            if c == &RichPattern::SomethingElse {
                 continue;
             }
-            if i > 0 {
+            if use_or {
                 msg = msg.text(" or ");
+            } else {
+                use_or = true;
             }
             msg = msg.quoted(c.to_string());
         }
