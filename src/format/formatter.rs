@@ -52,20 +52,21 @@ impl Formatter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset: usize) -> Option<(Vec<lexer::Token>, usize)> {
-        match lexer::lex(self.source_id(), offset, content) {
-            Ok((tokens, _)) if tokens.is_empty() => None,
-            Ok((tokens, end_offset)) => Some((tokens, end_offset)),
+    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::token::TokenSpanned> {
+        let source_id = self.source_id();
+        match lexer::lex(source_id.clone(), offset_source, content) {
+            Ok(tokens) => tokens,
             Err(errs) => {
                 self.fail(errs);
-                None
+                Vec::new()
             }
         }
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: &[lexer::Token]) -> Option<parser::ast::Command> {
-        match parser::parse(tokens) {
+    fn parse(&mut self, tokens: &[lexer::token::TokenSpanned]) -> Option<parser::ast::Command> {
+        let source_id = self.source_id();
+        match parser::parse(source_id.clone(), tokens) {
             Ok(cmd) => Some(cmd),
             Err(errs) => {
                 self.fail(errs);
@@ -79,16 +80,17 @@ impl Formatter {
         let mut offset = 0;
         let mut content = self.content.to_string();
 
-        while !content.is_empty() && self.err_code == 0 {
-            match self.lex(&content, offset) {
-                Some((tokens, add_offset)) => {
-                    offset += add_offset;
-                    content = content[add_offset..].to_string();
+        while !content.is_empty() {
+            let tokens = self.lex(&content, offset);
+            match tokens.last() {
+                None => break,
+                Some(last_token) => {
                     if let Some(cmd) = self.parse(&tokens) {
                         self.commands.push(cmd)
                     }
+                    offset += last_token.span.end;
+                    content = content[last_token.span.end..].to_string();
                 }
-                None => break,
             }
         }
     }

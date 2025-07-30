@@ -63,23 +63,28 @@ TYPE := "Type" | "Ty"
 TYPE_OF := "TypeOf" | "?:"
 ```
 ## Parser
-Parse token (`COMMENT` can be in space)
+
+### Identifier
+```
+identifier := IDENTIFIER
+```
 
 ### Expression
 ```
-type_restriction := COLON type
-
 constant :=
 | NUMBER
 | CHARACTER
 
-expression :=
-|  "(" expression ")"
-|  IDENTIFIER
+expression@0 :=
+|  LPAR expression RPAR
+|  identifier
 |  constant
-|  expression type_restiction
 
-expr_definition := IDENTIFIER type_rest? EQ_DEF expression
+expression@1 :=
+| expression@0 COLON type
+| expression@0
+
+expr_definition := identifier (COLON type)? EQ_DEF expression
 ```
 
 ### Type

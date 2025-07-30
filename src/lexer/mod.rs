@@ -1,39 +1,36 @@
-use crate::utils::location::{Located as _, Location, SourceId};
-use ariadne::Span as _;
 use chumsky::prelude::*;
 
 pub mod error;
 pub mod lexing;
 pub mod token;
-pub use token::Token;
 
 pub use error::Error;
+
+use crate::utils::location::SourceId;
 pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, char>>;
 
 /// make a lexing with offset to token until "." (end of a command)
 /// return offset rest to lexing
 pub fn lexer<'src>(
-    source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, (Vec<token::Token>, usize), ErrorChumsky<'src>> {
-    use token::{Token, TokenKind};
+) -> impl Parser<'src, &'src str, Vec<token::TokenSpanned>, ErrorChumsky<'src>> {
+    use token::{Token, TokenSpanned};
     let tokens = choice((
-        lexing::comment().map(TokenKind::Comment),
-        lexing::identifier().map(TokenKind::Identifier),
-        lexing::number().map(TokenKind::Number),
-        lexing::character().map(TokenKind::Character),
-        lexing::keyword().map(TokenKind::Keyword),
-        lexing::operator().map(TokenKind::Operator),
+        lexing::comment().map(Token::Comment),
+        lexing::identifier().map(Token::Identifier),
+        lexing::number().map(Token::Number),
+        lexing::character().map(Token::Character),
+        lexing::keyword().map(Token::Keyword),
+        lexing::operator().map(Token::Operator),
     ))
-    .map_with({
-        let source_id = source_id.clone();
-        move |kind, e| {
-            let span: SimpleSpan = e.span();
-            Token::new(
-                kind,
-                Location::new(source_id.clone(), span.start, span.end).with_offset(offset),
-            )
-        }
+    .map_with(move |kind, e| {
+        let span_e: SimpleSpan = e.span();
+        let span = SimpleSpan {
+            start: span_e.start + offset,
+            end: span_e.end + offset,
+            context: (),
+        };
+        TokenSpanned { token: kind, span }
     })
     .padded()
     .repeated()
@@ -41,24 +38,27 @@ pub fn lexer<'src>(
     .collect::<Vec<_>>();
 
     let end_command = just('.')
-        .map_with(move |_, e| {
-            let span: SimpleSpan = e.span();
-            Token::new(
-                TokenKind::CommandEnd,
-                Location::new(source_id.clone(), span.start, span.end).with_offset(offset),
-            )
+        .to(Token::CommandEnd)
+        .map_with({
+            move |kind, e| {
+                let span_e: SimpleSpan = e.span();
+                let span = SimpleSpan {
+                    start: span_e.start + offset,
+                    end: span_e.end + offset,
+                    context: (),
+                };
+                TokenSpanned { token: kind, span }
+            }
         })
+        .padded()
         .then_ignore(any().then(end()));
 
     let token_command = tokens.then(end_command).map(|(mut tokens, end)| {
         tokens.push(end.clone());
-        (tokens, end.loc().end())
+        tokens
     });
 
-    let empty_input = end().padded().map_with(|_, e| {
-        let span: SimpleSpan = e.span();
-        (Vec::new(), span.end)
-    });
+    let empty_input = end().padded().map(|_| Vec::new());
 
     choice((token_command, empty_input))
 }
@@ -68,13 +68,10 @@ pub fn lex<'src>(
     source_id: SourceId,
     offset: usize,
     content: &'src str,
-) -> Result<(Vec<token::Token>, usize), Vec<Error<'src>>> {
-    lexer(source_id.clone(), offset)
-        .parse(content)
-        .into_result()
-        .map_err(|errs| {
-            errs.iter()
-                .map(|e| Error::new(e.clone(), source_id.clone(), offset))
-                .collect()
-        })
+) -> Result<Vec<token::TokenSpanned>, Vec<Error<'src>>> {
+    lexer(offset).parse(content).into_result().map_err(|errs| {
+        errs.iter()
+            .map(|e| Error::new(e.clone(), source_id.clone(), offset))
+            .collect()
+    })
 }
