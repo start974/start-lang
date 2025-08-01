@@ -19,31 +19,6 @@ pub enum Type {
 }
 
 impl Type {
-    //// get map of aliases
-    /*    pub fn aliases(&self) -> HashMap<Identifier, &'_ Ty> {*/
-    /*fn aux<'a>(*/
-    /*ty: &'a Ty,*/
-    /*mut acc: HashMap<Identifier, &'a Ty>,*/
-    /*) -> HashMap<Identifier, &'a Ty> {*/
-    /*match ty {*/
-    /*Ty::Alias(alias) => {*/
-    /*acc.insert(alias.name().clone(), alias.ty());*/
-    /*aux(alias.ty(), acc)*/
-    /*}*/
-    /*Ty::Builtin(_) => acc,*/
-    /*}*/
-    /*}*/
-    /*aux(self, HashMap::new())*/
-    /*}*/
-
-    ///// remove alias from type
-    //pub fn normalize(&self) -> Self {
-    //match self {
-    //Ty::Alias(alias) => alias.ty().normalize(),
-    //Ty::Builtin(builtin) => Self::Builtin(builtin.clone()),
-    //}
-    //}
-
     /// type is compatible with another type
     pub fn is_compatible(&self, other: &Self) -> bool {
         *self == *other
@@ -106,7 +81,7 @@ pub trait Typed {
             Err(Box::new(ErrorUnexpectedType::new(
                 self.ty(),
                 &ty,
-                self.loc(),
+                &self.loc(),
             )))
         }
     }

@@ -1,3 +1,4 @@
+use super::{AsCharacter, AsNumber};
 use crate::lexer::meta::Meta;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
@@ -17,6 +18,12 @@ impl Pretty for NumberT {
     }
 }
 
+impl AsNumber for NumberT {
+    fn as_number(&self) -> &BigUint {
+        &self.0
+    }
+}
+
 // ============================================================================
 // Character
 // ============================================================================
@@ -27,6 +34,12 @@ pub type Character = Meta<CharacterT>;
 impl Pretty for CharacterT {
     fn pretty(&self, theme: &Theme) -> Doc {
         theme.character(self.0)
+    }
+}
+
+impl AsCharacter for CharacterT {
+    fn as_character(&self) -> char {
+        self.0
     }
 }
 

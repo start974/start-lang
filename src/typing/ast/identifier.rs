@@ -1,4 +1,4 @@
-use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
+use crate::utils::location::{Located, LocatedSet, Location};
 use std::{collections::HashMap, hash::Hash};
 
 // ==========================================================================
@@ -40,8 +40,8 @@ impl std::fmt::Display for Identifier {
 }
 
 impl Located for Identifier {
-    fn loc(&self) -> &Location {
-        &self.loc
+    fn loc(&self) -> Location {
+        self.loc.clone()
     }
 }
 
@@ -104,7 +104,7 @@ impl IdentifierBuilder {
         Identifier {
             name: Name::Named(name.to_string()),
             id,
-            loc: UNKNOWN_LOCATION,
+            loc: Location::unknown(),
         }
     }
 
@@ -114,7 +114,7 @@ impl IdentifierBuilder {
         Identifier {
             name: Name::Named(name.to_string()),
             id,
-            loc: UNKNOWN_LOCATION,
+            loc: Location::unknown(),
         }
     }
 

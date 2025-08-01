@@ -9,7 +9,7 @@ use crate::utils::theme::{Doc, Theme};
 #[derive(Debug)]
 pub struct Parenthesed<Left, Val, Right> {
     l_paren: Meta<Left>,
-    val: Val,
+    inner: Val,
     r_paren: Meta<Right>,
 }
 
@@ -18,14 +18,14 @@ impl<Left, Val, Right> Parenthesed<Left, Val, Right> {
     pub fn new(l_paren: Meta<Left>, val: Val, r_paren: Meta<Right>) -> Self {
         Self {
             l_paren,
-            val,
+            inner: val,
             r_paren,
         }
     }
 
     /// Get the value inside the parentheses
-    pub fn val(&self) -> &Val {
-        &self.val
+    pub fn inner(&self) -> &Val {
+        &self.inner
     }
 }
 
@@ -42,12 +42,12 @@ where
     Right: Pretty,
 {
     fn precedence(&self) -> u8 {
-        self.val.precedence()
+        self.inner.precedence()
     }
 
     fn pretty_precedence(&self, prec: u8, theme: &Theme) -> Doc {
-        let val_prec = self.val.precedence();
-        let doc_val = self.val.pretty_precedence(self.precedence(), theme);
+        let val_prec = self.inner.precedence();
+        let doc_val = self.inner.pretty_precedence(self.precedence(), theme);
         if val_prec < prec {
             Doc::nil()
                 .append(self.l_paren.pretty(theme))

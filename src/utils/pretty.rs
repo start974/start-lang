@@ -1,5 +1,4 @@
 use super::theme::{ColorInfo, Doc, Theme};
-use num_bigint::BigUint;
 use pretty::{Render, RenderAnnotated};
 use std::collections::VecDeque;
 

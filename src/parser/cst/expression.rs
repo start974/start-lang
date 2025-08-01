@@ -1,4 +1,5 @@
 use super::parenthesis::PrettyPrecedence;
+use super::AsIdentifier;
 use super::{operator, parenthesis::Parenthesed, Constant, Type};
 use crate::lexer::meta::Meta;
 use crate::utils::location::{Located, Location};
@@ -12,9 +13,9 @@ use crate::utils::theme::{Doc, Theme};
 pub struct VariableT(String);
 pub type Variable = Meta<VariableT>;
 
-impl VariableT {
+impl AsIdentifier for VariableT {
     /// get name of variable
-    pub fn name(&self) -> &str {
+    fn name(&self) -> &str {
         &self.0
     }
 }
@@ -51,7 +52,7 @@ pub enum Expression1 {
     Expression0(Expression0),
 }
 
-pub type Expression = Meta<Expression1>;
+pub type Expression = Expression1;
 
 impl PrettyPrecedence for Expression0 {
     fn precedence(&self) -> u8 {
@@ -84,11 +85,12 @@ impl PrettyPrecedence for Expression1 {
 
     fn pretty_precedence(&self, prec: u8, theme: &Theme) -> Doc {
         match self {
-            Expression1::TypedExpression(ty_expr) => (ty_expr.expr.pretty_precedence(0, theme))
+            Expression1::TypedExpression { expr, colon, ty } => Doc::nil()
+                .append(expr.pretty(theme))
                 .append(Doc::space())
-                .append(ty_expr.colon.pretty(theme))
+                .append(colon.pretty(theme))
                 .append(Doc::space())
-                .append(ty_expr.ty.pretty(theme))
+                .append(ty.pretty(theme))
                 .group(),
             Expression1::Expression0(expr) => expr.pretty_precedence(prec, theme),
         }
@@ -98,7 +100,7 @@ impl PrettyPrecedence for Expression1 {
 impl Located for Expression1 {
     fn loc(&self) -> Location {
         match self {
-            Expression1::TypedExpression(ty_expr) => ty_expr.loc(),
+            Expression1::TypedExpression { expr, ty, .. } => expr.loc().union(ty.loc()),
             Expression1::Expression0(expr) => expr.loc(),
         }
     }

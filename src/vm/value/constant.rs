@@ -24,8 +24,8 @@ impl From<&ast::Constant> for Constant {
     fn from(c: &ast::Constant) -> Self {
         match c.kind() {
             ast::ConstantKind::Nat(n) => Constant::Nat(n.clone()),
-            ast::ConstantKind::Bool(b) => Constant::Bool(*b),
-            ast::ConstantKind::Char(c) => Constant::Char(*c),
+            ast::ConstantKind::Boolean(b) => Constant::Bool(*b),
+            ast::ConstantKind::Character(c) => Constant::Char(*c),
         }
     }
 }
