@@ -1,7 +1,9 @@
 use chumsky::prelude::*;
 
+pub mod comment;
 pub mod error;
 pub mod lexing;
+pub mod meta;
 pub mod token;
 
 pub use error::Error;

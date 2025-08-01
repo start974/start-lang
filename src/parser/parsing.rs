@@ -12,59 +12,37 @@ use chumsky::prelude::*;
 // with comments
 // ===========================================================================
 
-pub trait WithCommentsExt<'tokens, I, O>:
-    Parser<'tokens, I, O, ErrorChumsky<'tokens>> + Sized
-where
-    I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
-    O: WithComments,
-{
-    /// with comment parser
-    fn with_comments(self) -> impl Parser<'tokens, I, O, ErrorChumsky<'tokens>> {
-        let comments = select! {Token::Comment(c) => c}
-            .map(cst::Comment::from)
-            .repeated()
-            .collect();
+/*pub trait WithCommentsExt<'tokens, I, O>:*/
+    /*Parser<'tokens, I, O, ErrorChumsky<'tokens>> + Sized*/
+/*where*/
+    /*I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,*/
+    /*O: WithComments,*/
+/*{*/
+    /*/// with comment parser*/
+    /*fn with_comments(self) -> impl Parser<'tokens, I, O, ErrorChumsky<'tokens>> {*/
+        /*let comments = select! {Token::Comment(c) => c}*/
+            /*.map(cst::Comment::from)*/
+            /*.repeated()*/
+            /*.collect();*/
 
-        comments
-            .then(self)
-            .then(comments)
-            .map(|((comments_before, value), comments_after)| {
-                value
-                    .with_comments_before(comments_before)
-                    .with_comments_after(comments_after)
-            })
-    }
-}
+        /*comments*/
+            /*.then(self)*/
+            /*.then(comments)*/
+            /*.map(|((comments_before, value), comments_after)| {*/
+                /*value*/
+                    /*.with_comments_before(comments_before)*/
+                    /*.with_comments_after(comments_after)*/
+            /*})*/
+    /*}*/
+/*}*/
 
-impl<'tokens, I, O, P> WithCommentsExt<'tokens, I, O> for P
-where
-    P: Parser<'tokens, I, O, ErrorChumsky<'tokens>> + Sized,
-    I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
-    O: WithComments,
-{
-}
-
-// ===========================================================================
-// Identifier
-// ===========================================================================
-/// parse identifier
-/// ```ebfn
-/// identifier := IDENTIFIER
-/// ```
-pub fn identifier<'tokens, I>(
-    source_id: SourceId,
-) -> impl Parser<'tokens, I, cst::Identifier<String>, ErrorChumsky<'tokens>>
-where
-    I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
-{
-    select! {Token::Identifier(id) => id}
-        .map_with(move |id, e| {
-            let span: SimpleSpan = e.span();
-            let loc = Location::new(source_id.clone(), span.start, span.end);
-            cst::Identifier::new(id, loc)
-        })
-        .with_comments()
-}
+/*impl<'tokens, I, O, P> WithCommentsExt<'tokens, I, O> for P*/
+/*where*/
+    /*P: Parser<'tokens, I, O, ErrorChumsky<'tokens>> + Sized,*/
+    /*I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,*/
+    /*O: WithComments,*/
+/*{*/
+/*}*/
 
 // ===========================================================================
 // Pattern

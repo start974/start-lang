@@ -38,6 +38,15 @@ impl Location {
         Self { start, end, id }
     }
 
+    /// unknown location
+    pub fn unknown() -> Self {
+        Self {
+            start: 0,
+            end: 0,
+            id: SourceId::Unknown,
+        }
+    }
+
     /// add offset to location
     pub fn with_offset(self, offset: usize) -> Self {
         Location {
@@ -48,7 +57,7 @@ impl Location {
     }
 
     /// union of location
-    pub fn union(&self, other: &Location) -> Location {
+    pub fn union(self, other: Location) -> Location {
         if self.id != other.id {
             panic!("Cannot union locations from different sources");
         }
@@ -59,12 +68,6 @@ impl Location {
         }
     }
 }
-
-pub const UNKNOWN_LOCATION: Location = Location {
-    start: 0,
-    end: 0,
-    id: SourceId::Unknown,
-};
 
 impl Span for Location {
     type SourceId = SourceId;
@@ -82,8 +85,8 @@ impl Span for Location {
 }
 
 impl Located for Location {
-    fn loc(&self) -> &Location {
-        self
+    fn loc(&self) -> Location {
+        self.clone()
     }
 }
 
@@ -92,14 +95,14 @@ impl Located for Location {
 // ==========================================================================
 pub trait Located {
     /// location of a node
-    fn loc(&self) -> &Location;
+    fn loc(&self) -> Location;
 }
 
 impl<T> Located for Box<T>
 where
     T: Located,
 {
-    fn loc(&self) -> &Location {
+    fn loc(&self) -> Location {
         self.as_ref().loc()
     }
 }

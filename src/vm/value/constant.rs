@@ -1,5 +1,4 @@
 use crate::typing::ast;
-use crate::utils::format_number;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use num_bigint::BigUint;
@@ -14,9 +13,9 @@ pub enum Constant {
 impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Self::Nat(n) => theme.constant(&format_number(n)),
-            Self::Bool(b) => theme.constant(b),
-            Self::Char(c) => theme.constant(&format!("{c}")),
+            Self::Nat(n) => theme.number(&n),
+            Self::Bool(b) => theme.boolean(b),
+            Self::Char(c) => theme.character(c),
         }
     }
 }

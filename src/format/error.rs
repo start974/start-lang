@@ -1,5 +1,5 @@
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
-use crate::utils::location::{Located, Location, Report, ReportBuilder, UNKNOWN_LOCATION};
+use crate::utils::location::{Located, Location, Report, ReportBuilder};
 use std::path::PathBuf;
 
 //=======================================================================
@@ -22,8 +22,8 @@ impl ErrorCode for ErrorFileWrite {
     }
 }
 impl Located for ErrorFileWrite {
-    fn loc(&self) -> &Location {
-        &UNKNOWN_LOCATION
+    fn loc(&self) -> Location {
+        Location::unknown()
     }
 }
 impl ErrorReport for ErrorFileWrite {

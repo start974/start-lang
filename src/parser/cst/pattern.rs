@@ -1,30 +1,24 @@
-use super::super::Identifier;
+use crate::lexer::meta::Meta;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
+// ============================================================================
+// Variable
+// ============================================================================
 #[derive(Debug)]
-pub struct VariableName(String);
+pub struct VariableT(String);
+pub type Variable = Meta<VariableT>;
 
-impl From<String> for VariableName {
-    fn from(name: String) -> Self {
-        VariableName(name)
-    }
-}
-
-impl Pretty for VariableName {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+impl Pretty for VariableT {
+    fn pretty(&self, theme: &Theme) -> Doc {
         theme.def_var(&self.0)
     }
 }
 
-impl std::fmt::Display for VariableName {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-pub type Variable = Identifier<VariableName>;
+// ============================================================================
+// Pattern
+// ============================================================================
 
 #[derive(Debug)]
 pub enum Pattern {
@@ -38,7 +32,7 @@ impl From<Variable> for Pattern {
 }
 
 impl Located for Pattern {
-    fn loc(&self) -> &Location {
+    fn loc(&self) -> Location {
         match self {
             Pattern::Variable(var) => var.loc(),
         }

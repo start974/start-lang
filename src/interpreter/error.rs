@@ -1,4 +1,4 @@
-use crate::parser::cst::Variable;
+use crate::parser::cst::expression::Variable;
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder};
 
@@ -22,7 +22,7 @@ impl ErrorCode for UnknownOption {
     }
 }
 impl Located for UnknownOption {
-    fn loc(&self) -> &Location {
+    fn loc(&self) -> Location {
         self.option.loc()
     }
 }
@@ -38,7 +38,7 @@ impl ErrorReport for UnknownOption {
     fn message(&self) -> Message {
         Message::nil()
             .text("Option ")
-            .quoted(self.option.to_string())
+            .quoted(self.option.value().name())
             .text(" is unknown.")
     }
 }

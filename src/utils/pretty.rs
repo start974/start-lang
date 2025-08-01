@@ -1,4 +1,5 @@
 use super::theme::{ColorInfo, Doc, Theme};
+use num_bigint::BigUint;
 use pretty::{Render, RenderAnnotated};
 use std::collections::VecDeque;
 
@@ -7,7 +8,7 @@ use std::collections::VecDeque;
 // ===========================================================================
 pub trait Pretty: Sized {
     /// pretty print
-    fn pretty(&self, theme: &Theme) -> Doc<'_>;
+    fn pretty(&self, theme: &Theme) -> Doc;
 
     /// write with fmt
     fn fmt(&self, theme: &Theme, fmt: &mut impl std::fmt::Write) -> std::fmt::Result {

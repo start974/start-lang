@@ -2,12 +2,13 @@ use super::diff::print_diff;
 use super::error::ErrorFileWrite;
 use super::Mode;
 use crate::file_interpreter::error::ErrorFileRead;
+use crate::parser::CommandOrEnd;
 use crate::utils::error::{ErrorCode, ErrorPrint};
-use crate::utils::location::{Located as _, SourceId};
+use crate::utils::location::SourceId;
 use crate::utils::pretty::Pretty as _;
 use crate::utils::theme::Theme;
 use crate::{lexer, parser};
-use ariadne::{Source, Span as _};
+use ariadne::Source;
 use std::path::{Path, PathBuf};
 
 pub struct Formatter {
@@ -15,7 +16,6 @@ pub struct Formatter {
     content: String,
     pub err_code: i32,
     theme: Theme,
-    commands: Vec<parser::cst::Command>,
 }
 
 impl Formatter {
@@ -26,7 +26,6 @@ impl Formatter {
             content: String::new(),
             err_code: 0,
             theme: Theme::default_theme(),
-            commands: Vec::new(),
         };
         match std::fs::read_to_string(path) {
             Ok(content) => {
@@ -65,7 +64,7 @@ impl Formatter {
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: &[lexer::token::TokenSpanned]) -> Option<parser::cst::Command> {
+    fn parse(&mut self, tokens: &[lexer::token::TokenSpanned]) -> Option<CommandOrEnd> {
         let source_id = self.source_id();
         match parser::parse(source_id.clone(), tokens) {
             Ok(cmd) => Some(cmd),
@@ -77,9 +76,10 @@ impl Formatter {
     }
 
     /// run the interpreter
-    fn parse_content(&mut self) {
+    fn parse_content(&mut self) -> Option<parser::cst::File> {
         let mut offset = 0;
         let content_copy = self.content.clone();
+        let mut cst_file = parser::cst::File::default();
 
         loop {
             let content = &content_copy[offset..];
@@ -90,47 +90,31 @@ impl Formatter {
             match tokens.last() {
                 None => break,
                 Some(last_token) => {
-                    if let Some(cmd) = self.parse(&tokens) {
-                        self.commands.push(cmd)
+                    match self.parse(&tokens) {
+                        None => (),
+                        Some(CommandOrEnd::Command(cmd)) => cst_file.add_command(cmd),
+                        Some(CommandOrEnd::End(end)) => {
+                            cst_file.set_end(end);
+                            break;
+                        }
                     }
                     offset = last_token.span.end;
                 }
             }
         }
-    }
-
-    /// format content after run
-    fn format_content(&self) -> String {
-        let mut result = String::new();
-        let mut last_end = 0;
-        let theme = Theme::default();
-
-        for cmd in self.commands.iter() {
-            let loc = cmd.loc();
-            let start = loc.start();
-            let end = loc.end();
-            if start > last_end {
-                result.push_str(&self.content[last_end..start]);
-            }
-            result.push_str(&cmd.make_string(&theme));
-            last_end = end;
+        if self.err_code == 0 {
+            Some(cst_file)
+        } else {
+            None
         }
-
-        if last_end < self.content.len() {
-            result.push_str(&self.content[last_end..]);
-        }
-
-        result
     }
 
     /// run formatter with mode
     pub fn run(&mut self, mode: &Mode) {
-        self.parse_content();
-        if self.err_code != 0 {
+        let Some(cst_file) = self.parse_content() else {
             return;
-        }
-
-        let formatted = self.format_content();
+        };
+        let formatted = cst_file.make_string(&Theme::default());
         match mode {
             Mode::Overwrite if std::fs::write(&self.path, &formatted).is_err() => {
                 self.fail(ErrorFileWrite::new(self.path.clone()))
