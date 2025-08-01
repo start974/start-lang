@@ -1,7 +1,7 @@
 use super::error::UnknownOption;
 use super::flag::Flag;
 use crate::lexer;
-use crate::parser;
+use crate::parser::{self, cst};
 use crate::typing;
 use crate::typing::ast::Typed;
 use crate::utils::error::{ErrorCode, ErrorPrint};
@@ -31,19 +31,16 @@ pub trait Interpreter {
     /// type expression defintion
     fn type_expr_definition(
         &mut self,
-        def: parser::cst::ExpressionDefinition,
+        def: cst::ExpressionDefinition,
     ) -> Result<typing::ast::ExpressionDefinition, Box<typing::Error>>;
 
     /// type type defininition
-    fn type_ty_definition(
-        &mut self,
-        def: parser::cst::TypeDefinition,
-    ) -> Result<(), Box<typing::Error>>;
+    fn type_ty_definition(&mut self, def: cst::TypeDefinition) -> Result<(), Box<typing::Error>>;
 
     /// type expression
     fn type_expression(
         &mut self,
-        expr: parser::cst::Expression,
+        expr: cst::Expression,
     ) -> Result<typing::ast::Expression, Box<typing::Error>>;
 
     /// add definitin in vm
@@ -84,7 +81,7 @@ pub trait Interpreter {
     }
 
     /// run command expr definition
-    fn run_expr_definition(&mut self, def: parser::cst::ExpressionDefinition) {
+    fn run_expr_definition(&mut self, def: cst::ExpressionDefinition) {
         self.type_expr_definition(def)
             .map(|def| {
                 self.debug_pretty(Flag::DebugTyper, &def);
@@ -96,14 +93,14 @@ pub trait Interpreter {
     }
 
     /// run command type definition
-    fn run_type_definition(&mut self, def: parser::cst::TypeDefinition) {
+    fn run_type_definition(&mut self, def: cst::TypeDefinition) {
         if let Err(e) = self.type_ty_definition(def) {
             self.fail(e);
         }
     }
 
     /// run command eval
-    fn run_eval(&mut self, expr: parser::cst::Expression) {
+    fn run_eval(&mut self, expr: cst::Expression) {
         self.type_expression(expr)
             .map(|expr| {
                 self.debug_pretty(Flag::DebugTyper, &expr);
@@ -116,7 +113,7 @@ pub trait Interpreter {
     }
 
     /// run type of expression
-    fn run_typeof(&mut self, expr: parser::cst::Expression) {
+    fn run_typeof(&mut self, expr: cst::Expression) {
         self.type_expression(expr)
             .map(|expr| {
                 let ty = expr.ty();
@@ -126,8 +123,8 @@ pub trait Interpreter {
     }
 
     /// run command set and unset
-    fn run_set(&mut self, b: bool, var: parser::cst::Variable) {
-        match var.to_string().as_str() {
+    fn run_set(&mut self, b: bool, var: cst::expression::Variable) {
+        match var.value().name() {
             "DebugParser" => self.set_debug(b, Flag::DebugParser),
             "DebugTyper" => self.set_debug(b, Flag::DebugTyper),
             _ => self.fail(UnknownOption::from(var)),
@@ -135,13 +132,14 @@ pub trait Interpreter {
     }
 
     /// run command
-    fn run_command(&mut self, cmd: parser::cst::Command) {
+    fn run_command(&mut self, cmd: cst::Command) {
         match cmd.kind {
-            parser::cst::CommandKind::ExpressionDefinition(def) => self.run_expr_definition(def),
-            parser::cst::CommandKind::TypeDefinition(def) => self.run_type_definition(def),
-            parser::cst::CommandKind::Eval(expr) => self.run_eval(expr),
-            parser::cst::CommandKind::TypeOf(expr) => self.run_typeof(expr),
-            parser::cst::CommandKind::Set(b, id) => self.run_set(b, id),
+            cst::CommandKind::ExpressionDefinition { def, .. } => self.run_expr_definition(def),
+            cst::CommandKind::TypeDefinition { def, .. } => self.run_type_definition(def),
+            cst::CommandKind::Eval { expr, .. } => self.run_eval(expr),
+            cst::CommandKind::TypeOf { expr, .. } => self.run_typeof(expr),
+            cst::CommandKind::Set { var, .. } => self.run_set(true, var),
+            cst::CommandKind::UnSet { var, .. } => self.run_set(false, var),
         }
     }
 
@@ -158,10 +156,11 @@ pub trait Interpreter {
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: &[lexer::token::TokenSpanned]) -> Option<parser::cst::Command> {
+    fn parse(&mut self, tokens: &[lexer::token::TokenSpanned]) -> Option<cst::Command> {
         let source_id = self.source_id();
         match parser::parse(source_id.clone(), tokens) {
-            Ok(cmd) => Some(cmd),
+            Ok(parser::CommandOrEnd::Command(cmd)) => Some(cmd),
+            Ok(parser::CommandOrEnd::End(_)) => None,
             Err(errs) => {
                 self.fail(errs);
                 None

@@ -1,5 +1,6 @@
 pub use colored::{Color, Styles};
 use colored::{ColoredString, Colorize};
+use num_bigint::BigUint;
 use pretty::RcDoc;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -71,8 +72,12 @@ pub struct Theme {
     pub def_var: ColorInfo,
     /// expression var color
     pub expr_var: ColorInfo,
-    /// constant color
-    pub constant: ColorInfo,
+    /// character color
+    pub character: ColorInfo,
+    /// number
+    pub number: ColorInfo,
+    /// boolean
+    pub boolean: ColorInfo,
     /// type var
     pub ty_var: ColorInfo,
     /// comment
@@ -87,7 +92,9 @@ impl Default for Theme {
             operator: ColorInfo::default(),
             def_var: ColorInfo::default(),
             expr_var: ColorInfo::default(),
-            constant: ColorInfo::default(),
+            character: ColorInfo::default(),
+            boolean: ColorInfo::default(),
+            number: ColorInfo::default(),
             ty_var: ColorInfo::default(),
             comment: ColorInfo::default(),
         }
@@ -107,7 +114,9 @@ impl Theme {
                 .fg_color(Color::Blue)
                 .styles(vec![Styles::Bold]),
             expr_var: ColorInfo::default().fg_color(Color::Blue),
-            constant: ColorInfo::default().fg_color(Color::Green),
+            character: ColorInfo::default().fg_color(Color::Green),
+            number: ColorInfo::default().fg_color(Color::Green),
+            boolean: ColorInfo::default().fg_color(Color::Green),
             ty_var: ColorInfo::default()
                 .fg_color(Color::Yellow)
                 .styles(vec![Styles::Italic]),
@@ -156,8 +165,29 @@ impl Theme {
     }
 
     /// pprint constant expression
-    pub fn constant<'a>(&self, n: &impl ToString) -> Doc<'a> {
-        Doc::text(n.to_string()).annotate(self.constant.clone())
+    pub fn character<'a>(&self, c: char) -> Doc<'a> {
+        Doc::text(c.to_string()).annotate(self.character.clone())
+    }
+
+    /// pretty print number
+    pub fn number<'a>(&self, n: &BigUint) -> Doc<'a> {
+        let number_str: String = {
+            let s = n.to_string();
+            let mut res = String::new();
+            for (i, c) in s.chars().rev().enumerate() {
+                if i > 0 && i % 3 == 0 {
+                    res.push('_');
+                }
+                res.push(c);
+            }
+            res.chars().rev().collect()
+        };
+        Doc::text(number_str).annotate(self.number.clone())
+    }
+
+    /// pretty print boolean
+    pub fn boolean<'a>(&self, b: bool) -> Doc<'a> {
+        Doc::text(if b { "true" } else { "false" }).annotate(self.boolean.clone())
     }
 
     /// pprint type variable

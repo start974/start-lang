@@ -12,21 +12,27 @@ pub mod parsing;
 
 pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, token::Token>>;
 
+pub enum CommandOrEnd {
+    Command(Command),
+    End(cst::file::EndOfFile),
+}
+
 /// parse with lexer tokens
 pub fn parser<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, cst::Command, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, CommandOrEnd, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = token::Token, Span = SimpleSpan>,
 {
-    parsing::command(source_id)
+    //parsing::command(source_id)
+    todo!("WIP")
 }
 
 /// parse tokens
 pub fn parse<'tokens>(
     source_id: SourceId,
     tokens: &'tokens [token::TokenSpanned],
-) -> Result<Command, Vec<Error<'tokens>>> {
+) -> Result<CommandOrEnd, Vec<Error<'tokens>>> {
     let input = {
         let span_end = tokens.last().unwrap().span;
         tokens.map(span_end, move |token_spanned| {

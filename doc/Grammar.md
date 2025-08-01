@@ -1,10 +1,14 @@
 # Grammar
-- *<ANY>* is any character
-- *<IDENT>* is define as [Unicode Standard Annex #31](https://www.unicode.org/reports/tr31/)
+
+- _<ANY>_ is any character
+- _<IDENT>_ is define as [Unicode Standard Annex #31](https://www.unicode.org/reports/tr31/)
 
 ## Lexer
+
 All token in lexer can be separated by space
+
 ### Comment
+
 ```ebnf
 COMMENT := "(*" <ANY>* "*)"
 ```
@@ -16,6 +20,7 @@ INDENTIFIER := IDENT "'"*
 ```
 
 ### Number
+
 ```ebnf
 NUMBER_F(DIGIT) := DIGIT ("_"* DIGIT)*
 ```
@@ -37,6 +42,7 @@ NUMBER := NUMBER_DEC | NUMBER_HEX | NUMBER_OCT | NUMBER_BIT
 ```
 
 ### Character
+
 ```ebnf
 CHARACTER := "'" CHARACTER_LIT "'"
 
@@ -49,52 +55,84 @@ ESCAPE_CHAR := "\"
 ```
 
 ### Operator
+
 ```ebnf
 EVAL_OP := "$"
 TYPE_OF_OP := "?:"
+
 EQ_DEF := ":="
 COLON := ":"
 DOT := "."
+L_PAREN := "("
+R_PAREN := ")"
 
 ```
-
 
 ## Parser
+
 All element in quotes is keyword in "IDENTIFIER"
 
+### Operator
+
+```
+eq_def := EQ_DEF            display as operator
+dot := DOT                  display as operator
+colon := COLON              display as operator
+l_paren := L_PAREN          display as operator
+r_paren := L_PAREN          display as operator
+```
+
+### Constant
+
+```
+constant :=
+| NUMBER                    display as number
+| CHARACTER                 display as character
+```
+
 ### Pattern
+
 ```ebnf
 pattern :=
-| IDENTIFIER
+| IDENTIFIER                display as def_var
 ```
+
+### Type
+
+```ebnf
+type_var := IDENTIFIER      display as ty_var
+
+type :=
+| type_var
+```
+
+### Type Definition
+```ebnf
+type_definition := type_var EQ_DEF type
+```
+
 
 ### Expression
 
 ```ebnf
-constant :=
-| NUMBER
-| CHARACTER
-
-variable := IDENTIFIER
+expr_var := IDENTIFIER      display as expr_var
 
 expression@0 :=
-|  LPAR expression RPAR
-|  variable
+|  l_paren expression r_paren
+|  expr_var
 |  constant
 
 expression@1 :=
-| expression@0 COLON type
+| expression@0 colon type
 | expression@0
 
-expr_definition := pattern (COLON type)? EQ_DEF expression
+expression = expression@1
 ```
 
-### Type
-```ebnf
-type_definition := IDENTIFIER EQ_DEF type
+### Expression Definition
 
-type :=
-| IDENTIFIER
+```ebnf
+expr_definition := pattern (colon type)? eq_def expression
 ```
 
 ## Command
@@ -111,4 +149,5 @@ command := command_kind DOT
 ```
 
 ## Program
+
 A program is a succession of `command`

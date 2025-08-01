@@ -7,7 +7,7 @@ use ariadne::Label;
 use chumsky::error::{Rich, RichPattern};
 
 pub struct Error<'tokens> {
-    location: Location,
+    loc: Location,
     err: Rich<'tokens, Token>,
 }
 
@@ -15,9 +15,9 @@ impl<'tokens> Error<'tokens> {
     /// make a new error
     pub fn new(err: Rich<'tokens, Token>, source_id: SourceId) -> Self {
         let span = err.span();
-        let location = Location::new(source_id, span.start, span.end);
+        let loc = Location::new(source_id, span.start, span.end);
         Self {
-            location,
+            loc,
             err: err.clone(),
         }
     }
@@ -30,8 +30,8 @@ impl ErrorCode for Error<'_> {
 }
 
 impl Located for Error<'_> {
-    fn loc(&self) -> &Location {
-        &self.location
+    fn loc(&self) -> Location {
+        self.loc.clone()
     }
 }
 
