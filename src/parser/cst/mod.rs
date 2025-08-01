@@ -19,3 +19,20 @@ pub use file::File;
 pub use pattern::Pattern;
 pub use ty::Type;
 pub use ty_definition::TypeDefinition;
+
+use num_bigint::BigUint;
+
+pub trait AsIdentifier {
+    /// get name of Identifier
+    fn name(&self) -> &str;
+}
+
+pub trait AsNumber {
+    /// get the number as a reference to BigUint
+    fn as_number(&self) -> &BigUint;
+}
+
+pub trait AsCharacter {
+    /// get character as a char
+    fn as_character(&self) -> char;
+}

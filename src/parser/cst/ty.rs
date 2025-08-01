@@ -3,12 +3,21 @@ use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
+use super::AsIdentifier;
+
 // ============================================================================
 // Variable
 // ============================================================================
 #[derive(Debug)]
 pub struct VariableT(String);
 pub type Variable = Meta<VariableT>;
+
+impl AsIdentifier for VariableT {
+    /// get name of variable
+    fn name(&self) -> &str {
+        &self.0
+    }
+}
 
 impl Pretty for VariableT {
     fn pretty(&self, theme: &Theme) -> Doc {

@@ -1,6 +1,5 @@
 use super::super::ty::{Type, TypeBuiltin, Typed, TypedMut};
-use crate::utils::format_number;
-use crate::utils::location::{Located, LocatedSet, Location, UNKNOWN_LOCATION};
+use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use num_bigint::BigUint;
@@ -27,7 +26,7 @@ impl Constant {
     pub fn nat(v: NConst) -> Self {
         Self {
             ty: Type::from(TypeBuiltin::Nat),
-            loc: UNKNOWN_LOCATION,
+            loc: Location::unknown(),
             kind: ConstantKind::Nat(v),
         }
     }
@@ -36,7 +35,7 @@ impl Constant {
     pub fn boolean(b: bool) -> Self {
         Self {
             ty: Type::Builtin(TypeBuiltin::Bool),
-            loc: UNKNOWN_LOCATION,
+            loc: Location::unknown(),
             kind: ConstantKind::Bool(b),
         }
     }
@@ -45,7 +44,7 @@ impl Constant {
     pub fn character(c: char) -> Self {
         Self {
             ty: Type::Builtin(TypeBuiltin::Char),
-            loc: UNKNOWN_LOCATION,
+            loc: Location::unknown(),
             kind: ConstantKind::Char(c),
         }
     }
@@ -57,8 +56,8 @@ impl Constant {
 }
 
 impl Located for Constant {
-    fn loc(&self) -> &Location {
-        &self.loc
+    fn loc(&self) -> Location {
+        self.loc.clone()
     }
 }
 
@@ -71,9 +70,9 @@ impl LocatedSet for Constant {
 impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match &self.kind() {
-            ConstantKind::Nat(n) => theme.constant(&format_number(n)),
-            ConstantKind::Bool(b) => theme.constant(b),
-            ConstantKind::Char(c) => theme.constant(&format!("'{}'", c.escape_default())),
+            ConstantKind::Nat(n) => theme.number(n),
+            ConstantKind::Bool(b) => theme.boolean(*b),
+            ConstantKind::Char(c) => theme.character(*c),
         }
     }
 }

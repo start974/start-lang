@@ -32,8 +32,8 @@ impl Definition {
 
 impl Located for Definition {
     /// location is at name of definition
-    fn loc(&self) -> &Location {
-        self.name.loc()
+    fn loc(&self) -> Location {
+        self.name.loc().union(self.body.loc())
     }
 }
 

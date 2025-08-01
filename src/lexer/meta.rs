@@ -1,4 +1,5 @@
 use super::comment::Comment;
+use crate::parser::cst::{AsCharacter, AsIdentifier, AsNumber};
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -105,5 +106,32 @@ where
                 Doc::line()
             })
             .append(self.value.pretty(theme))
+    }
+}
+
+impl<T> AsIdentifier for Meta<T>
+where
+    T: AsIdentifier,
+{
+    fn name(&self) -> &str {
+        self.value.name()
+    }
+}
+
+impl<T> AsNumber for Meta<T>
+where
+    T: AsNumber,
+{
+    fn as_number(&self) -> &num_bigint::BigUint {
+        self.value.as_number()
+    }
+}
+
+impl<T> AsCharacter for Meta<T>
+where
+    T: AsCharacter,
+{
+    fn as_character(&self) -> char {
+        self.value.as_character()
     }
 }

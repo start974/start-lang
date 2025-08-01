@@ -59,12 +59,12 @@ impl ExpressionDefinition {
     }
 
     /// get pattern
-    pub fn get_pattern(&self) -> &Pattern {
+    pub fn pattern(&self) -> &Pattern {
         &self.pattern
     }
 
     /// get optal type of definition
-    pub fn get_typed_by(&self) -> Option<&Type> {
+    pub fn typed_by(&self) -> Option<&Type> {
         match self.typed_by {
             Some(ref typed_by) => Some(typed_by.get_type()),
             None => None,

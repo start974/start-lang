@@ -1,5 +1,3 @@
-use chumsky::input::Input;
-
 use super::Command;
 use crate::lexer::meta::Meta;
 use crate::utils::pretty::Pretty;
@@ -15,7 +13,7 @@ pub struct EndOfFileT();
 pub type EndOfFile = Meta<EndOfFileT>;
 
 impl Pretty for EndOfFileT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, _: &Theme) -> Doc {
         Doc::nil()
     }
 }

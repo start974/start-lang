@@ -1,15 +1,15 @@
 use super::ty::{Type, Typed, TypedMut};
-use super::variable::Variable;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
 mod constant;
 mod definition;
+mod variable;
 
-pub use constant::Constant;
-pub use constant::ConstantKind;
+pub use constant::{Constant, ConstantKind};
 pub use definition::Definition as ExpressionDefinition;
+pub use variable::{Variable as ExpressionVariable, VariableEnv};
 
 // ==========================================================================
 // Expression
@@ -17,7 +17,7 @@ pub use definition::Definition as ExpressionDefinition;
 
 pub enum Expression {
     Constant(Constant),
-    Variable(Variable),
+    Variable(ExpressionVariable),
 }
 
 impl From<Constant> for Expression {
@@ -26,8 +26,8 @@ impl From<Constant> for Expression {
     }
 }
 
-impl From<Variable> for Expression {
-    fn from(variable: Variable) -> Self {
+impl From<ExpressionVariable> for Expression {
+    fn from(variable: ExpressionVariable) -> Self {
         Expression::Variable(variable)
     }
 }
@@ -54,7 +54,7 @@ impl Typed for Expression {
 }
 
 impl Located for Expression {
-    fn loc(&self) -> &Location {
+    fn loc(&self) -> Location {
         match self {
             Expression::Constant(c) => c.loc(),
             Expression::Variable(v) => v.loc(),

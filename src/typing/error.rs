@@ -27,7 +27,7 @@ impl ErrorCode for ErrorVariableNotFound {
 }
 
 impl Located for ErrorVariableNotFound {
-    fn loc(&self) -> &Location {
+    fn loc(&self) -> Location {
         self.identifier.loc()
     }
 }
@@ -58,7 +58,7 @@ impl ErrorReport for ErrorVariableNotFound {
 pub struct ErrorUnexpectedType {
     expected: Type,
     found: Type,
-    location: Location,
+    loc: Location,
 }
 
 impl ErrorUnexpectedType {
@@ -66,7 +66,7 @@ impl ErrorUnexpectedType {
         Self {
             expected: expected.clone(),
             found: found.clone(),
-            location: location.clone(),
+            loc: location.clone(),
         }
     }
 }
@@ -78,8 +78,8 @@ impl ErrorCode for ErrorUnexpectedType {
 }
 
 impl Located for ErrorUnexpectedType {
-    fn loc(&self) -> &Location {
-        &self.location
+    fn loc(&self) -> Location {
+        self.loc.clone()
     }
 }
 
@@ -87,7 +87,7 @@ impl ErrorReport for ErrorUnexpectedType {
     fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
         report
             .with_label(
-                Label::new(self.location.clone()).with_message(
+                Label::new(self.loc.clone()).with_message(
                     Message::nil()
                         .text("Expect Type ")
                         .of_pretty(&self.expected)
@@ -141,7 +141,7 @@ impl ErrorCode for Error {
 }
 
 impl Located for Error {
-    fn loc(&self) -> &Location {
+    fn loc(&self) -> Location {
         match self {
             Error::VariableNotFound(e) => e.loc(),
             Error::UnexpectedType(e) => e.loc(),

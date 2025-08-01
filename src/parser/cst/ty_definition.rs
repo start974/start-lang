@@ -5,9 +5,25 @@ use crate::utils::theme::{Doc, Theme};
 
 #[derive(Debug)]
 pub struct TypeDefinition {
-    pub name: ty::Variable,
-    pub eq_def: operator::EqDef,
-    pub ty: ty::Type,
+    name: ty::Variable,
+    eq_def: operator::EqDef,
+    ty: ty::Type,
+}
+
+impl TypeDefinition {
+    pub fn new(name: ty::Variable, eq_def: operator::EqDef, ty: ty::Type) -> Self {
+        Self { name, eq_def, ty }
+    }
+
+    /// Get the name of the type definition
+    pub fn name(&self) -> &ty::Variable {
+        &self.name
+    }
+
+    /// Get the type of the type definition
+    pub fn ty(&self) -> &ty::Type {
+        &self.ty
+    }
 }
 
 impl Located for TypeDefinition {
