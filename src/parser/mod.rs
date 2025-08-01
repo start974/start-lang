@@ -1,12 +1,12 @@
 use crate::lexer::token;
 use crate::utils::location::SourceId;
-use ast::Command;
+use cst::Command;
 use chumsky::input::{Input as _, ValueInput};
 use chumsky::span::SimpleSpan;
 use chumsky::Parser;
 pub use error::Error;
 
-pub mod ast;
+pub mod cst;
 pub mod error;
 pub mod parsing;
 
@@ -15,7 +15,7 @@ pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, token::
 /// parse with lexer tokens
 pub fn parser<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::Command, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::Command, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = token::Token, Span = SimpleSpan>,
 {

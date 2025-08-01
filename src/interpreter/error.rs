@@ -1,4 +1,4 @@
-use crate::parser::ast::Variable;
+use crate::parser::cst::Variable;
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder};
 

@@ -85,7 +85,7 @@ impl interpreter::Interpreter for Interpreter {
 
     fn type_expr_definition(
         &mut self,
-        def: parser::ast::ExpressionDefinition,
+        def: parser::cst::ExpressionDefinition,
     ) -> Result<typing::ast::ExpressionDefinition, Box<typing::Error>> {
         self.typer.expression_definition(&def).inspect(|def| {
             let summary = SummaryDefinition::from(def);
@@ -95,14 +95,14 @@ impl interpreter::Interpreter for Interpreter {
 
     fn type_ty_definition(
         &mut self,
-        def: parser::ast::TypeDefinition,
+        def: parser::cst::TypeDefinition,
     ) -> Result<(), Box<typing::Error>> {
         self.typer.type_definition(&def)
     }
 
     fn type_expression(
         &mut self,
-        expr: parser::ast::Expression,
+        expr: parser::cst::Expression,
     ) -> Result<typing::ast::Expression, Box<typing::Error>> {
         self.typer.expression(&expr)
     }
