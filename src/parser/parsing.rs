@@ -1,5 +1,5 @@
-use super::ast;
-use super::ast::WithComments;
+use super::cst;
+use super::cst::WithComments;
 use super::ErrorChumsky;
 use crate::lexer::token::Operator;
 use crate::lexer::token::Token;
@@ -21,7 +21,7 @@ where
     /// with comment parser
     fn with_comments(self) -> impl Parser<'tokens, I, O, ErrorChumsky<'tokens>> {
         let comments = select! {Token::Comment(c) => c}
-            .map(ast::Comment::from)
+            .map(cst::Comment::from)
             .repeated()
             .collect();
 
@@ -53,7 +53,7 @@ where
 /// ```
 pub fn identifier<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::Identifier<String>, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::Identifier<String>, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
@@ -61,7 +61,7 @@ where
         .map_with(move |id, e| {
             let span: SimpleSpan = e.span();
             let loc = Location::new(source_id.clone(), span.start, span.end);
-            ast::Identifier::new(id, loc)
+            cst::Identifier::new(id, loc)
         })
         .with_comments()
 }
@@ -76,13 +76,13 @@ where
 ///```
 pub fn pattern<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::Pattern, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::Pattern, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     let variable = identifier(source_id)
-        .map(|id| id.map_name(ast::PatternVariableName::from))
-        .map(ast::Pattern::from)
+        .map(|id| id.map_name(cst::PatternVariableName::from))
+        .map(cst::Pattern::from)
         .labelled("pattern variable");
 
     variable.labelled("pattern")
@@ -100,7 +100,7 @@ where
 ///```
 pub fn constant<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::Constant, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::Constant, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
@@ -110,7 +110,7 @@ where
             move |n, e| {
                 let span: SimpleSpan = e.span();
                 let loc = Location::new(source_id.clone(), span.start, span.end);
-                ast::Constant::nat(n, loc)
+                cst::Constant::nat(n, loc)
             }
         })
     };
@@ -118,7 +118,7 @@ where
     let character = select! {Token::Character(c) => c}.map_with(move |c, e| {
         let span: SimpleSpan = e.span();
         let loc = Location::new(source_id.clone(), span.start, span.end);
-        ast::Constant::char(c, loc)
+        cst::Constant::char(c, loc)
     });
 
     choice((number, character))
@@ -132,13 +132,13 @@ where
 ///```
 pub fn variable<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::Variable, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::Variable, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     identifier(source_id)
-        .map(|id| id.map_name(ast::VariableName::from))
-        .map(ast::Variable::from)
+        .map(|id| id.map_name(cst::VariableName::from))
+        .map(cst::Variable::from)
         .labelled("variable")
 }
 
@@ -155,14 +155,14 @@ where
 ///```
 pub fn expression<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::Expression, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::Expression, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     recursive(move |expr1| {
         let expr0 = {
-            let variable = variable(source_id.clone()).map(ast::Expression::from);
-            let constant = constant(source_id.clone()).map(ast::Expression::from);
+            let variable = variable(source_id.clone()).map(cst::Expression::from);
+            let constant = constant(source_id.clone()).map(cst::Expression::from);
             let parens = expr1.delimited_by(
                 just(Token::Operator(Operator::LParen)).labelled("("),
                 just(Token::Operator(Operator::RParen)).labelled(")"),
@@ -175,8 +175,8 @@ where
             let type_restriction = (expr0.clone())
                 .then_ignore(just(Token::Operator(Operator::Colon)).labelled("Colon"))
                 .then(ty(source_id.clone()))
-                .map(|(expr, ty)| ast::TypeRestriction::new(expr, ty))
-                .map(ast::Expression::from);
+                .map(|(expr, ty)| cst::TypeRestriction::new(expr, ty))
+                .map(cst::Expression::from);
             choice((type_restriction, expr0))
         }
         .boxed();
@@ -192,7 +192,7 @@ where
 ///```
 pub fn expression_definition<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::ExpressionDefinition, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::ExpressionDefinition, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
@@ -205,7 +205,7 @@ where
         .then_ignore(just(Token::Operator(Operator::EqDef)).labelled(":="))
         .then(expression(source_id))
         .map(|((id, opt_ty), body)| {
-            let def = ast::ExpressionDefinition::new(id, body);
+            let def = cst::ExpressionDefinition::new(id, body);
             match opt_ty {
                 Some(ty) => def.with_ty(ty),
                 None => def,
@@ -222,12 +222,12 @@ where
 /// ```
 pub fn ty_variable<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::TypeVariable, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::TypeVariable, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     identifier(source_id)
-        .map(|id| id.map_name(ast::TypeVariableName::from))
+        .map(|id| id.map_name(cst::TypeVariableName::from))
         .labelled("type variable")
 }
 
@@ -238,11 +238,11 @@ where
 /// ```
 pub fn ty<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::Type, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::Type, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
-    ty_variable(source_id).map(ast::Type::from).labelled("type")
+    ty_variable(source_id).map(cst::Type::from).labelled("type")
 }
 
 /// parse type definition
@@ -251,14 +251,14 @@ where
 /// ```
 pub fn type_definition<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::TypeDefinition, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::TypeDefinition, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     ty_variable(source_id.clone())
         .then_ignore(just(Token::Operator(Operator::EqDef)).labelled(":="))
         .then(ty(source_id))
-        .map(|(name, ty)| ast::TypeDefinition::new(name, ty))
+        .map(|(name, ty)| cst::TypeDefinition::new(name, ty))
 }
 
 // ===========================================================================
@@ -276,14 +276,14 @@ where
 ///```
 pub fn command_kind<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::CommandKind, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::CommandKind, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
     let def_expr = select! {Token::Identifier(id) if id == "Def" || id == "Definition" => ()}
         .labelled("Definition")
         .ignore_then(expression_definition(source_id.clone()))
-        .map(ast::CommandKind::ExpressionDefinition);
+        .map(cst::CommandKind::ExpressionDefinition);
 
     let eval = select! {
         Token::Identifier(id) if id == "Eval" => (),
@@ -291,7 +291,7 @@ where
     }
     .labelled("Eval")
     .ignore_then(expression(source_id.clone()))
-    .map(ast::CommandKind::Eval);
+    .map(cst::CommandKind::Eval);
 
     let type_of = select! {
         Token::Identifier(id) if id == "TypeOf"  => (),
@@ -299,12 +299,12 @@ where
     }
     .labelled("TypeOf")
     .ignore_then(expression(source_id.clone()))
-    .map(ast::CommandKind::TypeOf);
+    .map(cst::CommandKind::TypeOf);
 
     let def_type = select! {Token::Identifier(id) if id == "Ty" || id == "Type" => ()}
         .labelled("Type")
         .ignore_then(type_definition(source_id.clone()))
-        .map(ast::CommandKind::TypeDefinition);
+        .map(cst::CommandKind::TypeDefinition);
 
     let set_unset = choice((
         select! {
@@ -317,7 +317,7 @@ where
         .labelled("Unset"),
     ))
     .then(variable(source_id.clone()))
-    .map(|(b, var)| ast::CommandKind::Set(b, var));
+    .map(|(b, var)| cst::CommandKind::Set(b, var));
 
     choice((def_expr, eval, type_of, def_type, set_unset))
 }
@@ -328,7 +328,7 @@ where
 ///```
 pub fn command<'tokens, I>(
     source_id: SourceId,
-) -> impl Parser<'tokens, I, ast::Command, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, cst::Command, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = Token, Span = SimpleSpan>,
 {
@@ -338,6 +338,6 @@ where
         .map_with(move |cmd_kind, e| {
             let span: SimpleSpan = e.span();
             let loc = Location::new(source_id.clone(), span.start, span.end);
-            ast::Command::new(cmd_kind, loc)
+            cst::Command::new(cmd_kind, loc)
         })
 }

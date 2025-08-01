@@ -1,54 +1,54 @@
-use super::ast::{self as ast_typed, IdentifierBuilder, Type, TypeAliasEnv, Typed, VariableEnv};
+use super::ast::{self, Typed as _};
 use super::error::Error;
-use crate::parser::ast as ast_parser;
+use crate::parser::cst;
 use crate::utils::location::LocatedSet;
 
 #[derive(Debug, Default)]
 pub struct Typer {
-    var_env: VariableEnv,
-    ty_alias: TypeAliasEnv,
-    id_builder: IdentifierBuilder,
+    var_env: ast::VariableEnv,
+    ty_alias: ast::TypeAliasEnv,
+    id_builder: ast::IdentifierBuilder,
 }
 
 type Result<T, E = Box<Error>> = std::result::Result<T, E>;
 
 impl Typer {
     /// convert constant
-    pub fn constant(&self, constant: &ast_parser::Constant) -> ast_typed::Constant {
+    pub fn constant(&self, constant: &cst::Constant) -> ast::Constant {
         match constant.kind() {
-            ast_parser::ConstantKind::Nat(n) => ast_typed::Constant::nat(n.clone()),
-            ast_parser::ConstantKind::Char(c) => ast_typed::Constant::character(*c),
+            cst::ConstantKind::Nat(n) => ast::Constant::nat(n.clone()),
+            cst::ConstantKind::Char(c) => ast::Constant::character(*c),
         }
         .with_loc(constant)
     }
 
     /// convert expression
-    pub fn expression(&self, expression: &ast_parser::Expression) -> Result<ast_typed::Expression> {
+    pub fn expression(&self, expression: &cst::Expression) -> Result<ast::Expression> {
         match expression {
-            ast_parser::Expression::Constant(c) => {
+            cst::Expression::Constant(c) => {
                 let c_ty = self.constant(c);
-                Ok(ast_typed::Expression::Constant(c_ty))
+                Ok(ast::Expression::Constant(c_ty))
             }
-            ast_parser::Expression::Variable(var) => {
+            cst::Expression::Variable(var) => {
                 let var_name = var.to_string();
                 let id = self.id_builder.get(&var_name).with_loc(var);
                 self.var_env
                     .get(&id)
                     .map_err(Error::from)
-                    .map(ast_typed::Expression::from)
+                    .map(ast::Expression::from)
                     .or_else(|e| match var_name.as_str() {
                         "__Constant_true__" => {
-                            let b = ast_typed::Constant::boolean(true);
-                            Ok(ast_typed::Expression::from(b))
+                            let b = ast::Constant::boolean(true);
+                            Ok(ast::Expression::from(b))
                         }
                         "__Constant_false__" => {
-                            let b = ast_typed::Constant::boolean(false);
-                            Ok(ast_typed::Expression::from(b))
+                            let b = ast::Constant::boolean(false);
+                            Ok(ast::Expression::from(b))
                         }
                         _ => Err(e),
                     })
             }
-            ast_parser::Expression::TypeRestriction(ty_restr) => {
+            cst::Expression::TypeRestriction(ty_restr) => {
                 // TODO: make multiple error
                 let expr = self.expression(ty_restr.expression())?;
                 let ty = self.ty(ty_restr.ty())?;
@@ -59,19 +59,22 @@ impl Typer {
     }
 
     /// convert typ
-    pub fn ty(&self, ty: &ast_parser::Type) -> Result<ast_typed::Type> {
+    pub fn ty(&self, ty: &cst::Type) -> Result<ast::Type> {
         match ty {
-            ast_parser::Type::Var(ident) => {
+            cst::Type::Var(ident) => {
                 let name = ident.to_string();
                 let id = self.id_builder.get(&name).with_loc(ident);
                 self.ty_alias
                     .get(&id)
-                    .map(Type::from)
-                    .or_else(|e| match name.as_str() {
-                        "__Type_Nat__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::Nat)),
-                        "__Type_Bool__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::Bool)),
-                        "__Type_Char__" => Ok(ast_typed::Type::from(ast_typed::TypeBuiltin::Char)),
-                        _ => Err(e),
+                    .map(ast::Type::from)
+                    .or_else(|e| {
+                        match name.as_str() {
+                            "__Type_Nat__" => Ok(ast::TypeBuiltin::Nat),
+                            "__Type_Bool__" => Ok(ast::TypeBuiltin::Bool),
+                            "__Type_Char__" => Ok(ast::TypeBuiltin::Char),
+                            _ => Err(e),
+                        }
+                        .map(ast::Type::from)
                     })
                     .map_err(Error::from)
                     .map_err(Box::new)
@@ -82,10 +85,10 @@ impl Typer {
     /// convert definition
     pub fn expression_definition(
         &mut self,
-        definition: &ast_parser::ExpressionDefinition,
-    ) -> Result<ast_typed::ExpressionDefinition> {
+        definition: &cst::ExpressionDefinition,
+    ) -> Result<ast::ExpressionDefinition> {
         match definition.pattern() {
-            ast_parser::Pattern::Variable(var) => {
+            cst::Pattern::Variable(var) => {
                 let name_parse = var.to_string();
                 let name = self.id_builder.build(&name_parse).with_loc(var);
                 match definition.ty() {
@@ -93,7 +96,7 @@ impl Typer {
                         let ty = self.ty(ty)?;
                         self.var_env.add(name.clone(), ty.clone());
                         let body = self.expression(definition.body())?;
-                        ast_typed::ExpressionDefinition::new(name, body)
+                        ast::ExpressionDefinition::new(name, body)
                             .restrict_ty(ty)
                             .map_err(|e| Error::from(*e))
                             .map_err(Box::new)
@@ -101,7 +104,7 @@ impl Typer {
                     None => {
                         let body = self.expression(definition.body())?;
                         self.var_env.add(name.clone(), body.ty().clone());
-                        Ok(ast_typed::ExpressionDefinition::new(name, body))
+                        Ok(ast::ExpressionDefinition::new(name, body))
                     }
                 }
             }
@@ -109,7 +112,7 @@ impl Typer {
     }
 
     /// add type definition
-    pub fn type_definition(&mut self, definition: &ast_parser::TypeDefinition) -> Result<()> {
+    pub fn type_definition(&mut self, definition: &cst::TypeDefinition) -> Result<()> {
         let name_parse = definition.name();
         let name = self
             .id_builder

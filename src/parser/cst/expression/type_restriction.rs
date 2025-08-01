@@ -1,5 +1,5 @@
 use super::Expression;
-use crate::parser::ast::Type;
+use crate::parser::cst::Type;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};

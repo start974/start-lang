@@ -15,7 +15,7 @@ pub struct Formatter {
     content: String,
     pub err_code: i32,
     theme: Theme,
-    commands: Vec<parser::ast::Command>,
+    commands: Vec<parser::cst::Command>,
 }
 
 impl Formatter {
@@ -65,7 +65,7 @@ impl Formatter {
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: &[lexer::token::TokenSpanned]) -> Option<parser::ast::Command> {
+    fn parse(&mut self, tokens: &[lexer::token::TokenSpanned]) -> Option<parser::cst::Command> {
         let source_id = self.source_id();
         match parser::parse(source_id.clone(), tokens) {
             Ok(cmd) => Some(cmd),
