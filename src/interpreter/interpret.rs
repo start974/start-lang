@@ -137,7 +137,7 @@ pub trait Interpreter {
     /// run command
     fn run_command(&mut self, cmd: cst::Command) {
         match cmd.kind {
-            cst::CommandKind::ExpressionDefinition { def, .. } => self.run_expr_definition(def),
+            cst::CommandKind::ExpressionDefinition { def, .. } => self.run_expr_definition(*def),
             cst::CommandKind::TypeDefinition { def, .. } => self.run_type_definition(def),
             cst::CommandKind::Eval { expr, .. } => self.run_eval(expr),
             cst::CommandKind::TypeOf { expr, .. } => self.run_typeof(expr),
@@ -147,7 +147,7 @@ pub trait Interpreter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::Token> {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::MetaToken> {
         let source_id = self.source_id();
         match lexer::lex(source_id.clone(), offset_source, content) {
             Ok(tokens) => tokens,
@@ -159,10 +159,10 @@ pub trait Interpreter {
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: &[lexer::Token]) -> Option<cst::Command> {
+    fn parse(&mut self, tokens: &[lexer::MetaToken]) -> Option<cst::Command> {
         let source_id = self.source_id();
         match parser::parse(source_id.clone(), tokens) {
-            Ok(parser::CommandOrEnd::Command(cmd)) => Some(cmd),
+            Ok(parser::CommandOrEnd::Command(cmd)) => Some(*cmd),
             Ok(parser::CommandOrEnd::End(_)) => None,
             Err(errs) => {
                 self.fail(errs);

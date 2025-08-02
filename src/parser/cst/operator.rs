@@ -5,7 +5,7 @@ use crate::utils::theme::{Doc, Theme};
 // ============================================================================
 // Eq Def
 // ============================================================================
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EqDefT();
 pub type EqDef = Meta<EqDefT>;
 
@@ -18,7 +18,7 @@ impl Pretty for EqDefT {
 // ============================================================================
 // Colon
 // ============================================================================
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ColonT();
 pub type Colon = Meta<ColonT>;
 
@@ -31,9 +31,9 @@ impl Pretty for ColonT {
 // ============================================================================
 // LParen
 // ============================================================================
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LParenT();
-pub type LParen = Meta<LParenT>;
+//pub type LParen = Meta<LParenT>;
 
 impl Pretty for LParenT {
     fn pretty(&self, theme: &Theme) -> Doc {
@@ -44,9 +44,9 @@ impl Pretty for LParenT {
 // ============================================================================
 // RParent
 // ============================================================================
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RParenT();
-pub type RParen = Meta<RParenT>;
+//pub type RParen = Meta<RParenT>;
 
 impl Pretty for RParenT {
     fn pretty(&self, theme: &Theme) -> Doc {
@@ -57,7 +57,7 @@ impl Pretty for RParenT {
 // ============================================================================
 // Dot
 // ============================================================================
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DotT();
 pub type Dot = Meta<DotT>;
 
@@ -66,4 +66,3 @@ impl Pretty for DotT {
         theme.operator(&".")
     }
 }
-

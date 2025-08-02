@@ -3,7 +3,6 @@ pub mod format;
 pub mod interpreter;
 pub mod lexer;
 pub mod parser;
-pub mod stdlib;
 pub mod typing;
 pub mod utils;
 pub mod vm;

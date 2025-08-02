@@ -6,7 +6,7 @@ use crate::utils::theme::{Doc, Theme};
 // ============================================================================
 // parenthesized
 // ============================================================================
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Parenthesed<Left, Val, Right> {
     l_paren: Meta<Left>,
     inner: Val,

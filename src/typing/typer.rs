@@ -35,7 +35,7 @@ impl Typer {
             }
             Expression0::Variable(var) => {
                 let var_name = var.name();
-                let id = self.id_builder.get(&var_name).with_loc(var);
+                let id = self.id_builder.get(var_name).with_loc(var);
                 self.var_env
                     .get(&id)
                     .map_err(Error::from)
@@ -86,7 +86,7 @@ impl Typer {
         match ty {
             cst::Type::Variable(ident) => {
                 let name = ident.name();
-                let id = self.id_builder.get(&name).with_loc(ident);
+                let id = self.id_builder.get(name).with_loc(ident);
                 self.ty_alias
                     .get(&id)
                     .map(ast::Type::from)
@@ -110,22 +110,22 @@ impl Typer {
         &mut self,
         definition: &cst::ExpressionDefinition,
     ) -> Result<ast::ExpressionDefinition> {
-        match definition.pattern() {
+        match &definition.pattern {
             cst::Pattern::Variable(var) => {
                 let name_parse = var.name();
-                let name = self.id_builder.build(&name_parse).with_loc(var);
+                let name = self.id_builder.build(name_parse).with_loc(var);
                 match definition.typed_by() {
                     Some(ty) => {
                         let ty = self.ty(ty)?;
                         self.var_env.add(name.clone(), ty.clone());
-                        let body = self.expression(definition.body())?;
+                        let body = self.expression(&definition.body)?;
                         ast::ExpressionDefinition::new(name, body)
                             .restrict_ty(ty)
                             .map_err(|e| Error::from(*e))
                             .map_err(Box::new)
                     }
                     None => {
-                        let body = self.expression(definition.body())?;
+                        let body = self.expression(&definition.body)?;
                         self.var_env.add(name.clone(), body.ty().clone());
                         Ok(ast::ExpressionDefinition::new(name, body))
                     }
@@ -136,12 +136,12 @@ impl Typer {
 
     /// add type definition
     pub fn type_definition(&mut self, definition: &cst::TypeDefinition) -> Result<()> {
-        let name_parse = definition.name();
+        let name_parse = &definition.name;
         let name = self
             .id_builder
-            .build(&name_parse.name())
+            .build(name_parse.name())
             .with_loc(name_parse);
-        let ty = self.ty(definition.ty())?;
+        let ty = self.ty(&definition.ty)?;
         self.ty_alias.add(name.clone(), ty.clone());
         Ok(())
     }

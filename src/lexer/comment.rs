@@ -1,7 +1,7 @@
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Comment {
     content: Vec<String>,
 }
@@ -29,12 +29,4 @@ impl Pretty for Comment {
             .append(Doc::space())
             .append(theme.comment(&"*)"))
     }
-}
-
-pub trait WithComments {
-    /// with commments befor
-    fn with_comments(self, comments: Vec<Comment>) -> Self;
-
-    /// get the comments before
-    fn comments(&self) -> &[Comment];
 }

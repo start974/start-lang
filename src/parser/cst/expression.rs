@@ -9,9 +9,15 @@ use crate::utils::theme::{Doc, Theme};
 // ============================================================================
 // Variable
 // ============================================================================
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VariableT(String);
 pub type Variable = Meta<VariableT>;
+
+impl From<String> for VariableT {
+    fn from(name: String) -> Self {
+        Self(name)
+    }
+}
 
 impl AsIdentifier for VariableT {
     /// get name of variable
@@ -30,7 +36,7 @@ impl Pretty for VariableT {
 // Expression
 // ============================================================================
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expression0 {
     /// variable
     Variable(Variable),
@@ -39,10 +45,10 @@ pub enum Expression0 {
     Constant(Constant),
 
     /// parenthesized expression
-    Paren(Parenthesed<operator::LParen, Box<Expression>, operator::RParen>),
+    Paren(Parenthesed<operator::LParenT, Box<Expression>, operator::RParenT>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expression1 {
     TypedExpression {
         expr: Expression0,
