@@ -80,7 +80,7 @@ impl<T> Meta<T> {
     pub fn pretty_meta(&self, theme: &Theme) -> Doc {
         Doc::intersperse(
             self.before.iter().map(|item| item.pretty(theme)),
-            Doc::line(),
+            Doc::nil(),
         )
     }
 }
@@ -106,11 +106,6 @@ where
 {
     fn pretty(&self, theme: &Theme) -> Doc {
         self.pretty_meta(theme)
-            .append(if self.before.is_empty() {
-                Doc::nil()
-            } else {
-                Doc::line()
-            })
             .append(self.value.pretty(theme))
     }
 }

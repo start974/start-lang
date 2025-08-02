@@ -1,4 +1,11 @@
 # Error on definition
+```
+$ startlang run no_expression.st
+
+```
+```
+$ startlang run stop_ident.st
+```
 
 ```
 $ startlang run def_not_space.st

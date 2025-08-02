@@ -391,5 +391,5 @@ where
     use cst::file::EndOfFileT;
     select! {meta @ Meta{ value: Token::EndOfInput, ..} =>
         meta.map(|_| EndOfFileT())
-    }
+    }.labelled("end of input")
 }

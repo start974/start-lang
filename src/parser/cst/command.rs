@@ -155,21 +155,27 @@ impl Pretty for CommandKind {
         match self {
             CommandKind::ExpressionDefinition { keyword, def } => Doc::nil()
                 .append(keyword.pretty(theme))
+                .append(Doc::space())
                 .append(def.pretty(theme)),
             CommandKind::TypeDefinition { keyword, def } => Doc::nil()
                 .append(keyword.pretty(theme))
+                .append(Doc::space())
                 .append(def.pretty(theme)),
             CommandKind::Eval { keyword, expr } => Doc::nil()
                 .append(keyword.pretty(theme))
+                .append(Doc::space())
                 .append(expr.pretty(theme)),
             CommandKind::TypeOf { keyword, expr } => Doc::nil()
                 .append(keyword.pretty(theme))
+                .append(Doc::space())
                 .append(expr.pretty(theme)),
             CommandKind::Set { keyword, var } => Doc::nil()
                 .append(keyword.pretty(theme))
+                .append(Doc::space())
                 .append(var.pretty(theme)),
             CommandKind::UnSet { keyword, var } => Doc::nil()
                 .append(keyword.pretty(theme))
+                .append(Doc::space())
                 .append(var.pretty(theme)),
         }
     }

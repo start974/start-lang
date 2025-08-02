@@ -77,6 +77,10 @@ impl Formatter {
 
     /// run the interpreter
     fn parse_content(&mut self) -> Option<parser::cst::File> {
+        if self.err_code != 0 {
+            return None;
+        }
+
         let mut offset = 0;
         let content_copy = self.content.clone();
         let mut cst_file = parser::cst::File::default();

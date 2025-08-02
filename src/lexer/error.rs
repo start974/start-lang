@@ -36,16 +36,20 @@ impl Located for Error<'_> {
 
 impl ErrorReport for Error<'_> {
     fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
-        let mut msg = if self.err.expected().len() == 1 {
-            Message::nil()
+        let mut msg;
+        if self.err.expected().len() == 1 {
+            msg = Message::nil()
                 .text("Lexer expected ")
-                .quoted(self.err.expected().next().unwrap().to_string())
+                .quoted(self.err.expected().next().unwrap().to_string());
+            if let Some(found) = self.err.found() {
+                msg = msg.text(", found ").quoted(found.to_string().escape_default());
+            }
         } else {
-            Message::nil().text("Lexer unknow token")
+            msg = Message::nil().text("Lexer unknow token ");
+            if let Some(found) = self.err.found() {
+                msg = msg.quoted(found.to_string().escape_default());
+            }
         };
-        if let Some(found) = self.err.found() {
-            msg = msg.text(", found ").quoted(found.to_string());
-        }
         msg = msg.text(".");
         report
             .with_label(Label::new(self.loc().clone()).with_message(msg.make_string(theme)))

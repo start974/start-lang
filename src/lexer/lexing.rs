@@ -1,7 +1,7 @@
-use crate::utils::location::{Location, SourceId};
-
 use super::{comment::Comment, meta::CommentOrLines, token, ErrorChumsky, Meta};
-use chumsky::{prelude::*, text::newline};
+use crate::utils::location::{Location, SourceId};
+use chumsky::prelude::*;
+use chumsky::text::newline;
 use num_bigint::BigUint;
 use std::rc::Rc;
 
