@@ -166,7 +166,15 @@ impl Theme {
 
     /// pprint constant expression
     pub fn character<'a>(&self, c: char) -> Doc<'a> {
-        Doc::text(format!("'{}'", c.escape_default())).annotate(self.character.clone())
+        let c_escaped = match c {
+            '\'' => "\\'",
+            '\\' => "\\\\",
+            '\n' => "\\n",
+            '\r' => "\\r",
+            '\t' => "\\t",
+            _ => &c.to_string(),
+        };
+        Doc::text(format!("'{c_escaped}'")).annotate(self.character.clone())
     }
 
     /// pretty print number

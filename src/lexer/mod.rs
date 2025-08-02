@@ -1,5 +1,6 @@
 use crate::utils::location::SourceId;
-use chumsky::{prelude::*, text::inline_whitespace};
+use chumsky::prelude::*;
+use chumsky::text::inline_whitespace;
 use lexing::WithMeta as _;
 
 pub mod comment;
@@ -22,20 +23,28 @@ pub fn lexer<'src>(
 ) -> impl Parser<'src, &'src str, Vec<MetaToken>, ErrorChumsky<'src>> {
     use token::Token;
 
-    let token_dot = just('.').to(Token::Operator(token::Operator::Dot)).lazy();
-    let token_end = end().to(Token::EndOfInput);
-    choice((
+    let token_dot = just('.')
+        .to(Token::Operator(token::Operator::Dot))
+        .with_meta(source_id.clone(), offset)
+        .lazy();
+    let token_end = end()
+        .to(Token::EndOfInput)
+        .with_meta(source_id.clone(), offset);
+    (choice((
         lexing::operator().map(Token::Operator),
         lexing::identifier().map(Token::Identifier),
         lexing::number().map(Token::Number),
         lexing::character().map(Token::Character),
-        token_dot,
-        token_end,
     ))
-    .with_meta(source_id.clone(), offset)
     .padded_by(inline_whitespace())
+    .with_meta(source_id.clone(), offset))
     .repeated()
     .collect::<Vec<_>>()
+    .then(choice((token_dot, token_end)))
+    .map(move |(mut tokens, end)| {
+        tokens.push(end);
+        tokens
+    })
 }
 
 /// apply lexer on [source_id] with [offset] on [content]

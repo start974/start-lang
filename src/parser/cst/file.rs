@@ -47,8 +47,8 @@ impl File {
 impl Pretty for File {
     fn pretty(&self, theme: &Theme) -> Doc {
         Doc::intersperse(
-            self.commands().iter().map(|cmd| cmd.pretty(theme).group()),
-            Doc::line(),
+            self.commands().iter().map(|cmd| cmd.pretty(theme)),
+            Doc::nil(),
         )
         .append(match &self.end {
             Some(end) => end.pretty(theme),

@@ -1,6 +1,9 @@
 # Error Type
 
 ```
+$ startlang run not_end.st
+```
+```
 $ startlang run no_eq_def.st
 ? 202
 [202] Error: Parsing error

@@ -173,6 +173,10 @@ pub trait Interpreter {
 
     /// run the interpreter
     fn run(&mut self) {
+        if self.get_error_code() != 0 {
+            return; // If there is an error code, we stop parsing
+        }
+
         let mut offset = 0;
         let content_copy = self.content().to_string();
 
