@@ -1,5 +1,7 @@
-use super::{token, ErrorChumsky};
-use chumsky::prelude::*;
+use crate::utils::location::{Location, SourceId};
+
+use super::{comment::Comment, meta::CommentOrLines, token, ErrorChumsky, Meta};
+use chumsky::{prelude::*, text::newline};
 use num_bigint::BigUint;
 use std::rc::Rc;
 
@@ -10,7 +12,7 @@ use std::rc::Rc;
 /// ```ebnf
 /// COMMENT := "(*" <ANY>* "*)"
 /// ```
-pub fn comment<'src>() -> impl Parser<'src, &'src str, String, ErrorChumsky<'src>> {
+pub fn comment<'src>() -> impl Parser<'src, &'src str, Comment, ErrorChumsky<'src>> {
     just("(*")
         .ignore_then(
             any()
@@ -19,7 +21,45 @@ pub fn comment<'src>() -> impl Parser<'src, &'src str, String, ErrorChumsky<'src
                 .collect::<String>(),
         )
         .then_ignore(just("*)"))
+        .map(Comment::from)
         .labelled("comment")
+}
+
+/// lex comment or lines
+pub fn comment_or_lines<'src>() -> impl Parser<'src, &'src str, CommentOrLines, ErrorChumsky<'src>>
+{
+    let lines = newline()
+        .repeated()
+        .at_least(1)
+        .map(|_| CommentOrLines::Lines);
+    let comment = comment().map(CommentOrLines::Comment);
+    choice((lines, comment))
+}
+
+// ===========================================================================
+// Meta
+// ===========================================================================
+pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, ErrorChumsky<'src>> + Sized {
+    /// with comment parser
+    fn with_meta(
+        self,
+        source_id: SourceId,
+        offset: usize,
+    ) -> impl Parser<'src, &'src str, Meta<T>, ErrorChumsky<'src>> {
+        (comment_or_lines().repeated().collect::<Vec<_>>())
+            .then(self)
+            .map_with(move |(comments, value), e| {
+                let span: SimpleSpan = e.span();
+                let loc =
+                    Location::new(source_id.clone(), span.start, span.end).with_offset(offset);
+                Meta::new(value, loc).with_items(&comments)
+            })
+    }
+}
+
+impl<'src, T, P> WithMeta<'src, T> for P where
+    P: Parser<'src, &'src str, T, ErrorChumsky<'src>> + Sized
+{
 }
 
 // ===========================================================================

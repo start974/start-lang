@@ -5,23 +5,23 @@ use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
 #[derive(Debug)]
-enum CommentOrLine {
+pub enum CommentOrLines {
     Comment(Comment),
     Lines,
 }
 
-impl Pretty for CommentOrLine {
+impl Pretty for CommentOrLines {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            CommentOrLine::Comment(comment) => comment.pretty(theme),
-            CommentOrLine::Lines => Doc::line(),
+            CommentOrLines::Comment(comment) => comment.pretty(theme),
+            CommentOrLines::Lines => Doc::line(),
         }
     }
 }
 
 #[derive(Debug)]
 pub struct Meta<T> {
-    before: Vec<CommentOrLine>,
+    before: Vec<CommentOrLines>,
     value: T,
     loc: Location,
 }
@@ -37,7 +37,7 @@ impl<T> Meta<T> {
 
     /// add comment before
     pub fn add_comment(&mut self, comment: Comment) {
-        self.before.push(CommentOrLine::Comment(comment));
+        self.before.push(CommentOrLines::Comment(comment));
     }
 
     /// with comment before
@@ -49,9 +49,9 @@ impl<T> Meta<T> {
     /// add lines before
     pub fn add_lines(&mut self) {
         match self.before.last() {
-            Some(CommentOrLine::Lines) => (),
+            Some(CommentOrLines::Lines) => (),
             _ => {
-                self.before.push(CommentOrLine::Lines);
+                self.before.push(CommentOrLines::Lines);
             }
         }
     }
@@ -59,6 +59,21 @@ impl<T> Meta<T> {
     /// with lines before
     pub fn with_lines(mut self) -> Self {
         self.add_lines();
+        self
+    }
+
+    /// with comments or lines items before
+    pub fn with_items(mut self, before: &[CommentOrLines]) -> Self {
+        for item in before {
+            match item {
+                CommentOrLines::Comment(comment) => {
+                    self.add_comment(comment.clone());
+                }
+                CommentOrLines::Lines => {
+                    self.add_lines();
+                }
+            }
+        }
         self
     }
 
