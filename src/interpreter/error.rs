@@ -1,4 +1,5 @@
 use crate::parser::cst::expression::Variable;
+use crate::parser::cst::AsIdentifier as _;
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location, Report, ReportBuilder};
 
@@ -38,7 +39,7 @@ impl ErrorReport for UnknownOption {
     fn message(&self) -> Message {
         Message::nil()
             .text("Option ")
-            .quoted(self.option.value().name())
+            .quoted(self.option.name())
             .text(" is unknown.")
     }
 }

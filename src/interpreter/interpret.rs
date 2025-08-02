@@ -1,11 +1,14 @@
+use ariadne::Span as _;
+
 use super::error::UnknownOption;
 use super::flag::Flag;
 use crate::lexer;
+use crate::parser::cst::AsIdentifier as _;
 use crate::parser::{self, cst};
 use crate::typing;
 use crate::typing::ast::Typed;
 use crate::utils::error::{ErrorCode, ErrorPrint};
-use crate::utils::location::SourceId;
+use crate::utils::location::{Located as _, SourceId};
 use crate::utils::pretty::Pretty;
 use crate::vm;
 
@@ -124,7 +127,7 @@ pub trait Interpreter {
 
     /// run command set and unset
     fn run_set(&mut self, b: bool, var: cst::expression::Variable) {
-        match var.value().name() {
+        match var.name() {
             "DebugParser" => self.set_debug(b, Flag::DebugParser),
             "DebugTyper" => self.set_debug(b, Flag::DebugTyper),
             _ => self.fail(UnknownOption::from(var)),
@@ -144,7 +147,7 @@ pub trait Interpreter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::token::TokenSpanned> {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::Token> {
         let source_id = self.source_id();
         match lexer::lex(source_id.clone(), offset_source, content) {
             Ok(tokens) => tokens,
@@ -156,7 +159,7 @@ pub trait Interpreter {
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: &[lexer::token::TokenSpanned]) -> Option<cst::Command> {
+    fn parse(&mut self, tokens: &[lexer::Token]) -> Option<cst::Command> {
         let source_id = self.source_id();
         match parser::parse(source_id.clone(), tokens) {
             Ok(parser::CommandOrEnd::Command(cmd)) => Some(cmd),
@@ -187,7 +190,7 @@ pub trait Interpreter {
                         self.debug_pretty(Flag::DebugParser, &cmd);
                         self.run_command(cmd);
                     }
-                    let add_offset = last_token.span.end - offset_source;
+                    let add_offset = last_token.loc().end() - offset_source;
                     offset += add_offset;
                 }
             }

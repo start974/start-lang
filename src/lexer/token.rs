@@ -9,6 +9,7 @@ pub enum Operator {
     RParen,
     Eval,
     TypeOf,
+    Dot,
 }
 
 impl std::fmt::Display for Operator {
@@ -20,6 +21,7 @@ impl std::fmt::Display for Operator {
             Operator::RParen => write!(f, ")"),
             Operator::Eval => write!(f, "$"),
             Operator::TypeOf => write!(f, "?:"),
+            Operator::Dot => write!(f, "."),
         }
     }
 }
@@ -31,7 +33,7 @@ pub enum Token {
     Number(BigUint),
     Character(char),
     Operator(Operator),
-    CommandEnd,
+    EndOfInput,
 }
 
 impl std::fmt::Display for Token {
@@ -42,19 +44,12 @@ impl std::fmt::Display for Token {
             Token::Number(n) => write!(f, "{n}"),
             Token::Character(c) => write!(f, "'{c}'"),
             Token::Operator(op) => write!(f, "{op}"),
-            Token::CommandEnd => write!(f, "."),
+            Token::EndOfInput => write!(f, "EndOfInput"),
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TokenSpanned {
-    pub token: Token,
+pub struct Spanned<T>{
+    pub value: T,
     pub span: SimpleSpan,
-}
-
-impl std::fmt::Display for TokenSpanned {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.token)
-    }
 }

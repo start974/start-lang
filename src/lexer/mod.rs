@@ -1,4 +1,6 @@
-use chumsky::prelude::*;
+use crate::utils::location::SourceId;
+use chumsky::{prelude::*, text::inline_whitespace};
+use lexing::WithMeta as _;
 
 pub mod comment;
 pub mod error;
@@ -7,61 +9,33 @@ pub mod meta;
 pub mod token;
 
 pub use error::Error;
+pub use meta::Meta;
 
-use crate::utils::location::SourceId;
 pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, char>>;
+pub type Token = Meta<token::Token>;
 
 /// make a lexing with offset to token until "." (end of a command)
 /// return offset rest to lexing
 pub fn lexer<'src>(
+    source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, Vec<token::TokenSpanned>, ErrorChumsky<'src>> {
-    use token::{Token, TokenSpanned};
-    let tokens = choice((
-        lexing::comment().map(Token::Comment),
+) -> impl Parser<'src, &'src str, Vec<Token>, ErrorChumsky<'src>> {
+    use token::Token;
+
+    let token_dot = just('.').to(Token::Operator(token::Operator::Dot)).lazy();
+    let token_end = end().to(Token::EndOfInput);
+    choice((
         lexing::operator().map(Token::Operator),
         lexing::identifier().map(Token::Identifier),
         lexing::number().map(Token::Number),
         lexing::character().map(Token::Character),
+        token_dot,
+        token_end,
     ))
-    .map_with(move |token, e| {
-        let span_e: SimpleSpan = e.span();
-        let span = SimpleSpan {
-            start: span_e.start + offset,
-            end: span_e.end + offset,
-            context: (),
-        };
-        TokenSpanned { token, span }
-    })
-    .padded()
+    .with_meta(source_id.clone(), offset)
+    .padded_by(inline_whitespace())
     .repeated()
-    .at_least(1)
-    .collect::<Vec<_>>();
-
-    let end_command = just('.')
-        .to(Token::CommandEnd)
-        .map_with({
-            move |token, e| {
-                let span_e: SimpleSpan = e.span();
-                let span = SimpleSpan {
-                    start: span_e.start + offset,
-                    end: span_e.end + offset,
-                    context: (),
-                };
-                TokenSpanned { token, span }
-            }
-        })
-        .padded()
-        .then_ignore(any().repeated().then(end()));
-
-    let token_command = tokens.then(end_command).map(|(mut tokens, end)| {
-        tokens.push(end.clone());
-        tokens
-    });
-
-    let empty_input = end().padded().map(|_| Vec::new());
-
-    choice((token_command, empty_input))
+    .collect::<Vec<_>>()
 }
 
 /// apply lexer on [source_id] with [offset] on [content]
@@ -69,10 +43,13 @@ pub fn lex<'src>(
     source_id: SourceId,
     offset: usize,
     content: &'src str,
-) -> Result<Vec<token::TokenSpanned>, Vec<Error<'src>>> {
-    lexer(offset).parse(content).into_result().map_err(|errs| {
-        errs.iter()
-            .map(|e| Error::new(e.clone(), source_id.clone(), offset))
-            .collect()
-    })
+) -> Result<Vec<Token>, Vec<Error<'src>>> {
+    lexer(source_id.clone(), offset)
+        .parse(content)
+        .into_result()
+        .map_err(|errs| {
+            errs.iter()
+                .map(|e| Error::new(e.clone(), source_id.clone(), offset))
+                .collect()
+        })
 }
