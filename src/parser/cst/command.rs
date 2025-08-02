@@ -68,7 +68,7 @@ pub enum TypeOfKeywordT {
     TypeOf,
     TypeOfOp,
 }
-pub type TypeOfKeyword = Meta<EvalKeywordT>;
+pub type TypeOfKeyword = Meta<TypeOfKeywordT>;
 
 impl Pretty for TypeOfKeywordT {
     fn pretty(&self, theme: &Theme) -> Doc {
@@ -80,21 +80,28 @@ impl Pretty for TypeOfKeywordT {
 }
 
 // ============================================================================
-// Set Unset Keyword
+// Set Keyword
 // ============================================================================
 #[derive(Debug)]
-pub enum SetKeywordT {
-    Set,
-    Unset,
-}
-pub type SetKeyword = Meta<EvalKeywordT>;
+pub struct SetKeywordT();
+pub type SetKeyword = Meta<SetKeywordT>;
 
 impl Pretty for SetKeywordT {
     fn pretty(&self, theme: &Theme) -> Doc {
-        match self {
-            SetKeywordT::Set => theme.keyword(&"Set"),
-            SetKeywordT::Unset => theme.operator(&"?:"),
-        }
+        theme.keyword(&"Set")
+    }
+}
+
+// ============================================================================
+// Unset Keyword
+// ============================================================================
+#[derive(Debug)]
+pub struct UnsetKeywordT();
+pub type UnsetKeyword = Meta<UnsetKeywordT>;
+
+impl Pretty for UnsetKeywordT {
+    fn pretty(&self, theme: &Theme) -> Doc {
+        theme.keyword(&"Unset")
     }
 }
 
@@ -106,7 +113,7 @@ impl Pretty for SetKeywordT {
 pub enum CommandKind {
     ExpressionDefinition {
         keyword: DefinitionKeyword,
-        def: ExpressionDefinition,
+        def: Box<ExpressionDefinition>,
     },
     TypeDefinition {
         keyword: TypeKeyword,
@@ -125,7 +132,7 @@ pub enum CommandKind {
         var: expression::Variable,
     },
     UnSet {
-        keyword: SetKeyword,
+        keyword: UnsetKeyword,
         var: expression::Variable,
     },
 }

@@ -4,7 +4,7 @@ use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CommentOrLines {
     Comment(Comment),
     Lines,
@@ -19,10 +19,10 @@ impl Pretty for CommentOrLines {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Meta<T> {
     before: Vec<CommentOrLines>,
-    value: T,
+    pub value: T,
     loc: Location,
 }
 
@@ -40,12 +40,6 @@ impl<T> Meta<T> {
         self.before.push(CommentOrLines::Comment(comment));
     }
 
-    /// with comment before
-    pub fn with_comment(mut self, comment: Comment) -> Self {
-        self.add_comment(comment);
-        self
-    }
-
     /// add lines before
     pub fn add_lines(&mut self) {
         match self.before.last() {
@@ -55,13 +49,6 @@ impl<T> Meta<T> {
             }
         }
     }
-
-    /// with lines before
-    pub fn with_lines(mut self) -> Self {
-        self.add_lines();
-        self
-    }
-
     /// with comments or lines items before
     pub fn with_items(mut self, before: &[CommentOrLines]) -> Self {
         for item in before {
@@ -75,11 +62,6 @@ impl<T> Meta<T> {
             }
         }
         self
-    }
-
-    /// get value
-    pub fn value(&self) -> &T {
-        &self.value
     }
 
     /// map value
@@ -100,6 +82,15 @@ impl<T> Meta<T> {
             self.before.iter().map(|item| item.pretty(theme)),
             Doc::line(),
         )
+    }
+}
+
+impl<T> std::fmt::Display for Meta<T>
+where
+    T: std::fmt::Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.value)
     }
 }
 

@@ -12,14 +12,14 @@ pub use error::Error;
 pub use meta::Meta;
 
 pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, char>>;
-pub type Token = Meta<token::Token>;
+pub use token::MetaToken;
 
 /// make a lexing with offset to token until "." (end of a command)
 /// return offset rest to lexing
 pub fn lexer<'src>(
     source_id: SourceId,
     offset: usize,
-) -> impl Parser<'src, &'src str, Vec<Token>, ErrorChumsky<'src>> {
+) -> impl Parser<'src, &'src str, Vec<MetaToken>, ErrorChumsky<'src>> {
     use token::Token;
 
     let token_dot = just('.').to(Token::Operator(token::Operator::Dot)).lazy();
@@ -43,7 +43,7 @@ pub fn lex<'src>(
     source_id: SourceId,
     offset: usize,
     content: &'src str,
-) -> Result<Vec<Token>, Vec<Error<'src>>> {
+) -> Result<Vec<MetaToken>, Vec<Error<'src>>> {
     lexer(source_id.clone(), offset)
         .parse(content)
         .into_result()

@@ -8,15 +8,11 @@ use crate::utils::theme::{Doc, Theme};
 // ============================================================================
 #[derive(Debug)]
 pub struct TypedBy {
-    colon: operator::Colon,
-    ty: Type,
+    pub colon: operator::Colon,
+    pub ty: Type,
 }
 
 impl TypedBy {
-    pub fn new(colon: operator::Colon, ty: Type) -> Self {
-        Self { colon, ty }
-    }
-
     /// get type
     pub fn get_type(&self) -> &Type {
         &self.ty
@@ -37,32 +33,13 @@ impl Pretty for TypedBy {
 // ============================================================================
 #[derive(Debug)]
 pub struct ExpressionDefinition {
-    pattern: Pattern,
-    typed_by: Option<TypedBy>,
-    eq_def: operator::EqDef,
-    expr: Expression,
+    pub pattern: Pattern,
+    pub typed_by: Option<TypedBy>,
+    pub eq_def: operator::EqDef,
+    pub body: Expression,
 }
 
 impl ExpressionDefinition {
-    pub fn new(
-        pattern: Pattern,
-        typed_by: Option<TypedBy>,
-        eq_def: operator::EqDef,
-        expr: Expression,
-    ) -> Self {
-        Self {
-            pattern,
-            typed_by,
-            eq_def,
-            expr,
-        }
-    }
-
-    /// get pattern
-    pub fn pattern(&self) -> &Pattern {
-        &self.pattern
-    }
-
     /// get optal type of definition
     pub fn typed_by(&self) -> Option<&Type> {
         match self.typed_by {
@@ -70,16 +47,11 @@ impl ExpressionDefinition {
             None => None,
         }
     }
-
-    /// get body
-    pub fn body(&self) -> &Expression {
-        &self.expr
-    }
 }
 
 impl Located for ExpressionDefinition {
     fn loc(&self) -> Location {
-        self.pattern.loc().union(self.expr.loc())
+        self.pattern.loc().union(self.body.loc())
     }
 }
 
@@ -95,7 +67,7 @@ impl Pretty for ExpressionDefinition {
             }
         };
         let doc_body = Doc::softline()
-            .append(self.expr.pretty(theme).group())
+            .append(self.body.pretty(theme).group())
             .nest(2);
         Doc::nil()
             .append(self.pattern.pretty(theme))

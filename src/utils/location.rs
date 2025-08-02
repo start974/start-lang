@@ -1,4 +1,5 @@
 use ariadne::Span;
+use chumsky::span::SimpleSpan;
 use std::path::PathBuf;
 
 // ==========================================================================
@@ -65,6 +66,15 @@ impl Location {
             start: self.start.min(other.start),
             end: self.end.max(other.end),
             id: self.id.clone(),
+        }
+    }
+
+    /// to simple span
+    pub fn to_simple_span(&self) -> SimpleSpan {
+        SimpleSpan {
+            start: self.start,
+            end: self.end,
+            context: (),
         }
     }
 }

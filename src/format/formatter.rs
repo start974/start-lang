@@ -4,11 +4,11 @@ use super::Mode;
 use crate::file_interpreter::error::ErrorFileRead;
 use crate::parser::CommandOrEnd;
 use crate::utils::error::{ErrorCode, ErrorPrint};
-use crate::utils::location::SourceId;
+use crate::utils::location::{Located as _, SourceId};
 use crate::utils::pretty::Pretty as _;
 use crate::utils::theme::Theme;
 use crate::{lexer, parser};
-use ariadne::Source;
+use ariadne::{Source, Span as _};
 use std::path::{Path, PathBuf};
 
 pub struct Formatter {
@@ -52,7 +52,7 @@ impl Formatter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::token::TokenSpanned> {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::token::MetaToken> {
         let source_id = self.source_id();
         match lexer::lex(source_id.clone(), offset_source, content) {
             Ok(tokens) => tokens,
@@ -64,7 +64,7 @@ impl Formatter {
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: &[lexer::token::TokenSpanned]) -> Option<CommandOrEnd> {
+    fn parse(&mut self, tokens: &[lexer::token::MetaToken]) -> Option<CommandOrEnd> {
         let source_id = self.source_id();
         match parser::parse(source_id.clone(), tokens) {
             Ok(cmd) => Some(cmd),
@@ -92,13 +92,13 @@ impl Formatter {
                 Some(last_token) => {
                     match self.parse(&tokens) {
                         None => (),
-                        Some(CommandOrEnd::Command(cmd)) => cst_file.add_command(cmd),
+                        Some(CommandOrEnd::Command(cmd)) => cst_file.add_command(*cmd),
                         Some(CommandOrEnd::End(end)) => {
                             cst_file.set_end(end);
                             break;
                         }
                     }
-                    offset = last_token.span.end;
+                    offset = last_token.loc().end();
                 }
             }
         }

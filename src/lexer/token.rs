@@ -1,5 +1,6 @@
-use chumsky::span::SimpleSpan;
 use num_bigint::BigUint;
+
+use super::Meta;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Operator {
@@ -28,7 +29,6 @@ impl std::fmt::Display for Operator {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
-    Comment(String),
     Identifier(String),
     Number(BigUint),
     Character(char),
@@ -39,7 +39,6 @@ pub enum Token {
 impl std::fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Token::Comment(s) => write!(f, "(* {s} *)"),
             Token::Identifier(s) => write!(f, "{s}"),
             Token::Number(n) => write!(f, "{n}"),
             Token::Character(c) => write!(f, "'{c}'"),
@@ -49,7 +48,4 @@ impl std::fmt::Display for Token {
     }
 }
 
-pub struct Spanned<T>{
-    pub value: T,
-    pub span: SimpleSpan,
-}
+pub type MetaToken = Meta<Token>;

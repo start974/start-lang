@@ -8,9 +8,15 @@ use super::AsIdentifier;
 // ============================================================================
 // Variable
 // ============================================================================
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VariableT(String);
 pub type Variable = Meta<VariableT>;
+
+impl From<String> for VariableT {
+    fn from(name: String) -> Self {
+        Self(name)
+    }
+}
 
 impl Pretty for VariableT {
     fn pretty(&self, theme: &Theme) -> Doc {

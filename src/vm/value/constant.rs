@@ -13,9 +13,9 @@ pub enum Constant {
 impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Self::Nat(n) => theme.number(&n),
-            Self::Bool(b) => theme.boolean(b),
-            Self::Char(c) => theme.character(c),
+            Self::Nat(n) => theme.number(n),
+            Self::Bool(b) => theme.boolean(*b),
+            Self::Char(c) => theme.character(*c),
         }
     }
 }
@@ -24,8 +24,8 @@ impl From<&ast::Constant> for Constant {
     fn from(c: &ast::Constant) -> Self {
         match c.kind() {
             ast::ConstantKind::Nat(n) => Constant::Nat(n.clone()),
-            ast::ConstantKind::Boolean(b) => Constant::Bool(*b),
-            ast::ConstantKind::Character(c) => Constant::Char(*c),
+            ast::ConstantKind::Bool(b) => Constant::Bool(*b),
+            ast::ConstantKind::Char(c) => Constant::Char(*c),
         }
     }
 }

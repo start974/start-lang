@@ -107,10 +107,10 @@ type :=
 ```
 
 ### Type Definition
+
 ```ebnf
 type_definition := type_var EQ_DEF type
 ```
-
 
 ### Expression
 
@@ -138,12 +138,51 @@ expr_definition := pattern (colon type)? eq_def expression
 ## Command
 
 ```ebnf
+keyword_definition :=
+| "Definition"          display as keyword
+| "Def"                 display as keyword
+```
+
+```ebnf
+keyword_eval :=
+| "Eval"                display as keyword
+| EVAL_OP               display as keyword
+```
+
+```ebnf
+keyword_typeof :=
+| "TypeOf"               display as keyword
+|  TYPE_OF_OP            display as keyword
+```
+
+```ebnf
+keyword_type :=
+| "Type"                 display as keyword
+| "Ty"                   display as keyword
+```
+
+```ebnf
+keyword_set :=
+| "Set"                  display as keyword
+```
+
+```ebnf
+keyword_unset :=
+| "Unset"                display as keyword
+```
+
+```ebnf
+dot := DOT               display as operator
+```
+
+```ebnf
 command_kind :=
-| ("Definition" | "Def") expr_definition
-| ("Eval" | EVAL_OP) expr
-| ("TypeOf" | TYPE_OF_OP) expr
-| ("Type" | "Ty") type_definition
-| ("Set") | "Unset") variable
+| keyword_definition expr_definition
+| keyword_eval expr
+| keyword_typeof expr
+| keyword_type type_definition
+| keyword_set variable
+| keyword_unset variable
 
 command := command_kind DOT
 ```

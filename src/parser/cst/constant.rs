@@ -8,13 +8,13 @@ use num_bigint::BigUint;
 // ============================================================================
 // Number
 // ============================================================================
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NumberT(BigUint);
 pub type Number = Meta<NumberT>;
 
-impl Pretty for NumberT {
-    fn pretty(&self, theme: &Theme) -> Doc {
-        theme.number(&self.0)
+impl From<BigUint> for NumberT {
+    fn from(value: BigUint) -> Self {
+        Self(value)
     }
 }
 
@@ -24,16 +24,22 @@ impl AsNumber for NumberT {
     }
 }
 
+impl Pretty for NumberT {
+    fn pretty(&self, theme: &Theme) -> Doc {
+        theme.number(&self.0)
+    }
+}
+
 // ============================================================================
 // Character
 // ============================================================================
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CharacterT(char);
 pub type Character = Meta<CharacterT>;
 
-impl Pretty for CharacterT {
-    fn pretty(&self, theme: &Theme) -> Doc {
-        theme.character(self.0)
+impl From<char> for CharacterT {
+    fn from(value: char) -> Self {
+        Self(value)
     }
 }
 
@@ -43,11 +49,17 @@ impl AsCharacter for CharacterT {
     }
 }
 
+impl Pretty for CharacterT {
+    fn pretty(&self, theme: &Theme) -> Doc {
+        theme.character(self.0)
+    }
+}
+
 // ============================================================================
 // Constant
 // ============================================================================
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Constant {
     Number(Number),
     Character(Character),
