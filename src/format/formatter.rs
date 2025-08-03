@@ -77,10 +77,6 @@ impl Formatter {
 
     /// run the interpreter
     fn parse_content(&mut self) -> Option<parser::cst::File> {
-        if self.err_code != 0 {
-            return None;
-        }
-
         let mut offset = 0;
         let content_copy = self.content.clone();
         let mut cst_file = parser::cst::File::default();
@@ -95,7 +91,9 @@ impl Formatter {
                 None => break,
                 Some(last_token) => {
                     match self.parse(&tokens) {
-                        None => (),
+                        None => {
+                            break;
+                        }
                         Some(CommandOrEnd::Command(cmd)) => cst_file.add_command(*cmd),
                         Some(CommandOrEnd::End(end)) => {
                             cst_file.set_end(end);
@@ -115,6 +113,9 @@ impl Formatter {
 
     /// run formatter with mode
     pub fn run(&mut self, mode: &Mode) {
+        if self.err_code != 0 {
+            return;
+        }
         let Some(cst_file) = self.parse_content() else {
             return;
         };

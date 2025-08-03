@@ -5,13 +5,13 @@ $ startlang format good.st
 
 ```
 $ startlang format error.st
-? 201
-[201] Error: Lexing error
+? 202
+[202] Error: Parsing error
    ╭─[ error.st:1:14 ]
    │
  1 │ Definition a
    │              │ 
-   │              ╰─ Lexer unknow token.
+   │              ╰─ Expected ":" or ":=", found "end of input".
 ───╯
 
 ```
@@ -22,30 +22,25 @@ $ startlang format error.st
 $ startlang format --print good.st
 Definition a := 3.
 Eval a.
-
-Definition b : N := 42.
-
+Def b : Nat := a.
 ```
 
 ```
 $ startlang format --print bad.st
 Definition a := 3.
-
 Definition b : N := 42.
-
 Eval a.
-
 ```
 
 ```
 $ startlang format --print error.st
-? 201
-[201] Error: Lexing error
+? 202
+[202] Error: Parsing error
    ╭─[ error.st:1:14 ]
    │
  1 │ Definition a
    │              │ 
-   │              ╰─ Lexer unknow token.
+   │              ╰─ Expected ":" or ":=", found "end of input".
 ───╯
 
 ```
@@ -53,8 +48,6 @@ $ startlang format --print error.st
 
 ```
 $ startlang format --print empty.st
-
-
 
 ```
 
@@ -64,8 +57,7 @@ $ startlang format --print empty.st
 $ startlang format --diff good.st
    1    1 | Definition a := 3.
    2    2 | Eval a.
-   3    3 | 
-   4    4 | Definition b : N := 42.
+   3    3 | Def b : Nat := a.
 
 ```
 
@@ -74,25 +66,26 @@ $ startlang format --diff bad.st
 ? 1
    1      - Definition a :=
    2      -   3.
-        1 + Definition a := 3.
-   3    2 | 
+   3      - 
    4      - Definition b:N :=
    5      -   42.
-        3 + Definition b : N := 42.
-   6    4 | 
-   7    5 | Eval a.
+   6      - 
+   7      - Eval a.
+        1 + Definition a := 3.
+        2 + Definition b : N := 42.
+        3 + Eval a.
 
 ```
 
 ```
 $ startlang format --diff error.st
-? 201
-[201] Error: Lexing error
+? 202
+[202] Error: Parsing error
    ╭─[ error.st:1:14 ]
    │
  1 │ Definition a
    │              │ 
-   │              ╰─ Lexer unknow token.
+   │              ╰─ Expected ":" or ":=", found "end of input".
 ───╯
 
 ```
@@ -100,7 +93,8 @@ $ startlang format --diff error.st
 
 ```
 $ startlang format --diff empty.st
-   1    1 | 
-   2    2 | 
+? 1
+   1      - 
+   2      - 
 
 ```
