@@ -1,6 +1,7 @@
 use super::super::Identifier;
 use super::{Type, TypeEnv, Typed};
 use crate::typing::error::ErrorVariableNotFound;
+use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -24,6 +25,18 @@ impl Typed for Alias {
 impl Pretty for Alias {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         theme.ty_var(&self.name.name())
+    }
+}
+
+impl Located for Alias {
+    fn loc(&self) -> Location {
+        self.name.loc()
+    }
+}
+
+impl LocatedSet for Alias {
+    fn set_loc(&mut self, loc: &impl Located) {
+        self.name.set_loc(loc);
     }
 }
 

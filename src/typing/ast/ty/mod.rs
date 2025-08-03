@@ -1,6 +1,6 @@
 use super::super::error::{ErrorUnexpectedType, ErrorVariableNotFound};
 use crate::typing::ast::Identifier;
-use crate::utils::location::Located;
+use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use std::collections::HashMap;
@@ -46,6 +46,24 @@ impl Pretty for Type {
     }
 }
 
+impl Located for Type {
+    fn loc(&self) -> Location {
+        match self {
+            Type::Builtin(builtin) => builtin.loc(),
+            Type::Alias(alias) => alias.loc(),
+        }
+    }
+}
+
+impl LocatedSet for Type {
+    fn set_loc(&mut self, loc: &impl Located) {
+        match self {
+            Type::Builtin(builtin) => builtin.set_loc(loc),
+            Type::Alias(alias) => alias.set_loc(loc),
+        }
+    }
+}
+
 impl PartialEq for Type {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -79,9 +97,9 @@ pub trait Typed {
             Ok(self)
         } else {
             Err(Box::new(ErrorUnexpectedType::new(
-                self.ty(),
                 &ty,
-                &self.loc(),
+                self.ty(),
+                &ty.loc(),
             )))
         }
     }
