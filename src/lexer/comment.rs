@@ -22,7 +22,7 @@ impl Pretty for Comment {
             .append(
                 Doc::intersperse(
                     self.content.iter().map(|txt| theme.comment(txt)),
-                    Doc::line(),
+                    Doc::hardline(),
                 )
                 .group(),
             )

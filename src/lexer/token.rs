@@ -1,5 +1,10 @@
 use num_bigint::BigUint;
 
+use crate::utils::{
+    pretty::Pretty,
+    theme::{Doc, Theme},
+};
+
 use super::Meta;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,6 +32,12 @@ impl std::fmt::Display for Operator {
     }
 }
 
+impl Pretty for Operator {
+    fn pretty(&self, theme: &Theme) -> Doc {
+        theme.operator(&self.to_string())
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
     Identifier(String),
@@ -43,9 +54,50 @@ impl std::fmt::Display for Token {
             Token::Number(n) => write!(f, "{n}"),
             Token::Character(c) => write!(f, "'{c}'"),
             Token::Operator(op) => write!(f, "{op}"),
-            Token::EndOfInput => write!(f, "EndOfInput"),
+            Token::EndOfInput => write!(f, "end of input"),
+        }
+    }
+}
+impl Pretty for Token {
+    fn pretty(&self, theme: &Theme) -> Doc {
+        match self {
+            Token::Identifier(s) => Doc::nil()
+                .append(Doc::text("IDENTIFIER("))
+                .append(Doc::text(s))
+                .append(Doc::text(")"))
+                .group(),
+            Token::Number(n) => Doc::nil()
+                .append(Doc::text("NUMBER("))
+                .append(theme.number(n))
+                .append(Doc::text(")"))
+                .group(),
+            Token::Character(c) => Doc::nil()
+                .append(Doc::text("CHARACTER('"))
+                .append(theme.character(*c))
+                .append(Doc::text("')"))
+                .group(),
+            Token::Operator(op) => Doc::nil()
+                .append(Doc::text("OPERATOR("))
+                .append(op.pretty(theme))
+                .append(Doc::text(")"))
+                .group(),
+            Token::EndOfInput => Doc::nil().append(Doc::text("END_OF_INPUT")).group(),
         }
     }
 }
 
 pub type MetaToken = Meta<Token>;
+
+impl Pretty for Vec<MetaToken> {
+    fn pretty(&self, theme: &Theme) -> Doc {
+        Doc::intersperse(
+            self.iter().map(|token| {
+                Doc::nil()
+                    .append(Doc::text("["))
+                    .append(token.pretty(theme))
+                    .append(Doc::text("]"))
+            }),
+            Doc::line(),
+        )
+    }
+}

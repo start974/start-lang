@@ -23,7 +23,7 @@ impl Pretty for TypedBy {
     fn pretty(&self, theme: &Theme) -> Doc {
         Doc::nil()
             .append(self.colon.pretty(theme))
-            .append(Doc::space())
+            .append(Doc::line())
             .append(self.ty.pretty(theme))
     }
 }
@@ -66,9 +66,11 @@ impl Pretty for ExpressionDefinition {
                 None => Doc::nil(),
             }
         };
+
         let doc_body = Doc::softline()
             .append(self.body.pretty(theme).group())
             .nest(2);
+
         Doc::nil()
             .append(self.pattern.pretty(theme))
             .append(doc_typed_by)

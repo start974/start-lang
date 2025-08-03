@@ -1,1 +1,1 @@
-Def a : Not_definied := 4.
+Def a : Not_defined := 4.

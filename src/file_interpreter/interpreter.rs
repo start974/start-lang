@@ -1,5 +1,6 @@
 use super::error::ErrorFileRead;
 use crate::interpreter;
+use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use crate::interpreter::Interpreter as _;
 use crate::parser;
@@ -20,6 +21,7 @@ pub struct Interpreter {
     err_code: i32,
     pub typer: typing::Typer,
     pub vm: vm::Env,
+    debug_lexer: bool,
     debug_parser: bool,
     debug_typer: bool,
     theme: Theme,
@@ -47,6 +49,7 @@ impl Interpreter {
             err_code: 0,
             typer: typing::Typer::default(),
             vm: vm::Env::default(),
+            debug_lexer: false,
             debug_parser: false,
             debug_typer: false,
             theme: Theme::default_theme(),
@@ -56,8 +59,9 @@ impl Interpreter {
     /// get flag
     fn get_flag(&self, flag: Flag) -> bool {
         match flag {
-            Flag::DebugParser => self.debug_parser,
-            Flag::DebugTyper => self.debug_typer,
+            Flag::Debug(DebugFlag::Lexer) => self.debug_lexer,
+            Flag::Debug(DebugFlag::Parser) => self.debug_parser,
+            Flag::Debug(DebugFlag::Typer) => self.debug_typer,
         }
     }
 }
@@ -116,15 +120,16 @@ impl interpreter::Interpreter for Interpreter {
         self.vm.eval(&expr).unwrap()
     }
 
-    fn set_debug(&mut self, b: bool, flag: Flag) {
+    fn set_flag(&mut self, b: bool, flag: Flag) {
         match flag {
-            Flag::DebugParser => self.debug_parser = b,
-            Flag::DebugTyper => self.debug_typer = b,
+            Flag::Debug(DebugFlag::Lexer) => self.debug_lexer = b,
+            Flag::Debug(DebugFlag::Parser) => self.debug_parser = b,
+            Flag::Debug(DebugFlag::Typer) => self.debug_typer = b,
         }
     }
 
-    fn debug_pretty(&self, flag: Flag, doc: &impl Pretty) {
-        if self.get_flag(flag) {
+    fn debug_pretty(&self, flag: DebugFlag, doc: &impl Pretty) {
+        if self.get_flag(Flag::Debug(flag)) {
             println!("{}", doc.make_string(&self.theme));
         }
     }

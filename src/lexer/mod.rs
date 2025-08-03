@@ -36,7 +36,7 @@ pub fn lexer<'src>(
         lexing::number().map(Token::Number),
         lexing::character().map(Token::Character),
     ))
-    .padded_by(inline_whitespace())
+    .padded()
     .with_meta(source_id.clone(), offset))
     .repeated()
     .collect::<Vec<_>>()
