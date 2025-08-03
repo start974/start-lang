@@ -54,6 +54,7 @@ pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, ErrorChumsky<'src>> + Si
                     Location::new(source_id.clone(), span.start, span.end).with_offset(offset);
                 Meta::new(value, loc).with_items(&comments)
             })
+            .padded()
     }
 }
 
