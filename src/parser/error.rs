@@ -20,7 +20,12 @@ impl Error {
         let loc = Location::new(source_id, span.start, span.end);
         Self {
             loc,
-            expected: { err.expected().map(RichPattern::to_string).collect() },
+            expected: {
+                err.expected()
+                    .map(RichPattern::to_string)
+                    .filter(|s| !s.is_empty())
+                    .collect()
+            },
             found: err.found().map(|meta| meta.value.clone()),
         }
     }

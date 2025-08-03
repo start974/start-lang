@@ -17,9 +17,9 @@ Def c
   : LongType_NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN :=
   long_number.
 
-$ long_number.
+Eval long_number.
 
-?: n.
+TypeOf n.
 
 Def b := true.
 

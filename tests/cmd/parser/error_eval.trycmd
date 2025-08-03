@@ -23,7 +23,7 @@ $ startlang run parent_unclosed1.st
    │
  1 │ Eval (1.
    │        ┬  
-   │        ╰── Expected "Colon" or ")", found ".".
+   │        ╰── Expected ":" or ")", found ".".
 ───╯
 
 ```
@@ -37,7 +37,7 @@ $ startlang run parent_unclosed2.st
    │
  1 │ Eval (1.
    │        ┬  
-   │        ╰── Expected "Colon" or ")", found ".".
+   │        ╰── Expected ":" or ")", found ".".
 ───╯
 
 ```

@@ -294,7 +294,7 @@ where
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Type" =>
             meta.clone().map(|_| TypeKeywordT::Type),
-        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Definition" =>
+        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Ty" =>
             meta.clone().map(|_| TypeKeywordT::Ty),
     }
 }
@@ -391,5 +391,5 @@ where
     use cst::file::EndOfFileT;
     select! {meta @ Meta{ value: Token::EndOfInput, ..} =>
         meta.map(|_| EndOfFileT())
-    }.labelled("end of input")
+    }.labelled("")
 }
