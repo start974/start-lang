@@ -13,40 +13,35 @@ pub enum ConstantKind {
 }
 
 pub struct Constant {
+    /// kind of the constant
+    kind: ConstantKind,
     /// type of constant
     ty: Type,
     /// location of the constant
     loc: Location,
-    /// kind of the constant
-    kind: ConstantKind,
 }
 
 impl Constant {
+    fn new(kind: ConstantKind, ty: Type) -> Self {
+        Self {
+            kind,
+            ty,
+            loc: Location::unknown(),
+        }
+    }
     /// create natural number constant
     pub fn nat(v: NConst) -> Self {
-        Self {
-            ty: Type::from(TypeBuiltin::Nat),
-            loc: Location::unknown(),
-            kind: ConstantKind::Nat(v),
-        }
+        Self::new(ConstantKind::Nat(v), Type::from(TypeBuiltin::nat()))
     }
 
     /// create boolean constant
     pub fn boolean(b: bool) -> Self {
-        Self {
-            ty: Type::Builtin(TypeBuiltin::Bool),
-            loc: Location::unknown(),
-            kind: ConstantKind::Bool(b),
-        }
+        Self::new(ConstantKind::Bool(b), Type::from(TypeBuiltin::bool()))
     }
 
     /// create a character constant
     pub fn character(c: char) -> Self {
-        Self {
-            ty: Type::Builtin(TypeBuiltin::Char),
-            loc: Location::unknown(),
-            kind: ConstantKind::Char(c),
-        }
+        Self::new(ConstantKind::Char(c), Type::Builtin(TypeBuiltin::char()))
     }
 
     /// get kind of the constant

@@ -92,9 +92,9 @@ impl Typer {
                     .map(ast::Type::from)
                     .or_else(|e| {
                         match name {
-                            "__Type_Nat__" => Ok(ast::TypeBuiltin::Nat),
-                            "__Type_Bool__" => Ok(ast::TypeBuiltin::Bool),
-                            "__Type_Char__" => Ok(ast::TypeBuiltin::Char),
+                            "__Type_Nat__" => Ok(ast::TypeBuiltin::nat()),
+                            "__Type_Bool__" => Ok(ast::TypeBuiltin::bool()),
+                            "__Type_Char__" => Ok(ast::TypeBuiltin::char()),
                             _ => Err(e),
                         }
                         .map(ast::Type::from)

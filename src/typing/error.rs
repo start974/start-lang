@@ -89,18 +89,18 @@ impl ErrorReport for ErrorUnexpectedType {
             .with_label(
                 Label::new(self.loc.clone()).with_message(
                     Message::nil()
-                        .text("Expect Type ")
-                        .of_pretty(&self.expected)
+                        .text("Found Type ")
+                        .of_pretty(&self.found)
                         .text(".")
                         .make_string(theme),
                 ),
             )
             .with_note(
                 Message::nil()
-                    .text("Expected type: ")
+                    .text("Type exprected: ")
                     .of_pretty(&self.expected)
-                    .text(".\n")
-                    .text("Found type:    ")
+                    .text("\n")
+                    .text("         found: ")
                     .of_pretty(&self.found)
                     .make_string(theme),
             )

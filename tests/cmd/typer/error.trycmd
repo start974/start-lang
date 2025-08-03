@@ -7,9 +7,9 @@ $ startlang run def_expr_type_not_found.st
 [301] Error: Variable not found.
    ╭─[ def_expr_type_not_found.st:1:9 ]
    │
- 1 │ Def a : Not_definied := 4.
-   │         ──────┬─────  
-   │               ╰─────── Variable "Not_definied" not found in the current scope.
+ 1 │ Def a : Not_defined := 4.
+   │         ─────┬─────  
+   │              ╰─────── Variable "Not_defined" not found in the current scope.
 ───╯
 
 ```
@@ -48,36 +48,36 @@ $ startlang run def_type_not_found.st
 ```
 $ startlang run type_mismatch.st
 ? 1
-Definition a : ℕ := 1.
+Def a : ℕ := 1.
 Definition a_0 : ℕ :=
   1
-Definition b : 𝔹 := true.
+Def b : 𝔹 := true.
 Definition b_0 : 𝔹 :=
   true_0
-Definition c : ℕ := b.
+Def c : ℕ := b.
 [302] Error: Type mismatch.
-   ╭─[ type_mismatch.st:8:5 ]
+   ╭─[ type_mismatch.st:8:9 ]
    │
  8 │ Def c : ℕ := b.
-   │     ┬  
-   │     ╰── Expect Type 𝔹.
+   │         ┬  
+   │         ╰── Found Type 𝔹.
    │ 
-   │ Note: Expected type: 𝔹.
-   │       Found type:    ℕ
+   │ Note: Type exprected: ℕ
+   │                found: 𝔹
 ───╯
-Definition c' : 𝔹 := a : Bool.
+Def c' : 𝔹 := a : Bool.
 [302] Error: Type mismatch.
-    ╭─[ type_mismatch.st:10:16 ]
+    ╭─[ type_mismatch.st:10:20 ]
     │
  10 │ Def c' : 𝔹 := (a : Bool).
-    │                ┬  
-    │                ╰── Expect Type ℕ.
+    │                    ──┬─  
+    │                      ╰─── Found Type ℕ.
     │ 
-    │ Note: Expected type: ℕ.
-    │       Found type:    Bool
+    │ Note: Type exprected: Bool
+    │                found: ℕ
 ────╯
 Type N1 := Nat.
-Definition d : N1 := c.
+Def d : N1 := c.
 Definition d_0 : N1 :=
   c_0
 

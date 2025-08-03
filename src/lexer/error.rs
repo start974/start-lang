@@ -42,7 +42,9 @@ impl ErrorReport for Error<'_> {
                 .text("Lexer expected ")
                 .quoted(self.err.expected().next().unwrap().to_string());
             if let Some(found) = self.err.found() {
-                msg = msg.text(", found ").quoted(found.to_string().escape_default());
+                msg = msg
+                    .text(", found ")
+                    .quoted(found.to_string().escape_default());
             }
         } else {
             msg = Message::nil().text("Lexer unknow token ");
