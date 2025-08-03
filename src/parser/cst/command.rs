@@ -201,5 +201,6 @@ impl Pretty for Command {
         Doc::nil()
             .append(self.kind.pretty(theme))
             .append(self.dot.pretty(theme))
+            .group()
     }
 }

@@ -13,8 +13,8 @@ pub enum CommentOrLines {
 impl Pretty for CommentOrLines {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            CommentOrLines::Comment(comment) => comment.pretty(theme),
-            CommentOrLines::Lines => Doc::line(),
+            CommentOrLines::Comment(comment) => comment.pretty(theme).group(),
+            CommentOrLines::Lines => Doc::hardline(),
         }
     }
 }
@@ -78,10 +78,7 @@ impl<T> Meta<T> {
 
     /// just pretty meta
     pub fn pretty_meta(&self, theme: &Theme) -> Doc {
-        Doc::intersperse(
-            self.before.iter().map(|item| item.pretty(theme)),
-            Doc::nil(),
-        )
+        Doc::concat(self.before.iter().map(|item| item.pretty(theme)))
     }
 }
 
@@ -106,6 +103,10 @@ where
 {
     fn pretty(&self, theme: &Theme) -> Doc {
         self.pretty_meta(theme)
+            .append(match self.before.last() {
+                Some(CommentOrLines::Comment(_)) => Doc::line(),
+                _ => Doc::nil(),
+            })
             .append(self.value.pretty(theme))
     }
 }

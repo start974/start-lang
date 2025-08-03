@@ -1,4 +1,8 @@
+pub enum DebugFlag {
+    Parser,
+    Typer,
+    Lexer,
+}
 pub enum Flag {
-    DebugParser,
-    DebugTyper,
+    Debug(DebugFlag),
 }

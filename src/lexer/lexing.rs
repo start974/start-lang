@@ -30,7 +30,7 @@ pub fn comment_or_lines<'src>() -> impl Parser<'src, &'src str, CommentOrLines, 
 {
     let lines = newline()
         .repeated()
-        .at_least(1)
+        .at_least(2)
         .map(|_| CommentOrLines::Lines);
     let comment = comment().map(CommentOrLines::Comment);
     choice((lines, comment))

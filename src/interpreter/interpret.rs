@@ -1,7 +1,7 @@
 use ariadne::Span as _;
 
 use super::error::UnknownOption;
-use super::flag::Flag;
+use super::flag::{DebugFlag, Flag};
 use crate::lexer;
 use crate::parser::cst::AsIdentifier as _;
 use crate::parser::{self, cst};
@@ -53,10 +53,10 @@ pub trait Interpreter {
     fn vm_eval_expression(&mut self, expr: typing::ast::Expression) -> vm::Value;
 
     /// set debug parser
-    fn set_debug(&mut self, b: bool, flag: Flag);
+    fn set_flag(&mut self, b: bool, flag: Flag);
 
     /// pretty debug
-    fn debug_pretty(&self, flag: Flag, doc: &impl Pretty);
+    fn debug_pretty(&self, flag: DebugFlag, doc: &impl Pretty);
 
     /// print eval
     fn print_eval(&mut self, value: &vm::Value);
@@ -87,7 +87,7 @@ pub trait Interpreter {
     fn run_expr_definition(&mut self, def: cst::ExpressionDefinition) {
         self.type_expr_definition(def)
             .map(|def| {
-                self.debug_pretty(Flag::DebugTyper, &def);
+                self.debug_pretty(DebugFlag::Typer, &def);
                 if self.get_error_code() == 0 {
                     self.vm_add_definition(def)
                 }
@@ -106,7 +106,7 @@ pub trait Interpreter {
     fn run_eval(&mut self, expr: cst::Expression) {
         self.type_expression(expr)
             .map(|expr| {
-                self.debug_pretty(Flag::DebugTyper, &expr);
+                self.debug_pretty(DebugFlag::Typer, &expr);
                 if self.get_error_code() == 0 {
                     let value = self.vm_eval_expression(expr);
                     self.print_eval(&value);
@@ -128,8 +128,9 @@ pub trait Interpreter {
     /// run command set and unset
     fn run_set(&mut self, b: bool, var: cst::expression::Variable) {
         match var.name() {
-            "DebugParser" => self.set_debug(b, Flag::DebugParser),
-            "DebugTyper" => self.set_debug(b, Flag::DebugTyper),
+            "DebugLexer" => self.set_flag(b, Flag::Debug(DebugFlag::Lexer)),
+            "DebugParser" => self.set_flag(b, Flag::Debug(DebugFlag::Parser)),
+            "DebugTyper" => self.set_flag(b, Flag::Debug(DebugFlag::Typer)),
             _ => self.fail(UnknownOption::from(var)),
         }
     }
@@ -190,8 +191,9 @@ pub trait Interpreter {
             match tokens.last() {
                 None => break,
                 Some(last_token) => {
+                    self.debug_pretty(DebugFlag::Lexer, &tokens);
                     if let Some(cmd) = self.parse(&tokens) {
-                        self.debug_pretty(Flag::DebugParser, &cmd);
+                        self.debug_pretty(DebugFlag::Parser, &cmd);
                         self.run_command(cmd);
                     }
                     let add_offset = last_token.loc().end() - offset_source;
