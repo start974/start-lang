@@ -22,8 +22,7 @@ $ startlang run char_unclosed2.st
    │
  1 │ Eval 1'.
    │         ┬  
-   │         ╰── Lexer expected "'", found "
-".
+   │         ╰── Lexer expected "'", found "/n".
 ───╯
 
 ```
