@@ -28,7 +28,7 @@ $ startlang run just_keyword.st
    │
  2 │ :?.
    │   ┬  
-   │   ╰── Lexer unknow token, found ".".
+   │   ╰── Lexer unknow token ".".
 ───╯
 
 ```

@@ -2,6 +2,15 @@
 
 ```
 $ startlang run not_end.st
+? 202
+[202] Error: Parsing error
+   ╭─[ not_end.st:1:8 ]
+   │
+ 1 │ Type N
+   │        │ 
+   │        ╰─ Expected ":=", found "end of input".
+───╯
+
 ```
 ```
 $ startlang run no_eq_def.st
