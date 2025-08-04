@@ -155,28 +155,28 @@ impl Pretty for CommandKind {
         match self {
             CommandKind::ExpressionDefinition { keyword, def } => Doc::nil()
                 .append(keyword.pretty(theme))
-                .append(Doc::space())
-                .append(def.pretty(theme)),
+                .append(Doc::softline())
+                .append(def.pretty(theme).nest(2)),
             CommandKind::TypeDefinition { keyword, def } => Doc::nil()
                 .append(keyword.pretty(theme))
-                .append(Doc::space())
-                .append(def.pretty(theme)),
+                .append(Doc::softline())
+                .append(def.pretty(theme).nest(2)),
             CommandKind::Eval { keyword, expr } => Doc::nil()
                 .append(keyword.pretty(theme))
-                .append(Doc::space())
-                .append(expr.pretty(theme)),
+                .append(Doc::softline())
+                .append(expr.pretty(theme).nest(2)),
             CommandKind::TypeOf { keyword, expr } => Doc::nil()
                 .append(keyword.pretty(theme))
-                .append(Doc::space())
-                .append(expr.pretty(theme)),
+                .append(Doc::softline())
+                .append(expr.pretty(theme).nest(2)),
             CommandKind::Set { keyword, var } => Doc::nil()
                 .append(keyword.pretty(theme))
-                .append(Doc::space())
-                .append(var.pretty(theme)),
+                .append(Doc::softline())
+                .append(var.pretty(theme).nest(2)),
             CommandKind::UnSet { keyword, var } => Doc::nil()
                 .append(keyword.pretty(theme))
                 .append(Doc::space())
-                .append(var.pretty(theme)),
+                .append(var.pretty(theme).nest(2)),
         }
     }
 }
@@ -200,7 +200,12 @@ impl Pretty for Command {
     fn pretty(&self, theme: &Theme) -> Doc {
         Doc::nil()
             .append(self.kind.pretty(theme))
-            .append(self.dot.pretty(theme))
+            .append(if self.dot.has_comment() {
+                Doc::line()
+            } else {
+                Doc::nil()
+            })
+            .append(self.dot.pretty_with_end_line(theme, false))
             .group()
     }
 }

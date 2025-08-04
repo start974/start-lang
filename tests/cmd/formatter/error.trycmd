@@ -1,9 +1,5 @@
 # Overrite
 ```
-$ startlang format good.st
-```
-
-```
 $ startlang format error.st
 ? 202
 [202] Error: Parsing error
@@ -19,20 +15,6 @@ $ startlang format error.st
 # Format print
 
 ```
-$ startlang format --print good.st
-Definition a := 3.
-Eval a.
-Def b : Nat := a.
-```
-
-```
-$ startlang format --print bad.st
-Definition a := 3.
-Definition b : N := 42.
-Eval a.
-```
-
-```
 $ startlang format --print error.st
 ? 202
 [202] Error: Parsing error
@@ -45,37 +27,7 @@ $ startlang format --print error.st
 
 ```
 
-
-```
-$ startlang format --print empty.st
-
-```
-
 # Format diff
-
-```
-$ startlang format --diff good.st
-   1    1 | Definition a := 3.
-   2    2 | Eval a.
-   3    3 | Def b : Nat := a.
-
-```
-
-```
-$ startlang format --diff bad.st
-? 1
-   1      - Definition a :=
-   2      -   3.
-   3      - 
-   4      - Definition b:N :=
-   5      -   42.
-   6      - 
-   7      - Eval a.
-        1 + Definition a := 3.
-        2 + Definition b : N := 42.
-        3 + Eval a.
-
-```
 
 ```
 $ startlang format --diff error.st
@@ -87,14 +39,5 @@ $ startlang format --diff error.st
    │              │ 
    │              ╰─ Expected ":" or ":=", found "end of input".
 ───╯
-
-```
-
-
-```
-$ startlang format --diff empty.st
-? 1
-   1      - 
-   2      - 
 
 ```

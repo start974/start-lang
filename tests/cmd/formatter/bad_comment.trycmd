@@ -1,0 +1,96 @@
+# Format print
+
+```
+$ startlang format --print bad_comment.st
+(* Comment before *)
+(* other comment *)
+
+(* comment with lines *)
+(** doc *)
+Definition (* comment1 *)
+  a (* comment2 *) : (* comment 3 *) ℕ (* comment 4 *)
+  := (* comment 5 *) 3
+(* comment 6 *)
+.
+Eval (* Eval var a *) a (* Eval last comment *).
+Def b : Nat := (* many comment
+  
+  bla bla bla
+  bla bla bla blaaa
+  
+  end of many comment *)
+  
+  a.
+(** doc type *)
+Type (* comment 1 *)
+  N1 (* comment 2 *)
+  := (* comment 3 *) Nat
+(* comment 4 *)
+.
+
+TypeOf (* type of a *)
+  a.
+
+Set (* comment set *)
+  DebugTyper.
+Unset (* comment unset *) DebugTyper.
+```
+
+# Format diff
+
+```
+$ startlang format --diff bad_comment.st
+? 1
+   1    1 | (* Comment before *)
+   2    2 | (* other comment *)
+   3    3 | 
+   4    4 | (* comment with lines *)
+   5    5 | (** doc *)
+   6      - Definition (* comment1 *) a (* comment2 *) : (* comment 3 *) ℕ (* comment 4 *) := (* comment 5 *) 3 (* comment 6 *).
+   7      - Eval (* Eval var a *) a (* Eval last comment*).
+   8      - Def b : Nat :=
+   9      -   (* many comment
+  10      - 
+        6 + Definition (* comment1 *)
+        7 +   a (* comment2 *) : (* comment 3 *) ℕ (* comment 4 *)
+        8 +   := (* comment 5 *) 3
+        9 + (* comment 6 *)
+       10 + .
+       11 + Eval (* Eval var a *) a (* Eval last comment *).
+       12 + Def b : Nat := (* many comment
+       13 +   
+  11   14 |   bla bla bla
+  12   15 |   bla bla bla blaaa
+  13      - 
+       16 +   
+  14   17 |   end of many comment *)
+  15      - 
+  16      - 
+  17      - 
+  18      - 
+       18 +   
+  19   19 |   a.
+  20      - 
+  21   20 | (** doc type *)
+  22      - Type (* comment 1 *) N1 (* comment 2 *) :=
+  23      - 
+  24      - 
+  25      - (* comment 3 *) Nat (* comment 4*).
+  26      - 
+       21 + Type (* comment 1 *)
+       22 +   N1 (* comment 2 *)
+       23 +   := (* comment 3 *) Nat
+       24 + (* comment 4 *)
+       25 + .
+  27   26 | 
+  28      - TypeOf (* type of a *) a.
+       27 + TypeOf (* type of a *)
+       28 +   a.
+  29   29 | 
+  30      -    Set (* comment set *)    DebugTyper.
+  31      -    Unset (* comment unset *) DebugTyper        .
+       30 + Set (* comment set *)
+       31 +   DebugTyper.
+       32 + Unset (* comment unset *) DebugTyper.
+
+```

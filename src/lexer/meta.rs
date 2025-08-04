@@ -10,15 +10,6 @@ pub enum CommentOrLines {
     Lines,
 }
 
-impl Pretty for CommentOrLines {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        match self {
-            CommentOrLines::Comment(comment) => comment.pretty(theme).group(),
-            CommentOrLines::Lines => Doc::hardline(),
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Meta<T> {
     before: Vec<CommentOrLines>,
@@ -37,16 +28,16 @@ impl<T> Meta<T> {
 
     /// add comment before
     pub fn add_comment(&mut self, comment: Comment) {
+        if self.before.len() == 1 && matches!(self.before.last(), Some(CommentOrLines::Lines)) {
+            let _ = self.before.pop();
+        }
         self.before.push(CommentOrLines::Comment(comment));
     }
 
     /// add lines before
     pub fn add_lines(&mut self) {
-        match self.before.last() {
-            Some(CommentOrLines::Lines) => (),
-            _ => {
-                self.before.push(CommentOrLines::Lines);
-            }
+        if !matches!(self.before.last(), Some(CommentOrLines::Lines)) {
+            self.before.push(CommentOrLines::Lines);
         }
     }
     /// with comments or lines items before
@@ -64,6 +55,13 @@ impl<T> Meta<T> {
         self
     }
 
+    /// has comment
+    pub fn has_comment(&self) -> bool {
+        self.before
+            .iter()
+            .any(|item| matches!(item, CommentOrLines::Comment(_)))
+    }
+
     /// map value
     pub fn map<U, F>(self, f: F) -> Meta<U>
     where
@@ -78,7 +76,43 @@ impl<T> Meta<T> {
 
     /// just pretty meta
     pub fn pretty_meta(&self, theme: &Theme) -> Doc {
-        Doc::concat(self.before.iter().map(|item| item.pretty(theme)))
+        let mut last_is_comment = false;
+        let mut doc = Doc::nil();
+        for val in self.before.iter() {
+            if last_is_comment {
+                doc = doc.append(Doc::hardline());
+            }
+            match val {
+                CommentOrLines::Comment(comment) => {
+                    doc = doc.append(comment.pretty(theme));
+                    last_is_comment = true;
+                }
+                CommentOrLines::Lines => {
+                    doc = doc.append(Doc::hardline());
+                    last_is_comment = false;
+                }
+            }
+        }
+        doc
+    }
+
+    /// pretty without line after comment
+    pub fn pretty_with_end_line(&self, theme: &Theme, end_line: bool) -> Doc
+    where
+        T: Pretty,
+    {
+        self.pretty_meta(theme)
+            .append(match self.before.last() {
+                Some(CommentOrLines::Comment(_)) => {
+                    if end_line {
+                        Doc::line()
+                    } else {
+                        Doc::line_()
+                    }
+                }
+                _ => Doc::nil(),
+            })
+            .append(self.value.pretty(theme))
     }
 }
 
@@ -102,12 +136,7 @@ where
     T: Pretty,
 {
     fn pretty(&self, theme: &Theme) -> Doc {
-        self.pretty_meta(theme)
-            .append(match self.before.last() {
-                Some(CommentOrLines::Comment(_)) => Doc::line(),
-                _ => Doc::nil(),
-            })
-            .append(self.value.pretty(theme))
+        self.pretty_with_end_line(theme, true)
     }
 }
 
