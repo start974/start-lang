@@ -120,6 +120,7 @@ impl Formatter {
             return;
         };
         let formatted = cst_file.make_string(&Theme::default());
+
         match mode {
             Mode::Overwrite if std::fs::write(&self.path, &formatted).is_err() => {
                 self.fail(ErrorFileWrite::new(self.path.clone()))

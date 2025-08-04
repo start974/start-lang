@@ -1,0 +1,26 @@
+# Format print
+```
+$ startlang format --print bad.st
+Definition a := 3.
+
+Definition b : N := 42.
+
+Eval a.
+```
+# Format diff
+
+```
+$ startlang format --diff bad.st
+? 1
+   1      - Definition a :=
+   2      -   3.
+        1 + Definition a := 3.
+   3    2 | 
+   4      - Definition b:N :=
+   5      -   42.
+        3 + Definition b : N := 42.
+   6    4 | 
+   7      - Eval a.
+        5 + Eval a.
+
+```

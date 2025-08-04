@@ -1,0 +1,81 @@
+# Overrite
+```
+$ startlang format good_comment.st
+```
+
+# Format print
+
+```
+$ startlang format --print good_comment.st
+(* Comment before *)
+(* other comment *)
+
+(* comment with lines *)
+(** doc *)
+Definition (* comment1 *)
+  a (* comment2 *) : (* comment 3 *) ℕ (* comment 4 *)
+  := (* comment 5 *) 3
+(* comment 6 *)
+.
+Eval (* Eval var a *) a (* Eval last comment *).
+
+Def b : Nat := (* many comment
+  
+  bla bla bla
+  bla bla bla blaaa
+  
+  end of many comment *)
+  a.
+(** doc type *)
+Type (* comment 1 *)
+  N1 (* comment 2 *)
+  := (* comment 3 *) Nat
+(* comment 4 *)
+.
+
+TypeOf (* type of a *)
+  a.
+
+Set (* comment set *)
+  DebugTyper.
+Unset (* comment unset *) DebugTyper.
+```
+
+# Format diff
+
+```
+$ startlang format --diff good_comment.st
+   1    1 | (* Comment before *)
+   2    2 | (* other comment *)
+   3    3 | 
+   4    4 | (* comment with lines *)
+   5    5 | (** doc *)
+   6    6 | Definition (* comment1 *)
+   7    7 |   a (* comment2 *) : (* comment 3 *) ℕ (* comment 4 *)
+   8    8 |   := (* comment 5 *) 3
+   9    9 | (* comment 6 *)
+  10   10 | .
+  11   11 | Eval (* Eval var a *) a (* Eval last comment *).
+  12   12 | 
+  13   13 | Def b : Nat := (* many comment
+  14   14 |   
+  15   15 |   bla bla bla
+  16   16 |   bla bla bla blaaa
+  17   17 |   
+  18   18 |   end of many comment *)
+  19   19 |   a.
+  20   20 | (** doc type *)
+  21   21 | Type (* comment 1 *)
+  22   22 |   N1 (* comment 2 *)
+  23   23 |   := (* comment 3 *) Nat
+  24   24 | (* comment 4 *)
+  25   25 | .
+  26   26 | 
+  27   27 | TypeOf (* type of a *)
+  28   28 |   a.
+  29   29 | 
+  30   30 | Set (* comment set *)
+  31   31 |   DebugTyper.
+  32   32 | Unset (* comment unset *) DebugTyper.
+
+```

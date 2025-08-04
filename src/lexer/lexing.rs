@@ -1,7 +1,7 @@
 use super::{comment::Comment, meta::CommentOrLines, token, ErrorChumsky, Meta};
 use crate::utils::location::{Location, SourceId};
 use chumsky::prelude::*;
-use chumsky::text::newline;
+use chumsky::text::{newline, whitespace};
 use num_bigint::BigUint;
 use std::rc::Rc;
 
@@ -13,48 +13,51 @@ use std::rc::Rc;
 /// COMMENT := "(*" <ANY>* "*)"
 /// ```
 pub fn comment<'src>() -> impl Parser<'src, &'src str, Comment, ErrorChumsky<'src>> {
-    just("(*")
-        .ignore_then(
+    let start = just("(*")
+        .ignore_then(just("*").or_not())
+        .map(|opt| opt.is_some());
+
+    start
+        .then(
             any()
                 .and_is(just("*)").not())
                 .repeated()
                 .collect::<String>(),
         )
         .then_ignore(just("*)"))
-        .map(Comment::from)
+        .map(|(is_doc, str)| Comment::from(str).with_is_doc(is_doc))
         .labelled("comment")
-}
-
-/// lex comment or lines
-pub fn comment_or_lines<'src>() -> impl Parser<'src, &'src str, CommentOrLines, ErrorChumsky<'src>>
-{
-    let lines = newline()
-        .repeated()
-        .at_least(2)
-        .map(|_| CommentOrLines::Lines);
-    let comment = comment().map(CommentOrLines::Comment);
-    choice((lines, comment))
 }
 
 // ===========================================================================
 // Meta
 // ===========================================================================
 pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, ErrorChumsky<'src>> + Sized {
-    /// with comment parser
+    /// meta(rule) = (LINE{2,} | WS* COMMENT)* WS* rule
     fn with_meta(
         self,
         source_id: SourceId,
         offset: usize,
     ) -> impl Parser<'src, &'src str, Meta<T>, ErrorChumsky<'src>> {
-        (comment_or_lines().repeated().collect::<Vec<_>>())
-            .then(self)
-            .map_with(move |(comments, value), e| {
-                let span: SimpleSpan = e.span();
-                let loc =
-                    Location::new(source_id.clone(), span.start, span.end).with_offset(offset);
-                Meta::new(value, loc).with_items(&comments)
-            })
-            .padded()
+        let lines = newline().repeated().at_least(2).to(CommentOrLines::Lines);
+        let comment = whitespace().ignore_then(comment()).map(CommentOrLines::Comment);
+
+        let meta_items = (lines.or(comment))
+            .repeated()
+            .collect::<Vec<CommentOrLines>>();
+
+        // Ajoute la location à la rule
+        let rule_loc = self.map_with(move |value, e| {
+            let span: SimpleSpan = e.span();
+            let loc = Location::new(source_id.clone(), span.start, span.end).with_offset(offset);
+            (value, loc)
+        });
+
+        // Consomme les derniers espaces/lignes avant le rule
+        meta_items
+            .then_ignore(whitespace())
+            .then(rule_loc)
+            .map(move |(comments, (value, loc))| Meta::new(value, loc).with_items(&comments))
     }
 }
 

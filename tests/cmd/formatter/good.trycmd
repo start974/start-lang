@@ -1,0 +1,23 @@
+# Overrite
+```
+$ startlang format good.st
+```
+
+# Format print
+
+```
+$ startlang format --print good.st
+Definition a := 3.
+Eval a.
+Def b : Nat := a.
+```
+
+# Format diff
+
+```
+$ startlang format --diff good.st
+   1    1 | Definition a := 3.
+   2    2 | Eval a.
+   3    3 | Def b : Nat := a.
+
+```

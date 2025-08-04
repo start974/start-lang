@@ -1,0 +1,17 @@
+# Format print
+
+```
+$ startlang format --print empty.st
+
+
+```
+
+# Format diff
+
+```
+$ startlang format --diff empty.st
+? 1
+   1    1 | 
+   2      - 
+
+```

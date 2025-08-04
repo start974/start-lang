@@ -48,12 +48,15 @@ $ startlang run def_type_not_found.st
 ```
 $ startlang run type_mismatch.st
 ? 1
+
 Def a : ℕ := 1.
 Definition a_0 : ℕ :=
   1
+
 Def b : 𝔹 := true.
 Definition b_0 : 𝔹 :=
   true_0
+
 Def c : ℕ := b.
 [302] Error: Type mismatch.
    ╭─[ type_mismatch.st:8:9 ]
@@ -65,6 +68,7 @@ Def c : ℕ := b.
    │ Note: Type exprected: ℕ
    │                found: 𝔹
 ───╯
+
 Def c' : 𝔹 := a : Bool.
 [302] Error: Type mismatch.
     ╭─[ type_mismatch.st:10:20 ]
@@ -76,7 +80,9 @@ Def c' : 𝔹 := a : Bool.
     │ Note: Type exprected: Bool
     │                found: ℕ
 ────╯
+
 Type N1 := Nat.
+
 Def d : N1 := c.
 Definition d_0 : N1 :=
   c_0
