@@ -23,12 +23,12 @@ $ startlang run just_keyword.st
    │       ┬  
    │       ╰── Expected "expression", found ".".
 ───╯
-[201] Error: Lexing error
+[202] Error: Parsing error
    ╭─[ just_keyword.st:2:3 ]
    │
- 2 │ :?.
+ 2 │ ?:.
    │   ┬  
-   │   ╰── Lexer unknow token ".".
+   │   ╰── Expected "expression", found ".".
 ───╯
 
 ```

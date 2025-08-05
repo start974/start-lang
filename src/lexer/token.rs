@@ -15,6 +15,7 @@ pub enum Operator {
     RParen,
     Eval,
     TypeOf,
+    Help,
     Dot,
 }
 
@@ -27,6 +28,7 @@ impl std::fmt::Display for Operator {
             Operator::RParen => write!(f, ")"),
             Operator::Eval => write!(f, "$"),
             Operator::TypeOf => write!(f, "?:"),
+            Operator::Help => write!(f, "?"),
             Operator::Dot => write!(f, "."),
         }
     }

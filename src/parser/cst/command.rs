@@ -1,4 +1,4 @@
-use super::{expression, operator, Expression, ExpressionDefinition, TypeDefinition};
+use super::{expression, help, operator, Expression, ExpressionDefinition, TypeDefinition};
 use crate::lexer::meta::Meta;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
@@ -60,6 +60,7 @@ impl Pretty for EvalKeywordT {
         }
     }
 }
+
 // ============================================================================
 // TypeOf Keyword
 // ============================================================================
@@ -75,6 +76,25 @@ impl Pretty for TypeOfKeywordT {
         match self {
             TypeOfKeywordT::TypeOf => theme.keyword(&"TypeOf"),
             TypeOfKeywordT::TypeOfOp => theme.operator(&"?:"),
+        }
+    }
+}
+
+// ============================================================================
+// Help Keyword
+// ============================================================================
+#[derive(Debug)]
+pub enum HelpKeywordT {
+    Help,
+    HelpOp,
+}
+pub type HelpKeyword = Meta<HelpKeywordT>;
+
+impl Pretty for HelpKeywordT {
+    fn pretty(&self, theme: &Theme) -> Doc {
+        match self {
+            HelpKeywordT::Help => theme.keyword(&"Help"),
+            HelpKeywordT::HelpOp => theme.operator(&"?"),
         }
     }
 }
@@ -127,6 +147,10 @@ pub enum CommandKind {
         keyword: TypeOfKeyword,
         expr: Expression,
     },
+    Help {
+        keyword: HelpKeyword,
+        var: help::Variable,
+    },
     Set {
         keyword: SetKeyword,
         var: expression::Variable,
@@ -144,6 +168,7 @@ impl Located for CommandKind {
             CommandKind::TypeDefinition { keyword, def } => keyword.loc().union(def.loc()),
             CommandKind::Eval { keyword, expr } => keyword.loc().union(expr.loc()),
             CommandKind::TypeOf { keyword, expr } => keyword.loc().union(expr.loc()),
+            CommandKind::Help { keyword, var } => keyword.loc().union(var.loc()),
             CommandKind::Set { keyword, var, .. } => keyword.loc().union(var.loc()),
             CommandKind::UnSet { keyword, var, .. } => keyword.loc().union(var.loc()),
         }
@@ -152,32 +177,29 @@ impl Located for CommandKind {
 
 impl Pretty for CommandKind {
     fn pretty(&self, theme: &Theme) -> Doc {
-        match self {
-            CommandKind::ExpressionDefinition { keyword, def } => Doc::nil()
-                .append(keyword.pretty(theme))
-                .append(Doc::softline())
-                .append(def.pretty(theme).nest(2)),
-            CommandKind::TypeDefinition { keyword, def } => Doc::nil()
-                .append(keyword.pretty(theme))
-                .append(Doc::softline())
-                .append(def.pretty(theme).nest(2)),
-            CommandKind::Eval { keyword, expr } => Doc::nil()
-                .append(keyword.pretty(theme))
-                .append(Doc::softline())
-                .append(expr.pretty(theme).nest(2)),
-            CommandKind::TypeOf { keyword, expr } => Doc::nil()
-                .append(keyword.pretty(theme))
-                .append(Doc::softline())
-                .append(expr.pretty(theme).nest(2)),
-            CommandKind::Set { keyword, var } => Doc::nil()
-                .append(keyword.pretty(theme))
-                .append(Doc::softline())
-                .append(var.pretty(theme).nest(2)),
-            CommandKind::UnSet { keyword, var } => Doc::nil()
-                .append(keyword.pretty(theme))
-                .append(Doc::space())
-                .append(var.pretty(theme).nest(2)),
-        }
+        let doc_keyword = match self {
+            CommandKind::ExpressionDefinition { keyword, .. } => keyword.pretty(theme),
+            CommandKind::TypeDefinition { keyword, .. } => keyword.pretty(theme),
+            CommandKind::Eval { keyword, .. } => keyword.pretty(theme),
+            CommandKind::TypeOf { keyword, .. } => keyword.pretty(theme),
+            CommandKind::Help { keyword, .. } => keyword.pretty(theme),
+            CommandKind::Set { keyword, .. } => keyword.pretty(theme),
+            CommandKind::UnSet { keyword, .. } => keyword.pretty(theme),
+        };
+        let doc_content = match self {
+            CommandKind::ExpressionDefinition { def, .. } => def.pretty(theme),
+            CommandKind::TypeDefinition { def, .. } => def.pretty(theme),
+            CommandKind::Eval { expr, .. } => expr.pretty(theme),
+            CommandKind::TypeOf { expr, .. } => expr.pretty(theme),
+            CommandKind::Help { var, .. } => var.pretty(theme),
+            CommandKind::Set { var, .. } => var.pretty(theme),
+            CommandKind::UnSet { var, .. } => var.pretty(theme),
+        };
+
+        Doc::nil()
+            .append(doc_keyword)
+            .append(Doc::softline())
+            .append(doc_content.nest(2))
     }
 }
 

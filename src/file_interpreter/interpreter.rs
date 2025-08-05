@@ -94,16 +94,17 @@ impl interpreter::Interpreter for Interpreter {
     fn type_expr_definition(
         &mut self,
         def: parser::cst::ExpressionDefinition,
-        doc: Vec<String>,
-    ) -> Result<typing::ast::Definition, Box<typing::Error>> {
+        doc: Option<typing::ast::Documentation>,
+    ) -> Result<typing::ast::ExpressionDefinition, Box<typing::Error>> {
         self.typer.definition(&def, doc)
     }
 
     fn type_ty_definition(
         &mut self,
         def: parser::cst::TypeDefinition,
+        doc: Option<typing::ast::Documentation>,
     ) -> Result<(), Box<typing::Error>> {
-        self.typer.type_definition(&def)
+        self.typer.type_definition(&def, doc)
     }
 
     fn type_expression(
@@ -113,7 +114,7 @@ impl interpreter::Interpreter for Interpreter {
         self.typer.expression(&expr)
     }
 
-    fn vm_add_definition(&mut self, def: typing::ast::Definition) {
+    fn vm_add_definition(&mut self, def: typing::ast::ExpressionDefinition) {
         self.vm.add_definition(&def);
     }
 

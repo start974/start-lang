@@ -281,9 +281,10 @@ pub fn character<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src
 pub fn operator<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>> {
     choice((
         just("?:").to(token::Operator::TypeOf),
-        just('$').to(token::Operator::Eval),
+        just("?").to(token::Operator::Help),
         just(":=").to(token::Operator::EqDef),
         just(':').to(token::Operator::Colon),
+        just('$').to(token::Operator::Eval),
         just('(').to(token::Operator::LParen),
         just(')').to(token::Operator::RParen),
     ))
