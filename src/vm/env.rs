@@ -1,4 +1,4 @@
-use crate::typing::ast::{Expression, ExpressionDefinition};
+use crate::typer::ast::{Expression, ExpressionDefinition};
 
 use super::identifier::Identifier;
 use super::value::{Constant, Value};

@@ -3,7 +3,7 @@ use crate::interpreter;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use crate::interpreter::Interpreter as _;
-use crate::typing::Typer;
+use crate::typer::Typer;
 use crate::utils::error::{ErrorCode, ErrorPrint};
 use crate::utils::location::SourceId;
 use crate::utils::pretty::Pretty;
@@ -109,7 +109,7 @@ impl interpreter::Interpreter for Interpreter {
         println!("{}", doc.make_string(&self.theme));
     }
 
-    fn print_summay(&self, _: &crate::typing::ast::ExpressionDefinition) {}
+    fn print_summay(&self, _: &crate::typer::ast::ExpressionDefinition) {}
 
     fn eprint<E>(&self, error: &E)
     where

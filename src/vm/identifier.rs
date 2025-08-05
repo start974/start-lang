@@ -1,4 +1,4 @@
-use crate::typing::ast;
+use crate::typer::ast;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Identifier {

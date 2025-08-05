@@ -1,6 +1,6 @@
 use super::super::error::{ErrorUnexpectedType, ErrorVariableNotFound};
 use super::Documentation;
-use crate::typing::ast::Identifier;
+use crate::typer::ast::Identifier;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -23,18 +23,6 @@ impl Type {
     /// type is compatible with another type
     pub fn is_compatible(&self, other: &Self) -> bool {
         *self == *other
-    }
-}
-
-impl From<TypeBuiltin> for Type {
-    fn from(builtin: TypeBuiltin) -> Self {
-        Type::Builtin(builtin)
-    }
-}
-
-impl From<TypeAlias> for Type {
-    fn from(alias: TypeAlias) -> Self {
-        Type::Alias(alias)
     }
 }
 

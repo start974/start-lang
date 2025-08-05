@@ -31,12 +31,12 @@ impl Constant {
     }
     /// create natural number constant
     pub fn nat(v: NConst) -> Self {
-        Self::new(ConstantKind::Nat(v), Type::from(TypeBuiltin::nat()))
+        Self::new(ConstantKind::Nat(v), Type::Builtin(TypeBuiltin::nat()))
     }
 
     /// create boolean constant
     pub fn boolean(b: bool) -> Self {
-        Self::new(ConstantKind::Bool(b), Type::from(TypeBuiltin::bool()))
+        Self::new(ConstantKind::Bool(b), Type::Builtin(TypeBuiltin::bool()))
     }
 
     /// create a character constant

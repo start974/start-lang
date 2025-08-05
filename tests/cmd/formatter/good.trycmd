@@ -1,6 +1,6 @@
 # Overrite
 ```
-$ startlang format good.st
+$ startlang format overrite.st
 
 ```
 
@@ -11,26 +11,24 @@ $ startlang format --print good.st
 Definition a := 3.
 Help a.
 Eval a.
-?: a.
 
 Ty N1 := Nat.
 (** b is Natural number *)
 Def b : Nat := (a : Nat) : N1.
-? b.
 ```
 
 # Format diff
 
 ```
 $ startlang format --diff good.st
+? 1
    1    1 | Definition a := 3.
    2    2 | Help a.
    3    3 | Eval a.
-   4    4 | ?: a.
-   5    5 | 
-   6    6 | Ty N1 := Nat.
-   7    7 | (** b is Natural number *)
-   8    8 | Def b : Nat := (a : Nat) : N1.
-   9    9 | ? b.
+   4    4 | 
+   5    5 | Ty N1 := Nat.
+   6    6 | (** b is Natural number *)
+   7      - Def b : Nat := (a : Nat) : N1.
+        7 + Def b : Nat := (a : Nat) : N1.
 
 ```

@@ -1,5 +1,4 @@
 use crate::lexer::meta::Meta;
-use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -43,14 +42,6 @@ pub enum Pattern {
 impl From<Variable> for Pattern {
     fn from(variable: Variable) -> Self {
         Pattern::Variable(variable)
-    }
-}
-
-impl Located for Pattern {
-    fn loc(&self) -> Location {
-        match self {
-            Pattern::Variable(var) => var.loc(),
-        }
     }
 }
 

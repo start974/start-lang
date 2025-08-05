@@ -1,4 +1,4 @@
-use crate::typing::ast::{ExpressionDefinition, Typed};
+use crate::typer::ast::{ExpressionDefinition, Typed};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 

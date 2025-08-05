@@ -3,8 +3,8 @@ use super::flag::{DebugFlag, Flag};
 use crate::lexer;
 use crate::parser::cst::AsIdentifier as _;
 use crate::parser::{self, cst};
-use crate::typing::ast::Typed as _;
-use crate::typing::{self, ast};
+use crate::typer::ast::Typed as _;
+use crate::typer::{self, ast};
 use crate::utils::error::{ErrorCode, ErrorPrint};
 use crate::utils::location::{Located as _, SourceId};
 use crate::utils::pretty::Pretty;
@@ -31,7 +31,7 @@ pub trait Interpreter {
     fn get_offset_source(&self, offset: usize) -> usize;
 
     /// get mutable reference on typer
-    fn mut_typer(&mut self) -> &mut typing::Typer;
+    fn mut_typer(&mut self) -> &mut typer::Typer;
 
     /// get vm
     fn mut_vm(&mut self) -> &mut vm::Env;
