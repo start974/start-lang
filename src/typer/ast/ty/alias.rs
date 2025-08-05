@@ -1,7 +1,7 @@
 use super::super::Identifier;
 use super::{Type, TypeBuiltin, TypeEnv, Typed};
-use crate::typing::ast::Documentation;
-use crate::typing::error::ErrorVariableNotFound;
+use crate::typer::ast::Documentation;
+use crate::typer::error::ErrorVariableNotFound;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};

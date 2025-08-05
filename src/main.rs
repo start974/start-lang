@@ -7,7 +7,7 @@ mod interpreter;
 mod lexer;
 mod parser;
 mod repl;
-mod typing;
+mod typer;
 mod utils;
 mod vm;
 

@@ -1,4 +1,4 @@
-use crate::typing::ast::Documentation;
+use crate::typer::ast::Documentation;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 

@@ -1,5 +1,5 @@
-use crate::typing::ast::{Documentation, Identifier, Type, TypeEnv, Typed};
-use crate::typing::error::ErrorVariableNotFound;
+use crate::typer::ast::{Documentation, Identifier, Type, TypeEnv, Typed};
+use crate::typer::error::ErrorVariableNotFound;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -25,7 +25,7 @@ impl Variable {
 }
 
 mod sealed_mut_ty {
-    use crate::typing::ast::TypedMut;
+    use crate::typer::ast::TypedMut;
 
     use super::*;
     impl TypedMut for Variable {

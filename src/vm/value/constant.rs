@@ -1,4 +1,4 @@
-use crate::typing::ast;
+use crate::typer::ast;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use num_bigint::BigUint;

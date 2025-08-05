@@ -1,6 +1,5 @@
 use super::{expression, help, operator, Expression, ExpressionDefinition, TypeDefinition};
 use crate::lexer::meta::Meta;
-use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -161,20 +160,6 @@ pub enum CommandKind {
     },
 }
 
-impl Located for CommandKind {
-    fn loc(&self) -> Location {
-        match self {
-            CommandKind::ExpressionDefinition { keyword, def } => keyword.loc().union(def.loc()),
-            CommandKind::TypeDefinition { keyword, def } => keyword.loc().union(def.loc()),
-            CommandKind::Eval { keyword, expr } => keyword.loc().union(expr.loc()),
-            CommandKind::TypeOf { keyword, expr } => keyword.loc().union(expr.loc()),
-            CommandKind::Help { keyword, var } => keyword.loc().union(var.loc()),
-            CommandKind::Set { keyword, var, .. } => keyword.loc().union(var.loc()),
-            CommandKind::UnSet { keyword, var, .. } => keyword.loc().union(var.loc()),
-        }
-    }
-}
-
 impl Pretty for CommandKind {
     fn pretty(&self, theme: &Theme) -> Doc {
         let doc_keyword = match self {
@@ -210,12 +195,6 @@ impl Pretty for CommandKind {
 pub struct Command {
     pub kind: CommandKind,
     pub dot: operator::Dot,
-}
-
-impl Located for Command {
-    fn loc(&self) -> Location {
-        self.kind.loc().union(self.dot.loc())
-    }
 }
 
 impl Pretty for Command {
