@@ -79,7 +79,7 @@ pub trait Typed {
     /// restrict object type to other type
     fn restrict_ty(mut self, ty: Type) -> Result<Self, Box<ErrorUnexpectedType>>
     where
-        Self: Located + Sized + TypedMut,
+        Self: Sized + TypedMut,
     {
         if self.ty().is_compatible(&ty) {
             *self.ty_mut() = ty;

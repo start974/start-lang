@@ -49,9 +49,9 @@ impl ExpressionDefinition {
 }
 
 /*impl Located for ExpressionDefinition {*/
-    /*fn loc(&self) -> Location {*/
-        /*self.pattern.loc().union(self.body.loc())*/
-    /*}*/
+/*fn loc(&self) -> Location {*/
+/*self.pattern.loc().union(self.body.loc())*/
+/*}*/
 /*}*/
 
 impl Pretty for ExpressionDefinition {

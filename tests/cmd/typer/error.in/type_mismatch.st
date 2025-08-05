@@ -1,6 +1,3 @@
-Set DebugTyper.
-Set DebugParser.
-
 Def a : ℕ := 1.
 
 Def b : 𝔹 := true.
