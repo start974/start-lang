@@ -154,7 +154,7 @@ impl Typer {
             .get(&id)
             .map(|ty| ast::Help {
                 var: id.clone(),
-                info: ast::HelpInfo::Alias(ty.clone()),
+                info: ast::HelpInfo::Type(ty.clone()),
                 doc: self.ty_env.get_doc(&id).cloned(),
             })
             .map_err(Error::from)
