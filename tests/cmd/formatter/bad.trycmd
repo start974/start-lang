@@ -3,9 +3,11 @@
 $ startlang format --print bad.st
 Definition a := 3.
 
-Definition b : N := 42.
+Ty N1 := Nat.
+Definition b : N1 := 42.
 
 Eval a.
+
 ```
 # Format diff
 
@@ -16,11 +18,14 @@ $ startlang format --diff bad.st
    2      -   3.
         1 + Definition a := 3.
    3    2 | 
-   4      - Definition b:N :=
-   5      -   42.
-        3 + Definition b : N := 42.
-   6    4 | 
-   7      - Eval a.
-        5 + Eval a.
+   4      - Ty N1:= Nat.
+   5      - Definition b:N1 :=
+   6      -   42.
+        3 + Ty N1 := Nat.
+        4 + Definition b : N1 := 42.
+   7    5 | 
+   8    6 | Eval a.
+   9      - 
+  10      - 
 
 ```

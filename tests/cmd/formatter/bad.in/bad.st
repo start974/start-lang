@@ -1,7 +1,10 @@
 Definition a :=
   3.
 
-Definition b:N :=
+Ty N1:= Nat.
+Definition b:N1 :=
   42.
 
 Eval a.
+
+

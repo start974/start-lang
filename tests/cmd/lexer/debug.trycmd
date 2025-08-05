@@ -1,0 +1,56 @@
+```
+$ startlang run debug.st
+[
+IDENTIFIER(Def)]
+[IDENTIFIER(a)]
+[OPERATOR(:=)]
+[NUMBER(3)]
+[OPERATOR(.)]
+[
+IDENTIFIER(Type)]
+[IDENTIFIER(N1)]
+[OPERATOR(:=)]
+[IDENTIFIER(Nat)]
+[OPERATOR(.)]
+[(** definition of is Nat *)
+IDENTIFIER(Definition)]
+[IDENTIFIER(b)]
+[OPERATOR(:)]
+[IDENTIFIER(Nat)]
+[OPERATOR(:=)]
+[OPERATOR(()]
+[OPERATOR(()]
+[IDENTIFIER(a)]
+[OPERATOR(:)]
+[IDENTIFIER(Nat)]
+[OPERATOR())]
+[OPERATOR(:)]
+[IDENTIFIER(N1)]
+[OPERATOR())]
+[OPERATOR(.)]
+[OPERATOR(?)]
+[IDENTIFIER(b)]
+[OPERATOR(.)]
+b : Nat
+  definition of is Nat
+[OPERATOR(?:)]
+[IDENTIFIER(b)]
+[OPERATOR(.)]
+Nat
+[OPERATOR($)]
+[IDENTIFIER(b)]
+[OPERATOR(.)]
+3
+[
+IDENTIFIER(Definition)]
+[IDENTIFIER(c)]
+[OPERATOR(:=)]
+[CHARACTER(''c'')]
+[OPERATOR(.)]
+[OPERATOR($)]
+[IDENTIFIER(c)]
+[OPERATOR(.)]
+'c'
+[END_OF_INPUT]
+
+```

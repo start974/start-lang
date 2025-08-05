@@ -17,11 +17,16 @@ impl Comment {
 
     /// get documentation content
     pub fn get_doc(&self) -> Option<Documentation> {
-        if self.is_doc {
+        if self.is_doc() {
             Some(Documentation::from(self.content.clone()))
         } else {
             None
         }
+    }
+
+    /// is doc
+    pub fn is_doc(&self) -> bool {
+        self.is_doc
     }
 }
 

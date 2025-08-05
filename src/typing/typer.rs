@@ -58,6 +58,7 @@ impl Typer {
     /// convert expression1
     pub fn expression(&self, expression: &cst::expression::Expression) -> Result<ast::Expression> {
         self.expression1(expression)
+            .map(|expr_ast| expr_ast.with_loc(expression))
     }
 
     /// convert type
@@ -69,6 +70,7 @@ impl Typer {
                 self.ty_env.get(&id).map_err(Error::from).map_err(Box::new)
             }
         }
+        .map(|ast_ty| ast_ty.with_loc(ty))
     }
 
     /// type expression definition
