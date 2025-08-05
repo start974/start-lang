@@ -1,9 +1,22 @@
 # Overrite
 ```
-$ startlang format error.st
+$ startlang format lexer.st
+? 201
+[201] Error: Lexing error
+   ╭─[ lexer.st:1:8 ]
+   │
+ 1 │ Eval '1.
+   │        ┬  
+   │        ╰── Lexer expected "'", found ".".
+───╯
+
+```
+
+```
+$ startlang format parser.st
 ? 202
 [202] Error: Parsing error
-   ╭─[ error.st:1:14 ]
+   ╭─[ parser.st:1:14 ]
    │
  1 │ Definition a
    │              │ 
@@ -15,10 +28,23 @@ $ startlang format error.st
 # Format print
 
 ```
-$ startlang format --print error.st
+$ startlang format --print lexer.st
+? 201
+[201] Error: Lexing error
+   ╭─[ lexer.st:1:8 ]
+   │
+ 1 │ Eval '1.
+   │        ┬  
+   │        ╰── Lexer expected "'", found ".".
+───╯
+
+```
+
+```
+$ startlang format --print parser.st
 ? 202
 [202] Error: Parsing error
-   ╭─[ error.st:1:14 ]
+   ╭─[ parser.st:1:14 ]
    │
  1 │ Definition a
    │              │ 
@@ -28,12 +54,24 @@ $ startlang format --print error.st
 ```
 
 # Format diff
+```
+$ startlang format --diff lexer.st
+? 201
+[201] Error: Lexing error
+   ╭─[ lexer.st:1:8 ]
+   │
+ 1 │ Eval '1.
+   │        ┬  
+   │        ╰── Lexer expected "'", found ".".
+───╯
 
 ```
-$ startlang format --diff error.st
+
+```
+$ startlang format --diff parser.st
 ? 202
 [202] Error: Parsing error
-   ╭─[ error.st:1:14 ]
+   ╭─[ parser.st:1:14 ]
    │
  1 │ Definition a
    │              │ 

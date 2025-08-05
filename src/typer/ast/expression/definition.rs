@@ -1,7 +1,6 @@
 use super::super::ty::{Type, Typed, TypedMut};
 use super::super::Identifier;
 use super::Expression;
-use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -27,19 +26,6 @@ impl Definition {
     /// Get the body of the expression definition
     pub fn body(&self) -> &Expression {
         &self.body
-    }
-}
-
-impl Located for Definition {
-    /// location is at name of definition
-    fn loc(&self) -> Location {
-        self.name.loc().union(self.body.loc())
-    }
-}
-
-impl LocatedSet for Definition {
-    fn set_loc(&mut self, loc: &impl Located) {
-        self.name.set_loc(loc);
     }
 }
 
