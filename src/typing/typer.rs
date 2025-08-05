@@ -6,7 +6,7 @@ use crate::utils::location::LocatedSet;
 #[derive(Debug, Default)]
 pub struct Typer {
     var_env: ast::VariableEnv,
-    ty_alias: ast::TypeAliasEnv,
+    ty_env: ast::TypeAliasEnv,
     id_builder: ast::IdentifierBuilder,
 }
 
@@ -33,22 +33,7 @@ impl Typer {
             Expression0::Variable(var) => {
                 let var_name = var.name();
                 let id = self.id_builder.get(var_name).with_loc(var);
-                self.var_env
-                    .get(&id)
-                    .map_err(Error::from)
-                    .map(ast::Expression::from)
-                    .or_else(|e| match var_name {
-                        "__Constant_true__" => {
-                            let b = ast::Constant::boolean(true);
-                            Ok(ast::Expression::from(b))
-                        }
-                        "__Constant_false__" => {
-                            let b = ast::Constant::boolean(false);
-                            Ok(ast::Expression::from(b))
-                        }
-                        _ => Err(e),
-                    })
-                    .map_err(Box::new)
+                self.var_env.get(&id).map_err(Error::from).map_err(Box::new)
             }
             Expression0::Paren(expr) => self.expression(expr.inner()),
         }
@@ -81,20 +66,7 @@ impl Typer {
             cst::Type::Variable(ident) => {
                 let name = ident.name();
                 let id = self.id_builder.get(name).with_loc(ident);
-                self.ty_alias
-                    .get(&id)
-                    .map(ast::Type::from)
-                    .or_else(|e| {
-                        match name {
-                            "__Type_Nat__" => Ok(ast::TypeBuiltin::nat()),
-                            "__Type_Bool__" => Ok(ast::TypeBuiltin::bool()),
-                            "__Type_Char__" => Ok(ast::TypeBuiltin::char()),
-                            _ => Err(e),
-                        }
-                        .map(ast::Type::from)
-                    })
-                    .map_err(Error::from)
-                    .map_err(Box::new)
+                self.ty_env.get(&id).map_err(Error::from).map_err(Box::new)
             }
         }
     }
@@ -132,9 +104,12 @@ impl Typer {
     pub fn definition(
         &mut self,
         definition: &cst::ExpressionDefinition,
-        _doc: Option<ast::Documentation>,
+        doc: Option<ast::Documentation>,
     ) -> Result<ast::ExpressionDefinition> {
         let expr_def = self.expression_definition(definition)?;
+        if let Some(doc) = doc {
+            self.var_env.add_doc(expr_def.name().clone(), doc);
+        }
         Ok(expr_def)
     }
 
@@ -142,7 +117,7 @@ impl Typer {
     pub fn type_definition(
         &mut self,
         definition: &cst::TypeDefinition,
-        _doc: Option<ast::Documentation>,
+        doc: Option<ast::Documentation>,
     ) -> Result<()> {
         let name_parse = &definition.name;
         let name = self
@@ -150,7 +125,39 @@ impl Typer {
             .build(name_parse.name())
             .with_loc(name_parse);
         let ty = self.ty(&definition.ty)?;
-        self.ty_alias.add(name.clone(), ty.clone());
+        self.ty_env.add(name.clone(), ty.clone());
+        if let Some(doc) = doc {
+            self.ty_env.add_doc(name.clone(), doc);
+        }
         Ok(())
+    }
+
+    /// convert help variable
+    pub fn help(&self, var: &cst::help::Variable) -> Result<ast::Help> {
+        let name = var.name();
+        let id = self.id_builder.get(name).with_loc(var);
+        let res_var = self
+            .var_env
+            .get(&id)
+            .map(|e| ast::Help {
+                var: id.clone(),
+                info: ast::HelpInfo::Expression(e.ty().clone()),
+                doc: self.var_env.get_doc(&id).cloned(),
+            })
+            .map_err(Error::from)
+            .map_err(Box::new);
+
+        let res_ty = self
+            .ty_env
+            .get(&id)
+            .map(|ty| ast::Help {
+                var: id.clone(),
+                info: ast::HelpInfo::Alias(ty.clone()),
+                doc: self.ty_env.get_doc(&id).cloned(),
+            })
+            .map_err(Error::from)
+            .map_err(Box::new);
+
+        res_var.or(res_ty)
     }
 }

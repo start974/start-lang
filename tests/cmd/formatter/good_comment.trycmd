@@ -20,10 +20,8 @@ Definition (* comment1 *)
 Eval (* Eval var a *) a (* Eval last comment *).
 
 Def b : Nat := (* many comment
-  
   bla bla bla
   bla bla bla blaaa
-  
   end of many comment *)
   a.
 (** doc type *)
@@ -58,24 +56,22 @@ $ startlang format --diff good_comment.st
   11   11 | Eval (* Eval var a *) a (* Eval last comment *).
   12   12 | 
   13   13 | Def b : Nat := (* many comment
-  14   14 |   
-  15   15 |   bla bla bla
-  16   16 |   bla bla bla blaaa
-  17   17 |   
-  18   18 |   end of many comment *)
-  19   19 |   a.
-  20   20 | (** doc type *)
-  21   21 | Type (* comment 1 *)
-  22   22 |   N1 (* comment 2 *)
-  23   23 |   := (* comment 3 *) Nat
-  24   24 | (* comment 4 *)
-  25   25 | .
-  26   26 | 
-  27   27 | TypeOf (* type of a *)
-  28   28 |   a.
-  29   29 | 
-  30   30 | Set (* comment set *)
-  31   31 |   DebugTyper.
-  32   32 | Unset (* comment unset *) DebugTyper.
+  14   14 |   bla bla bla
+  15   15 |   bla bla bla blaaa
+  16   16 |   end of many comment *)
+  17   17 |   a.
+  18   18 | (** doc type *)
+  19   19 | Type (* comment 1 *)
+  20   20 |   N1 (* comment 2 *)
+  21   21 |   := (* comment 3 *) Nat
+  22   22 | (* comment 4 *)
+  23   23 | .
+  24   24 | 
+  25   25 | TypeOf (* type of a *)
+  26   26 |   a.
+  27   27 | 
+  28   28 | Set (* comment set *)
+  29   29 |   DebugTyper.
+  30   30 | Unset (* comment unset *) DebugTyper.
 
 ```

@@ -1,3 +1,4 @@
+use super::AsIdentifier;
 use crate::lexer::Meta;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -15,10 +16,15 @@ impl From<String> for VariableT {
     }
 }
 
-impl Pretty for VariableT {
-    fn pretty(&self, theme: &Theme) -> Doc {
-        theme.def_var(&self.0)
+impl AsIdentifier for VariableT {
+    /// get name of variable
+    fn name(&self) -> &str {
+        &self.0
     }
 }
 
-
+impl Pretty for VariableT {
+    fn pretty(&self, theme: &Theme) -> Doc {
+        theme.expr_var(&self.0)
+    }
+}

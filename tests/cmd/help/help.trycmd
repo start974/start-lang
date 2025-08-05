@@ -1,0 +1,25 @@
+```
+$ startlang run definition.st
+test0 : ℕ
+test1 : ℕ
+  document of a test
+test2 : ℕ
+  document of a test with many lines:
+  lines 1
+  lines 2
+test3 : ℕ
+
+```
+
+```
+$ startlang run type.st
+N0 := N0
+N1 := N1
+  document of a N
+N2 := N2
+  document of a N with many lines:
+  lines 1
+  lines 2
+N3 := N3
+
+```

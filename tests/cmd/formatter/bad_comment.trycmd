@@ -14,10 +14,8 @@ Definition (* comment1 *)
 .
 Eval (* Eval var a *) a (* Eval last comment *).
 Def b : Nat := (* many comment
-  
   bla bla bla
   bla bla bla blaaa
-  
   end of many comment *)
   
   a.
@@ -58,39 +56,37 @@ $ startlang format --diff bad_comment.st
        10 + .
        11 + Eval (* Eval var a *) a (* Eval last comment *).
        12 + Def b : Nat := (* many comment
-       13 +   
-  11   14 |   bla bla bla
-  12   15 |   bla bla bla blaaa
+  11   13 |   bla bla bla
+  12   14 |   bla bla bla blaaa
   13      - 
-       16 +   
-  14   17 |   end of many comment *)
+  14   15 |   end of many comment *)
   15      - 
   16      - 
   17      - 
   18      - 
-       18 +   
-  19   19 |   a.
+       16 +   
+  19   17 |   a.
   20      - 
-  21   20 | (** doc type *)
+  21   18 | (** doc type *)
   22      - Type (* comment 1 *) N1 (* comment 2 *) :=
-  23      - 
-  24      - 
+       19 + Type (* comment 1 *)
+       20 +   N1 (* comment 2 *)
+       21 +   := (* comment 3 *) Nat
+       22 + (* comment 4 *)
+       23 + .
+  23   24 | 
+       25 + TypeOf (* type of a *)
+       26 +   a.
+  24   27 | 
   25      - (* comment 3 *) Nat (* comment 4*).
   26      - 
-       21 + Type (* comment 1 *)
-       22 +   N1 (* comment 2 *)
-       23 +   := (* comment 3 *) Nat
-       24 + (* comment 4 *)
-       25 + .
-  27   26 | 
+  27      - 
   28      - TypeOf (* type of a *) a.
-       27 + TypeOf (* type of a *)
-       28 +   a.
-  29   29 | 
+  29      - 
   30      -    Set (* comment set *)    DebugTyper.
   31      -    Unset (* comment unset *) DebugTyper        .
-       30 + Set (* comment set *)
-       31 +   DebugTyper.
-       32 + Unset (* comment unset *) DebugTyper.
+       28 + Set (* comment set *)
+       29 +   DebugTyper.
+       30 + Unset (* comment unset *) DebugTyper.
 
 ```
