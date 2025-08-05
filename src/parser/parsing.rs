@@ -240,6 +240,24 @@ where
 }
 
 // ===========================================================================
+// Type
+// ===========================================================================
+/// parse type
+/// ```ebfn
+/// help_variable := IDENTIFIER
+/// ```
+pub fn help_variable<'tokens, I>(
+) -> impl Parser<'tokens, I, cst::help::Variable, ErrorChumsky<'tokens>>
+where
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+{
+    use cst::help::VariableT;
+    select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
+            meta.clone().map(|_| VariableT::from(s.clone()))
+    }
+    .labelled("help variable")
+}
+// ===========================================================================
 // Command
 // ===========================================================================
 
@@ -285,6 +303,20 @@ where
     }
 }
 
+fn keyword_help<'tokens, I>(
+) -> impl Parser<'tokens, I, cst::command::HelpKeyword, ErrorChumsky<'tokens>>
+where
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+{
+    use cst::command::HelpKeywordT;
+    select! {
+        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Help" =>
+            meta.clone().map(|_| HelpKeywordT::Help),
+        ref meta @ Meta{value: Token::Operator(Operator::Help), ..} =>
+            meta.clone().map(|_| HelpKeywordT::HelpOp),
+    }
+}
+
 fn keyword_type<'tokens, I>(
 ) -> impl Parser<'tokens, I, cst::command::TypeKeyword, ErrorChumsky<'tokens>>
 where
@@ -326,9 +358,9 @@ where
 /// ```ebfn
 /// command_kind :=
 /// | keyword_definition expr_definition
+/// | keyword_type type_definition
 /// | keyword_eval expr
 /// | keyword_typeof expr
-/// | keyword_type type_definition
 /// | keyword_set variable
 /// | keyword_unset variable
 ///```
@@ -337,31 +369,30 @@ where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::command::CommandKind;
-    let def_expr = keyword_definition()
-        .then(expression_definition().map(Box::new))
-        .map(|(keyword, def)| CommandKind::ExpressionDefinition { keyword, def });
 
-    let eval = keyword_eval()
-        .then(expression())
-        .map(|(keyword, expr)| CommandKind::Eval { keyword, expr });
-
-    let type_of = keyword_type_of()
-        .then(expression())
-        .map(|(keyword, expr)| CommandKind::TypeOf { keyword, expr });
-
-    let def_type = keyword_type()
-        .then(type_definition())
-        .map(|(keyword, def)| CommandKind::TypeDefinition { keyword, def });
-
-    let set = keyword_set()
-        .then(variable())
-        .map(|(keyword, var)| CommandKind::Set { keyword, var });
-
-    let unset = keyword_unset()
-        .then(variable())
-        .map(|(keyword, var)| CommandKind::UnSet { keyword, var });
-
-    choice((def_expr, eval, type_of, def_type, set, unset))
+    choice((
+        keyword_definition()
+            .then(expression_definition().map(Box::new))
+            .map(|(keyword, def)| CommandKind::ExpressionDefinition { keyword, def }),
+        keyword_type()
+            .then(type_definition())
+            .map(|(keyword, def)| CommandKind::TypeDefinition { keyword, def }),
+        keyword_eval()
+            .then(expression())
+            .map(|(keyword, expr)| CommandKind::Eval { keyword, expr }),
+        keyword_type_of()
+            .then(expression())
+            .map(|(keyword, expr)| CommandKind::TypeOf { keyword, expr }),
+        keyword_help()
+            .then(help_variable())
+            .map(|(keyword, var)| CommandKind::Help { keyword, var }),
+        keyword_set()
+            .then(variable())
+            .map(|(keyword, var)| CommandKind::Set { keyword, var }),
+        keyword_unset()
+            .then(variable())
+            .map(|(keyword, var)| CommandKind::UnSet { keyword, var }),
+    ))
 }
 
 /// parse command with dot

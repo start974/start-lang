@@ -1,5 +1,6 @@
 use super::comment::Comment;
 use crate::parser::cst::{AsCharacter, AsIdentifier, AsNumber};
+use crate::typing::ast::Documentation;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
@@ -116,11 +117,11 @@ impl<T> Meta<T> {
     }
 
     /// get documentation content on meta before
-    pub fn get_doc(&self) -> Vec<String> {
+    pub fn get_doc(&self) -> Option<Documentation> {
         if let Some(CommentOrLines::Comment(comment)) = self.before.last() {
             comment.get_doc()
         } else {
-            Vec::new()
+            None
         }
     }
 }

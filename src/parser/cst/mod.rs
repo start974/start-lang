@@ -3,6 +3,7 @@ pub mod constant;
 pub mod expression;
 pub mod expression_definition;
 pub mod file;
+pub mod help;
 pub mod operator;
 pub mod parenthesis;
 pub mod pattern;
@@ -20,8 +21,6 @@ pub use pattern::Pattern;
 pub use ty::Type;
 pub use ty_definition::TypeDefinition;
 
-use num_bigint::BigUint;
-
 pub trait AsIdentifier {
     /// get name of Identifier
     fn name(&self) -> &str;
@@ -29,7 +28,7 @@ pub trait AsIdentifier {
 
 pub trait AsNumber {
     /// get the number as a reference to BigUint
-    fn as_number(&self) -> &BigUint;
+    fn as_number(&self) -> &num_bigint::BigUint;
 }
 
 pub trait AsCharacter {

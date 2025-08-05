@@ -1,3 +1,4 @@
+use crate::typing::ast::Documentation;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -15,11 +16,11 @@ impl Comment {
     }
 
     /// get documentation content
-    pub fn get_doc(&self) -> Vec<String> {
+    pub fn get_doc(&self) -> Option<Documentation> {
         if self.is_doc {
-            self.content.clone()
+            Some(Documentation::from(self.content.clone()))
         } else {
-            Vec::new()
+            None
         }
     }
 }

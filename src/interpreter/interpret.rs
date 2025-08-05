@@ -1,16 +1,15 @@
-use ariadne::Span as _;
-
 use super::error::UnknownOption;
 use super::flag::{DebugFlag, Flag};
 use crate::lexer;
 use crate::parser::cst::AsIdentifier as _;
 use crate::parser::{self, cst};
-use crate::typing;
-use crate::typing::ast::Typed;
+use crate::typing::ast::Typed as _;
+use crate::typing::{self, ast};
 use crate::utils::error::{ErrorCode, ErrorPrint};
 use crate::utils::location::{Located as _, SourceId};
 use crate::utils::pretty::Pretty;
 use crate::vm;
+use ariadne::Span as _;
 
 pub trait Interpreter {
     /// get content
@@ -35,23 +34,27 @@ pub trait Interpreter {
     fn type_expr_definition(
         &mut self,
         def: cst::ExpressionDefinition,
-        doc: Vec<String>,
-    ) -> Result<typing::ast::Definition, Box<typing::Error>>;
+        doc: Option<ast::Documentation>,
+    ) -> Result<ast::ExpressionDefinition, Box<typing::Error>>;
 
     /// type type defininition
-    fn type_ty_definition(&mut self, def: cst::TypeDefinition) -> Result<(), Box<typing::Error>>;
+    fn type_ty_definition(
+        &mut self,
+        def: cst::TypeDefinition,
+        doc: Option<ast::Documentation>,
+    ) -> Result<(), Box<typing::Error>>;
 
     /// type expression
     fn type_expression(
         &mut self,
         expr: cst::Expression,
-    ) -> Result<typing::ast::Expression, Box<typing::Error>>;
+    ) -> Result<ast::Expression, Box<typing::Error>>;
 
     /// add definitin in vm
-    fn vm_add_definition(&mut self, def: typing::ast::Definition);
+    fn vm_add_definition(&mut self, def: ast::ExpressionDefinition);
 
     /// eval expression in vm
-    fn vm_eval_expression(&mut self, expr: typing::ast::Expression) -> vm::Value;
+    fn vm_eval_expression(&mut self, expr: ast::Expression) -> vm::Value;
 
     /// set debug parser
     fn set_flag(&mut self, b: bool, flag: Flag);
@@ -63,7 +66,7 @@ pub trait Interpreter {
     fn print_eval(&mut self, value: &vm::Value);
 
     /// print type of
-    fn print_typeof(&mut self, ty: &typing::ast::Type);
+    fn print_typeof(&mut self, ty: &ast::Type);
 
     /// print error
     fn eprint<E>(&self, error: &E)
@@ -85,7 +88,11 @@ pub trait Interpreter {
     }
 
     /// run command expr definition
-    fn run_expr_definition(&mut self, def: cst::ExpressionDefinition, doc: Vec<String>) {
+    fn run_expr_definition(
+        &mut self,
+        def: cst::ExpressionDefinition,
+        doc: Option<ast::Documentation>,
+    ) {
         self.type_expr_definition(def, doc)
             .map(|def| {
                 self.debug_pretty(DebugFlag::Typer, &def);
@@ -97,8 +104,8 @@ pub trait Interpreter {
     }
 
     /// run command type definition
-    fn run_type_definition(&mut self, def: cst::TypeDefinition) {
-        if let Err(e) = self.type_ty_definition(def) {
+    fn run_type_definition(&mut self, def: cst::TypeDefinition, doc: Option<ast::Documentation>) {
+        if let Err(e) = self.type_ty_definition(def, doc) {
             self.fail(e);
         }
     }
@@ -139,12 +146,15 @@ pub trait Interpreter {
     /// run command
     fn run_command(&mut self, cmd: cst::Command) {
         match cmd.kind {
-            cst::CommandKind::ExpressionDefinition { def, keyword } => {
+            cst::CommandKind::ExpressionDefinition { keyword, def } => {
                 self.run_expr_definition(*def, keyword.get_doc())
             }
-            cst::CommandKind::TypeDefinition { def, .. } => self.run_type_definition(def),
+            cst::CommandKind::TypeDefinition { keyword, def } => {
+                self.run_type_definition(def, keyword.get_doc())
+            }
             cst::CommandKind::Eval { expr, .. } => self.run_eval(expr),
             cst::CommandKind::TypeOf { expr, .. } => self.run_typeof(expr),
+            cst::CommandKind::Help { keyword, var } => todo!("implement help {keyword:?}, {var:?}"),
             cst::CommandKind::Set { var, .. } => self.run_set(true, var),
             cst::CommandKind::UnSet { var, .. } => self.run_set(false, var),
         }

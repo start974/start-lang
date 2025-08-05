@@ -58,6 +58,7 @@ ESCAPE_CHAR := "\"
 
 ```ebnf
 EVAL_OP := "$"
+HELP_OP := "?"
 TYPE_OF_OP := "?:"
 
 EQ_DEF := ":="
@@ -144,6 +145,12 @@ keyword_definition :=
 ```
 
 ```ebnf
+keyword_type :=
+| "Type"                 display as keyword
+| "Ty"                   display as keyword
+```
+
+```ebnf
 keyword_eval :=
 | "Eval"                display as keyword
 | EVAL_OP               display as keyword
@@ -156,9 +163,9 @@ keyword_typeof :=
 ```
 
 ```ebnf
-keyword_type :=
-| "Type"                 display as keyword
-| "Ty"                   display as keyword
+keyword_help :=
+| "Help"                 display as keyword
+|  HELP_OP               display as keyword
 ```
 
 ```ebnf
@@ -178,9 +185,10 @@ dot := DOT               display as operator
 ```ebnf
 command_kind :=
 | keyword_definition expr_definition
+| keyword_type type_definition
+| keyword_help IDENTIFIER
 | keyword_eval expr
 | keyword_typeof expr
-| keyword_type type_definition
 | keyword_set variable
 | keyword_unset variable
 

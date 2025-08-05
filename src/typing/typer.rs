@@ -132,15 +132,18 @@ impl Typer {
     pub fn definition(
         &mut self,
         definition: &cst::ExpressionDefinition,
-        doc: Vec<String>,
-    ) -> Result<ast::Definition> {
+        _doc: Option<ast::Documentation>,
+    ) -> Result<ast::ExpressionDefinition> {
         let expr_def = self.expression_definition(definition)?;
-        let doc = ast::Definition::from(expr_def).with_doc(doc);
-        Ok(doc)
+        Ok(expr_def)
     }
 
     /// add type definition
-    pub fn type_definition(&mut self, definition: &cst::TypeDefinition) -> Result<()> {
+    pub fn type_definition(
+        &mut self,
+        definition: &cst::TypeDefinition,
+        _doc: Option<ast::Documentation>,
+    ) -> Result<()> {
         let name_parse = &definition.name;
         let name = self
             .id_builder

@@ -4,8 +4,8 @@ use crate::interpreter;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use crate::interpreter::Interpreter as _;
-use crate::parser;
-use crate::typing;
+use crate::parser::cst;
+use crate::typing::{self, ast};
 use crate::utils::error::{ErrorCode, ErrorPrint};
 use crate::utils::location::SourceId;
 use crate::utils::pretty::Pretty;
@@ -89,9 +89,9 @@ impl interpreter::Interpreter for Interpreter {
 
     fn type_expr_definition(
         &mut self,
-        def: parser::cst::ExpressionDefinition,
-        doc: Vec<String>,
-    ) -> Result<typing::ast::Definition, Box<typing::Error>> {
+        def: cst::ExpressionDefinition,
+        doc: Option<ast::Documentation>,
+    ) -> Result<ast::ExpressionDefinition, Box<typing::Error>> {
         self.typer.definition(&def, doc).inspect(|def| {
             let summary = SummaryDefinition::from(def);
             println!("       {}", summary.make_string(&self.theme));
@@ -100,23 +100,24 @@ impl interpreter::Interpreter for Interpreter {
 
     fn type_ty_definition(
         &mut self,
-        def: parser::cst::TypeDefinition,
+        def: cst::TypeDefinition,
+        doc: Option<ast::Documentation>,
     ) -> Result<(), Box<typing::Error>> {
-        self.typer.type_definition(&def)
+        self.typer.type_definition(&def, doc)
     }
 
     fn type_expression(
         &mut self,
-        expr: parser::cst::Expression,
-    ) -> Result<typing::ast::Expression, Box<typing::Error>> {
+        expr: cst::Expression,
+    ) -> Result<ast::Expression, Box<typing::Error>> {
         self.typer.expression(&expr)
     }
 
-    fn vm_add_definition(&mut self, def: typing::ast::Definition) {
+    fn vm_add_definition(&mut self, def: ast::ExpressionDefinition) {
         self.vm.add_definition(&def);
     }
 
-    fn vm_eval_expression(&mut self, expr: typing::ast::Expression) -> vm::Value {
+    fn vm_eval_expression(&mut self, expr: ast::Expression) -> vm::Value {
         self.vm.eval(&expr).unwrap()
     }
 
@@ -138,7 +139,7 @@ impl interpreter::Interpreter for Interpreter {
         println!("{}", value.make_string(&self.theme));
     }
 
-    fn print_typeof(&mut self, ty: &typing::ast::Type) {
+    fn print_typeof(&mut self, ty: &ast::Type) {
         println!("{}", ty.make_string(&self.theme));
     }
 

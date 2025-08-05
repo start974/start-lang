@@ -8,7 +8,7 @@ mod definition;
 mod variable;
 
 pub use constant::{Constant, ConstantKind};
-pub use definition::{Definition, ExpressionDefinition};
+pub use definition::Definition as ExpressionDefinition;
 pub use variable::{Variable as ExpressionVariable, VariableEnv};
 
 // ==========================================================================
