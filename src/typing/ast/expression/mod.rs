@@ -1,5 +1,5 @@
 use super::ty::{Type, Typed, TypedMut};
-use crate::utils::location::{Located, Location};
+use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -18,18 +18,6 @@ pub use variable::{Variable as ExpressionVariable, VariableEnv};
 pub enum Expression {
     Constant(Constant),
     Variable(ExpressionVariable),
-}
-
-impl From<Constant> for Expression {
-    fn from(constant: Constant) -> Self {
-        Expression::Constant(constant)
-    }
-}
-
-impl From<ExpressionVariable> for Expression {
-    fn from(variable: ExpressionVariable) -> Self {
-        Expression::Variable(variable)
-    }
 }
 
 mod sealed_mut_ty {
@@ -58,6 +46,15 @@ impl Located for Expression {
         match self {
             Expression::Constant(c) => c.loc(),
             Expression::Variable(v) => v.loc(),
+        }
+    }
+}
+
+impl LocatedSet for Expression {
+    fn set_loc(&mut self, loc: &impl Located) {
+        match self {
+            Expression::Constant(c) => c.set_loc(loc),
+            Expression::Variable(v) => v.set_loc(loc),
         }
     }
 }

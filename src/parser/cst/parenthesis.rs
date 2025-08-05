@@ -48,7 +48,7 @@ where
     fn pretty_precedence(&self, prec: u8, theme: &Theme) -> Doc {
         let val_prec = self.inner.precedence();
         let doc_val = self.inner.pretty_precedence(self.precedence(), theme);
-        if val_prec < prec {
+        if prec < val_prec {
             Doc::nil()
                 .append(self.l_paren.pretty(theme))
                 .append(doc_val)

@@ -50,7 +50,7 @@ pub struct RParenT();
 
 impl Pretty for RParenT {
     fn pretty(&self, theme: &Theme) -> Doc {
-        theme.operator(&"(")
+        theme.operator(&")")
     }
 }
 

@@ -61,3 +61,16 @@ $ startlang run just_keyword.st
 ───╯
 
 ```
+
+```
+$ startlang run not_end.st
+? 202
+[202] Error: Parsing error
+   ╭─[ not_end.st:1:8 ]
+   │
+ 1 │ Eval 1
+   │        │ 
+   │        ╰─ Expected ":" or ".", found "end of input".
+───╯
+
+```

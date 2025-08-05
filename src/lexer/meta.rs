@@ -104,8 +104,10 @@ impl<T> Meta<T> {
     {
         self.pretty_meta(theme)
             .append(match self.before.last() {
-                Some(CommentOrLines::Comment(_)) => {
-                    if end_line {
+                Some(CommentOrLines::Comment(comment)) => {
+                    if comment.is_doc() {
+                        Doc::hardline()
+                    } else if end_line {
                         Doc::line()
                     } else {
                         Doc::line_()
