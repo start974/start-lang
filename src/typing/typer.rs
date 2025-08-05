@@ -14,7 +14,7 @@ type Result<T, E = Box<Error>> = std::result::Result<T, E>;
 
 impl Typer {
     /// convert constant
-    pub fn constant(&self, constant: &cst::Constant) -> ast::Constant {
+    fn constant(&self, constant: &cst::Constant) -> ast::Constant {
         match constant {
             cst::Constant::Number(n) => ast::Constant::nat(n.as_number().clone()),
             cst::Constant::Character(c) => ast::Constant::character(c.as_character()),
@@ -23,10 +23,7 @@ impl Typer {
     }
 
     /// convert expression0
-    pub fn expression0(
-        &self,
-        expression: &cst::expression::Expression0,
-    ) -> Result<ast::Expression> {
+    fn expression0(&self, expression: &cst::expression::Expression0) -> Result<ast::Expression> {
         use cst::expression::Expression0;
         match expression {
             Expression0::Constant(c) => {
@@ -58,10 +55,7 @@ impl Typer {
     }
 
     /// convert expression1
-    pub fn expression1(
-        &self,
-        expression: &cst::expression::Expression1,
-    ) -> Result<ast::Expression> {
+    fn expression1(&self, expression: &cst::expression::Expression1) -> Result<ast::Expression> {
         use cst::expression::Expression1;
         match expression {
             Expression1::TypedExpression { expr, ty, .. } => {
@@ -81,7 +75,7 @@ impl Typer {
         self.expression1(expression)
     }
 
-    /// convert typ
+    /// convert type
     pub fn ty(&self, ty: &cst::Type) -> Result<ast::Type> {
         match ty {
             cst::Type::Variable(ident) => {
@@ -105,8 +99,8 @@ impl Typer {
         }
     }
 
-    /// convert definition
-    pub fn expression_definition(
+    /// type expression definition
+    fn expression_definition(
         &mut self,
         definition: &cst::ExpressionDefinition,
     ) -> Result<ast::ExpressionDefinition> {
@@ -132,6 +126,17 @@ impl Typer {
                 }
             }
         }
+    }
+
+    /// convert definition
+    pub fn definition(
+        &mut self,
+        definition: &cst::ExpressionDefinition,
+        doc: Vec<String>,
+    ) -> Result<ast::Definition> {
+        let expr_def = self.expression_definition(definition)?;
+        let doc = ast::Definition::from(expr_def).with_doc(doc);
+        Ok(doc)
     }
 
     /// add type definition

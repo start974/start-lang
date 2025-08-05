@@ -1,4 +1,4 @@
-use crate::typing::ast::{Expression, ExpressionDefinition};
+use crate::typing::ast::{Definition, Expression};
 
 use super::identifier::Identifier;
 use super::value::{Constant, Value};
@@ -31,7 +31,8 @@ impl Env {
     }
 
     /// add a definition to the environment
-    pub fn add_definition(&mut self, def: &ExpressionDefinition) {
+    pub fn add_definition(&mut self, def: &Definition) {
+        let def = &def.value;
         let id = Identifier::from(def.name());
         let value = self.eval(def.body()).unwrap();
         self.set(id, value.clone());

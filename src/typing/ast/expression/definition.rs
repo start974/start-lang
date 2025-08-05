@@ -1,5 +1,5 @@
-use super::super::identifier::Identifier;
 use super::super::ty::{Type, Typed, TypedMut};
+use super::super::{documentation::WithDoc, Identifier};
 use super::Expression;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
@@ -8,12 +8,14 @@ use crate::utils::theme::{Doc, Theme};
 // ==========================================================================
 // Expression Definition
 // ==========================================================================
-pub struct Definition {
+pub struct ExpressionDefinition {
     name: Identifier,
     body: Expression,
 }
 
-impl Definition {
+pub type Definition = WithDoc<ExpressionDefinition>;
+
+impl ExpressionDefinition {
     /// Create a new expression definition
     pub fn new(name: Identifier, body: Expression) -> Self {
         Self { name, body }
@@ -30,14 +32,14 @@ impl Definition {
     }
 }
 
-impl Located for Definition {
+impl Located for ExpressionDefinition {
     /// location is at name of definition
     fn loc(&self) -> Location {
         self.name.loc().union(self.body.loc())
     }
 }
 
-impl LocatedSet for Definition {
+impl LocatedSet for ExpressionDefinition {
     fn set_loc(&mut self, loc: &impl Located) {
         self.name.set_loc(loc);
     }
@@ -45,19 +47,19 @@ impl LocatedSet for Definition {
 
 pub mod sealed_mut_ty {
     use super::*;
-    impl TypedMut for Definition {
+    impl TypedMut for ExpressionDefinition {
         fn ty_mut(&mut self) -> &mut Type {
             self.body.ty_mut()
         }
     }
 }
-impl Typed for Definition {
+impl Typed for ExpressionDefinition {
     fn ty(&self) -> &Type {
         self.body.ty()
     }
 }
 
-impl Pretty for Definition {
+impl Pretty for ExpressionDefinition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
             .append(theme.keyword(&"Definition"))

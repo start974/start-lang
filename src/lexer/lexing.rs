@@ -40,7 +40,9 @@ pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, ErrorChumsky<'src>> + Si
         offset: usize,
     ) -> impl Parser<'src, &'src str, Meta<T>, ErrorChumsky<'src>> {
         let lines = newline().repeated().at_least(2).to(CommentOrLines::Lines);
-        let comment = whitespace().ignore_then(comment()).map(CommentOrLines::Comment);
+        let comment = whitespace()
+            .ignore_then(comment())
+            .map(CommentOrLines::Comment);
 
         let meta_items = (lines.or(comment))
             .repeated()

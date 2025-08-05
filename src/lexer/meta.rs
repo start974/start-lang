@@ -114,6 +114,15 @@ impl<T> Meta<T> {
             })
             .append(self.value.pretty(theme))
     }
+
+    /// get documentation content on meta before
+    pub fn get_doc(&self) -> Vec<String> {
+        if let Some(CommentOrLines::Comment(comment)) = self.before.last() {
+            comment.get_doc()
+        } else {
+            Vec::new()
+        }
+    }
 }
 
 impl<T> std::fmt::Display for Meta<T>
