@@ -35,7 +35,8 @@ pub trait Interpreter {
     fn type_expr_definition(
         &mut self,
         def: cst::ExpressionDefinition,
-    ) -> Result<typing::ast::ExpressionDefinition, Box<typing::Error>>;
+        doc: Vec<String>,
+    ) -> Result<typing::ast::Definition, Box<typing::Error>>;
 
     /// type type defininition
     fn type_ty_definition(&mut self, def: cst::TypeDefinition) -> Result<(), Box<typing::Error>>;
@@ -47,7 +48,7 @@ pub trait Interpreter {
     ) -> Result<typing::ast::Expression, Box<typing::Error>>;
 
     /// add definitin in vm
-    fn vm_add_definition(&mut self, def: typing::ast::ExpressionDefinition);
+    fn vm_add_definition(&mut self, def: typing::ast::Definition);
 
     /// eval expression in vm
     fn vm_eval_expression(&mut self, expr: typing::ast::Expression) -> vm::Value;
@@ -84,8 +85,8 @@ pub trait Interpreter {
     }
 
     /// run command expr definition
-    fn run_expr_definition(&mut self, def: cst::ExpressionDefinition) {
-        self.type_expr_definition(def)
+    fn run_expr_definition(&mut self, def: cst::ExpressionDefinition, doc: Vec<String>) {
+        self.type_expr_definition(def, doc)
             .map(|def| {
                 self.debug_pretty(DebugFlag::Typer, &def);
                 if self.get_error_code() == 0 {
@@ -138,7 +139,9 @@ pub trait Interpreter {
     /// run command
     fn run_command(&mut self, cmd: cst::Command) {
         match cmd.kind {
-            cst::CommandKind::ExpressionDefinition { def, .. } => self.run_expr_definition(*def),
+            cst::CommandKind::ExpressionDefinition { def, keyword } => {
+                self.run_expr_definition(*def, keyword.get_doc())
+            }
             cst::CommandKind::TypeDefinition { def, .. } => self.run_type_definition(def),
             cst::CommandKind::Eval { expr, .. } => self.run_eval(expr),
             cst::CommandKind::TypeOf { expr, .. } => self.run_typeof(expr),

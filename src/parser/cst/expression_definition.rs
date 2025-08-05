@@ -67,8 +67,7 @@ impl Pretty for ExpressionDefinition {
             }
         };
 
-        let doc_body = Doc::softline()
-            .append(self.body.pretty(theme).group());
+        let doc_body = Doc::softline().append(self.body.pretty(theme).group());
 
         Doc::nil()
             .append((self.pattern.pretty(theme)).append(doc_typed_by))

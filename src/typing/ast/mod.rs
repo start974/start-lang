@@ -1,3 +1,4 @@
+mod documentation;
 mod expression;
 mod identifier;
 mod ty;

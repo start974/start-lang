@@ -13,6 +13,15 @@ impl Comment {
         self.is_doc = is_doc;
         self
     }
+
+    /// get documentation content
+    pub fn get_doc(&self) -> Vec<String> {
+        if self.is_doc {
+            self.content.clone()
+        } else {
+            Vec::new()
+        }
+    }
 }
 
 impl From<String> for Comment {
@@ -43,6 +52,7 @@ impl Pretty for Comment {
                 .group(),
             )
             .append(Doc::space())
-            .append(theme.comment(&"*)")).group()
+            .append(theme.comment(&"*)"))
+            .group()
     }
 }

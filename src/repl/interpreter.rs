@@ -90,8 +90,9 @@ impl interpreter::Interpreter for Interpreter {
     fn type_expr_definition(
         &mut self,
         def: parser::cst::ExpressionDefinition,
-    ) -> Result<typing::ast::ExpressionDefinition, Box<typing::Error>> {
-        self.typer.expression_definition(&def).inspect(|def| {
+        doc: Vec<String>,
+    ) -> Result<typing::ast::Definition, Box<typing::Error>> {
+        self.typer.definition(&def, doc).inspect(|def| {
             let summary = SummaryDefinition::from(def);
             println!("       {}", summary.make_string(&self.theme));
         })
@@ -111,7 +112,7 @@ impl interpreter::Interpreter for Interpreter {
         self.typer.expression(&expr)
     }
 
-    fn vm_add_definition(&mut self, def: typing::ast::ExpressionDefinition) {
+    fn vm_add_definition(&mut self, def: typing::ast::Definition) {
         self.vm.add_definition(&def);
     }
 
