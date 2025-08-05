@@ -32,52 +32,57 @@ where
     assert(path_str, output);
 }
 
-#[test]
-fn test_format_file_without_read_permission() {
-    exec_startlang(
-        "format_file_bad_read.st",
-        0o244,
-        |path| vec!["format", path],
-        |path, output| {
-            assert_eq!(output.status.code().unwrap(), 101);
-            assert_eq!(
-                String::from_utf8_lossy(&output.stderr),
-                format!("[101] Error: Cannot read file \"{path}\".\n")
-            );
-            assert_eq!(String::from_utf8_lossy(&output.stdout), "");
-        },
-    );
-}
-#[test]
-fn test_format_file_without_write_permission() {
-    exec_startlang(
-        "format_file_bad_write.st",
-        0o444,
-        |path| vec!["format", path],
-        |path, output| {
-            assert_eq!(output.status.code().unwrap(), 102);
-            assert_eq!(
-                String::from_utf8_lossy(&output.stderr),
-                format!("[102] Error: Cannot write file \"{path}\".\n")
-            );
-            assert_eq!(String::from_utf8_lossy(&output.stdout), "");
-        },
-    );
+mod format {
+    #[test]
+    fn without_read_permission() {
+        super::exec_startlang(
+            "format_file_bad_read.st",
+            0o244,
+            |path| vec!["format", path],
+            |path, output| {
+                assert_eq!(output.status.code().unwrap(), 101);
+                assert_eq!(
+                    String::from_utf8_lossy(&output.stderr),
+                    format!("[101] Error: Cannot read file \"{path}\".\n")
+                );
+                assert_eq!(String::from_utf8_lossy(&output.stdout), "");
+            },
+        );
+    }
+
+    #[test]
+    fn without_write_permission() {
+        super::exec_startlang(
+            "format_file_bad_write.st",
+            0o444,
+            |path| vec!["format", path],
+            |path, output| {
+                assert_eq!(output.status.code().unwrap(), 102);
+                assert_eq!(
+                    String::from_utf8_lossy(&output.stderr),
+                    format!("[102] Error: Cannot write file \"{path}\".\n")
+                );
+                assert_eq!(String::from_utf8_lossy(&output.stdout), "");
+            },
+        );
+    }
 }
 
-#[test]
-fn test_run_file_without_read_permission() {
-    exec_startlang(
-        "run_file_bad_read.st",
-        0o244,
-        |path| vec!["run", path],
-        |path, output| {
-            assert_eq!(output.status.code().unwrap(), 101);
-            assert_eq!(
-                String::from_utf8_lossy(&output.stderr),
-                format!("[101] Error: Cannot read file \"{path}\".\n")
-            );
-            assert_eq!(String::from_utf8_lossy(&output.stdout), "");
-        },
-    );
+mod run {
+    #[test]
+    fn without_read_permission() {
+        super::exec_startlang(
+            "run_file_bad_read.st",
+            0o244,
+            |path| vec!["run", path],
+            |path, output| {
+                assert_eq!(output.status.code().unwrap(), 101);
+                assert_eq!(
+                    String::from_utf8_lossy(&output.stderr),
+                    format!("[101] Error: Cannot read file \"{path}\".\n")
+                );
+                assert_eq!(String::from_utf8_lossy(&output.stdout), "");
+            },
+        );
+    }
 }
