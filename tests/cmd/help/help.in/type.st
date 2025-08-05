@@ -16,3 +16,7 @@ Type N2 := Nat.
 (* not a documentation *)
 Type N3 := N1.
 ? N3.
+
+? Nat.
+? ℕ.
+? __Type_Nat__.

@@ -1,10 +1,10 @@
-use super::{Documentation, Identifier, Type};
+use super::{Documentation, Identifier, Type, Typed as _};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
 pub enum HelpInfo {
     Expression(Type),
-    Alias(Type),
+    Type(Type),
 }
 // ==========================================================================
 // Help Variable
@@ -25,20 +25,30 @@ impl Pretty for Help {
                 .append(theme.operator(&":"))
                 .append(Doc::softline())
                 .append(ty.pretty(theme).group()),
-            HelpInfo::Alias(Type::Builtin(_)) => Doc::nil(),
-            HelpInfo::Alias(ty) => Doc::nil()
-                .append(theme.ty_var(&self.var.name()))
-                .append(Doc::space())
-                .append(theme.operator(&":="))
-                .append(Doc::softline())
-                .append(ty.pretty(theme).group()),
+            HelpInfo::Type(ty) => {
+                let doc_start = Doc::nil()
+                    .append(theme.ty_var(&self.var.name()))
+                    .append(Doc::space());
+                let doc_builtin = theme.comment(&"(builtin)");
+
+                match ty {
+                    Type::Builtin(_) => doc_start.append(doc_builtin),
+                    Type::Alias(alias) if matches!(alias.ty(), Type::Builtin(_)) => {
+                        doc_start.append(doc_builtin)
+                    }
+                    Type::Alias(alias) => doc_start
+                        .append(theme.operator(&":="))
+                        .append(Doc::softline())
+                        .append(alias.ty().pretty(theme).group()),
+                }
+            }
         };
 
-        let docu = match &self.doc {
+        let documentation = match &self.doc {
             Some(doc) => Doc::hardline().append(doc.pretty(theme)).nest(2),
             None => Doc::nil(),
         };
 
-        var.append(docu)
+        var.append(documentation)
     }
 }
