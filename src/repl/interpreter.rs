@@ -4,21 +4,21 @@ use crate::interpreter;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use crate::interpreter::Interpreter as _;
-use crate::parser::cst;
-use crate::typing::{self, ast};
+use crate::typing::ast;
+use crate::typing::Typer;
 use crate::utils::error::{ErrorCode, ErrorPrint};
 use crate::utils::location::SourceId;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
-use crate::vm;
+use crate::vm::Env;
 use ariadne::Source;
 
 pub struct Interpreter {
     all_content: String,
     content: String,
     err_code: i32,
-    typer: typing::Typer,
-    vm: vm::Env,
+    typer: Typer,
+    vm: Env,
     debug_lexer: bool,
     debug_parser: bool,
     debug_typer: bool,
@@ -51,15 +51,6 @@ impl Interpreter {
         self.content = content.to_string();
         self.err_code = 0;
     }
-
-    /// get flag
-    fn get_flag(&self, flag: Flag) -> bool {
-        match flag {
-            Flag::Debug(DebugFlag::Lexer) => self.debug_lexer,
-            Flag::Debug(DebugFlag::Parser) => self.debug_parser,
-            Flag::Debug(DebugFlag::Typer) => self.debug_typer,
-        }
-    }
 }
 
 impl interpreter::Interpreter for Interpreter {
@@ -69,10 +60,6 @@ impl interpreter::Interpreter for Interpreter {
 
     fn source_id(&self) -> &SourceId {
         &SourceId::Repl
-    }
-
-    fn get_offset_source(&self, offset: usize) -> usize {
-        self.all_content.len() - self.content.len() + offset
     }
 
     fn set_error_code(&mut self, code: i32) {
@@ -87,38 +74,16 @@ impl interpreter::Interpreter for Interpreter {
         self.err_code == 0
     }
 
-    fn type_expr_definition(
-        &mut self,
-        def: cst::ExpressionDefinition,
-        doc: Option<ast::Documentation>,
-    ) -> Result<ast::ExpressionDefinition, Box<typing::Error>> {
-        self.typer.definition(&def, doc).inspect(|def| {
-            let summary = SummaryDefinition::from(def);
-            println!("       {}", summary.make_string(&self.theme));
-        })
+    fn get_offset_source(&self, offset: usize) -> usize {
+        self.all_content.len() - self.content.len() + offset
     }
 
-    fn type_ty_definition(
-        &mut self,
-        def: cst::TypeDefinition,
-        doc: Option<ast::Documentation>,
-    ) -> Result<(), Box<typing::Error>> {
-        self.typer.type_definition(&def, doc)
+    fn mut_typer(&mut self) -> &mut Typer {
+        &mut self.typer
     }
 
-    fn type_expression(
-        &mut self,
-        expr: cst::Expression,
-    ) -> Result<ast::Expression, Box<typing::Error>> {
-        self.typer.expression(&expr)
-    }
-
-    fn vm_add_definition(&mut self, def: ast::ExpressionDefinition) {
-        self.vm.add_definition(&def);
-    }
-
-    fn vm_eval_expression(&mut self, expr: ast::Expression) -> vm::Value {
-        self.vm.eval(&expr).unwrap()
+    fn mut_vm(&mut self) -> &mut Env {
+        &mut self.vm
     }
 
     fn set_flag(&mut self, b: bool, flag: Flag) {
@@ -129,18 +94,27 @@ impl interpreter::Interpreter for Interpreter {
         }
     }
 
-    fn debug_pretty(&self, flag: DebugFlag, doc: &impl Pretty) {
-        if self.get_flag(Flag::Debug(flag)) {
-            println!("{}", doc.make_string(&self.theme));
+    fn is_active_debug(&self, debug: DebugFlag) -> bool {
+        match debug {
+            DebugFlag::Lexer => self.debug_lexer,
+            DebugFlag::Parser => self.debug_parser,
+            DebugFlag::Typer => self.debug_typer,
         }
     }
 
-    fn print_eval(&mut self, value: &vm::Value) {
-        println!("{}", value.make_string(&self.theme));
+    fn print(&self, doc: &impl Pretty) {
+        println!("{}", doc.make_string(&self.theme));
     }
 
-    fn print_typeof(&mut self, ty: &ast::Type) {
-        println!("{}", ty.make_string(&self.theme));
+    fn print_summay(&self, def: &ast::ExpressionDefinition) {
+        let summary = SummaryDefinition::from(def);
+        println!("       {}", summary.make_string(&self.theme));
+    }
+
+    fn debug(&self, flag: DebugFlag, doc: &impl Pretty) {
+        if self.is_active_debug(flag) {
+            self.print(doc);
+        }
     }
 
     fn eprint<E>(&self, error: &E)

@@ -30,44 +30,30 @@ pub trait Interpreter {
     /// get a lexer with offset
     fn get_offset_source(&self, offset: usize) -> usize;
 
-    /// type expression defintion
-    fn type_expr_definition(
-        &mut self,
-        def: cst::ExpressionDefinition,
-        doc: Option<ast::Documentation>,
-    ) -> Result<ast::ExpressionDefinition, Box<typing::Error>>;
+    /// get mutable reference on typer
+    fn mut_typer(&mut self) -> &mut typing::Typer;
 
-    /// type type defininition
-    fn type_ty_definition(
-        &mut self,
-        def: cst::TypeDefinition,
-        doc: Option<ast::Documentation>,
-    ) -> Result<(), Box<typing::Error>>;
-
-    /// type expression
-    fn type_expression(
-        &mut self,
-        expr: cst::Expression,
-    ) -> Result<ast::Expression, Box<typing::Error>>;
-
-    /// add definitin in vm
-    fn vm_add_definition(&mut self, def: ast::ExpressionDefinition);
-
-    /// eval expression in vm
-    fn vm_eval_expression(&mut self, expr: ast::Expression) -> vm::Value;
+    /// get vm
+    fn mut_vm(&mut self) -> &mut vm::Env;
 
     /// set debug parser
     fn set_flag(&mut self, b: bool, flag: Flag);
 
+    /// get debug flags
+    fn is_active_debug(&self, debug: DebugFlag) -> bool;
+
+    /// print
+    fn print(&self, doc: &impl Pretty);
+
+    /// active printing of summarry definition
+    fn print_summay(&self, def: &ast::ExpressionDefinition);
+
     /// pretty debug
-    fn debug_pretty(&self, flag: DebugFlag, doc: &impl Pretty);
-
-    /// print eval
-    fn print_eval(&mut self, value: &vm::Value);
-
-    /// print type of
-    fn print_typeof(&mut self, ty: &ast::Type);
-
+    fn debug(&self, flag: DebugFlag, doc: &impl Pretty) {
+        if self.is_active_debug(flag) {
+            self.print(doc);
+        }
+    }
     /// print error
     fn eprint<E>(&self, error: &E)
     where
@@ -93,11 +79,13 @@ pub trait Interpreter {
         def: cst::ExpressionDefinition,
         doc: Option<ast::Documentation>,
     ) {
-        self.type_expr_definition(def, doc)
+        self.mut_typer()
+            .definition(&def, doc)
             .map(|def| {
-                self.debug_pretty(DebugFlag::Typer, &def);
+                self.print_summay(&def);
+                self.debug(DebugFlag::Typer, &def);
                 if self.get_error_code() == 0 {
-                    self.vm_add_definition(def)
+                    self.mut_vm().add_definition(&def)
                 }
             })
             .unwrap_or_else(|e| self.fail(e))
@@ -105,19 +93,20 @@ pub trait Interpreter {
 
     /// run command type definition
     fn run_type_definition(&mut self, def: cst::TypeDefinition, doc: Option<ast::Documentation>) {
-        if let Err(e) = self.type_ty_definition(def, doc) {
+        if let Err(e) = self.mut_typer().type_definition(&def, doc) {
             self.fail(e);
         }
     }
 
     /// run command eval
     fn run_eval(&mut self, expr: cst::Expression) {
-        self.type_expression(expr)
+        self.mut_typer()
+            .expression(&expr)
             .map(|expr| {
-                self.debug_pretty(DebugFlag::Typer, &expr);
+                self.debug(DebugFlag::Typer, &expr);
                 if self.get_error_code() == 0 {
-                    let value = self.vm_eval_expression(expr);
-                    self.print_eval(&value);
+                    let value = self.mut_vm().eval(&expr).unwrap();
+                    self.print(&value);
                 }
             })
             .unwrap_or_else(|e| self.fail(e))
@@ -125,12 +114,20 @@ pub trait Interpreter {
 
     /// run type of expression
     fn run_typeof(&mut self, expr: cst::Expression) {
-        self.type_expression(expr)
+        self.mut_typer()
+            .expression(&expr)
             .map(|expr| {
                 let ty = expr.ty();
-                self.print_typeof(ty);
+                self.print(ty);
             })
             .unwrap_or_else(|e| self.fail(e))
+    }
+
+    fn run_help(&mut self, var: cst::help::Variable) {
+        match self.mut_typer().help(&var) {
+            Ok(help) => self.print(&help),
+            Err(err) => self.fail(err),
+        }
     }
 
     /// run command set and unset
@@ -154,7 +151,7 @@ pub trait Interpreter {
             }
             cst::CommandKind::Eval { expr, .. } => self.run_eval(expr),
             cst::CommandKind::TypeOf { expr, .. } => self.run_typeof(expr),
-            cst::CommandKind::Help { keyword, var } => todo!("implement help {keyword:?}, {var:?}"),
+            cst::CommandKind::Help { var, .. } => self.run_help(var),
             cst::CommandKind::Set { var, .. } => self.run_set(true, var),
             cst::CommandKind::UnSet { var, .. } => self.run_set(false, var),
         }
@@ -204,9 +201,9 @@ pub trait Interpreter {
             match tokens.last() {
                 None => break,
                 Some(last_token) => {
-                    self.debug_pretty(DebugFlag::Lexer, &tokens);
+                    self.debug(DebugFlag::Lexer, &tokens);
                     if let Some(cmd) = self.parse(&tokens) {
-                        self.debug_pretty(DebugFlag::Parser, &cmd);
+                        self.debug(DebugFlag::Parser, &cmd);
                         self.run_command(cmd);
                     }
                     offset += last_token.loc().end() - offset_source;

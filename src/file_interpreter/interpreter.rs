@@ -3,8 +3,7 @@ use crate::interpreter;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use crate::interpreter::Interpreter as _;
-use crate::parser;
-use crate::typing;
+use crate::typing::Typer;
 use crate::utils::error::{ErrorCode, ErrorPrint};
 use crate::utils::location::SourceId;
 use crate::utils::pretty::Pretty;
@@ -19,7 +18,7 @@ pub struct Interpreter {
     source_id: SourceId,
     content: String,
     err_code: i32,
-    pub typer: typing::Typer,
+    pub typer: Typer,
     pub vm: vm::Env,
     debug_lexer: bool,
     debug_parser: bool,
@@ -47,7 +46,7 @@ impl Interpreter {
             source_id: SourceId::File(PathBuf::from("stdlib.st")),
             content: include_str!("../../assets/stdlib.st").to_string(),
             err_code: 0,
-            typer: typing::Typer::default(),
+            typer: Typer::default(),
             vm: vm::Env::default(),
             debug_lexer: false,
             debug_parser: false,
@@ -55,28 +54,15 @@ impl Interpreter {
             theme: Theme::default_theme(),
         }
     }
-
-    /// get flag
-    fn get_flag(&self, flag: Flag) -> bool {
-        match flag {
-            Flag::Debug(DebugFlag::Lexer) => self.debug_lexer,
-            Flag::Debug(DebugFlag::Parser) => self.debug_parser,
-            Flag::Debug(DebugFlag::Typer) => self.debug_typer,
-        }
-    }
 }
 
 impl interpreter::Interpreter for Interpreter {
-    fn source_id(&self) -> &SourceId {
-        &self.source_id
-    }
-
     fn content(&self) -> &str {
         &self.content
     }
 
-    fn get_offset_source(&self, offset: usize) -> usize {
-        offset
+    fn source_id(&self) -> &SourceId {
+        &self.source_id
     }
 
     fn set_error_code(&mut self, code: i32) {
@@ -91,35 +77,16 @@ impl interpreter::Interpreter for Interpreter {
         true
     }
 
-    fn type_expr_definition(
-        &mut self,
-        def: parser::cst::ExpressionDefinition,
-        doc: Option<typing::ast::Documentation>,
-    ) -> Result<typing::ast::ExpressionDefinition, Box<typing::Error>> {
-        self.typer.definition(&def, doc)
+    fn get_offset_source(&self, offset: usize) -> usize {
+        offset
     }
 
-    fn type_ty_definition(
-        &mut self,
-        def: parser::cst::TypeDefinition,
-        doc: Option<typing::ast::Documentation>,
-    ) -> Result<(), Box<typing::Error>> {
-        self.typer.type_definition(&def, doc)
+    fn mut_typer(&mut self) -> &mut Typer {
+        &mut self.typer
     }
 
-    fn type_expression(
-        &mut self,
-        expr: parser::cst::Expression,
-    ) -> Result<typing::ast::Expression, Box<typing::Error>> {
-        self.typer.expression(&expr)
-    }
-
-    fn vm_add_definition(&mut self, def: typing::ast::ExpressionDefinition) {
-        self.vm.add_definition(&def);
-    }
-
-    fn vm_eval_expression(&mut self, expr: typing::ast::Expression) -> vm::Value {
-        self.vm.eval(&expr).unwrap()
+    fn mut_vm(&mut self) -> &mut vm::Env {
+        &mut self.vm
     }
 
     fn set_flag(&mut self, b: bool, flag: Flag) {
@@ -130,19 +97,19 @@ impl interpreter::Interpreter for Interpreter {
         }
     }
 
-    fn debug_pretty(&self, flag: DebugFlag, doc: &impl Pretty) {
-        if self.get_flag(Flag::Debug(flag)) {
-            println!("{}", doc.make_string(&self.theme));
+    fn is_active_debug(&self, debug: DebugFlag) -> bool {
+        match debug {
+            DebugFlag::Lexer => self.debug_lexer,
+            DebugFlag::Parser => self.debug_parser,
+            DebugFlag::Typer => self.debug_typer,
         }
     }
 
-    fn print_eval(&mut self, value: &vm::Value) {
-        println!("{}", value.make_string(&self.theme));
+    fn print(&self, doc: &impl Pretty) {
+        println!("{}", doc.make_string(&self.theme));
     }
 
-    fn print_typeof(&mut self, ty: &typing::ast::Type) {
-        println!("{}", ty.make_string(&self.theme));
-    }
+    fn print_summay(&self, _: &crate::typing::ast::ExpressionDefinition) {}
 
     fn eprint<E>(&self, error: &E)
     where

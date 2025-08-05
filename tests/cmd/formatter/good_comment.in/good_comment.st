@@ -11,10 +11,8 @@ Definition (* comment1 *)
 Eval (* Eval var a *) a (* Eval last comment *).
 
 Def b : Nat := (* many comment
-  
   bla bla bla
   bla bla bla blaaa
-  
   end of many comment *)
   a.
 (** doc type *)

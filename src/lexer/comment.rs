@@ -27,8 +27,13 @@ impl Comment {
 
 impl From<String> for Comment {
     fn from(content: String) -> Self {
+        let content = content
+            .split("\n")
+            .map(|s| s.trim().to_string())
+            .filter(|s| !String::is_empty(s))
+            .collect();
         Self {
-            content: content.split("\n").map(|s| s.trim().to_string()).collect(),
+            content,
             is_doc: false,
         }
     }

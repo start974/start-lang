@@ -1,7 +1,5 @@
 Def a := 4.
-
 Eval a.
 
-Def b := a.
-
+Def b : Nat := (a : ℕ) : Nat.
 $ b.

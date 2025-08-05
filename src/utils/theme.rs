@@ -82,6 +82,8 @@ pub struct Theme {
     pub ty_var: ColorInfo,
     /// comment
     pub comment: ColorInfo,
+    /// documentation color
+    pub documentation: ColorInfo,
 }
 
 impl Default for Theme {
@@ -97,6 +99,7 @@ impl Default for Theme {
             number: ColorInfo::default(),
             ty_var: ColorInfo::default(),
             comment: ColorInfo::default(),
+            documentation: ColorInfo::default(),
         }
     }
 }
@@ -122,6 +125,9 @@ impl Theme {
                 .styles(vec![Styles::Italic]),
             comment: ColorInfo::default()
                 .fg_color(Color::BrightBlack)
+                .styles(vec![Styles::Italic]),
+            documentation: ColorInfo::default()
+                .fg_color(Color::White)
                 .styles(vec![Styles::Italic]),
         }
     }
@@ -206,6 +212,10 @@ impl Theme {
     /// pprint comment color
     pub fn comment<'a>(&self, comment: &impl ToString) -> Doc<'a> {
         Doc::text(comment.to_string()).annotate(self.comment.clone())
+    }
+
+    pub fn documentation<'a>(&self, doc: &impl ToString) -> Doc<'a> {
+        Doc::text(doc.to_string()).annotate(self.documentation.clone())
     }
 }
 
