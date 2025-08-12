@@ -129,8 +129,7 @@ pub struct ErrorTheme {
 impl ErrorTheme {
     /// get label color
     pub fn label_color(&self) -> Option<ariadne::Color> {
-        self.label_color
-            .map(to_ariadne_color)
+        self.label_color.map(to_ariadne_color)
     }
 }
 

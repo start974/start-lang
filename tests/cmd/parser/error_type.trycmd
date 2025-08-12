@@ -8,7 +8,10 @@ $ startlang run not_end.st
    │
  1 │ Type N
    │        │ 
-   │        ╰─ Expected ":=", found "end of input".
+   │        ╰─ Parsing expect ":=".
+   │ 
+   │ Note: Expected : ":="
+   │       Found    : "end of input".
 ───╯
 
 ```
@@ -20,7 +23,10 @@ $ startlang run no_eq_def.st
    │
  1 │ Type N Nat.
    │        ─┬─  
-   │         ╰─── Expected ":=", found "Nat".
+   │         ╰─── Parsing expect ":=".
+   │ 
+   │ Note: Expected : ":="
+   │       Found    : "Nat".
 ───╯
 
 ```
@@ -33,7 +39,10 @@ $ startlang run no_space.st
    │
  1 │ TypeN := Nat.
    │ ──┬──  
-   │   ╰──── Expected "command", found "TypeN".
+   │   ╰──── Parsing expect "command".
+   │ 
+   │ Note: Expected : "command"
+   │       Found    : "TypeN".
 ───╯
 
 ```
@@ -47,7 +56,10 @@ $ startlang run wrong_name.st
    │
  1 │ Type 1 := ℕ.
    │      ┬  
-   │      ╰── Expected "type variable", found "1".
+   │      ╰── Parsing expect "type variable".
+   │ 
+   │ Note: Expected : "type variable"
+   │       Found    : "1".
 ───╯
 
 ```
@@ -60,14 +72,20 @@ $ startlang run just_keyword.st
    │
  1 │ Type.
    │     ┬  
-   │     ╰── Expected "type variable", found ".".
+   │     ╰── Parsing expect "type variable".
+   │ 
+   │ Note: Expected : "type variable"
+   │       Found    : ".".
 ───╯
 [202] Error: Parsing error
    ╭─[ just_keyword.st:2:3 ]
    │
  2 │ Ty.
    │   ┬  
-   │   ╰── Expected "type variable", found ".".
+   │   ╰── Parsing expect "type variable".
+   │ 
+   │ Note: Expected : "type variable"
+   │       Found    : ".".
 ───╯
 
 ```

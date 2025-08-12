@@ -8,7 +8,10 @@ $ startlang run no_space.st
    │
  1 │ TypeOf1.
    │ ───┬───  
-   │    ╰───── Expected "command", found "TypeOf1".
+   │    ╰───── Parsing expect "command".
+   │ 
+   │ Note: Expected : "command"
+   │       Found    : "TypeOf1".
 ───╯
 
 ```
@@ -21,14 +24,20 @@ $ startlang run just_keyword.st
    │
  1 │ TypeOf.
    │       ┬  
-   │       ╰── Expected "expression", found ".".
+   │       ╰── Parsing expect "expression".
+   │ 
+   │ Note: Expected : "expression"
+   │       Found    : ".".
 ───╯
 [202] Error: Parsing error
    ╭─[ just_keyword.st:2:3 ]
    │
  2 │ ?:.
    │   ┬  
-   │   ╰── Expected "expression", found ".".
+   │   ╰── Parsing expect "expression".
+   │ 
+   │ Note: Expected : "expression"
+   │       Found    : ".".
 ───╯
 
 ```

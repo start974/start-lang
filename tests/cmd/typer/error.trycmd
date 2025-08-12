@@ -9,7 +9,7 @@ $ startlang run def_expr_type_not_found.st
    │
  1 │ Def a : Not_defined := 4.
    │         ─────┬─────  
-   │              ╰─────── Variable "Not_defined" not found in the current scope.
+   │              ╰─────── Variable Not_defined not found in the current scope.
 ───╯
 
 ```
@@ -24,7 +24,7 @@ $ startlang run var_not_found.st
    │
  1 │ Eval not_defined.
    │      ─────┬─────  
-   │           ╰─────── Variable "not_defined" not found in the current scope.
+   │           ╰─────── Variable not_defined not found in the current scope.
 ───╯
 
 ```
@@ -38,7 +38,7 @@ $ startlang run def_type_not_found.st
    │
  1 │ Type T := Not_definied.
    │           ──────┬─────  
-   │                 ╰─────── Variable "Not_definied" not found in the current scope.
+   │                 ╰─────── Variable Not_definied not found in the current scope.
 ───╯
 
 ```
@@ -53,20 +53,20 @@ $ startlang run type_mismatch.st
    │
  5 │ Def c : ℕ := b.
    │         ┬  
-   │         ╰── Found Type 𝔹.
+   │         ╰── Found type 𝔹.
    │ 
-   │ Note: Type exprected: ℕ
-   │                found: 𝔹
+   │ Note: Expected : ℕ
+   │       Found    : 𝔹
 ───╯
 [302] Error: Type mismatch.
    ╭─[ type_mismatch.st:7:20 ]
    │
  7 │ Def c' : 𝔹 := (a : Bool).
    │                    ──┬─  
-   │                      ╰─── Found Type ℕ.
+   │                      ╰─── Found type ℕ.
    │ 
-   │ Note: Type exprected: Bool
-   │                found: ℕ
+   │ Note: Expected : Bool
+   │       Found    : ℕ
 ───╯
 
 ```

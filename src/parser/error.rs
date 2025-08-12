@@ -46,7 +46,7 @@ impl ErrorReport for Error {
     }
 
     fn text(&self) -> Option<Message> {
-        let msg = Message::text("Parsing Expected ")
+        let msg = Message::text("Parsing expect ")
             .append(Message::intersperse(
                 self.expected.iter().map(|s| Message::quoted(s).important()),
                 Message::text(" or "),

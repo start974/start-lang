@@ -7,7 +7,10 @@ $ startlang run no_expression.st
    │
  1 │ Definition a :=
    │                 │ 
-   │                 ╰─ Expected "expression", found "end of input".
+   │                 ╰─ Parsing expect "expression".
+   │ 
+   │ Note: Expected : "expression"
+   │       Found    : "end of input".
 ───╯
 
 ```
@@ -19,7 +22,10 @@ $ startlang run stop_ident.st
    │
  1 │ Definition a
    │              │ 
-   │              ╰─ Expected ":" or ":=", found "end of input".
+   │              ╰─ Parsing expect ":" or ":=".
+   │ 
+   │ Note: Expected : ":", ":="
+   │       Found    : "end of input".
 ───╯
 
 ```
@@ -32,7 +38,10 @@ $ startlang run def_not_space.st
    │
  1 │ Defa := 1.
    │ ──┬─  
-   │   ╰─── Expected "command", found "Defa".
+   │   ╰─── Parsing expect "command".
+   │ 
+   │ Note: Expected : "command"
+   │       Found    : "Defa".
 ───╯
 
 ```
@@ -45,7 +54,10 @@ $ startlang run no_eq_def.st
    │
  1 │ Definition a 1.
    │              ┬  
-   │              ╰── Expected ":" or ":=", found "1".
+   │              ╰── Parsing expect ":" or ":=".
+   │ 
+   │ Note: Expected : ":", ":="
+   │       Found    : "1".
 ───╯
 
 ```
@@ -58,7 +70,10 @@ $ startlang run wrong_name.st
    │
  1 │ Definition 1 := 3.
    │            ┬  
-   │            ╰── Expected "pattern", found "1".
+   │            ╰── Parsing expect "pattern".
+   │ 
+   │ Note: Expected : "pattern"
+   │       Found    : "1".
 ───╯
 
 ```
@@ -71,7 +86,10 @@ $ startlang run wrong_ty.st
    │
  1 │ Definition a : 1 := 1.
    │                ┬  
-   │                ╰── Expected "type", found "1".
+   │                ╰── Parsing expect "type".
+   │ 
+   │ Note: Expected : "type"
+   │       Found    : "1".
 ───╯
 
 ```
@@ -84,14 +102,20 @@ $ startlang run just_keyword.st
    │
  1 │ Definition.
    │           ┬  
-   │           ╰── Expected "pattern", found ".".
+   │           ╰── Parsing expect "pattern".
+   │ 
+   │ Note: Expected : "pattern"
+   │       Found    : ".".
 ───╯
 [202] Error: Parsing error
    ╭─[ just_keyword.st:2:4 ]
    │
  2 │ Def.
    │    ┬  
-   │    ╰── Expected "pattern", found ".".
+   │    ╰── Parsing expect "pattern".
+   │ 
+   │ Note: Expected : "pattern"
+   │       Found    : ".".
 ───╯
 
 ```
