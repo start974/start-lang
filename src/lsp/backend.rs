@@ -83,4 +83,3 @@ impl LanguageServer for Backend {
         .await;
     }
 }
-
