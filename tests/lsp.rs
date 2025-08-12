@@ -9,9 +9,8 @@ fn encode_request(request: &Value) -> String {
 }
 
 // Nouvelle version de decode_responses qui gère plusieurs messages LSP.
-fn decode_responses(responses: &str) -> Vec<Value> {
+fn decode_responses(mut data: &str) -> Vec<Value> {
     let mut messages = Vec::new();
-    let mut data = responses;
 
     while !data.is_empty() {
         //find header
@@ -31,7 +30,8 @@ fn decode_responses(responses: &str) -> Vec<Value> {
 
         // parse body
         let body = &data[body_start..body_end];
-        messages.push(from_str(body).unwrap());
+        let message = from_str(body).unwrap();
+        messages.push(message);
         data = &data[body_end..];
     }
     messages
@@ -40,12 +40,25 @@ fn decode_responses(responses: &str) -> Vec<Value> {
 fn exec_lsp_command(requests: Vec<Value>) -> Vec<Value> {
     let mut cmd = Command::cargo_bin("startlang").unwrap();
     let cmd = cmd.arg("lsp");
-    for request in requests {
-        cmd.write_stdin(encode_request(&request)).unwrap();
-    }
+    let request_str = requests
+        .iter()
+        .map(encode_request)
+        .collect::<Vec<String>>()
+        .join("");
 
-    let responses = cmd.output().unwrap();
-    decode_responses(&String::from_utf8_lossy(&responses.stdout))
+    // send request
+    println!("========== sending raw request ==========");
+    println!("{request_str}");
+    println!("=========================================");
+    cmd.write_stdin(request_str).unwrap();
+
+    // receive response
+    let output = cmd.output().unwrap();
+    let responses = String::from_utf8_lossy(&output.stdout);
+    println!("--------- recive raw response ----------");
+    println!("{responses}");
+    println!("-----------------------------------------");
+    decode_responses(&responses)
 }
 
 #[test]
@@ -81,4 +94,29 @@ fn initialize() {
         });
         assert_json_include!(actual: server_response, expected: response);
     }
+}
+
+#[test]
+fn initialized_notification() {
+    let requests = {
+        let initialized_request = json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "rootUri": null,
+                "capabilities": {}
+            }
+        });
+        let initialized_notification = json!({
+            "jsonrpc": "2.0",
+            "method": "initialized",
+            "params": {}
+        });
+        vec![initialized_request, initialized_notification]
+    };
+
+    let responses = exec_lsp_command(requests);
+    // just one response for initialize `initialized`.
+    assert_eq!(responses.len(), 1);
 }
