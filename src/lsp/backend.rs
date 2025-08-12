@@ -26,6 +26,16 @@ impl Backend {
     }
 }
 
+impl Backend {
+    async fn on_change(&self, params: TextDocumentItem) {
+        let uri = params.uri;
+        let mut interpreter = Interpreter::new(uri.clone(), params.text);
+        interpreter.run();
+        let diags = interpreter.diagnostics().to_vec();
+        self.client.publish_diagnostics(uri, diags, None).await;
+    }
+}
+
 #[tower_lsp::async_trait]
 impl LanguageServer for Backend {
     async fn initialize(
@@ -57,24 +67,20 @@ impl LanguageServer for Backend {
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        let uri = params.text_document.uri;
-        let mut interpreter = Interpreter::new(uri.clone(), params.text_document.text);
-        interpreter.run();
-        let diags = interpreter.diagnostics().to_vec();
-        self.client.publish_diagnostics(uri, diags, None).await;
+        self.on_change(params.text_document).await;
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
-        let uri = params.text_document.uri;
-
-        if let Some(change) = params.content_changes.first() {
-            let new_text = change.text.clone();
-
-            let mut interpreter = Interpreter::new(uri.clone(), new_text);
-            interpreter.run();
-            let diags = interpreter.diagnostics().to_vec();
-
-            self.client.publish_diagnostics(uri, diags, None).await;
-        }
+        self.on_change(TextDocumentItem {
+            uri: params.text_document.uri,
+            language_id: Self::name().to_string(),
+            version: params.text_document.version,
+            text: params
+                .content_changes
+                .first()
+                .map_or(String::new(), |change| change.text.clone()),
+        })
+        .await;
     }
 }
+

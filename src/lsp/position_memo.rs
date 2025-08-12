@@ -82,7 +82,7 @@ impl PositionMemo {
 
 #[test]
 fn position_memo() {
-    let mut memo = PositionMemo::new("Hello\nWorld\nThis is a test".to_string());
+    let mut memo = PositionMemo::new("Hello\nWorld\nThis is a \ntest".to_string());
     assert_eq!(
         memo.position(0),
         Position {
@@ -118,18 +118,19 @@ fn position_memo() {
             character: 5
         }
     );
+
+    assert_eq!(
+        memo.position(23),
+        Position {
+            line: 3,
+            character: 1
+        }
+    );
     assert_eq!(
         memo.position(12),
         Position {
             line: 2,
             character: 0
-        }
-    );
-    assert_eq!(
-        memo.position(20),
-        Position {
-            line: 2,
-            character: 8
         }
     );
 }
