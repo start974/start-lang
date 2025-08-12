@@ -1,3 +1,5 @@
+use crate::interpreter::Interpreter as _;
+
 use super::interpreter::Interpreter;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer};
@@ -55,13 +57,28 @@ impl LanguageServer for Backend {
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        let uri = params.text_document.uri.clone();
-        let path = uri.to_file_path().unwrap();
-        let interpreter = Interpreter::new(&path, params.text_document.text);
-        let diags = interpreter.diagnostics();
-
+        let uri = params.text_document.uri;
+        let mut interpreter = Interpreter::new(uri.clone(), params.text_document.text);
+        interpreter.run();
+        let diags = interpreter.diagnostics().to_vec();
         self.client
-            .publish_diagnostics(uri, diags.to_vec(), None)
+            .publish_diagnostics(uri, diags, None)
             .await;
+    }
+
+    async fn did_change(&self, params: DidChangeTextDocumentParams) {
+        let uri = params.text_document.uri;
+
+        if let Some(change) = params.content_changes.first() {
+            let new_text = change.text.clone();
+
+            let mut interpreter = Interpreter::new(uri.clone(), new_text);
+            interpreter.run();
+            let diags = interpreter.diagnostics().to_vec();
+
+            self.client
+                .publish_diagnostics(uri, diags, None)
+                .await;
+        }
     }
 }

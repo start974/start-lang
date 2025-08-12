@@ -11,6 +11,7 @@ pub enum SourceId {
     Unknown,
     Repl,
     File(PathBuf),
+    Url(String),
 }
 
 impl std::fmt::Display for SourceId {
@@ -19,6 +20,7 @@ impl std::fmt::Display for SourceId {
             SourceId::Unknown => write!(f, "unknown"),
             SourceId::Repl => write!(f, "REPL"),
             SourceId::File(path) => write!(f, "{}", path.display()),
+            SourceId::Url(url) => write!(f, "{url}"),
         }
     }
 }
