@@ -4,7 +4,7 @@ use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use crate::interpreter::Interpreter as _;
 use crate::typer::Typer;
-use crate::utils::error::{ErrorCode, ErrorPrint};
+use crate::utils::error::{ErrorCode, ErrorReport, ErrorPrint as _};
 use crate::utils::location::SourceId;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
@@ -105,15 +105,15 @@ impl interpreter::Interpreter for Interpreter {
         }
     }
 
-    fn print(&self, doc: &impl Pretty) {
+    fn print(&mut self, doc: &impl Pretty) {
         println!("{}", doc.make_string(&self.theme));
     }
 
     fn print_summay(&self, _: &crate::typer::ast::ExpressionDefinition) {}
 
-    fn eprint<E>(&self, error: &E)
+    fn eprint<E>(&mut self, error: &E)
     where
-        E: ErrorPrint + ErrorCode,
+        E: ErrorReport + ErrorCode,
     {
         let mut cache = (self.source_id.clone(), Source::from(&self.content));
         error.eprint(&self.theme, &mut cache).unwrap();

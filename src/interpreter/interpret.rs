@@ -5,7 +5,7 @@ use crate::parser::cst::AsIdentifier as _;
 use crate::parser::{self, cst};
 use crate::typer::ast::Typed as _;
 use crate::typer::{self, ast};
-use crate::utils::error::{ErrorCode, ErrorPrint};
+use crate::utils::error::{ErrorCode, ErrorReport};
 use crate::utils::location::{Located as _, SourceId};
 use crate::utils::pretty::Pretty;
 use crate::vm;
@@ -43,26 +43,26 @@ pub trait Interpreter {
     fn is_active_debug(&self, debug: DebugFlag) -> bool;
 
     /// print
-    fn print(&self, doc: &impl Pretty);
+    fn print(&mut self, doc: &impl Pretty);
 
     /// active printing of summarry definition
     fn print_summay(&self, def: &ast::ExpressionDefinition);
 
     /// pretty debug
-    fn debug(&self, flag: DebugFlag, doc: &impl Pretty) {
+    fn debug(&mut self, flag: DebugFlag, doc: &impl Pretty) {
         if self.is_active_debug(flag) {
             self.print(doc);
         }
     }
     /// print error
-    fn eprint<E>(&self, error: &E)
+    fn eprint<E>(&mut self, error: &E)
     where
-        E: ErrorPrint + ErrorCode;
+        E: ErrorReport + ErrorCode;
 
     /// fail with error
     fn fail<E>(&mut self, error: E)
     where
-        E: ErrorPrint + ErrorCode,
+        E: ErrorReport + ErrorCode,
     {
         self.eprint(&error);
         let code = if self.get_error_code() == 0 {
@@ -163,7 +163,9 @@ pub trait Interpreter {
         match lexer::lex(source_id.clone(), offset_source, content) {
             Ok(tokens) => tokens,
             Err(errs) => {
-                self.fail(errs);
+                for err in errs {
+                    self.fail(err);
+                }
                 Vec::new()
             }
         }
@@ -176,7 +178,9 @@ pub trait Interpreter {
             Ok(parser::CommandOrEnd::Command(cmd)) => Some(*cmd),
             Ok(parser::CommandOrEnd::End(_)) => None,
             Err(errs) => {
-                self.fail(errs);
+                for err in errs {
+                    self.fail(err);
+                }
                 None
             }
         }

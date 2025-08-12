@@ -5,6 +5,7 @@ mod file_interpreter;
 mod format;
 mod interpreter;
 mod lexer;
+mod lsp;
 mod parser;
 mod repl;
 mod typer;
@@ -46,23 +47,29 @@ enum Commands {
         /// format file inplace
         overwrite: bool,
     },
+
+    /// run lsp
+    Lsp,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
-    match cli.command {
-        Commands::Repl => repl::run(),
+    let code = match cli.command {
+        Commands::Repl => {
+            repl::run();
+            0
+        }
         Commands::Run { path } => {
             let path = std::path::PathBuf::from(path);
-            let code = file_interpreter::run(&path);
-            exit(code)
+            file_interpreter::run(&path)
         }
         Commands::Format {
             path,
             print,
             diff,
-            overwrite: _,
+            overwrite,
         } => {
             let path = std::path::PathBuf::from(path);
             let mode = if print {
@@ -70,11 +77,18 @@ fn main() {
             } else if diff {
                 format::Mode::Diff
             } else {
-                // override is true
+                assert!(
+                    overwrite,
+                    "If not print or diff, then overwrite must be true"
+                );
                 format::Mode::Overwrite
             };
-            let code = format::run(&path, mode);
-            exit(code)
+            format::run(&path, mode)
         }
-    }
+        Commands::Lsp => {
+            lsp::run().await;
+            0
+        }
+    };
+    exit(code)
 }
