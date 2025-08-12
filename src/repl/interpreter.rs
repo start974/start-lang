@@ -6,7 +6,7 @@ use crate::interpreter::flag::Flag;
 use crate::interpreter::Interpreter as _;
 use crate::typer::ast;
 use crate::typer::Typer;
-use crate::utils::error::{ErrorCode, ErrorPrint};
+use crate::utils::error::ErrorPrint;
 use crate::utils::location::SourceId;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;
@@ -102,7 +102,7 @@ impl interpreter::Interpreter for Interpreter {
         }
     }
 
-    fn print(&self, doc: &impl Pretty) {
+    fn print(&mut self, doc: &impl Pretty) {
         println!("{}", doc.make_string(&self.theme));
     }
 
@@ -111,15 +111,9 @@ impl interpreter::Interpreter for Interpreter {
         println!("       {}", summary.make_string(&self.theme));
     }
 
-    fn debug(&self, flag: DebugFlag, doc: &impl Pretty) {
-        if self.is_active_debug(flag) {
-            self.print(doc);
-        }
-    }
-
-    fn eprint<E>(&self, error: &E)
+    fn eprint<E>(&mut self, error: &E)
     where
-        E: ErrorPrint + ErrorCode,
+        E: ErrorPrint,
     {
         let mut cache = (self.source_id().clone(), Source::from(&self.all_content));
         error.eprint(&self.theme, &mut cache).unwrap();

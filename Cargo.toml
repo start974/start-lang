@@ -21,3 +21,5 @@ num-bigint = "0.4.6"
 pretty = "0.12.3"
 rustyline = "14.0.0"
 similar = "2.7.0"
+tokio = { version = "1", features = ["full"] }
+tower-lsp = "0.20.0"
