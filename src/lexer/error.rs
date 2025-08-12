@@ -32,28 +32,26 @@ impl Located for Error<'_> {
 }
 
 impl ErrorReport for Error<'_> {
+    fn head(&self) -> Message {
+        Message::text("Lexing error")
+    }
+
     fn text(&self) -> Option<Message> {
         let mut msg = Message::nil();
         if self.err.expected().len() == 1 {
-            msg = msg
-                .text("Lexer expected ")
-                .quoted(self.err.expected().next().unwrap().to_string());
-            if let Some(found) = self.err.found() {
-                msg = msg
-                    .text(", found ")
-                    .quoted(found.to_string().escape_default());
+            msg.add_text("Lexer expected ");
+            let expect_str = self.err.expected().next().unwrap().to_string();
+            msg.extend(Message::quoted(expect_str));
+            if self.err.found().is_some() {
+                msg.add_text(", found ")
             }
         } else {
-            msg = msg.text("Lexer unknow token ");
-            if let Some(found) = self.err.found() {
-                msg = msg.quoted(found.to_string().escape_default());
-            }
+            msg.add_text("Lexer unknow token ");
         };
-        msg = msg.text(".");
+        if let Some(found) = self.err.found() {
+            msg.extend(Message::quoted(found.to_string().escape_default()).important());
+        }
+        msg.add_text(".");
         Some(msg)
-    }
-
-    fn head(&self) -> Message {
-        Message::nil().text("Lexing error")
     }
 }

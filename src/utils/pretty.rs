@@ -23,10 +23,11 @@ pub trait Pretty: Sized {
     }
 }
 
+
 // ===========================================================================
 // Stream Colored
 // ===========================================================================
-struct StreamColored<'w, W> {
+pub struct StreamColored<'w, W> {
     upstream: &'w mut W,
     color_info_stack: VecDeque<ColorInfo>,
 }

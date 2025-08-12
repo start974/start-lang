@@ -30,9 +30,8 @@ impl Located for ErrorFileRead {
 
 impl ErrorReport for ErrorFileRead {
     fn head(&self) -> Message {
-        Message::nil()
-            .text("Cannot read file ")
-            .quoted(self.path.to_string_lossy())
-            .text(".")
+        Message::text("Cannot read file ")
+            .with_quoted(self.path.to_string_lossy())
+            .with_text(".")
     }
 }

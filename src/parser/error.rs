@@ -42,17 +42,16 @@ impl Located for Error {
 
 impl ErrorReport for Error {
     fn head(&self) -> Message {
-        Message::nil().text("Parsing error")
+        Message::text("Parsing error")
     }
 
     fn text(&self) -> Option<Message> {
-        let msg = Message::nil()
-            .text("Parsing Expected ")
+        let msg = Message::text("Parsing Expected ")
             .append(Message::intersperse(
-                self.expected.iter().map(|s| Message::nil().quoted(s)),
-                Message::nil().text(" or "),
+                self.expected.iter().map(|s| Message::quoted(s).important()),
+                Message::text(" or "),
             ))
-            .text(".");
+            .with_text(".");
         Some(msg)
     }
 
@@ -61,16 +60,15 @@ impl ErrorReport for Error {
             None => None,
             Some(found) => {
                 let expected_list = Message::intersperse(
-                    self.expected.iter().map(|s| Message::nil().quoted(s)),
-                    Message::nil().text(", "),
+                    self.expected.iter().map(|s| Message::quoted(s).important()),
+                    Message::text(", "),
                 );
-                let msg = Message::nil()
-                    .text("Expected : ")
+                let msg = Message::text("Expected : ")
                     .append(expected_list)
-                    .text("\n")
-                    .text("Found    : ")
-                    .quoted(found.to_string())
-                    .text(".");
+                    .with_line()
+                    .with_text("Found    : ")
+                    .append(Message::quoted(found.to_string()).important())
+                    .with_text(".");
                 Some(msg)
             }
         }

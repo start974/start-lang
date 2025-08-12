@@ -30,14 +30,13 @@ impl Located for UnknownOption {
 
 impl ErrorReport for UnknownOption {
     fn head(&self) -> Message {
-        Message::nil().text("Option unknown.")
+        Message::text("Option unknown.")
     }
 
     fn text(&self) -> Option<Message> {
-        let msg = Message::nil()
-            .text("Option ")
-            .quoted(self.option.name())
-            .text(" is unknown.");
+        let msg = Message::text("Option ")
+            .append(Message::quoted(self.option.name()).important())
+            .with_text(" is unknown.");
         Some(msg)
     }
 }

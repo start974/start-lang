@@ -6,7 +6,7 @@ use crate::typer::Typer;
 use crate::utils::error::{ErrorCode, ErrorReport};
 use crate::utils::location::SourceId;
 use crate::utils::pretty::Pretty;
-use crate::utils::theme::Theme;
+use crate::utils::theme::MessageTheme;
 use crate::vm;
 use ariadne::Span as _;
 use std::path::PathBuf;
@@ -114,7 +114,7 @@ impl interpreter::Interpreter for Interpreter {
     where
         E: ErrorReport + ErrorCode,
     {
-        let theme = Theme::default();
+        let theme = MessageTheme::default();
         let range = Range {
             start: self.position_memo.position(err.loc().start()),
             end: self.position_memo.position(err.loc().end()),
