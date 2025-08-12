@@ -1,23 +1,49 @@
-use std::fmt::Display;
-
+use super::location::Report;
 use super::location::{Located, SourceId};
-use super::location::{Report, ReportBuilder};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
-use ariadne::{Cache, Config, IndexType, ReportKind};
+use ariadne::{Cache, Config, IndexType, Label, ReportKind};
+use std::fmt::Display;
 
 // ===========================================================================
 // Message
 // ===========================================================================
+#[derive(Debug, Clone)]
 enum MessageKind {
     Text(String),
     Important(String),
 }
+
+#[derive(Debug, Clone)]
 pub struct Message(Vec<MessageKind>);
 impl Message {
     /// empty message
     pub fn nil() -> Self {
         Self(Vec::new())
+    }
+
+    /// append doc
+    pub fn append(mut self, doc: Self) -> Self {
+        self.0.extend(doc.0);
+        self
+    }
+
+    /// intersperse document
+    pub fn intersperse<I>(docs: I, sep: Self) -> Self
+    where
+        I: IntoIterator<Item = Self>,
+    {
+        let mut add_doc = false;
+        let mut doc = Self::nil();
+        for cur_doc in docs.into_iter() {
+            doc = doc.append(cur_doc);
+            if add_doc {
+                doc = doc.append(sep.clone());
+            } else {
+                add_doc = true;
+            }
+        }
+        doc
     }
 
     /// text message
@@ -70,21 +96,30 @@ pub trait ErrorPrint {
 }
 
 pub trait ErrorReport: ErrorCode + Located {
-    /// finalize report
-    fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a>;
+    /// head message of error
+    fn head(&self) -> Message;
 
-    /// message of error
-    fn message(&self) -> Message;
+    /// label of error
+    fn text(&self) -> Option<Message> {
+        None
+    }
+
+    /// note of error
+    fn note(&self) -> Option<Message> {
+        None
+    }
 
     /// report of error
     fn report(&self, theme: &Theme) -> Report {
-        self.finalize(
-            theme,
-            Report::build(ReportKind::Error, self.loc().clone())
-                .with_config(Config::default().with_index_type(IndexType::Byte))
-                .with_code(self.code())
-                .with_message(self.message().make_string(theme)),
-        )
+        let loc = self.loc();
+        let mut report_builder = Report::build(ReportKind::Error, loc.clone())
+            .with_config(Config::default().with_index_type(IndexType::Byte))
+            .with_code(self.code())
+            .with_message(self.head().make_string(theme));
+        if let Some(text) = self.text() {
+            report_builder.add_label(Label::new(loc.clone()).with_message(text.make_string(theme)));
+        }
+        report_builder.finish()
     }
 }
 
@@ -113,12 +148,16 @@ impl<E> ErrorReport for Box<E>
 where
     E: ErrorReport,
 {
-    fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
-        self.as_ref().finalize(theme, report)
+    fn text(&self) -> Option<Message> {
+        self.as_ref().text()
     }
 
-    fn message(&self) -> Message {
-        self.as_ref().message()
+    fn head(&self) -> Message {
+        self.as_ref().head()
+    }
+
+    fn note(&self) -> Option<Message> {
+        self.as_ref().note()
     }
 }
 

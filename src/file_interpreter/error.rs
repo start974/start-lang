@@ -1,5 +1,5 @@
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
-use crate::utils::location::{Located, Location, Report, ReportBuilder};
+use crate::utils::location::{Located, Location};
 use std::path::PathBuf;
 
 //=======================================================================
@@ -29,14 +29,7 @@ impl Located for ErrorFileRead {
 }
 
 impl ErrorReport for ErrorFileRead {
-    fn finalize<'a>(
-        &self,
-        _: &crate::utils::theme::Theme,
-        report: ReportBuilder<'a>,
-    ) -> Report<'a> {
-        report.finish()
-    }
-    fn message(&self) -> Message {
+    fn head(&self) -> Message {
         Message::nil()
             .text("Cannot read file ")
             .quoted(self.path.to_string_lossy())

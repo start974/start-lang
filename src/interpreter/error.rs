@@ -1,7 +1,7 @@
 use crate::parser::cst::expression::Variable;
 use crate::parser::cst::AsIdentifier as _;
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
-use crate::utils::location::{Located, Location, Report, ReportBuilder};
+use crate::utils::location::{Located, Location};
 
 // =======================================================================
 // Unknown Option
@@ -29,17 +29,15 @@ impl Located for UnknownOption {
 }
 
 impl ErrorReport for UnknownOption {
-    fn finalize<'a>(
-        &self,
-        _: &crate::utils::theme::Theme,
-        report: ReportBuilder<'a>,
-    ) -> Report<'a> {
-        report.finish()
+    fn head(&self) -> Message {
+        Message::nil().text("Option unknown.")
     }
-    fn message(&self) -> Message {
-        Message::nil()
+
+    fn text(&self) -> Option<Message> {
+        let msg = Message::nil()
             .text("Option ")
             .quoted(self.option.name())
-            .text(" is unknown.")
+            .text(" is unknown.");
+        Some(msg)
     }
 }

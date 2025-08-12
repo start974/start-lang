@@ -137,4 +137,4 @@ pub trait LocatedSet {
 // Report
 // ==========================================================================
 pub type Report<'a> = ariadne::Report<'a, Location>;
-pub type ReportBuilder<'a> = ariadne::ReportBuilder<'a, Location>;
+//pub type ReportBuilder<'a> = ariadne::ReportBuilder<'a, Location>;
