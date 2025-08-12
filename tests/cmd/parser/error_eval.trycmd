@@ -8,7 +8,10 @@ $ startlang run no_space.st
    │
  1 │ Eval1.
    │ ──┬──  
-   │   ╰──── Expected "command", found "Eval1".
+   │   ╰──── Parsing expect "command".
+   │ 
+   │ Note: Expected : "command"
+   │       Found    : "Eval1".
 ───╯
 
 ```
@@ -23,7 +26,10 @@ $ startlang run parent_unclosed1.st
    │
  1 │ Eval (1.
    │        ┬  
-   │        ╰── Expected ":" or ")", found ".".
+   │        ╰── Parsing expect ":" or ")".
+   │ 
+   │ Note: Expected : ":", ")"
+   │       Found    : ".".
 ───╯
 
 ```
@@ -37,7 +43,10 @@ $ startlang run parent_unclosed2.st
    │
  1 │ Eval (1.
    │        ┬  
-   │        ╰── Expected ":" or ")", found ".".
+   │        ╰── Parsing expect ":" or ")".
+   │ 
+   │ Note: Expected : ":", ")"
+   │       Found    : ".".
 ───╯
 
 ```
@@ -50,14 +59,20 @@ $ startlang run just_keyword.st
    │
  1 │ Eval.
    │     ┬  
-   │     ╰── Expected "expression", found ".".
+   │     ╰── Parsing expect "expression".
+   │ 
+   │ Note: Expected : "expression"
+   │       Found    : ".".
 ───╯
 [202] Error: Parsing error
    ╭─[ just_keyword.st:2:2 ]
    │
  2 │ $.
    │  ┬  
-   │  ╰── Expected "expression", found ".".
+   │  ╰── Parsing expect "expression".
+   │ 
+   │ Note: Expected : "expression"
+   │       Found    : ".".
 ───╯
 
 ```
@@ -70,7 +85,10 @@ $ startlang run not_end.st
    │
  1 │ Eval 1
    │        │ 
-   │        ╰─ Expected ":" or ".", found "end of input".
+   │        ╰─ Parsing expect ":" or ".".
+   │ 
+   │ Note: Expected : ":", "."
+   │       Found    : "end of input".
 ───╯
 
 ```

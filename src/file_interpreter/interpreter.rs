@@ -4,7 +4,7 @@ use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use crate::interpreter::Interpreter as _;
 use crate::typer::Typer;
-use crate::utils::error::{ErrorCode, ErrorReport, ErrorPrint as _};
+use crate::utils::error::{ErrorCode, ErrorPrint as _, ErrorReport};
 use crate::utils::location::SourceId;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::Theme;

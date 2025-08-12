@@ -79,15 +79,14 @@ impl ErrorReport for ErrorUnexpectedType {
     }
 
     fn text(&self) -> Option<Message> {
-        let msg = Message::text("Found type: ")
+        let msg = Message::text("Found type ")
             .append(Message::of_pretty(&self.found).important())
             .with_text(".");
         Some(msg)
     }
 
     fn note(&self) -> Option<Message> {
-        let msg = Message::
-            text("Expected : ")
+        let msg = Message::text("Expected : ")
             .append(Message::of_pretty(&self.expected).important())
             .with_line()
             .with_text("Found    : ")

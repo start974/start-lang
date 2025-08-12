@@ -61,9 +61,7 @@ impl LanguageServer for Backend {
         let mut interpreter = Interpreter::new(uri.clone(), params.text_document.text);
         interpreter.run();
         let diags = interpreter.diagnostics().to_vec();
-        self.client
-            .publish_diagnostics(uri, diags, None)
-            .await;
+        self.client.publish_diagnostics(uri, diags, None).await;
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
@@ -76,9 +74,7 @@ impl LanguageServer for Backend {
             interpreter.run();
             let diags = interpreter.diagnostics().to_vec();
 
-            self.client
-                .publish_diagnostics(uri, diags, None)
-                .await;
+            self.client.publish_diagnostics(uri, diags, None).await;
         }
     }
 }

@@ -38,21 +38,21 @@ $ startlang run error.st
    │
  1 │ ? Not_exists.
    │   ─────┬────  
-   │        ╰────── Variable "Not_exists" not found in the current scope.
+   │        ╰────── Variable Not_exists not found in the current scope.
 ───╯
 [301] Error: Variable not found.
    ╭─[ error.st:6:16 ]
    │
  6 │ Definition N : N := 3.
    │                ┬  
-   │                ╰── Variable "N" not found in the current scope.
+   │                ╰── Variable N not found in the current scope.
 ───╯
 [301] Error: Variable not found.
    ╭─[ error.st:7:3 ]
    │
  7 │ ? N.
    │   ┬  
-   │   ╰── Variable "N" not found in the current scope.
+   │   ╰── Variable N not found in the current scope.
 ───╯
 
 ```

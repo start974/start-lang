@@ -20,7 +20,10 @@ $ startlang format parser.st
    │
  1 │ Definition a
    │              │ 
-   │              ╰─ Expected ":" or ":=", found "end of input".
+   │              ╰─ Parsing expect ":" or ":=".
+   │ 
+   │ Note: Expected : ":", ":="
+   │       Found    : "end of input".
 ───╯
 
 ```
@@ -48,7 +51,10 @@ $ startlang format --print parser.st
    │
  1 │ Definition a
    │              │ 
-   │              ╰─ Expected ":" or ":=", found "end of input".
+   │              ╰─ Parsing expect ":" or ":=".
+   │ 
+   │ Note: Expected : ":", ":="
+   │       Found    : "end of input".
 ───╯
 
 ```
@@ -75,7 +81,10 @@ $ startlang format --diff parser.st
    │
  1 │ Definition a
    │              │ 
-   │              ╰─ Expected ":" or ":=", found "end of input".
+   │              ╰─ Parsing expect ":" or ":=".
+   │ 
+   │ Note: Expected : ":", ":="
+   │       Found    : "end of input".
 ───╯
 
 ```
