@@ -1,10 +1,7 @@
 use crate::lexer::token::Token;
 use crate::lexer::MetaToken;
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
-use crate::utils::location::{Located, Location, Report, ReportBuilder, SourceId};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::Theme;
-use ariadne::Label;
+use crate::utils::location::{Located, Location, SourceId};
 use chumsky::error::{Rich, RichPattern};
 
 pub struct Error {
@@ -44,27 +41,38 @@ impl Located for Error {
 }
 
 impl ErrorReport for Error {
-    fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
-        let mut msg = Message::nil().text("Expected ");
-        let mut use_or = false;
-        for expect in self.expected.iter() {
-            if use_or {
-                msg = msg.text(" or ");
-            } else {
-                use_or = true;
-            }
-            msg = msg.quoted(expect);
-        }
-        if let Some(found) = &self.found {
-            msg = msg.text(", found ").quoted(found.to_string());
-        }
-        msg = msg.text(".");
-        report
-            .with_label(Label::new(self.loc().clone()).with_message(msg.make_string(theme)))
-            .finish()
+    fn head(&self) -> Message {
+        Message::nil().text("Parsing error")
     }
 
-    fn message(&self) -> Message {
-        Message::nil().text("Parsing error")
+    fn text(&self) -> Option<Message> {
+        let msg = Message::nil()
+            .text("Parsing Expected ")
+            .append(Message::intersperse(
+                self.expected.iter().map(|s| Message::nil().quoted(s)),
+                Message::nil().text(" or "),
+            ))
+            .text(".");
+        Some(msg)
+    }
+
+    fn note(&self) -> Option<Message> {
+        match &self.found {
+            None => None,
+            Some(found) => {
+                let expected_list = Message::intersperse(
+                    self.expected.iter().map(|s| Message::nil().quoted(s)),
+                    Message::nil().text(", "),
+                );
+                let msg = Message::nil()
+                    .text("Expected : ")
+                    .append(expected_list)
+                    .text("\n")
+                    .text("Found    : ")
+                    .quoted(found.to_string())
+                    .text(".");
+                Some(msg)
+            }
+        }
     }
 }

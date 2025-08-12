@@ -1,9 +1,6 @@
 use super::ast::{Identifier, Type};
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
-use crate::utils::location::{Located, Location, Report, ReportBuilder};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::Theme;
-use ariadne::Label;
+use crate::utils::location::{Located, Location};
 
 // =======================================================================
 // Error Variable Not Found
@@ -33,22 +30,16 @@ impl Located for ErrorVariableNotFound {
 }
 
 impl ErrorReport for ErrorVariableNotFound {
-    fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
-        report
-            .with_label(
-                Label::new(self.identifier.loc().clone()).with_message(
-                    Message::nil()
-                        .text("Variable ")
-                        .quoted(self.identifier.name())
-                        .text(" not found in the current scope.")
-                        .make_string(theme),
-                ),
-            )
-            .finish()
+    fn head(&self) -> crate::utils::error::Message {
+        Message::nil().text("Variable not found.")
     }
 
-    fn message(&self) -> crate::utils::error::Message {
-        Message::nil().text("Variable not found.")
+    fn text(&self) -> Option<Message> {
+        let msg = Message::nil()
+            .text("Variable ")
+            .quoted(self.identifier.name())
+            .text(" not found in the current scope.");
+        Some(msg)
     }
 }
 
@@ -84,30 +75,26 @@ impl Located for ErrorUnexpectedType {
 }
 
 impl ErrorReport for ErrorUnexpectedType {
-    fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
-        report
-            .with_label(
-                Label::new(self.loc.clone()).with_message(
-                    Message::nil()
-                        .text("Found Type ")
-                        .of_pretty(&self.found)
-                        .text(".")
-                        .make_string(theme),
-                ),
-            )
-            .with_note(
-                Message::nil()
-                    .text("Type exprected: ")
-                    .of_pretty(&self.expected)
-                    .text("\n")
-                    .text("         found: ")
-                    .of_pretty(&self.found)
-                    .make_string(theme),
-            )
-            .finish()
-    }
-    fn message(&self) -> crate::utils::error::Message {
+    fn head(&self) -> crate::utils::error::Message {
         Message::nil().text("Type mismatch.")
+    }
+
+    fn text(&self) -> Option<Message> {
+        let msg = Message::nil()
+            .text("Expect type ")
+            .of_pretty(&self.expected)
+            .text(".");
+        Some(msg)
+    }
+
+    fn note(&self) -> Option<Message> {
+        let msg = Message::nil()
+            .text("Expected : ")
+            .of_pretty(&self.expected)
+            .text("\n")
+            .text("Found    : ")
+            .of_pretty(&self.found);
+        Some(msg)
     }
 }
 
@@ -150,16 +137,24 @@ impl Located for Error {
 }
 
 impl ErrorReport for Error {
-    fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
+    fn head(&self) -> crate::utils::error::Message {
         match self {
-            Error::VariableNotFound(e) => e.finalize(theme, report),
-            Error::UnexpectedType(e) => e.finalize(theme, report),
+            Error::VariableNotFound(e) => e.head(),
+            Error::UnexpectedType(e) => e.head(),
         }
     }
-    fn message(&self) -> crate::utils::error::Message {
+
+    fn text(&self) -> Option<Message> {
         match self {
-            Error::VariableNotFound(e) => e.message(),
-            Error::UnexpectedType(e) => e.message(),
+            Error::VariableNotFound(e) => e.text(),
+            Error::UnexpectedType(e) => e.text(),
+        }
+    }
+
+    fn note(&self) -> Option<Message> {
+        match self {
+            Error::VariableNotFound(e) => e.note(),
+            Error::UnexpectedType(e) => e.note(),
         }
     }
 }

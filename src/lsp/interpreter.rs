@@ -115,17 +115,38 @@ impl interpreter::Interpreter for Interpreter {
         E: ErrorReport + ErrorCode,
     {
         let theme = Theme::default();
+        let range = Range {
+            start: self.position_memo.position(err.loc().start()),
+            end: self.position_memo.position(err.loc().end()),
+        };
+        let message = err
+            .text()
+            .map(|msg| msg.make_string(&theme))
+            .unwrap_or_else(|| err.head().make_string(&theme));
+
+        let related_information = err
+            .note()
+            .map(|msg| {
+                let uri = if let SourceId::Url(uri) = self.source_id.clone() {
+                    uri.parse().unwrap()
+                } else {
+                    unreachable!("source id is url")
+                };
+                DiagnosticRelatedInformation {
+                    location: Location { uri, range },
+                    message: msg.make_string(&theme),
+                }
+            })
+            .map(|info| vec![info]);
+
         let diag = Diagnostic {
-            range: Range {
-                start: self.position_memo.position(err.loc().start()),
-                end: self.position_memo.position(err.loc().end()),
-            },
+            range,
+            message,
+            related_information,
             severity: Some(DiagnosticSeverity::ERROR),
             code: Some(NumberOrString::Number(err.code())),
             code_description: None,
             source: Some(Backend::name().to_string()),
-            message: err.message().make_string(&theme),
-            related_information: None,
             tags: None,
             data: None,
         };

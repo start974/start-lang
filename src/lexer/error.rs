@@ -1,8 +1,5 @@
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
-use crate::utils::location::{Located, Location, Report, ReportBuilder, SourceId};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::Theme;
-use ariadne::Label;
+use crate::utils::location::{Located, Location, SourceId};
 use chumsky::error::Rich;
 
 pub struct Error<'src> {
@@ -35,10 +32,10 @@ impl Located for Error<'_> {
 }
 
 impl ErrorReport for Error<'_> {
-    fn finalize<'a>(&self, theme: &Theme, report: ReportBuilder<'a>) -> Report<'a> {
-        let mut msg;
+    fn text(&self) -> Option<Message> {
+        let mut msg = Message::nil();
         if self.err.expected().len() == 1 {
-            msg = Message::nil()
+            msg = msg
                 .text("Lexer expected ")
                 .quoted(self.err.expected().next().unwrap().to_string());
             if let Some(found) = self.err.found() {
@@ -47,18 +44,16 @@ impl ErrorReport for Error<'_> {
                     .quoted(found.to_string().escape_default());
             }
         } else {
-            msg = Message::nil().text("Lexer unknow token ");
+            msg = msg.text("Lexer unknow token ");
             if let Some(found) = self.err.found() {
                 msg = msg.quoted(found.to_string().escape_default());
             }
         };
         msg = msg.text(".");
-        report
-            .with_label(Label::new(self.loc().clone()).with_message(msg.make_string(theme)))
-            .finish()
+        Some(msg)
     }
 
-    fn message(&self) -> Message {
+    fn head(&self) -> Message {
         Message::nil().text("Lexing error")
     }
 }

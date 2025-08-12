@@ -1,5 +1,5 @@
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
-use crate::utils::location::{Located, Location, Report, ReportBuilder};
+use crate::utils::location::{Located, Location};
 use std::path::PathBuf;
 
 //=======================================================================
@@ -27,14 +27,7 @@ impl Located for ErrorFileWrite {
     }
 }
 impl ErrorReport for ErrorFileWrite {
-    fn finalize<'a>(
-        &self,
-        _: &crate::utils::theme::Theme,
-        report: ReportBuilder<'a>,
-    ) -> Report<'a> {
-        report.finish()
-    }
-    fn message(&self) -> Message {
+    fn head(&self) -> Message {
         Message::nil()
             .text("Cannot write file ")
             .quoted(self.path.to_string_lossy())
