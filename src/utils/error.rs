@@ -1,5 +1,7 @@
 use super::location::Report;
 use super::location::{Located, SourceId};
+use super::pretty::StreamColored;
+use super::theme::MessageTheme;
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use ariadne::{Cache, Config, IndexType, Label, ReportKind};
@@ -10,8 +12,9 @@ use std::fmt::Display;
 // ===========================================================================
 #[derive(Debug, Clone)]
 enum MessageKind {
-    Text(String),
+    Normal(String),
     Important(String),
+    NewLine,
 }
 
 #[derive(Debug, Clone)]
@@ -22,9 +25,26 @@ impl Message {
         Self(Vec::new())
     }
 
+    fn add_kind(&mut self, kind: MessageKind) {
+        match (&kind, self.0.last_mut()) {
+            (MessageKind::Normal(text), Some(MessageKind::Normal(last))) => last.push_str(text),
+            (MessageKind::Important(text), Some(MessageKind::Important(last))) => {
+                last.push_str(text)
+            }
+            (_, _) => self.0.push(kind.clone()),
+        }
+    }
+
+    /// add doc to message
+    pub fn extend(&mut self, doc: Self) {
+        for kind in doc.0 {
+            self.add_kind(kind);
+        }
+    }
+
     /// append doc
     pub fn append(mut self, doc: Self) -> Self {
-        self.0.extend(doc.0);
+        self.extend(doc);
         self
     }
 
@@ -33,51 +53,130 @@ impl Message {
     where
         I: IntoIterator<Item = Self>,
     {
-        let mut add_doc = false;
+        let mut add_sep = false;
         let mut doc = Self::nil();
         for cur_doc in docs.into_iter() {
-            doc = doc.append(cur_doc);
-            if add_doc {
+            if add_sep {
                 doc = doc.append(sep.clone());
             } else {
-                add_doc = true;
+                add_sep = true;
             }
+            doc = doc.append(cur_doc);
         }
         doc
     }
 
-    /// text message
-    pub fn text(mut self, text: impl Display) -> Self {
-        self.0.push(MessageKind::Text(text.to_string()));
+    /// text message by default is normal
+    pub fn text(text: impl Display) -> Self {
+        Self(vec![MessageKind::Normal(text.to_string())])
+    }
+
+    /// add text to message
+    pub fn add_text(&mut self, text: impl Display) {
+        self.add_kind(MessageKind::Normal(text.to_string()));
+    }
+
+    /// with text message
+    pub fn with_text(mut self, text: impl Display) -> Self {
+        self.add_text(text);
+        self
+    }
+
+    /// make text quoted
+    pub fn quoted(text: impl Display) -> Self {
+        Self::text(format!("\"{text}\""))
+    }
+
+    /// add quoted text to message
+    pub fn add_quoted(&mut self, text: impl Display) {
+        self.extend(Self::quoted(text));
+    }
+
+    /// with quoted text message
+    pub fn with_quoted(mut self, text: impl Display) -> Self {
+        self.add_quoted(text);
+        self
+    }
+
+    /// add new line in message
+    pub fn line() -> Self {
+        Self(vec![MessageKind::NewLine])
+    }
+
+    /// add line in message
+    pub fn add_line(&mut self) {
+        self.extend(Self::line());
+    }
+
+    /// with line in message
+    pub fn with_line(mut self) -> Self {
+        self.add_line();
+        self
+    }
+
+    /// add message from pretty
+    pub fn of_pretty(p: &impl Pretty) -> Self {
+        Self::text(p.make_string(&Theme::default()))
+    }
+
+    /// add pretty
+    #[allow(dead_code)]
+    pub fn add_pretty(&mut self, p: &impl Pretty) {
+        self.extend(Self::of_pretty(p));
+    }
+
+    /// with pretty
+    #[allow(dead_code)]
+    pub fn with_pretty(mut self, p: &impl Pretty) -> Self {
+        self.add_pretty(p);
+        self
+    }
+
+    /// make a doc normal
+    #[allow(dead_code)]
+    pub fn normal(mut self) -> Self {
+        self.0 = self
+            .0
+            .iter()
+            .map(|kind| match kind {
+                MessageKind::Normal(text) => MessageKind::Normal(text.clone()),
+                MessageKind::Important(text) => MessageKind::Normal(text.clone()),
+                MessageKind::NewLine => MessageKind::NewLine,
+            })
+            .collect();
         self
     }
 
     /// important message part
-    pub fn important(mut self, text: impl Display) -> Self {
-        self.0.push(MessageKind::Important(text.to_string()));
+    pub fn important(mut self) -> Self {
+        self.0 = self
+            .0
+            .iter()
+            .map(|kind| match kind {
+                MessageKind::Normal(text) => MessageKind::Important(text.clone()),
+                MessageKind::Important(text) => MessageKind::Important(text.clone()),
+                MessageKind::NewLine => MessageKind::NewLine,
+            })
+            .collect();
         self
     }
 
-    /// import text quoted
-    pub fn quoted(self, text: impl Display) -> Self {
-        self.important(format!("\"{text}\""))
-    }
-
-    /// add message from pretty
-    pub fn of_pretty(self, p: &impl Pretty) -> Self {
-        self.text(p.make_string(&Theme::default()))
-    }
-}
-
-impl Pretty for Message {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+    pub fn pretty(&self, theme: &MessageTheme) -> Doc {
         Doc::intersperse(
-            self.0.iter().map(|part| match part {
-                MessageKind::Text(text) => theme.error_message(text),
-                MessageKind::Important(text) => theme.error_important(text),
+            self.0.iter().map(|kind| match kind {
+                MessageKind::Normal(text) => theme.normal(text),
+                MessageKind::Important(text) => theme.important(text),
+                MessageKind::NewLine => Doc::hardline(),
             }),
             Doc::nil(),
         )
+    }
+
+    pub fn make_string(&self, theme: &MessageTheme) -> String {
+        let mut buffer = String::new();
+        let mut stream = StreamColored::new(&mut buffer);
+        let _ = self.pretty(theme).render_raw(theme.width, &mut stream);
+        buffer
     }
 }
 
@@ -115,9 +214,17 @@ pub trait ErrorReport: ErrorCode + Located {
         let mut report_builder = Report::build(ReportKind::Error, loc.clone())
             .with_config(Config::default().with_index_type(IndexType::Byte))
             .with_code(self.code())
-            .with_message(self.head().make_string(theme));
+            .with_message(self.head().make_string(&theme.error.head));
         if let Some(text) = self.text() {
-            report_builder.add_label(Label::new(loc.clone()).with_message(text.make_string(theme)));
+            let mut label =
+                Label::new(loc.clone()).with_message(text.make_string(&theme.error.text));
+            if let Some(color) = theme.error.label_color() {
+                label = label.with_color(color);
+            }
+            report_builder.add_label(label)
+        }
+        if let Some(note) = self.note() {
+            report_builder.add_note(note.make_string(&theme.error.note));
         }
         report_builder.finish()
     }

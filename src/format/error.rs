@@ -29,8 +29,8 @@ impl Located for ErrorFileWrite {
 impl ErrorReport for ErrorFileWrite {
     fn head(&self) -> Message {
         Message::nil()
-            .text("Cannot write file ")
-            .quoted(self.path.to_string_lossy())
-            .text(".")
+            .with_text("Cannot write file ")
+            .with_quoted(self.path.to_string_lossy())
+            .with_text(".")
     }
 }

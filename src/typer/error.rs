@@ -31,14 +31,13 @@ impl Located for ErrorVariableNotFound {
 
 impl ErrorReport for ErrorVariableNotFound {
     fn head(&self) -> crate::utils::error::Message {
-        Message::nil().text("Variable not found.")
+        Message::text("Variable not found.")
     }
 
     fn text(&self) -> Option<Message> {
-        let msg = Message::nil()
-            .text("Variable ")
-            .quoted(self.identifier.name())
-            .text(" not found in the current scope.");
+        let msg = Message::text("Variable ")
+            .append(Message::text(self.identifier.name()).important())
+            .with_text(" not found in the current scope.");
         Some(msg)
     }
 }
@@ -76,24 +75,23 @@ impl Located for ErrorUnexpectedType {
 
 impl ErrorReport for ErrorUnexpectedType {
     fn head(&self) -> crate::utils::error::Message {
-        Message::nil().text("Type mismatch.")
+        Message::text("Type mismatch.")
     }
 
     fn text(&self) -> Option<Message> {
-        let msg = Message::nil()
-            .text("Expect type ")
-            .of_pretty(&self.expected)
-            .text(".");
+        let msg = Message::text("Found type: ")
+            .append(Message::of_pretty(&self.found).important())
+            .with_text(".");
         Some(msg)
     }
 
     fn note(&self) -> Option<Message> {
-        let msg = Message::nil()
-            .text("Expected : ")
-            .of_pretty(&self.expected)
-            .text("\n")
-            .text("Found    : ")
-            .of_pretty(&self.found);
+        let msg = Message::
+            text("Expected : ")
+            .append(Message::of_pretty(&self.expected).important())
+            .with_line()
+            .with_text("Found    : ")
+            .append(Message::of_pretty(&self.found).important());
         Some(msg)
     }
 }

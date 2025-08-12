@@ -61,6 +61,79 @@ impl ColorInfo {
     }
 }
 
+pub fn to_ariadne_color(color: Color) -> ariadne::Color {
+    match color {
+        Color::Black => ariadne::Color::Black,
+        Color::Red => ariadne::Color::Red,
+        Color::Green => ariadne::Color::Green,
+        Color::Yellow => ariadne::Color::Yellow,
+        Color::Blue => ariadne::Color::Blue,
+        Color::Magenta => ariadne::Color::Magenta,
+        Color::Cyan => ariadne::Color::Cyan,
+        Color::White => ariadne::Color::White,
+        Color::BrightBlack => ariadne::Color::BrightBlack,
+        Color::BrightRed => ariadne::Color::BrightRed,
+        Color::BrightGreen => ariadne::Color::BrightGreen,
+        Color::BrightYellow => ariadne::Color::BrightYellow,
+        Color::BrightBlue => ariadne::Color::BrightBlue,
+        Color::BrightMagenta => ariadne::Color::BrightMagenta,
+        Color::BrightCyan => ariadne::Color::BrightCyan,
+        Color::BrightWhite => ariadne::Color::BrightWhite,
+        Color::TrueColor { r, g, b } => ariadne::Color::Rgb(r, g, b),
+    }
+}
+
+pub struct MessageTheme {
+    /// limit to try to align
+    pub width: usize,
+    /// important color
+    pub important: ColorInfo,
+    /// normal color
+    pub normal: ColorInfo,
+}
+
+impl Default for MessageTheme {
+    fn default() -> Self {
+        Self {
+            width: 120,
+            important: ColorInfo::default(),
+            normal: ColorInfo::default(),
+        }
+    }
+}
+
+impl MessageTheme {
+    /// pretty normal message
+    pub fn normal<'a>(&self, text: &impl ToString) -> Doc<'a> {
+        Doc::text(text.to_string()).annotate(self.normal.clone())
+    }
+
+    /// pretty important message
+    pub fn important<'a>(&self, text: &impl ToString) -> Doc<'a> {
+        Doc::text(text.to_string()).annotate(self.important.clone())
+    }
+}
+
+#[derive(Default)]
+pub struct ErrorTheme {
+    /// error message
+    pub head: MessageTheme,
+    /// text message
+    pub text: MessageTheme,
+    /// info message
+    pub note: MessageTheme,
+    /// label color
+    pub label_color: Option<Color>,
+}
+
+impl ErrorTheme {
+    /// get label color
+    pub fn label_color(&self) -> Option<ariadne::Color> {
+        self.label_color
+            .map(to_ariadne_color)
+    }
+}
+
 pub struct Theme {
     /// limit to try to align
     pub width: usize,
@@ -84,6 +157,9 @@ pub struct Theme {
     pub comment: ColorInfo,
     /// documentation color
     pub documentation: ColorInfo,
+
+    /// error theme
+    pub error: ErrorTheme,
 }
 
 impl Default for Theme {
@@ -100,6 +176,7 @@ impl Default for Theme {
             ty_var: ColorInfo::default(),
             comment: ColorInfo::default(),
             documentation: ColorInfo::default(),
+            error: ErrorTheme::default(),
         }
     }
 }
@@ -129,25 +206,31 @@ impl Theme {
             documentation: ColorInfo::default()
                 .fg_color(Color::White)
                 .styles(vec![Styles::Italic]),
+            error: ErrorTheme {
+                head: MessageTheme {
+                    width: 120,
+                    important: ColorInfo::default()
+                        .fg_color(Color::Red)
+                        .styles(vec![Styles::Bold]),
+                    normal: ColorInfo::default().fg_color(Color::Red),
+                },
+                text: MessageTheme {
+                    width: 120,
+                    important: ColorInfo::default()
+                        .fg_color(Color::Red)
+                        .styles(vec![Styles::Bold]),
+                    normal: ColorInfo::default(),
+                },
+                note: MessageTheme {
+                    width: 120,
+                    important: ColorInfo::default()
+                        .fg_color(Color::Yellow)
+                        .styles(vec![Styles::Bold]),
+                    normal: ColorInfo::default().fg_color(Color::Yellow),
+                },
+                label_color: Some(Color::Red),
+            },
         }
-    }
-
-    /// error message
-    pub fn error_message<'a>(&self, message: &impl ToString) -> Doc<'a> {
-        Doc::text(message.to_string()).annotate(ColorInfo {
-            fg_color: Some(Color::Red),
-            bg_color: None,
-            styles: vec![],
-        })
-    }
-
-    /// error important message
-    pub fn error_important<'a>(&self, message: &impl ToString) -> Doc<'a> {
-        Doc::text(message.to_string()).annotate(ColorInfo {
-            fg_color: Some(Color::Red),
-            bg_color: None,
-            styles: vec![Styles::Bold],
-        })
     }
 
     /// pprint keyword
