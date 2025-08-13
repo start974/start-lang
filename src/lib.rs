@@ -6,3 +6,4 @@ pub mod parser;
 pub mod typer;
 pub mod utils;
 pub mod vm;
+pub mod lsp;
