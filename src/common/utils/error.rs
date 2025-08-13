@@ -218,7 +218,7 @@ pub trait ErrorReport: ErrorCode + Located {
             let mut label =
                 Label::new(loc.clone()).with_message(text.make_string(&theme.error.text));
             if let Some(color) = theme.error.label_color() {
-                label = label.with_color(color);
+                label = label.with_color(*color);
             }
             report_builder.add_label(label)
         }

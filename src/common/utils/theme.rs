@@ -56,29 +56,6 @@ impl ColorInfo {
         cs
     }
 }
-
-pub fn to_ariadne_color(color: Color) -> ariadne::Color {
-    match color {
-        Color::Black => ariadne::Color::Black,
-        Color::Red => ariadne::Color::Red,
-        Color::Green => ariadne::Color::Green,
-        Color::Yellow => ariadne::Color::Yellow,
-        Color::Blue => ariadne::Color::Blue,
-        Color::Magenta => ariadne::Color::Magenta,
-        Color::Cyan => ariadne::Color::Cyan,
-        Color::White => ariadne::Color::White,
-        Color::BrightBlack => ariadne::Color::BrightBlack,
-        Color::BrightRed => ariadne::Color::BrightRed,
-        Color::BrightGreen => ariadne::Color::BrightGreen,
-        Color::BrightYellow => ariadne::Color::BrightYellow,
-        Color::BrightBlue => ariadne::Color::BrightBlue,
-        Color::BrightMagenta => ariadne::Color::BrightMagenta,
-        Color::BrightCyan => ariadne::Color::BrightCyan,
-        Color::BrightWhite => ariadne::Color::BrightWhite,
-        Color::TrueColor { r, g, b } => ariadne::Color::Rgb(r, g, b),
-    }
-}
-
 pub struct MessageTheme {
     /// limit to try to align
     pub width: usize,
@@ -119,13 +96,13 @@ pub struct ErrorTheme {
     /// info message
     pub note: MessageTheme,
     /// label color
-    pub label_color: Option<Color>,
+    pub label_color: Option<ariadne::Color>,
 }
 
 impl ErrorTheme {
     /// get label color
-    pub fn label_color(&self) -> Option<ariadne::Color> {
-        self.label_color.map(to_ariadne_color)
+    pub fn label_color(&self) -> &Option<ariadne::Color> {
+        &self.label_color
     }
 }
 
@@ -223,7 +200,7 @@ impl Theme {
                         .style(Styles::Bold),
                     normal: ColorInfo::default().fg_color(Color::Yellow),
                 },
-                label_color: Some(Color::Red),
+                label_color: Some(ariadne::Color::Red),
             },
         }
     }
