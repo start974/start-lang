@@ -35,7 +35,7 @@ impl std::fmt::Display for Operator {
 }
 
 impl Pretty for Operator {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         theme.operator(&self.to_string())
     }
 }
@@ -61,7 +61,7 @@ impl std::fmt::Display for Token {
     }
 }
 impl Pretty for Token {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             Token::Identifier(s) => Doc::nil()
                 .append(Doc::text("IDENTIFIER("))
@@ -91,7 +91,7 @@ impl Pretty for Token {
 pub type MetaToken = Meta<Token>;
 
 impl Pretty for Vec<MetaToken> {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::intersperse(
             self.iter().map(|token| {
                 Doc::nil()

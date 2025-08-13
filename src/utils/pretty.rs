@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 // ===========================================================================
 pub trait Pretty: Sized {
     /// pretty print
-    fn pretty(&self, theme: &Theme) -> Doc;
+    fn pretty(&self, theme: &Theme) -> Doc<'_>;
 
     /// write with fmt
     fn fmt(&self, theme: &Theme, fmt: &mut impl std::fmt::Write) -> std::fmt::Result {

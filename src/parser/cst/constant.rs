@@ -25,7 +25,7 @@ impl AsNumber for NumberT {
 }
 
 impl Pretty for NumberT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         theme.number(&self.0)
     }
 }
@@ -50,7 +50,7 @@ impl AsCharacter for CharacterT {
 }
 
 impl Pretty for CharacterT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         theme.character(self.0)
     }
 }
@@ -87,7 +87,7 @@ impl Located for Constant {
 }
 
 impl Pretty for Constant {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             Constant::Number(n) => n.pretty(theme),
             Constant::Character(c) => c.pretty(theme),

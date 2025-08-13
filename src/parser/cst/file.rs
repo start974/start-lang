@@ -13,7 +13,7 @@ pub struct EndOfFileT();
 pub type EndOfFile = Meta<EndOfFileT>;
 
 impl Pretty for EndOfFileT {
-    fn pretty(&self, _: &Theme) -> Doc {
+    fn pretty(&self, _: &Theme) -> Doc<'_> {
         Doc::nil()
     }
 }
@@ -45,7 +45,7 @@ impl File {
 }
 
 impl Pretty for File {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::intersperse(
             self.commands().iter().map(|cmd| cmd.pretty(theme)),
             Doc::line(),

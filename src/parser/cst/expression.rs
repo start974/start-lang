@@ -27,7 +27,7 @@ impl AsIdentifier for VariableT {
 }
 
 impl Pretty for VariableT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         theme.expr_var(&self.0)
     }
 }
@@ -89,7 +89,7 @@ impl PrettyPrecedence for Expression1 {
         1
     }
 
-    fn pretty_precedence(&self, prec: u8, theme: &Theme) -> Doc {
+    fn pretty_precedence(&self, prec: u8, theme: &Theme) -> Doc<'_> {
         match self {
             Expression1::TypedExpression { expr, colon, ty } => Doc::nil()
                 .append(expr.pretty(theme))

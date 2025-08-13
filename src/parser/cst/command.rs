@@ -14,7 +14,7 @@ pub enum DefinitionKeywordT {
 pub type DefinitionKeyword = Meta<DefinitionKeywordT>;
 
 impl Pretty for DefinitionKeywordT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             DefinitionKeywordT::Def => theme.keyword(&"Def"),
             DefinitionKeywordT::Definition => theme.keyword(&"Definition"),
@@ -33,7 +33,7 @@ pub enum TypeKeywordT {
 pub type TypeKeyword = Meta<TypeKeywordT>;
 
 impl Pretty for TypeKeywordT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             TypeKeywordT::Type => theme.keyword(&"Type"),
             TypeKeywordT::Ty => theme.keyword(&"Ty"),
@@ -52,7 +52,7 @@ pub enum EvalKeywordT {
 pub type EvalKeyword = Meta<EvalKeywordT>;
 
 impl Pretty for EvalKeywordT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             EvalKeywordT::Eval => theme.keyword(&"Eval"),
             EvalKeywordT::EvalOp => theme.operator(&"$"),
@@ -71,7 +71,7 @@ pub enum TypeOfKeywordT {
 pub type TypeOfKeyword = Meta<TypeOfKeywordT>;
 
 impl Pretty for TypeOfKeywordT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             TypeOfKeywordT::TypeOf => theme.keyword(&"TypeOf"),
             TypeOfKeywordT::TypeOfOp => theme.operator(&"?:"),
@@ -90,7 +90,7 @@ pub enum HelpKeywordT {
 pub type HelpKeyword = Meta<HelpKeywordT>;
 
 impl Pretty for HelpKeywordT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             HelpKeywordT::Help => theme.keyword(&"Help"),
             HelpKeywordT::HelpOp => theme.operator(&"?"),
@@ -106,7 +106,7 @@ pub struct SetKeywordT();
 pub type SetKeyword = Meta<SetKeywordT>;
 
 impl Pretty for SetKeywordT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         theme.keyword(&"Set")
     }
 }
@@ -119,7 +119,7 @@ pub struct UnsetKeywordT();
 pub type UnsetKeyword = Meta<UnsetKeywordT>;
 
 impl Pretty for UnsetKeywordT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         theme.keyword(&"Unset")
     }
 }
@@ -161,7 +161,7 @@ pub enum CommandKind {
 }
 
 impl Pretty for CommandKind {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         let doc_keyword = match self {
             CommandKind::ExpressionDefinition { keyword, .. } => keyword.pretty(theme),
             CommandKind::TypeDefinition { keyword, .. } => keyword.pretty(theme),
@@ -198,7 +198,7 @@ pub struct Command {
 }
 
 impl Pretty for Command {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
             .append(self.kind.pretty(theme))
             .append(if self.dot.has_comment() {

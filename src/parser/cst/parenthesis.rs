@@ -45,7 +45,7 @@ where
         self.inner.precedence()
     }
 
-    fn pretty_precedence(&self, prec: u8, theme: &Theme) -> Doc {
+    fn pretty_precedence(&self, prec: u8, theme: &Theme) -> Doc<'_> {
         let val_prec = self.inner.precedence();
         let doc_val = self.inner.pretty_precedence(self.precedence(), theme);
         if prec < val_prec {
@@ -70,14 +70,14 @@ pub trait PrettyPrecedence {
     fn precedence(&self) -> u8;
 
     /// pretty with precedence
-    fn pretty_precedence(&self, min_prec: u8, theme: &Theme) -> Doc;
+    fn pretty_precedence(&self, min_prec: u8, theme: &Theme) -> Doc<'_>;
 }
 
 impl<T> Pretty for T
 where
     T: PrettyPrecedence,
 {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         self.pretty_precedence(self.precedence(), theme)
     }
 }
@@ -90,7 +90,7 @@ where
         self.as_ref().precedence()
     }
 
-    fn pretty_precedence(&self, min_prec: u8, theme: &Theme) -> Doc {
+    fn pretty_precedence(&self, min_prec: u8, theme: &Theme) -> Doc<'_> {
         self.as_ref().pretty_precedence(min_prec, theme)
     }
 }
