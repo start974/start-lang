@@ -1,5 +1,6 @@
 use super::{expression, help, operator, Expression, ExpressionDefinition, TypeDefinition};
 use crate::lexer::meta::Meta;
+use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -188,6 +189,30 @@ impl Pretty for CommandKind {
     }
 }
 
+impl Located for CommandKind {
+    fn loc(&self) -> Location {
+        let loc_keyword = match self {
+            CommandKind::ExpressionDefinition { keyword, .. } => keyword.loc(),
+            CommandKind::TypeDefinition { keyword, .. } => keyword.loc(),
+            CommandKind::Eval { keyword, .. } => keyword.loc(),
+            CommandKind::TypeOf { keyword, .. } => keyword.loc(),
+            CommandKind::Help { keyword, .. } => keyword.loc(),
+            CommandKind::Set { keyword, .. } => keyword.loc(),
+            CommandKind::UnSet { keyword, .. } => keyword.loc(),
+        };
+        let loc_content = match self {
+            CommandKind::ExpressionDefinition { def, .. } => def.loc(),
+            CommandKind::TypeDefinition { def, .. } => def.loc(),
+            CommandKind::Eval { expr, .. } => expr.loc(),
+            CommandKind::TypeOf { expr, .. } => expr.loc(),
+            CommandKind::Help { var, .. } => var.loc(),
+            CommandKind::Set { var, .. } => var.loc(),
+            CommandKind::UnSet { var, .. } => var.loc(),
+        };
+        loc_keyword.union(loc_content)
+    }
+}
+
 // ============================================================================
 // Command
 // ============================================================================
@@ -208,5 +233,11 @@ impl Pretty for Command {
             })
             .append(self.dot.pretty_with_end_line(theme, false))
             .group()
+    }
+}
+
+impl Located for Command {
+    fn loc(&self) -> Location {
+        self.kind.loc().union(self.dot.loc())
     }
 }

@@ -1,3 +1,5 @@
+use crate::utils::pretty::Pretty;
+use crate::utils::theme::{Doc, Theme};
 use ariadne::Span;
 use chumsky::span::SimpleSpan;
 use std::path::PathBuf;
@@ -93,6 +95,38 @@ impl Span for Location {
 
     fn source(&self) -> &Self::SourceId {
         &self.id
+    }
+}
+
+// ==========================================================================
+// WithLoc
+// ==========================================================================
+pub struct WithLoc<T> {
+    /// location of the node
+    loc: Location,
+    /// inner value
+    pub value: T,
+}
+
+impl<T> WithLoc<T> {
+    /// create a new WithLoc
+    pub fn new(loc: Location, value: T) -> Self {
+        Self { loc, value }
+    }
+}
+
+impl<T> Located for WithLoc<T> {
+    fn loc(&self) -> Location {
+        self.loc.clone()
+    }
+}
+
+impl<T> Pretty for WithLoc<T>
+where
+    T: Pretty,
+{
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        self.value.pretty(theme)
     }
 }
 

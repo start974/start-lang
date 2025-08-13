@@ -102,7 +102,10 @@ impl interpreter::Interpreter for Interpreter {
         }
     }
 
-    fn print(&mut self, doc: &impl Pretty) {
+    fn print<Doc>(&mut self, doc: &Doc)
+    where
+        Doc: Pretty,
+    {
         println!("{}", doc.make_string(&self.theme));
     }
 

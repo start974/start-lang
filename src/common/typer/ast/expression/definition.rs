@@ -1,6 +1,7 @@
 use super::super::ty::{Type, Typed, TypedMut};
 use super::super::Identifier;
 use super::Expression;
+use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -62,5 +63,11 @@ impl Pretty for Definition {
             .append(Doc::space())
             .append(theme.operator(&":="))
             .append(Doc::line().append(self.body.pretty(theme).group()).nest(2))
+    }
+}
+
+impl Located for Definition {
+    fn loc(&self) -> Location {
+        self.name.loc().union(self.body.loc())
     }
 }

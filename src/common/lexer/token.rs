@@ -1,6 +1,7 @@
 use num_bigint::BigUint;
 
 use crate::utils::{
+    location::{Located, Location},
     pretty::Pretty,
     theme::{Doc, Theme},
 };
@@ -101,5 +102,19 @@ impl Pretty for Vec<MetaToken> {
             }),
             Doc::line(),
         )
+    }
+}
+
+impl Located for Vec<MetaToken> {
+    fn loc(&self) -> Location {
+        if self.is_empty() {
+            Location::unknown()
+        } else if self.len() == 1 {
+            self.first().unwrap().loc()
+        } else {
+            let first = self.first().unwrap().loc();
+            let last = self.last().unwrap().loc();
+            first.union(last)
+        }
     }
 }

@@ -6,7 +6,7 @@ use crate::parser::{self, cst};
 use crate::typer::ast::Typed as _;
 use crate::typer::{self, ast};
 use crate::utils::error::{ErrorCode, ErrorReport};
-use crate::utils::location::{Located as _, SourceId};
+use crate::utils::location::{Located, SourceId};
 use crate::utils::pretty::Pretty;
 use crate::vm;
 use ariadne::Span as _;
@@ -43,13 +43,18 @@ pub trait Interpreter {
     fn is_active_debug(&self, debug: DebugFlag) -> bool;
 
     /// print
-    fn print(&mut self, doc: &impl Pretty);
+    fn print<Doc>(&mut self, doc: &Doc)
+    where
+        Doc: Pretty + Located;
 
     /// active printing of summarry definition
     fn print_summay(&self, def: &ast::ExpressionDefinition);
 
     /// pretty debug
-    fn debug(&mut self, flag: DebugFlag, doc: &impl Pretty) {
+    fn debug<Doc>(&mut self, flag: DebugFlag, doc: &Doc)
+    where
+        Doc: Pretty + Located,
+    {
         if self.is_active_debug(flag) {
             self.print(doc);
         }
@@ -76,11 +81,11 @@ pub trait Interpreter {
     /// run command expr definition
     fn run_expr_definition(
         &mut self,
-        def: cst::ExpressionDefinition,
+        cst_def: cst::ExpressionDefinition,
         doc: Option<ast::Documentation>,
     ) {
         self.mut_typer()
-            .definition(&def, doc)
+            .definition(&cst_def, doc)
             .map(|def| {
                 self.print_summay(&def);
                 self.debug(DebugFlag::Typer, &def);
@@ -106,7 +111,7 @@ pub trait Interpreter {
                 self.debug(DebugFlag::Typer, &expr);
                 if self.get_error_code() == 0 {
                     let value = self.mut_vm().eval(&expr).unwrap();
-                    self.print(&value);
+                    self.print(&value.with_loc(expr.loc()));
                 }
             })
             .unwrap_or_else(|e| self.fail(e))
