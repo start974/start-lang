@@ -31,7 +31,11 @@ impl PositionMemo {
 
     /// compute position wich is after the last line computed
     fn compute(&mut self, offset: usize) -> Position {
-        assert!(offset < self.content.len(), "Offset out of bounds");
+        assert!(
+            offset <= self.content.len(),
+            "Offset out of bounds (offset : {offset} > {}",
+            self.content.len()
+        );
 
         let last_offset = self.lines_offset.last().cloned().unwrap_or(0) + 1;
         let mut line = self.lines_offset.len() - 1;
@@ -80,57 +84,62 @@ impl PositionMemo {
 // Tests
 // ---------------------------------------------------------------------------
 
-#[test]
-fn position_memo() {
-    let mut memo = PositionMemo::new("Hello\nWorld\nThis is a \ntest".to_string());
-    assert_eq!(
-        memo.position(0),
-        Position {
-            line: 0,
-            character: 0
-        }
-    );
-    assert_eq!(
-        memo.position(2),
-        Position {
-            line: 0,
-            character: 2
-        }
-    );
-    assert_eq!(
-        memo.position(5),
-        Position {
-            line: 0,
-            character: 5
-        }
-    );
-    assert_eq!(
-        memo.position(6),
-        Position {
-            line: 1,
-            character: 0
-        }
-    );
-    assert_eq!(
-        memo.position(11),
-        Position {
-            line: 1,
-            character: 5
-        }
-    );
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    assert_eq!(
-        memo.position(23),
-        Position {
-            line: 3,
-            character: 1
-        }
-    );
-    assert_eq!(
-        memo.position(12),
-        Position {
-            line: 2,
-            character: 0
-        }
-    );
+    #[test]
+    fn position_memo() {
+        let mut memo = PositionMemo::new("Hello\nWorld\nThis is a \ntest".to_string());
+        assert_eq!(
+            memo.position(0),
+            Position {
+                line: 0,
+                character: 0
+            }
+        );
+        assert_eq!(
+            memo.position(2),
+            Position {
+                line: 0,
+                character: 2
+            }
+        );
+        assert_eq!(
+            memo.position(5),
+            Position {
+                line: 0,
+                character: 5
+            }
+        );
+        assert_eq!(
+            memo.position(6),
+            Position {
+                line: 1,
+                character: 0
+            }
+        );
+        assert_eq!(
+            memo.position(11),
+            Position {
+                line: 1,
+                character: 5
+            }
+        );
+
+        assert_eq!(
+            memo.position(23),
+            Position {
+                line: 3,
+                character: 1
+            }
+        );
+        assert_eq!(
+            memo.position(12),
+            Position {
+                line: 2,
+                character: 0
+            }
+        );
+    }
 }

@@ -28,6 +28,9 @@ impl Backend {
 
 impl Backend {
     async fn on_change(&self, params: TextDocumentItem) {
+        self.client
+            .log_message(MessageType::INFO, "LSP on change")
+            .await;
         let uri = params.uri;
         let mut interpreter = Interpreter::new(uri.clone(), params.text);
         interpreter.run();
@@ -58,7 +61,7 @@ impl LanguageServer for Backend {
 
     async fn initialized(&self, _: InitializedParams) {
         self.client
-            .log_message(MessageType::INFO, "LSP démarré")
+            .log_message(MessageType::INFO, "LSP initialized")
             .await;
     }
 
