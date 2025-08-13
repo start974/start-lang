@@ -1,7 +1,6 @@
 use super::TestContext;
 
 #[tokio::test]
-async fn should_initialize() {
+async fn initialize() {
     TestContext::new("simple").initialize().await;
-    // panic!("Don’t panic!");
 }

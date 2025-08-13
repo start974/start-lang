@@ -2,30 +2,87 @@ use tower_lsp::lsp_types::*;
 
 use super::TestContext;
 
+fn test_error(diag: PublishDiagnosticsParams, uri: Url) {
+    assert_eq!(diag.uri, uri);
+
+    let mut ds = diag.diagnostics.into_iter();
+    let d = ds.next().unwrap();
+    assert_eq!(d.range.start.line, 0);
+    assert_eq!(d.range.start.character, 8);
+    assert_eq!(d.range.end.line, 0);
+    assert_eq!(d.range.end.character, 20);
+    assert_eq!(
+        d.message,
+        "Variable not_exist_ty not found in the current scope."
+    );
+
+    let d = ds.next().unwrap();
+    assert_eq!(d.range.start.line, 2);
+    assert_eq!(d.range.start.character, 9);
+    assert_eq!(d.range.end.line, 2);
+    assert_eq!(d.range.end.character, 22);
+    assert_eq!(
+        d.message,
+        "Variable not_exist_var not found in the current scope."
+    );
+
+    let d = ds.next().unwrap();
+    assert_eq!(d.range.start.line, 4);
+    assert_eq!(d.range.start.character, 0);
+    assert_eq!(d.range.end.line, 4);
+    assert_eq!(d.range.end.character, 1);
+    assert_eq!(d.message, "Parsing expect \"command\".");
+
+    let d = ds.next().unwrap();
+    assert_eq!(d.range.start.line, 5);
+    assert_eq!(d.range.start.character, 16);
+    assert_eq!(d.range.end.line, 5);
+    assert_eq!(d.range.end.character, 17);
+    assert_eq!(d.message, "Parsing expect \":\" or \")\".");
+
+    let d = ds.next().unwrap();
+    assert_eq!(d.range.start.line, 7);
+    assert_eq!(d.range.start.character, 14);
+    assert_eq!(d.range.end.line, 7);
+    assert_eq!(d.range.end.character, 15);
+    assert_eq!(d.message, "Lexer expected \"'\", found \".\".");
+
+    assert!(ds.next().is_none(), "There should be no more diagnostics.");
+}
+
 #[tokio::test]
 async fn did_open() {
     let mut ctx = TestContext::new("diagnostic");
     ctx.initialize().await;
     let text_document = ctx.document_item("main.st", include_str!("workspace/diagnostic/main.st"));
-    ctx.notify::<notification::DidOpenTextDocument>(DidOpenTextDocumentParams { text_document }).await;
+    ctx.notify::<notification::DidOpenTextDocument>(DidOpenTextDocumentParams { text_document })
+        .await;
+    let uri = ctx.doc_uri("main.st");
 
     let dp = ctx.recv::<PublishDiagnosticsParams>().await;
-    assert_eq!(dp.uri, ctx.doc_uri("main.st"));
-    let ds = dp.diagnostics;
-    assert_eq!(ds.len(), 6);
+    test_error(dp, uri);
+}
 
-    let d = &ds[0];
-    assert_eq!(d.range.start.line, 0);
-    assert_eq!(d.range.start.character, 8);
-    assert_eq!(d.range.end.line, 0);
-    assert_eq!(d.range.end.character, 20);
-    assert_eq!(d.message, "Variable Not_exist_ty not found in the current scope.");
+#[tokio::test]
+async fn did_change() {
+    let mut ctx = TestContext::new("diagnostic");
+    ctx.initialize().await;
+    let text_document = ctx.versioned_document("main.st");
+    let change = TextDocumentContentChangeEvent {
+        range: None,
+        range_length: None,
+        text: include_str!("workspace/diagnostic/main.st").to_string(),
+    };
 
+    ctx.notify::<notification::DidChangeTextDocument>(DidChangeTextDocumentParams {
+        text_document,
+        content_changes: vec![change.clone(), change],
+    })
+    .await;
+    let uri = ctx.doc_uri("main.st");
 
-    //let d = &ds[1];
-    //assert_eq!(d.range.start.line, 3);
-    //assert_eq!(d.range.start.character, 9);
-    //assert_eq!(d.range.end.line, 3);
-    //assert_eq!(d.range.end.character, 24);
-    //assert_eq!(d.message, "Variable Not_exist_var not found in current scope");
+    let dp = ctx.recv::<PublishDiagnosticsParams>().await;
+    test_error(dp, uri.clone());
+    let dp = ctx.recv::<PublishDiagnosticsParams>().await;
+    test_error(dp, uri);
 }

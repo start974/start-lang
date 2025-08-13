@@ -74,15 +74,17 @@ impl LanguageServer for Backend {
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
-        self.on_change(TextDocumentItem {
-            uri: params.text_document.uri,
-            language_id: Self::name().to_string(),
-            version: params.text_document.version,
-            text: params
-                .content_changes
-                .first()
-                .map_or(String::new(), |change| change.text.clone()),
-        })
-        .await;
+        for change in params.content_changes {
+            self.client
+                .log_message(MessageType::INFO, &format!("LSP change: {}", change.text))
+                .await;
+            self.on_change(TextDocumentItem {
+                uri: params.text_document.uri.clone(),
+                language_id: Self::name().to_string(),
+                version: params.text_document.version,
+                text: change.text,
+            })
+            .await;
+        }
     }
 }

@@ -93,6 +93,14 @@ impl TestContext {
         }
     }
 
+    pub fn versioned_document(&mut self, path: &str) -> VersionedTextDocumentIdentifier {
+        self.version_id += 1;
+        VersionedTextDocumentIdentifier {
+            uri: self.doc_uri(path),
+            version: self.version_id,
+        }
+    }
+
     pub async fn send(&mut self, request: &jsonrpc::Request) {
         let content = serde_json::to_string(request).unwrap();
         eprintln!(
@@ -151,6 +159,15 @@ impl TestContext {
         self.request_id += 1;
         self.send(&request).await;
         self.response().await
+    }
+
+    pub async fn shutdown(&mut self) {
+        let request = jsonrpc::Request::build(lsp_types::request::Shutdown::METHOD)
+            .id(self.request_id)
+            .finish();
+        self.request_id += 1;
+        self.send(&request).await;
+        // we don't care about the response, just that it is sent
     }
 
     pub async fn recv<R: std::fmt::Debug + serde::de::DeserializeOwned>(&mut self) -> R {
