@@ -69,7 +69,7 @@ async fn main() {
             } else if diff {
                 format::Mode::Diff
             } else {
-                assert!(
+                debug_assert!(
                     overwrite,
                     "If not print or diff, then overwrite must be true"
                 );

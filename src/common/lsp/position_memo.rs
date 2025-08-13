@@ -31,7 +31,7 @@ impl PositionMemo {
 
     /// compute position wich is after the last line computed
     fn compute(&mut self, offset: usize) -> Position {
-        assert!(
+        debug_assert!(
             offset <= self.content.len(),
             "Offset out of bounds (offset : {offset} > {}",
             self.content.len()
