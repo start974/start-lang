@@ -17,21 +17,17 @@ impl ColorInfo {
         self
     }
 
+    /*
     /// set bg color
     pub fn bg_color<S: Into<Color>>(mut self, color: S) -> Self {
         self.bg_color = Some(color.into());
         self
     }
+    */
 
     // set style
-    /*    pub fn style(mut self, style: Styles) -> Self {*/
-    /*self.styles.push(style);*/
-    /*self*/
-    /*}*/
-
-    /// add many styles
-    pub fn styles(mut self, styles: Vec<Styles>) -> Self {
-        self.styles.extend(styles);
+    pub fn style(mut self, style: Styles) -> Self {
+        self.styles.push(style);
         self
     }
 
@@ -191,40 +187,40 @@ impl Theme {
             operator: ColorInfo::default().fg_color(Color::Red),
             def_var: ColorInfo::default()
                 .fg_color(Color::Blue)
-                .styles(vec![Styles::Bold]),
+                .style(Styles::Bold),
             expr_var: ColorInfo::default().fg_color(Color::Blue),
             character: ColorInfo::default().fg_color(Color::Green),
             number: ColorInfo::default().fg_color(Color::Green),
             boolean: ColorInfo::default().fg_color(Color::Green),
             ty_var: ColorInfo::default()
                 .fg_color(Color::Yellow)
-                .styles(vec![Styles::Italic]),
+                .style(Styles::Italic),
             comment: ColorInfo::default()
                 .fg_color(Color::BrightBlack)
-                .styles(vec![Styles::Italic]),
+                .style(Styles::Italic),
             documentation: ColorInfo::default()
                 .fg_color(Color::White)
-                .styles(vec![Styles::Italic]),
+                .style(Styles::Italic),
             error: ErrorTheme {
                 head: MessageTheme {
                     width: 120,
                     important: ColorInfo::default()
                         .fg_color(Color::Red)
-                        .styles(vec![Styles::Bold]),
+                        .style(Styles::Bold),
                     normal: ColorInfo::default().fg_color(Color::Red),
                 },
                 text: MessageTheme {
                     width: 120,
                     important: ColorInfo::default()
                         .fg_color(Color::Red)
-                        .styles(vec![Styles::Bold]),
+                        .style(Styles::Bold),
                     normal: ColorInfo::default(),
                 },
                 note: MessageTheme {
                     width: 120,
                     important: ColorInfo::default()
                         .fg_color(Color::Yellow)
-                        .styles(vec![Styles::Bold]),
+                        .style(Styles::Bold),
                     normal: ColorInfo::default().fg_color(Color::Yellow),
                 },
                 label_color: Some(Color::Red),
@@ -298,11 +294,5 @@ impl Theme {
 
     pub fn documentation<'a>(&self, doc: &impl ToString) -> Doc<'a> {
         Doc::text(doc.to_string()).annotate(self.documentation.clone())
-    }
-}
-
-impl AsRef<Theme> for &Theme {
-    fn as_ref(&self) -> &Theme {
-        self
     }
 }
