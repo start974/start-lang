@@ -38,7 +38,7 @@ impl Interpreter {
     pub fn stdlib() -> Self {
         Interpreter {
             source_id: SourceId::File(PathBuf::from("stdlib.st")),
-            position_memo: PositionMemo::new(include_str!("../../assets/stdlib.st").to_string()),
+            position_memo: PositionMemo::new(include_str!("../../../assets/stdlib.st").to_string()),
             err_code: 0,
             typer: Typer::default(),
             vm: vm::Env::default(),
