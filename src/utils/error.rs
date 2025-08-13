@@ -119,21 +119,19 @@ impl Message {
         Self::text(p.make_string(&Theme::default()))
     }
 
+    /*
     /// add pretty
-    #[allow(dead_code)]
     pub fn add_pretty(&mut self, p: &impl Pretty) {
         self.extend(Self::of_pretty(p));
     }
 
     /// with pretty
-    #[allow(dead_code)]
     pub fn with_pretty(mut self, p: &impl Pretty) -> Self {
         self.add_pretty(p);
         self
     }
 
     /// make a doc normal
-    #[allow(dead_code)]
     pub fn normal(mut self) -> Self {
         self.0 = self
             .0
@@ -146,6 +144,7 @@ impl Message {
             .collect();
         self
     }
+    */
 
     /// important message part
     pub fn important(mut self) -> Self {
