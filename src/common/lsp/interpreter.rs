@@ -120,7 +120,7 @@ impl interpreter::Interpreter for Interpreter {
             range,
             message: doc.make_string(&theme),
             related_information: None,
-            severity: Some(DiagnosticSeverity::HINT),
+            severity: Some(DiagnosticSeverity::INFORMATION),
             code: None,
             code_description: None,
             source: Some(Backend::name().to_string()),

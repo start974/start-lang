@@ -13,6 +13,11 @@ Fonctional language with proover assistant.
 - repl
 - formatter
 - interpreter
+- lsp
+
+## Lsp
+- **diagnostic** of **error**
+- **diagnostic** of **hint** for command which print something
 
 ## Language features
 WIP
