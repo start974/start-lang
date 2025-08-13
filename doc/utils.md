@@ -29,3 +29,9 @@ use `cargo clippy` to lint the code
 
 ## Install
 use `cargo install --path .` to install startlang
+
+## check package outdated
+use `cargo oudated`
+
+## upgradde package of project
+use `cargo-edit` and run `cargo upgrade`
