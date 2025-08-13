@@ -1,11 +1,11 @@
-Def a : Not_exist_ty := 42.
+Def a : not_exist_ty := 42.
 
-Def b := not_exists_var.
+Def b := not_exist_var.
 
 d.
-
-Help d.
-
 Def parent := (a.
 
 Def char := 'x.
+
+
+parsing no continue

@@ -87,7 +87,6 @@ impl PositionMemo {
 mod tests {
     use super::*;
 
-
     #[test]
     fn position_memo() {
         // line at offset: 7, 12, 13, 24
