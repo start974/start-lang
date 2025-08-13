@@ -44,7 +44,7 @@ impl Interpreter {
     pub fn stdlib() -> Self {
         Interpreter {
             source_id: SourceId::File(PathBuf::from("stdlib.st")),
-            content: include_str!("../../assets/stdlib.st").to_string(),
+            content: include_str!("../../../assets/stdlib.st").to_string(),
             err_code: 0,
             typer: Typer::default(),
             vm: vm::Env::default(),

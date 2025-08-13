@@ -1,16 +1,8 @@
 use clap::{ArgGroup, Parser, Subcommand};
 use std::process::exit;
 
-mod file_interpreter;
-mod format;
-mod interpreter;
-mod lexer;
-mod lsp;
-mod parser;
-mod repl;
-mod typer;
-mod utils;
-mod vm;
+mod common;
+pub use common::*;
 
 #[derive(Parser)]
 #[command(version)]
