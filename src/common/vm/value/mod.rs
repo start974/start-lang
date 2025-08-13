@@ -1,3 +1,4 @@
+use crate::utils::location::{Location, WithLoc};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -11,6 +12,13 @@ pub use constant::Constant;
 #[derive(Debug, Clone)]
 pub enum Value {
     Constant(Constant),
+}
+
+impl Value {
+    /// make a value with location
+    pub fn with_loc(self, loc: Location) -> WithLoc<Self> {
+        WithLoc::new(loc, self)
+    }
 }
 
 impl Pretty for Value {

@@ -1,4 +1,5 @@
 use super::{operator, ty};
+use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -19,5 +20,11 @@ impl Pretty for TypeDefinition {
             .append(Doc::space())
             .append(self.eq_def.pretty(theme))
             .append(doc_ty)
+    }
+}
+
+impl Located for TypeDefinition {
+    fn loc(&self) -> Location {
+        self.name.loc().union(self.ty.loc())
     }
 }

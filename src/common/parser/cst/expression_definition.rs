@@ -1,4 +1,5 @@
 use super::{operator, Expression, Pattern, Type};
+use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -48,11 +49,11 @@ impl ExpressionDefinition {
     }
 }
 
-/*impl Located for ExpressionDefinition {*/
-/*fn loc(&self) -> Location {*/
-/*self.pattern.loc().union(self.body.loc())*/
-/*}*/
-/*}*/
+impl Located for ExpressionDefinition {
+    fn loc(&self) -> Location {
+        self.pattern.loc().union(self.body.loc())
+    }
+}
 
 impl Pretty for ExpressionDefinition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {

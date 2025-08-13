@@ -1,4 +1,5 @@
 use crate::lexer::meta::Meta;
+use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -49,6 +50,14 @@ impl Pretty for Pattern {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             Pattern::Variable(var) => var.pretty(theme),
+        }
+    }
+}
+
+impl Located for Pattern {
+    fn loc(&self) -> Location {
+        match self {
+            Pattern::Variable(var) => var.loc(),
         }
     }
 }

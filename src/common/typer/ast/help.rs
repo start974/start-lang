@@ -1,4 +1,5 @@
 use super::{Documentation, Identifier, Type, Typed as _};
+use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
@@ -50,5 +51,11 @@ impl Pretty for Help {
         };
 
         var.append(documentation)
+    }
+}
+
+impl Located for Help {
+    fn loc(&self) -> Location {
+        self.var.loc()
     }
 }

@@ -4,13 +4,13 @@ use crate::interpreter::flag::{DebugFlag, Flag};
 use crate::interpreter::{self, Interpreter as _};
 use crate::typer::Typer;
 use crate::utils::error::{ErrorCode, ErrorReport};
-use crate::utils::location::SourceId;
+use crate::utils::location::{Located, SourceId};
 use crate::utils::pretty::Pretty;
-use crate::utils::theme::MessageTheme;
+use crate::utils::theme::{MessageTheme, Theme};
 use crate::vm;
 use ariadne::Span as _;
 use std::path::PathBuf;
-use tower_lsp::lsp_types::*;
+use tower_lsp::lsp_types::{Diagnostic, Url};
 
 #[derive(Debug)]
 pub struct Interpreter {
@@ -104,8 +104,30 @@ impl interpreter::Interpreter for Interpreter {
         }
     }
 
-    fn print(&mut self, _doc: &impl Pretty) {
-        // TODO: push code lens
+    fn print<Doc>(&mut self, doc: &Doc)
+    where
+        Doc: Pretty + Located,
+    {
+        use tower_lsp::lsp_types::*;
+        let theme = Theme::default();
+        let loc = doc.loc();
+
+        let range = Range {
+            start: self.position_memo.position(loc.start()),
+            end: self.position_memo.position(loc.end()),
+        };
+        let diag = Diagnostic {
+            range,
+            message: doc.make_string(&theme),
+            related_information: None,
+            severity: Some(DiagnosticSeverity::HINT),
+            code: None,
+            code_description: None,
+            source: Some(Backend::name().to_string()),
+            tags: None,
+            data: None,
+        };
+        self.diagnostics.push(diag);
     }
 
     fn print_summay(&self, _: &crate::typer::ast::ExpressionDefinition) {}
@@ -114,10 +136,12 @@ impl interpreter::Interpreter for Interpreter {
     where
         E: ErrorReport + ErrorCode,
     {
+        use tower_lsp::lsp_types::*;
         let theme = MessageTheme::default();
+        let loc = err.loc();
         let range = Range {
-            start: self.position_memo.position(err.loc().start()),
-            end: self.position_memo.position(err.loc().end()),
+            start: self.position_memo.position(loc.start()),
+            end: self.position_memo.position(loc.end()),
         };
         let message = err
             .text()
