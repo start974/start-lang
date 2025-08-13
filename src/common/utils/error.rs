@@ -266,36 +266,3 @@ where
         self.as_ref().note()
     }
 }
-
-// ===========================================================================
-// Error Vec
-// ===========================================================================
-impl<E> ErrorCode for Vec<E>
-where
-    E: ErrorCode,
-{
-    fn code(&self) -> i32 {
-        if self.is_empty() {
-            0
-        } else if self.len() == 1 {
-            self[0].code()
-        } else {
-            1
-        }
-    }
-}
-
-impl<E> ErrorPrint for Vec<E>
-where
-    E: ErrorPrint,
-{
-    fn eprint(&self, theme: &Theme, cache: &mut impl Cache<SourceId>) -> std::io::Result<()> {
-        for (i, error) in self.iter().enumerate() {
-            if i > 0 {
-                eprintln!();
-            }
-            error.eprint(theme, cache)?;
-        }
-        Ok(())
-    }
-}

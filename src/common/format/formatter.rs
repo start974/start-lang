@@ -57,7 +57,9 @@ impl Formatter {
         match lexer::lex(source_id.clone(), offset_source, content) {
             Ok(tokens) => tokens,
             Err(errs) => {
-                self.fail(errs);
+                for err in errs {
+                    self.fail(err);
+                }
                 Vec::new()
             }
         }
@@ -69,7 +71,9 @@ impl Formatter {
         match parser::parse(source_id.clone(), tokens) {
             Ok(cmd) => Some(cmd),
             Err(errs) => {
-                self.fail(errs);
+                for err in errs {
+                    self.fail(err);
+                }
                 None
             }
         }
