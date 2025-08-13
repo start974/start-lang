@@ -37,17 +37,16 @@ impl PositionMemo {
             self.content.len()
         );
 
-        let last_offset = self.lines_offset.last().cloned().unwrap_or(0) + 1;
+        let last_offset = self.lines_offset.last().cloned().unwrap();
         let mut line = self.lines_offset.len() - 1;
         let mut col = 0;
-        for (k, chr) in self.content[last_offset..].chars().enumerate() {
-            let current_offset = last_offset + k;
-            if offset >= current_offset {
+        for (k, chr) in (last_offset..).zip(self.content[last_offset..].chars()) {
+            if offset > k {
                 col += 1;
             }
             if chr == '\n' {
-                self.lines_offset.push(current_offset + 1);
-                if offset <= current_offset {
+                self.lines_offset.push(k + 1);
+                if offset <= k {
                     break;
                 }
                 line += 1;
@@ -88,14 +87,23 @@ impl PositionMemo {
 mod tests {
     use super::*;
 
+
     #[test]
     fn position_memo() {
-        let mut memo = PositionMemo::new("Hello\nWorld\nThis is a \ntest".to_string());
+        // line at offset: 7, 12, 13, 24
+        let mut memo = PositionMemo::new("123456\n12345\n\n123456789\n123".to_string());
         assert_eq!(
             memo.position(0),
             Position {
                 line: 0,
                 character: 0
+            }
+        );
+        assert_eq!(
+            memo.position(1),
+            Position {
+                line: 0,
+                character: 1
             }
         );
         assert_eq!(
@@ -106,39 +114,45 @@ mod tests {
             }
         );
         assert_eq!(
-            memo.position(5),
-            Position {
-                line: 0,
-                character: 5
-            }
-        );
-        assert_eq!(
-            memo.position(6),
+            memo.position(7),
             Position {
                 line: 1,
                 character: 0
             }
         );
         assert_eq!(
-            memo.position(11),
+            memo.position(9),
             Position {
                 line: 1,
-                character: 5
+                character: 2
             }
         );
-
         assert_eq!(
-            memo.position(23),
+            memo.position(22),
             Position {
                 line: 3,
-                character: 1
+                character: 8
             }
         );
         assert_eq!(
             memo.position(12),
             Position {
+                line: 1,
+                character: 5
+            }
+        );
+        assert_eq!(
+            memo.position(13),
+            Position {
                 line: 2,
                 character: 0
+            }
+        );
+        assert_eq!(
+            memo.position(26),
+            Position {
+                line: 4,
+                character: 2
             }
         );
     }
