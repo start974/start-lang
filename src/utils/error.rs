@@ -161,7 +161,7 @@ impl Message {
         self
     }
 
-    pub fn pretty(&self, theme: &MessageTheme) -> Doc {
+    pub fn pretty(&self, theme: &MessageTheme) -> Doc<'_> {
         Doc::intersperse(
             self.0.iter().map(|kind| match kind {
                 MessageKind::Normal(text) => theme.normal(text),
@@ -209,7 +209,7 @@ pub trait ErrorReport: ErrorCode + Located {
     }
 
     /// report of error
-    fn report(&self, theme: &Theme) -> Report {
+    fn report(&self, theme: &Theme) -> Report<'_> {
         let loc = self.loc();
         let mut report_builder = Report::build(ReportKind::Error, loc.clone())
             .with_config(Config::default().with_index_type(IndexType::Byte))

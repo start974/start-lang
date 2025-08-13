@@ -26,7 +26,7 @@ impl AsIdentifier for VariableT {
 }
 
 impl Pretty for VariableT {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         theme.ty_var(&self.0)
     }
 }

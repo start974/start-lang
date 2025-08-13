@@ -10,7 +10,7 @@ pub struct TypeDefinition {
 }
 
 impl Pretty for TypeDefinition {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         let doc_ty = Doc::softline()
             .append(self.ty.pretty(theme).group())
             .nest(2);

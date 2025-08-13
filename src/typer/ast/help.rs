@@ -17,7 +17,7 @@ pub struct Help {
 }
 
 impl Pretty for Help {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         let var = match &self.info {
             HelpInfo::Expression(ty) => Doc::nil()
                 .append(theme.expr_var(&self.var.name()))

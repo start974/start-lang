@@ -76,7 +76,7 @@ impl<T> Meta<T> {
     }
 
     /// just pretty meta
-    pub fn pretty_meta(&self, theme: &Theme) -> Doc {
+    pub fn pretty_meta(&self, theme: &Theme) -> Doc<'_> {
         let mut last_is_comment = false;
         let mut doc = Doc::nil();
         for val in self.before.iter() {
@@ -98,7 +98,7 @@ impl<T> Meta<T> {
     }
 
     /// pretty without line after comment
-    pub fn pretty_with_end_line(&self, theme: &Theme, end_line: bool) -> Doc
+    pub fn pretty_with_end_line(&self, theme: &Theme, end_line: bool) -> Doc<'_>
     where
         T: Pretty,
     {
@@ -147,7 +147,7 @@ impl<T> Pretty for Meta<T>
 where
     T: Pretty,
 {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         self.pretty_with_end_line(theme, true)
     }
 }

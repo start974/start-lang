@@ -19,7 +19,7 @@ impl TypedBy {
 }
 
 impl Pretty for TypedBy {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
             .append(self.colon.pretty(theme))
             .append(Doc::softline())
@@ -55,7 +55,7 @@ impl ExpressionDefinition {
 /*}*/
 
 impl Pretty for ExpressionDefinition {
-    fn pretty(&self, theme: &Theme) -> Doc {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         let doc_typed_by = {
             match &self.typed_by {
                 Some(typed_by) => Doc::softline()
