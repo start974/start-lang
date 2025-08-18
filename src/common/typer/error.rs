@@ -9,11 +9,12 @@ use crate::utils::location::{Located, Location};
 #[derive(Debug)]
 pub struct ErrorVariableNotFound {
     identifier: Identifier,
+    loc: Location,
 }
 
 impl ErrorVariableNotFound {
-    pub fn new(identifier: Identifier) -> Self {
-        Self { identifier }
+    pub fn new(identifier: Identifier, loc: Location) -> Self {
+        Self { identifier, loc }
     }
 }
 
@@ -25,7 +26,7 @@ impl ErrorCode for ErrorVariableNotFound {
 
 impl Located for ErrorVariableNotFound {
     fn loc(&self) -> Location {
-        self.identifier.loc()
+        self.loc.clone()
     }
 }
 

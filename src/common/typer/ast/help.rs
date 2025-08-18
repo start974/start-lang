@@ -13,6 +13,7 @@ pub enum HelpInfo {
 
 pub struct Help {
     pub var: Identifier,
+    pub loc: Location,
     pub info: HelpInfo,
     pub doc: Option<Documentation>,
 }
@@ -56,6 +57,6 @@ impl Pretty for Help {
 
 impl Located for Help {
     fn loc(&self) -> Location {
-        self.var.loc()
+        self.loc.clone()
     }
 }

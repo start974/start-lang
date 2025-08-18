@@ -15,6 +15,8 @@ pub struct Variable {
     identifier: Identifier,
     /// type of the variable
     ty: Type,
+    /// location of varable
+    loc: Location,
 }
 
 impl Variable {
@@ -43,19 +45,19 @@ impl Typed for Variable {
 
 impl Located for Variable {
     fn loc(&self) -> Location {
-        self.identifier.loc()
+        self.loc.clone()
     }
 }
 
 impl LocatedSet for Variable {
     fn set_loc(&mut self, loc: &impl Located) {
-        self.identifier.set_loc(loc);
+        self.loc = loc.loc().clone();
     }
 }
 
 impl Pretty for Variable {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        theme.expr_var(&self.identifier.to_string())
+        theme.expr_var(&self.identifier)
     }
 }
 
@@ -80,14 +82,19 @@ impl VariableEnv {
     }
 
     /// Get expression of identifier (builtin or variable)
-    pub fn get(&self, identifier: &Identifier) -> Result<Expression, ErrorVariableNotFound> {
+    pub fn get(
+        &self,
+        identifier: &Identifier,
+        loc: Location,
+    ) -> Result<Expression, ErrorVariableNotFound> {
         match self.get_builtin_constant(identifier.name()) {
             Some(constant) => Ok(Expression::Constant(constant)),
             None => {
-                let ty = self.0.get(identifier)?;
+                let ty = self.0.get(identifier, loc.clone())?;
                 let var = Variable {
                     identifier: identifier.clone(),
                     ty: ty.clone(),
+                    loc,
                 };
                 Ok(Expression::Variable(var))
             }

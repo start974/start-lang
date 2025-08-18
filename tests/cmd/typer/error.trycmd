@@ -70,3 +70,33 @@ $ startlang run type_mismatch.st
 ───╯
 
 ```
+
+```
+$ startlang run many_error_def.st
+? 1
+[302] Error: Type mismatch.
+   ╭─[ many_error_def.st:1:32 ]
+   │
+ 1 │ Def a : Type_not_exist := (1 : Bool) : Type_not_exist_also.
+   │                                ──┬─  
+   │                                  ╰─── Found type ℕ.
+   │ 
+   │ Note: Expected : Bool
+   │       Found    : ℕ
+───╯
+[301] Error: Variable not found.
+   ╭─[ many_error_def.st:1:40 ]
+   │
+ 1 │ Def a : Type_not_exist := (1 : Bool) : Type_not_exist_also.
+   │                                        ─────────┬─────────  
+   │                                                 ╰─────────── Variable Type_not_exist_also not found in the current scope.
+───╯
+[301] Error: Variable not found.
+   ╭─[ many_error_def.st:1:9 ]
+   │
+ 1 │ Def a : Type_not_exist := (1 : Bool) : Type_not_exist_also.
+   │         ───────┬──────  
+   │                ╰──────── Variable Type_not_exist not found in the current scope.
+───╯
+
+```

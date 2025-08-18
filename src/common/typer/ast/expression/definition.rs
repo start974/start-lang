@@ -1,5 +1,5 @@
 use super::super::ty::{Type, Typed, TypedMut};
-use super::super::Identifier;
+use super::super::Pattern;
 use super::Expression;
 use crate::utils::location::{Located, Location};
 use crate::utils::pretty::Pretty;
@@ -9,19 +9,22 @@ use crate::utils::theme::{Doc, Theme};
 // Expression Definition
 // ==========================================================================
 pub struct Definition {
-    name: Identifier,
+    /// name of definition
+    pattern: Pattern,
+
+    /// body of definition
     body: Expression,
 }
 
 impl Definition {
     /// Create a new expression definition
-    pub fn new(name: Identifier, body: Expression) -> Self {
-        Self { name, body }
+    pub fn new(pattern: Pattern, body: Expression) -> Self {
+        Self { pattern, body }
     }
 
-    /// Get the name of the expression definition
-    pub fn name(&self) -> &Identifier {
-        &self.name
+    /// get pattern of definition
+    pub fn pattern(&self) -> &Pattern {
+        &self.pattern
     }
 
     /// Get the body of the expression definition
@@ -49,7 +52,7 @@ impl Pretty for Definition {
         Doc::nil()
             .append(theme.keyword(&"Definition"))
             .append(Doc::space())
-            .append(theme.def_var(&self.name))
+            .append(self.pattern.pretty(theme))
             .append(Doc::group(
                 Doc::nil().append(
                     Doc::line()
@@ -68,6 +71,6 @@ impl Pretty for Definition {
 
 impl Located for Definition {
     fn loc(&self) -> Location {
-        self.name.loc().union(self.body.loc())
+        self.pattern.loc().union(self.body.loc())
     }
 }

@@ -93,13 +93,19 @@ pub trait Interpreter {
                     self.mut_vm().add_definition(&def)
                 }
             })
-            .unwrap_or_else(|e| self.fail(e))
+            .unwrap_or_else(|errs| {
+                for err in errs {
+                    self.fail(err)
+                }
+            })
     }
 
     /// run command type definition
     fn run_type_definition(&mut self, def: cst::TypeDefinition, doc: Option<ast::Documentation>) {
-        if let Err(e) = self.mut_typer().type_definition(&def, doc) {
-            self.fail(e);
+        if let Err(errs) = self.mut_typer().type_definition(&def, doc) {
+            for err in errs {
+                self.fail(err);
+            }
         }
     }
 
@@ -114,7 +120,11 @@ pub trait Interpreter {
                     self.print(&value.with_loc(expr.loc()));
                 }
             })
-            .unwrap_or_else(|e| self.fail(e))
+            .unwrap_or_else(|errs| {
+                for err in errs {
+                    self.fail(err)
+                }
+            })
     }
 
     /// run type of expression
@@ -125,13 +135,21 @@ pub trait Interpreter {
                 let ty = expr.ty();
                 self.print(ty);
             })
-            .unwrap_or_else(|e| self.fail(e))
+            .unwrap_or_else(|errs| {
+                for err in errs {
+                    self.fail(err)
+                }
+            })
     }
 
     fn run_help(&mut self, var: cst::help::Variable) {
         match self.mut_typer().help(&var) {
             Ok(help) => self.print(&help),
-            Err(err) => self.fail(err),
+            Err(errs) => {
+                for err in errs {
+                    self.fail(err)
+                }
+            }
         }
     }
 
