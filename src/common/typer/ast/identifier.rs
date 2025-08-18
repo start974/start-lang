@@ -1,4 +1,3 @@
-use crate::utils::location::{Located, LocatedSet, Location};
 use std::{collections::HashMap, hash::Hash};
 
 // ==========================================================================
@@ -11,11 +10,10 @@ pub enum Name {
     Named(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Identifier {
     name: Name,
     id: usize,
-    loc: Location,
 }
 
 impl Identifier {
@@ -35,34 +33,7 @@ impl Identifier {
 
 impl std::fmt::Display for Identifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}_{}", self.name(), self.id())
-    }
-}
-
-impl Located for Identifier {
-    fn loc(&self) -> Location {
-        self.loc.clone()
-    }
-}
-
-impl LocatedSet for Identifier {
-    fn set_loc(&mut self, loc: &impl Located) {
-        self.loc = loc.loc().clone();
-    }
-}
-
-impl PartialEq for Identifier {
-    fn eq(&self, other: &Self) -> bool {
-        self.name == other.name && self.id == other.id
-    }
-}
-
-impl Eq for Identifier {}
-
-impl Hash for Identifier {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.name.hash(state);
-        self.id.hash(state);
+        write!(f, "{}__{}", self.name(), self.id())
     }
 }
 
@@ -104,7 +75,6 @@ impl IdentifierBuilder {
         Identifier {
             name: Name::Named(name.to_string()),
             id,
-            loc: Location::unknown(),
         }
     }
 
@@ -114,7 +84,6 @@ impl IdentifierBuilder {
         Identifier {
             name: Name::Named(name.to_string()),
             id,
-            loc: Location::unknown(),
         }
     }
 

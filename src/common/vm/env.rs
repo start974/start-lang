@@ -1,6 +1,5 @@
-use crate::typer::ast::{Expression, ExpressionDefinition};
+use crate::typer::ast::{Expression, ExpressionDefinition, Identifier, Pattern};
 
-use super::identifier::Identifier;
 use super::value::{Constant, Value};
 use std::collections::HashMap;
 
@@ -22,18 +21,17 @@ impl Env {
     pub fn eval(&self, expr: &Expression) -> Option<Value> {
         match expr {
             Expression::Constant(c) => Some(Value::from(Constant::from(c))),
-            Expression::Variable(x) => {
-                let id_ty = x.identifier();
-                let id = Identifier::from(id_ty);
-                self.get(&id).cloned()
-            }
+            Expression::Variable(var) => self.get(var.identifier()).cloned(),
         }
     }
 
     /// add a definition to the environment
     pub fn add_definition(&mut self, def: &ExpressionDefinition) {
-        let id = Identifier::from(def.name());
         let value = self.eval(def.body()).unwrap();
-        self.set(id, value.clone());
+        match def.pattern() {
+            Pattern::Variable(var) => {
+                self.set(var.identifier().clone(), value.clone());
+            }
+        }
     }
 }

@@ -18,7 +18,7 @@ stdout = """
        a : N1
 Set DebugTyper.
 Eval a.
-a_0
+a__0
 3
 Unset DebugParser.
 N1

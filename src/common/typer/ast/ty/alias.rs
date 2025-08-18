@@ -15,6 +15,8 @@ pub struct Alias {
     name: Identifier,
     /// type of alias
     ty: Box<Type>,
+    /// location of alias
+    loc: Location
 }
 
 impl Typed for Alias {
@@ -31,13 +33,13 @@ impl Pretty for Alias {
 
 impl Located for Alias {
     fn loc(&self) -> Location {
-        self.name.loc()
+        self.loc.clone()
     }
 }
 
 impl LocatedSet for Alias {
     fn set_loc(&mut self, loc: &impl Located) {
-        self.name.set_loc(loc);
+        self.loc = loc.loc();
     }
 }
 
@@ -64,14 +66,15 @@ impl TypeAliasEnv {
     }
 
     /// get alias by name
-    pub fn get(&self, name: &Identifier) -> Result<Type, ErrorVariableNotFound> {
+    pub fn get(&self, name: &Identifier, loc: Location) -> Result<Type, ErrorVariableNotFound> {
         if let Some(builtin_ty) = self.builtin_ty(name.name()) {
             Ok(Type::Builtin(builtin_ty))
         } else {
-            let ty = self.0.get(name)?;
+            let ty = self.0.get(name, loc.clone())?;
             let alias = Alias {
                 name: name.clone(),
                 ty: Box::new(ty.clone()),
+                loc,
             };
             Ok(Type::Alias(alias))
         }

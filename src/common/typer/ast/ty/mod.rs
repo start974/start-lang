@@ -112,10 +112,14 @@ impl TypeEnv {
     }
 
     /// Get type of identifier
-    pub fn get(&self, identifier: &Identifier) -> Result<&Type, ErrorVariableNotFound> {
+    pub fn get(
+        &self,
+        identifier: &Identifier,
+        loc: Location,
+    ) -> Result<&Type, ErrorVariableNotFound> {
         self.env
             .get(identifier)
-            .ok_or_else(|| ErrorVariableNotFound::new(identifier.clone()))
+            .ok_or_else(|| ErrorVariableNotFound::new(identifier.clone(), loc))
     }
 
     /// add documentation for an identifier
