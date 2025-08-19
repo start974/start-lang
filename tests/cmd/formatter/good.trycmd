@@ -32,3 +32,16 @@ $ startlang format --diff good.st
         7 + Def b : Nat := (a : Nat) : N1.
 
 ```
+
+```
+$ startlang format --diff builtin.st
+? 1
+   1    1 | Type N1 := __Type_Nat__.
+   2    2 | Type B1 := __Type_Bool__.
+   3    3 | Type C1 := __Type_Char__.
+   4    4 | 
+   5    5 | Def true1 : B1 := __Constant_true__.
+   6    6 | Def false1 : B1 := __Constant_false__.
+   7      - 
+
+```

@@ -39,8 +39,6 @@ pub struct SymbolInfo {
     pub refs_range: Vec<Range>,
 }
 
-
-
 #[derive(Debug, Clone, Default)]
 pub struct Document {
     /// symbol information
@@ -137,8 +135,8 @@ impl Document {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::typer::ast::IdentifierBuilder;
     use tower_lsp::lsp_types::{MarkedString, Position, Range};
-    use crate::typer::ast::{IdentifierBuilder};
 
     #[test]
     fn test_document_hover() {
