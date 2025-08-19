@@ -1,4 +1,5 @@
 use super::ast::{Identifier, Type};
+use crate::typer::env::IdentifierKind;
 use crate::utils::error::{ErrorCode, ErrorReport, Message};
 use crate::utils::location::{Located, Location};
 
@@ -9,12 +10,17 @@ use crate::utils::location::{Located, Location};
 #[derive(Debug)]
 pub struct ErrorVariableNotFound {
     identifier: Identifier,
+    kind: Option<IdentifierKind>,
     loc: Location,
 }
 
 impl ErrorVariableNotFound {
-    pub fn new(identifier: Identifier, loc: Location) -> Self {
-        Self { identifier, loc }
+    pub fn new(identifier: Identifier, kind: Option<IdentifierKind>, loc: Location) -> Self {
+        Self {
+            identifier,
+            kind,
+            loc,
+        }
     }
 }
 
@@ -36,9 +42,13 @@ impl ErrorReport for ErrorVariableNotFound {
     }
 
     fn text(&self) -> Option<Message> {
-        let msg = Message::text("Variable ")
-            .append(Message::text(self.identifier.name()).important())
-            .with_text(" not found in the current scope.");
+        let mut msg = match self.kind {
+            Some(IdentifierKind::Type) => Message::text("Type variable "),
+            Some(IdentifierKind::Expr) => Message::text("Expression variable "),
+            None => Message::text("Variable "),
+        };
+        msg.extend(Message::text(self.identifier.name()).important());
+        msg.add_text(" not found.");
         Some(msg)
     }
 }

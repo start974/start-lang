@@ -32,10 +32,33 @@ impl Pretty for VariableT {
 }
 
 // ============================================================================
+// Variable
+// ============================================================================
+
+#[derive(Debug, Clone)]
+pub enum BuiltinT {
+    Nat,
+    Bool,
+    Char,
+}
+pub type Builtin = Meta<BuiltinT>;
+
+impl Pretty for BuiltinT {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        match self {
+            BuiltinT::Nat => theme.ty_var(&"__Type_Nat__"),
+            BuiltinT::Bool => theme.ty_var(&"__Type_Bool__"),
+            BuiltinT::Char => theme.ty_var(&"__Type_Char__"),
+        }
+    }
+}
+
+// ============================================================================
 // Type
 // ============================================================================
 #[derive(Debug, Clone)]
 pub enum Type {
+    Builtin(Builtin),
     Variable(Variable),
 }
 
@@ -43,6 +66,7 @@ impl Pretty for Type {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             Type::Variable(var) => var.pretty(theme),
+            Type::Builtin(builtin) => builtin.pretty(theme),
         }
     }
 }
@@ -51,6 +75,7 @@ impl Located for Type {
     fn loc(&self) -> Location {
         match self {
             Type::Variable(var) => var.loc(),
+            Type::Builtin(builtin) => builtin.loc(),
         }
     }
 }
