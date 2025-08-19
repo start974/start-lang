@@ -20,6 +20,6 @@ stderr = """
    │
  1 │ Def a := 3. Eval not_exits.
    │                  ────┬────  
-   │                      ╰────── Variable not_exits not found in the current scope.
+   │                      ╰────── Expression variable not_exits not found.
 ───╯
 """

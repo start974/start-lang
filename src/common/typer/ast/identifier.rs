@@ -1,4 +1,4 @@
-use std::{collections::HashMap, hash::Hash};
+use std::{collections::HashMap, hash::Hash, rc::Rc};
 
 // ==========================================================================
 // Identifier
@@ -43,66 +43,46 @@ impl std::fmt::Display for Identifier {
 
 #[derive(Debug, Default)]
 pub struct IdentifierBuilder {
-    table: HashMap<String, usize>,
-    //fresh_id: usize,
-    //snapshot: Box<Option<IdentifierBuilder>>,
+    table: HashMap<String, Vec<Rc<Identifier>>>,
 }
 
 impl IdentifierBuilder {
-    ///// crate fresh identifier
-    /*    pub fn fresh(&mut self) -> Identifier {*/
-    /*let id = self.fresh_id;*/
-    /*self.fresh_id += 1;*/
-    /*Identifier {*/
-    /*name: Name::Fresh,*/
-    /*id,*/
-    /*loc: UNKNOWN_LOCATION,*/
-    /*}*/
-    /*}*/
-
-    fn identifier_id(&self, name: &str) -> Option<usize> {
-        self.table.get(name).cloned()
-        /*            .or_else(|| match self.snapshot.as_ref() {*/
-        /*Some(builder) => builder.identifier_id(name),*/
-        /*None => None,*/
-        /*})*/
-    }
-
     /// create a new identifier
-    pub fn build(&mut self, name: &str) -> Identifier {
-        let id = self.identifier_id(name).unwrap_or(0);
-        self.table.insert(name.to_string(), id + 1);
-        Identifier {
-            name: Name::Named(name.to_string()),
-            id,
+    pub fn build(&mut self, name: &str) -> Rc<Identifier> {
+        match self.table.get_mut(name) {
+            Some(idents) => {
+                let id = idents.len();
+                let ident = Identifier {
+                    name: Name::Named(name.to_string()),
+                    id,
+                };
+                let ident_rc = Rc::new(ident);
+                idents.push(ident_rc.clone());
+                ident_rc
+            }
+            None => {
+                let ident = Identifier {
+                    name: Name::Named(name.to_string()),
+                    id: 0,
+                };
+                let ident_rc = Rc::new(ident);
+                self.table.insert(name.to_string(), vec![ident_rc.clone()]);
+                ident_rc
+            }
         }
     }
 
     /// get identifier by name
-    pub fn get(&self, name: &str) -> Identifier {
-        let id = self.identifier_id(name).map(|id| id - 1).unwrap_or(0);
-        Identifier {
-            name: Name::Named(name.to_string()),
-            id,
-        }
+    pub fn get(&self, name: &str) -> Rc<Identifier> {
+        self.table
+            .get(name)
+            .and_then(|idents| idents.last().cloned())
+            .unwrap_or_else(|| {
+                let ident = Identifier {
+                    name: Name::Named(name.to_string()),
+                    id: 0,
+                };
+                Rc::new(ident)
+            })
     }
-
-    // iter over identifiers
-    //pub fn iter(&self) -> impl Iterator<Item = (&String, &usize)> {
-    //self.table.iter()
-    //}
-
-    /*    /// take a snapshot of the current state*/
-    /*pub fn snapshot(self) -> Self {*/
-    /*Self {*/
-    /*table: std::collections::HashMap::new(),*/
-    /*//fresh_id: self.fresh_id,*/
-    /*snapshot: Box::new(Some(self)),*/
-    /*}*/
-    /*}*/
-
-    /*/// restore the snapshot*/
-    /*pub fn restore(self) -> Self {*/
-    /*self.snapshot.expect("No snapshot to restore")*/
-    /*}*/
 }

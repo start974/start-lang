@@ -13,6 +13,15 @@ impl From<Vec<String>> for Documentation {
     }
 }
 
+impl std::fmt::Display for Documentation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for line in &self.doc {
+            writeln!(f, "{line}")?;
+        }
+        Ok(())
+    }
+}
+
 impl Pretty for Documentation {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::intersperse(

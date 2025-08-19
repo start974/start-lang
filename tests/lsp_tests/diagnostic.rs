@@ -14,7 +14,7 @@ fn test_error(diag: PublishDiagnosticsParams, uri: Url) {
     assert_eq!(d.range.end.character, 20);
     assert_eq!(
         d.message,
-        "Variable not_exist_ty not found in the current scope."
+        "Type variable not_exist_ty not found."
     );
 
     let d = ds.next().unwrap();
@@ -25,7 +25,7 @@ fn test_error(diag: PublishDiagnosticsParams, uri: Url) {
     assert_eq!(d.range.end.character, 22);
     assert_eq!(
         d.message,
-        "Variable not_exist_var not found in the current scope."
+        "Expression variable not_exist_var not found."
     );
 
     let d = ds.next().unwrap();

@@ -73,6 +73,10 @@ impl Location {
         }
     }
 
+    pub fn id(&self) -> &SourceId {
+        &self.id
+    }
+
     /// to simple span
     pub fn to_simple_span(&self) -> SimpleSpan {
         SimpleSpan {

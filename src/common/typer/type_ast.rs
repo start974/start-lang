@@ -19,6 +19,11 @@ fn to_errs(err: Error) -> Vec<Error> {
 }
 
 impl Typer {
+    /// get environment
+    pub fn env(&self) -> &Env {
+        &self.env
+    }
+
     /// convert constant
     fn constant(&self, constant: &cst::Constant) -> ast::Constant {
         match constant {
