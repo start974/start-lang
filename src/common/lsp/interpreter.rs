@@ -69,27 +69,21 @@ impl Interpreter {
                 //TODO: include location from other files
                 continue;
             }
-            let symbol = Arc::new(info.id.name().to_string());
-            let doc = info
-                .doc
-                .clone()
-                .map(|doc| doc.to_string())
-                .map(MarkedString::from_markdown);
-            let kind = info.kind;
-            let ty = info.ty.make_string(&theme);
-            let loc_def = self.position_memo.range(&info.loc_def);
-            let loc_refs = info
-                .loc_refs
-                .iter()
-                .map(|loc| self.position_memo.range(loc))
-                .collect::<Vec<_>>();
             document.add_symbol(SymbolInfo {
-                symbol,
-                doc,
-                kind,
-                ty,
-                def_range: loc_def,
-                refs_range: loc_refs,
+                symbol: Arc::new(info.id.as_ref().clone()),
+                doc: info
+                    .doc
+                    .clone()
+                    .map(|doc| doc.to_string())
+                    .map(MarkedString::from_markdown),
+                kind: info.kind,
+                ty: info.ty.make_string(&theme),
+                def_range: self.position_memo.range(&info.loc_def),
+                refs_range: info
+                    .loc_refs
+                    .iter()
+                    .map(|loc| self.position_memo.range(loc))
+                    .collect::<Vec<_>>(),
             });
         }
         document

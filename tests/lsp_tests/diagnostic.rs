@@ -12,10 +12,7 @@ fn test_error(diag: PublishDiagnosticsParams, uri: Url) {
     assert_eq!(d.range.start.character, 8);
     assert_eq!(d.range.end.line, 0);
     assert_eq!(d.range.end.character, 20);
-    assert_eq!(
-        d.message,
-        "Type variable not_exist_ty not found."
-    );
+    assert_eq!(d.message, "Type variable not_exist_ty not found.");
 
     let d = ds.next().unwrap();
     assert_eq!(d.severity, Some(DiagnosticSeverity::ERROR));
@@ -23,10 +20,7 @@ fn test_error(diag: PublishDiagnosticsParams, uri: Url) {
     assert_eq!(d.range.start.character, 9);
     assert_eq!(d.range.end.line, 2);
     assert_eq!(d.range.end.character, 22);
-    assert_eq!(
-        d.message,
-        "Expression variable not_exist_var not found."
-    );
+    assert_eq!(d.message, "Expression variable not_exist_var not found.");
 
     let d = ds.next().unwrap();
     assert_eq!(d.severity, Some(DiagnosticSeverity::ERROR));

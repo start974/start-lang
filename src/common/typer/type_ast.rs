@@ -186,7 +186,7 @@ impl Typer {
         let id = self.id_builder.build(definition.name.name());
         let ty = self.ty(&definition.ty)?;
         self.env
-            .add_type_def(id.clone(), ty.clone(), definition.loc());
+            .add_type_def(id.clone(), ty.clone(), definition.name.loc());
         if let Some(doc) = doc {
             self.env.set_doc(&id, doc.clone());
         }

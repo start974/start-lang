@@ -1,4 +1,4 @@
-use super::super::error::{ErrorUnexpectedType};
+use super::super::error::ErrorUnexpectedType;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};

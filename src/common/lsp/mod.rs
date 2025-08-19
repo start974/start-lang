@@ -1,8 +1,8 @@
 use tower_lsp::{LspService, Server};
 
 pub mod backend;
-pub mod interpreter;
 pub mod document;
+pub mod interpreter;
 mod position_memo;
 
 pub async fn run() {
