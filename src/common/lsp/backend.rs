@@ -1,20 +1,27 @@
-use crate::interpreter::Interpreter as _;
-
 use super::interpreter::Interpreter;
+use crate::interpreter::Interpreter as _;
+use crate::lsp::document::Document;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer};
 
 #[derive(Debug)]
 pub struct Backend {
     client: Client,
-    //document: HashMap<Url, Interpreter>,
+    documents: Arc<Mutex<HashMap<Url, Document>>>,
 }
 
-impl Backend {
-    /// make new backend with client
-    pub fn new(client: Client) -> Self {
-        Self { client }
+impl From<Client> for Backend {
+    fn from(client: Client) -> Self {
+        Self {
+            client,
+            documents: Arc::new(Mutex::new(HashMap::new())),
+        }
     }
+}
+impl Backend {
     /// get language server name
     pub fn name() -> &'static str {
         env!("CARGO_PKG_NAME")
@@ -27,15 +34,33 @@ impl Backend {
 }
 
 impl Backend {
+    /// on_change is called when the document is opened or changed
     async fn on_change(&self, params: TextDocumentItem) {
         self.client
             .log_message(MessageType::INFO, "LSP on change")
             .await;
-        let uri = params.uri;
-        let mut interpreter = Interpreter::new(uri.clone(), params.text);
-        interpreter.run();
-        let diags = interpreter.diagnostics().to_vec();
-        self.client.publish_diagnostics(uri, diags, None).await;
+
+        let (document, diags) = {
+            let uri = params.uri.clone();
+            let text = params.text.clone();
+            tokio::task::spawn_blocking(move || {
+                let mut interpreter = Interpreter::new(uri, text);
+                interpreter.run();
+                let document = interpreter.document();
+                let diags = interpreter.diagnostics().to_vec();
+                (document, diags)
+            })
+        }
+        .await
+        .unwrap();
+
+        let uri = params.uri.clone();
+        let mut documents = self.documents.lock().await;
+        documents.insert(uri.clone(), document);
+
+        self.client
+            .publish_diagnostics(uri, diags, Some(params.version))
+            .await;
     }
 }
 
@@ -50,6 +75,7 @@ impl LanguageServer for Backend {
                 text_document_sync: Some(TextDocumentSyncCapability::Kind(
                     TextDocumentSyncKind::FULL,
                 )),
+                hover_provider: Some(HoverProviderCapability::Simple(true)),
                 ..Default::default()
             },
             server_info: Some(ServerInfo {
@@ -86,5 +112,13 @@ impl LanguageServer for Backend {
             })
             .await;
         }
+    }
+
+    async fn hover(&self, params: HoverParams) -> tower_lsp::jsonrpc::Result<Option<Hover>> {
+        let text_doc = params.text_document_position_params;
+        let pos = text_doc.position;
+        let uri = text_doc.text_document.uri;
+        let documents = self.documents.lock().await;
+        Ok(documents.get(&uri).and_then(|doc| doc.get_hover(&pos)))
     }
 }

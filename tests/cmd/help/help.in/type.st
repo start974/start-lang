@@ -19,4 +19,3 @@ Type N3 := N1.
 
 ? Nat.
 ? ℕ.
-? __Type_Nat__.

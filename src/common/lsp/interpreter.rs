@@ -1,7 +1,9 @@
 use super::backend::Backend;
+use super::document::Document;
 use super::position_memo::PositionMemo;
 use crate::interpreter::flag::{DebugFlag, Flag};
 use crate::interpreter::{self, Interpreter as _};
+use crate::lsp::document::SymbolInfo;
 use crate::typer::Typer;
 use crate::utils::error::{ErrorCode, ErrorReport};
 use crate::utils::location::{Located, SourceId};
@@ -10,6 +12,7 @@ use crate::utils::theme::{MessageTheme, Theme};
 use crate::vm;
 use ariadne::Span as _;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tower_lsp::lsp_types::{Diagnostic, Url};
 
 #[derive(Debug)]
@@ -52,6 +55,44 @@ impl Interpreter {
     /// get diagnostics
     pub fn diagnostics(&self) -> &[Diagnostic] {
         &self.diagnostics
+    }
+
+    /// get document content
+    pub fn document(&mut self) -> Document {
+        use tower_lsp::lsp_types::MarkedString;
+
+        let theme = Theme::default();
+        let mut document = Document::default();
+        let env = self.typer.env();
+        for info in env.iter() {
+            if info.loc_def.id() != self.source_id() {
+                //TODO: include location from other files
+                continue;
+            }
+            let symbol = Arc::new(info.id.name().to_string());
+            let doc = info
+                .doc
+                .clone()
+                .map(|doc| doc.to_string())
+                .map(MarkedString::from_markdown);
+            let kind = info.kind;
+            let ty = info.ty.make_string(&theme);
+            let loc_def = self.position_memo.range(&info.loc_def);
+            let loc_refs = info
+                .loc_refs
+                .iter()
+                .map(|loc| self.position_memo.range(loc))
+                .collect::<Vec<_>>();
+            document.add_symbol(SymbolInfo {
+                symbol,
+                doc,
+                kind,
+                ty,
+                def_range: loc_def,
+                refs_range: loc_refs,
+            });
+        }
+        document
     }
 }
 

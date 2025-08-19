@@ -1,4 +1,6 @@
-use tower_lsp::lsp_types::Position;
+use crate::utils::location::Location;
+use ariadne::Span as _;
+use tower_lsp::lsp_types::{Position, Range};
 
 #[derive(Debug)]
 pub struct PositionMemo {
@@ -76,6 +78,13 @@ impl PositionMemo {
     /// get content
     pub fn content(&self) -> &str {
         &self.content
+    }
+
+    /// get range
+    pub fn range(&mut self, loc: &Location) -> Range {
+        let start = self.position(loc.start());
+        let end = self.position(loc.end());
+        Range { start, end }
     }
 }
 

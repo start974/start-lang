@@ -9,7 +9,7 @@ $ startlang run def_expr_type_not_found.st
    │
  1 │ Def a : Not_defined := 4.
    │         ─────┬─────  
-   │              ╰─────── Variable Not_defined not found in the current scope.
+   │              ╰─────── Type variable Not_defined not found.
 ───╯
 
 ```
@@ -24,7 +24,7 @@ $ startlang run var_not_found.st
    │
  1 │ Eval not_defined.
    │      ─────┬─────  
-   │           ╰─────── Variable not_defined not found in the current scope.
+   │           ╰─────── Expression variable not_defined not found.
 ───╯
 
 ```
@@ -38,7 +38,7 @@ $ startlang run def_type_not_found.st
    │
  1 │ Type T := Not_definied.
    │           ──────┬─────  
-   │                 ╰─────── Variable Not_definied not found in the current scope.
+   │                 ╰─────── Type variable Not_definied not found.
 ───╯
 
 ```
@@ -89,14 +89,14 @@ $ startlang run many_error_def.st
    │
  1 │ Def a : Type_not_exist := (1 : Bool) : Type_not_exist_also.
    │                                        ─────────┬─────────  
-   │                                                 ╰─────────── Variable Type_not_exist_also not found in the current scope.
+   │                                                 ╰─────────── Type variable Type_not_exist_also not found.
 ───╯
 [301] Error: Variable not found.
    ╭─[ many_error_def.st:1:9 ]
    │
  1 │ Def a : Type_not_exist := (1 : Bool) : Type_not_exist_also.
    │         ───────┬──────  
-   │                ╰──────── Variable Type_not_exist not found in the current scope.
+   │                ╰──────── Type variable Type_not_exist not found.
 ───╯
 
 ```

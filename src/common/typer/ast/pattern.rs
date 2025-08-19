@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use crate::typer::ast::Identifier;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
@@ -8,7 +9,7 @@ use crate::utils::theme::{Doc, Theme};
 // ==========================================================================
 pub struct PatternVar {
     /// identifier of the variable
-    id: Identifier,
+    id: Rc<Identifier>,
     /// location of the pattern
     loc: Location,
 }
@@ -18,11 +19,10 @@ impl PatternVar {
     pub fn identifier(&self) -> &Identifier {
         &self.id
     }
-
 }
 
-impl From<Identifier> for PatternVar {
-    fn from(id: Identifier) -> Self {
+impl From<Rc<Identifier>> for PatternVar {
+    fn from(id: Rc<Identifier>) -> Self {
         Self {
             id,
             loc: Location::unknown(),
@@ -55,11 +55,11 @@ pub enum Pattern {
     Variable(PatternVar),
 }
 
-impl Pattern{
+impl Pattern {
     /// get names on patterns
     pub fn names(&self) -> impl Iterator<Item = &Identifier> {
         match self {
-            Pattern::Variable(var) => std::iter::once(&var.id),
+            Pattern::Variable(var) => std::iter::once(var.id.as_ref()),
         }
     }
 }

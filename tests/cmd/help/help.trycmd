@@ -25,7 +25,6 @@ Nat := ℕ
   Natural numbers type
 ℕ (builtin)
   Natural numbers type
-__Type_Nat__ (builtin)
 
 ```
 
@@ -38,7 +37,7 @@ $ startlang run error.st
    │
  1 │ ? Not_exists.
    │   ─────┬────  
-   │        ╰────── Variable Not_exists not found in the current scope.
+   │        ╰────── Variable Not_exists not found.
 ───╯
 N : N
 

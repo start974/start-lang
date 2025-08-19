@@ -4,6 +4,7 @@ use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 use std::collections::HashMap;
+use std::rc::Rc;
 
 // ==========================================================================
 // Variable
@@ -115,6 +116,8 @@ pub enum IdentifierKind {
 /// with store documentation, location of definition and location of references
 #[derive(Debug)]
 pub struct IdentifierInfo {
+    /// identifier
+    pub id: Rc<Identifier>,
     /// documentation
     pub doc: Option<Documentation>,
     /// kind of identifier
@@ -133,7 +136,7 @@ pub struct IdentifierInfo {
 
 #[derive(Debug)]
 pub struct Help {
-    id: Identifier,
+    id: Rc<Identifier>,
     ty: Type,
     loc: Location,
     kind: IdentifierKind,
@@ -182,12 +185,13 @@ impl Located for Help {
 #[derive(Debug, Default)]
 pub struct Env {
     /// map of identifiers
-    table: HashMap<Identifier, IdentifierInfo>,
+    table: HashMap<Rc<Identifier>, IdentifierInfo>,
 }
 
 impl Env {
-    fn add(&mut self, id: Identifier, loc_def: Location, ty: Type, kind: IdentifierKind) {
+    fn add(&mut self, id: Rc<Identifier>, loc_def: Location, ty: Type, kind: IdentifierKind) {
         let info = IdentifierInfo {
+            id: id.clone(),
             doc: None,
             kind,
             ty,
@@ -198,12 +202,12 @@ impl Env {
     }
 
     /// add expression variable definition
-    pub fn add_expr_def(&mut self, id: Identifier, ty: Type, loc_def: Location) {
+    pub fn add_expr_def(&mut self, id: Rc<Identifier>, ty: Type, loc_def: Location) {
         self.add(id, loc_def, ty, IdentifierKind::Expr);
     }
 
     /// add type definition
-    pub fn add_type_def(&mut self, id: Identifier, ty: Type, loc_def: Location) {
+    pub fn add_type_def(&mut self, id: Rc<Identifier>, ty: Type, loc_def: Location) {
         self.add(id, loc_def, ty, IdentifierKind::Type);
     }
 
@@ -268,7 +272,7 @@ impl Env {
         match self.table.get(id) {
             Some(info) => {
                 Ok(Help {
-                    id: id.clone(),
+                    id: info.id.clone(),
                     ty: info.ty.clone(),
                     loc,
                     kind: info.kind,
@@ -284,7 +288,7 @@ impl Env {
     }
 
     /// iternate over all identifiers
-    pub fn iter(&self) -> impl Iterator<Item = (&Identifier, &IdentifierInfo)> {
-        self.table.iter()
+    pub fn iter(&self) -> impl Iterator<Item = &IdentifierInfo> {
+        self.table.values()
     }
 }
