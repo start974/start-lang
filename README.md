@@ -18,6 +18,7 @@ Fonctional language with proover assistant.
 ## Lsp
 - **diagnostic** of **error**
 - **diagnostic** of **hint** for command which print something
+- **hover** on current file identifiers
 
 ## Language features
 WIP
