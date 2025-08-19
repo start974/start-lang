@@ -1,16 +1,11 @@
-use super::super::error::{ErrorUnexpectedType, ErrorVariableNotFound};
-use super::Documentation;
-use crate::typer::ast::Identifier;
+use super::super::error::{ErrorUnexpectedType};
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
-use std::collections::HashMap;
 
-mod alias;
 mod builtin;
 
-pub use alias::Alias as TypeAlias;
-pub use alias::TypeAliasEnv;
+pub use super::super::env::Alias as TypeAlias;
 pub use builtin::Builtin as TypeBuiltin;
 
 #[derive(Debug, Clone)]
@@ -91,47 +86,5 @@ pub trait Typed {
                 &ty.loc(),
             )))
         }
-    }
-}
-
-// ==========================================================================
-// Type Environment
-// ==========================================================================
-#[derive(Debug, Default)]
-pub struct TypeEnv {
-    env: HashMap<Identifier, Type>,
-    doc: HashMap<Identifier, Documentation>,
-}
-
-impl TypeEnv {
-    /// insert a type into the environment
-    pub fn add(&mut self, name: Identifier, ty: Type) {
-        if self.env.insert(name.clone(), ty).is_some() {
-            panic!("Identifier {name:#?} already exists in environment")
-        }
-    }
-
-    /// Get type of identifier
-    pub fn get(
-        &self,
-        identifier: &Identifier,
-        loc: Location,
-    ) -> Result<&Type, ErrorVariableNotFound> {
-        self.env
-            .get(identifier)
-            .ok_or_else(|| ErrorVariableNotFound::new(identifier.clone(), loc))
-    }
-
-    /// add documentation for an identifier
-    pub fn add_doc(&mut self, identifier: Identifier, doc: Documentation) {
-        let name = identifier.name().to_string();
-        if self.doc.insert(identifier, doc).is_some() {
-            panic!("Identifier \"{name}\"already has documentation");
-        }
-    }
-
-    /// get documentation for an identifier
-    pub fn get_doc(&self, identifier: &Identifier) -> Option<&Documentation> {
-        self.doc.get(identifier)
     }
 }

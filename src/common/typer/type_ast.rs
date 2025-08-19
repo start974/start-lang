@@ -1,14 +1,15 @@
 use super::ast::{self, Typed as _};
+use super::env::Env;
 use super::error::Error;
+use crate::lexer::Meta;
 use crate::parser::cst::{self, AsCharacter as _, AsIdentifier as _, AsNumber as _};
 use crate::utils::error::ResultExt as _;
 use crate::utils::location::{Located as _, LocatedSet};
 
 #[derive(Debug, Default)]
 pub struct Typer {
-    var_env: ast::VariableEnv,
-    ty_env: ast::TypeAliasEnv,
     id_builder: ast::IdentifierBuilder,
+    env: Env,
 }
 
 type Result<T, E = Vec<Error>> = std::result::Result<T, E>;
@@ -23,12 +24,22 @@ impl Typer {
         match constant {
             cst::Constant::Number(n) => ast::Constant::nat(n.as_number().clone()),
             cst::Constant::Character(c) => ast::Constant::character(c.as_character()),
+            cst::Constant::Builtin(Meta { value: builtin, .. }) => {
+                use cst::constant::BuiltinT;
+                match builtin {
+                    BuiltinT::True => ast::Constant::boolean(true),
+                    BuiltinT::False => ast::Constant::boolean(false),
+                }
+            }
         }
         .with_loc(constant)
     }
 
     /// convert expression0
-    fn expression0(&self, expression: &cst::expression::Expression0) -> Result<ast::Expression> {
+    fn expression0(
+        &mut self,
+        expression: &cst::expression::Expression0,
+    ) -> Result<ast::Expression> {
         use cst::expression::Expression0;
         match expression {
             Expression0::Constant(c) => {
@@ -36,19 +47,24 @@ impl Typer {
                 Ok(ast::Expression::Constant(c_ty))
             }
             Expression0::Variable(var) => {
-                let var_name = var.name();
-                let id = self.id_builder.get(var_name);
-                self.var_env
-                    .get(&id, var.loc())
+                let loc = var.loc();
+                let id = self.id_builder.get(var.name());
+                let var = self
+                    .env
+                    .get_expr_var(&id, loc.clone())
                     .map_err(Error::from)
-                    .map_err(to_errs)
+                    .map_err(to_errs)?;
+                Ok(ast::Expression::Variable(var))
             }
             Expression0::Paren(expr) => self.expression(expr.inner()),
         }
     }
 
     /// convert expression1
-    fn expression1(&self, expression: &cst::expression::Expression1) -> Result<ast::Expression> {
+    fn expression1(
+        &mut self,
+        expression: &cst::expression::Expression1,
+    ) -> Result<ast::Expression> {
         use cst::expression::Expression1;
         match expression {
             Expression1::TypedExpression { expr, ty, .. } => {
@@ -66,21 +82,35 @@ impl Typer {
     }
 
     /// convert expression1
-    pub fn expression(&self, expression: &cst::expression::Expression) -> Result<ast::Expression> {
+    pub fn expression(
+        &mut self,
+        expression: &cst::expression::Expression,
+    ) -> Result<ast::Expression> {
         self.expression1(expression)
             .map(|expr_ast| expr_ast.with_loc(expression))
     }
 
     /// convert type
-    pub fn ty(&self, ty: &cst::Type) -> Result<ast::Type> {
+    pub fn ty(&mut self, ty: &cst::Type) -> Result<ast::Type> {
         match ty {
+            cst::Type::Builtin(Meta { value: builtin, .. }) => {
+                use cst::ty::BuiltinT;
+                let builtin = match builtin {
+                    BuiltinT::Nat => ast::TypeBuiltin::nat(),
+                    BuiltinT::Bool => ast::TypeBuiltin::bool(),
+                    BuiltinT::Char => ast::TypeBuiltin::char(),
+                };
+                Ok(ast::Type::Builtin(builtin))
+            }
             cst::Type::Variable(ty_var) => {
-                let name = ty_var.name();
-                let id = self.id_builder.get(name);
-                self.ty_env
-                    .get(&id, ty_var.loc())
+                let loc = ty_var.loc();
+                let id = self.id_builder.get(ty_var.name());
+                let alias = self
+                    .env
+                    .get_alias_ty(&id, loc.clone())
                     .map_err(Error::from)
-                    .map_err(to_errs)
+                    .map_err(to_errs)?;
+                Ok(ast::Type::Alias(alias))
             }
         }
         .map(|ast_ty| ast_ty.with_loc(ty))
@@ -91,7 +121,7 @@ impl Typer {
         match pattern {
             Pattern::Variable(var) => {
                 let id = self.id_builder.build(var.name());
-                self.var_env.add(id.clone(), ty.clone());
+                self.env.add_expr_def(id.clone(), ty.clone(), var.loc());
                 let pattern_var = ast::PatternVar::from(id).with_loc(var);
                 Ok(ast::Pattern::Variable(pattern_var))
             }
@@ -131,12 +161,12 @@ impl Typer {
     pub fn definition(
         &mut self,
         definition: &cst::ExpressionDefinition,
-        doc: Option<ast::Documentation>,
+        doc_opt: Option<ast::Documentation>,
     ) -> Result<ast::ExpressionDefinition> {
         let expr_def = self.expression_definition(definition)?;
-        if let Some(doc) = doc {
-            for name in expr_def.pattern().names() {
-                self.var_env.add_doc(name.clone(), doc.clone());
+        if let Some(doc) = doc_opt {
+            for id in expr_def.pattern().names() {
+                self.env.set_doc(id, doc.clone());
             }
         }
         Ok(expr_def)
@@ -148,44 +178,22 @@ impl Typer {
         definition: &cst::TypeDefinition,
         doc: Option<ast::Documentation>,
     ) -> Result<()> {
-        let name_parse = &definition.name;
-        let id = self.id_builder.build(name_parse.name());
+        let id = self.id_builder.build(definition.name.name());
         let ty = self.ty(&definition.ty)?;
+        self.env
+            .add_type_def(id.clone(), ty.clone(), definition.loc());
         if let Some(doc) = doc {
-            self.ty_env.add_doc(id.clone(), doc);
+            self.env.set_doc(&id, doc.clone());
         }
-        self.ty_env.add(id, ty.clone());
         Ok(())
     }
 
     /// convert help variable
-    pub fn help(&self, var: &cst::help::Variable) -> Result<ast::Help> {
-        let name = var.name();
-        let id = self.id_builder.get(name);
-        let res_var = self
-            .var_env
-            .get(&id, var.loc())
-            .map(|e| ast::Help {
-                var: id.clone(),
-                loc: var.loc(),
-                info: ast::HelpInfo::Expression(e.ty().clone()),
-                doc: self.var_env.get_doc(&id).cloned(),
-            })
+    pub fn help(&mut self, var: &cst::help::Variable) -> Result<ast::Help> {
+        let id = self.id_builder.get(var.name());
+        self.env
+            .get_help(&id, var.loc())
             .map_err(Error::from)
-            .map_err(to_errs);
-
-        let res_ty = self
-            .ty_env
-            .get(&id, var.loc())
-            .map(|ty| ast::Help {
-                var: id.clone(),
-                loc: var.loc(),
-                info: ast::HelpInfo::Type(ty.clone()),
-                doc: self.ty_env.get_doc(&id).cloned(),
-            })
-            .map_err(Error::from)
-            .map_err(to_errs);
-
-        res_var.or(res_ty)
+            .map_err(to_errs)
     }
 }

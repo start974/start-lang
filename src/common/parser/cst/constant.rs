@@ -56,13 +56,40 @@ impl Pretty for CharacterT {
 }
 
 // ============================================================================
+// Builtin
+// ============================================================================
+#[derive(Debug, Clone)]
+pub enum BuiltinT {
+    True,
+    False,
+}
+
+impl Pretty for BuiltinT {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        match self {
+            BuiltinT::True => theme.expr_var(&"__Constant_true__"),
+            BuiltinT::False => theme.expr_var(&"__Constant_false__"),
+        }
+    }
+}
+
+pub type Builtin = Meta<BuiltinT>;
+
+// ============================================================================
 // Constant
 // ============================================================================
 
 #[derive(Debug, Clone)]
 pub enum Constant {
+    Builtin(Builtin),
     Number(Number),
     Character(Character),
+}
+
+impl From<Builtin> for Constant {
+    fn from(value: Builtin) -> Self {
+        Constant::Builtin(value)
+    }
 }
 
 impl From<Number> for Constant {
@@ -82,6 +109,7 @@ impl Located for Constant {
         match self {
             Constant::Number(n) => n.loc(),
             Constant::Character(c) => c.loc(),
+            Constant::Builtin(b) => b.loc(),
         }
     }
 }
@@ -91,6 +119,7 @@ impl Pretty for Constant {
         match self {
             Constant::Number(n) => n.pretty(theme),
             Constant::Character(c) => c.pretty(theme),
+            Constant::Builtin(b) => b.pretty(theme),
         }
     }
 }

@@ -57,16 +57,26 @@ pub fn constant<'tokens, I>() -> impl Parser<'tokens, I, cst::Constant, ErrorChu
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
+    use cst::constant::{BuiltinT, CharacterT, Constant, NumberT};
     let number = select! {ref meta @ Meta{ value: Token::Number(ref n), ..} =>
-            meta.clone().map(|_| cst::constant::NumberT::from(n.clone()))
+            meta.clone().map(|_| NumberT::from(n.clone()))
     }
-    .map(cst::Constant::from);
+    .map(Constant::from);
+
+    let builtin = select! {
+        ref meta @ Meta{ value: Token::Identifier(ref b), ..} if b == "__Constant_true__" =>
+            meta.clone().map(|_| BuiltinT::True),
+        ref meta @ Meta{ value: Token::Identifier(ref b), ..} if b == "__Constant_false__" =>
+            meta.clone().map(|_| BuiltinT::False)
+    }
+    .map(Constant::from);
 
     let character = select! {ref meta @ Meta{ value: Token::Character(ref c), ..} =>
-    meta.clone().map(|_| cst::constant::CharacterT::from(*c))}
-    .map(cst::Constant::from);
+        meta.clone().map(|_| CharacterT::from(*c))
+    }
+    .map(Constant::from);
 
-    choice((number, character)).labelled("constant")
+    choice((builtin, number, character)).labelled("constant")
 }
 
 /// parse variable
@@ -87,8 +97,8 @@ where
 /// parse expression0
 /// ```ebfn
 /// expression0 :=
-/// | variable
 /// | constant
+/// | variable
 /// | "(" expression ")"
 ///```
 fn expression0<'tokens, I>(
@@ -100,8 +110,8 @@ where
     use cst::expression::Expression0;
     use cst::parenthesis::Parenthesed;
 
-    let variable = variable().map(Expression0::Variable);
     let constant = constant().map(Expression0::Constant);
+    let variable = variable().map(Expression0::Variable);
     let parens = {
         let l_paren = operator(Operator::LParen, cst::operator::LParenT()).labelled("(");
         let r_paren = operator(Operator::RParen, cst::operator::RParenT()).labelled(")");
@@ -112,7 +122,7 @@ where
             .map(Expression0::Paren)
     };
 
-    choice((variable, constant, parens))
+    choice((constant, variable, parens))
 }
 
 /// parse expression1
@@ -209,6 +219,24 @@ where
     .labelled("type variable")
 }
 
+/// parse type builtin
+pub fn ty_builtin<'tokens, I>() -> impl Parser<'tokens, I, cst::ty::Builtin, ErrorChumsky<'tokens>>
+where
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+{
+    select! {
+        ref meta @ Meta{ value: Token::Identifier(ref s), ..} if s == "__Type_Nat__" =>
+            meta.clone().map(|_| cst::ty::BuiltinT::Nat),
+
+        ref meta @ Meta{ value: Token::Identifier(ref s), ..} if s == "__Type_Bool__" =>
+            meta.clone().map(|_| cst::ty::BuiltinT::Bool),
+
+        ref meta @ Meta{ value: Token::Identifier(ref s), ..} if s == "__Type_Char__" =>
+            meta.clone().map(|_| cst::ty::BuiltinT::Char),
+    }
+    .labelled("builtin variable")
+}
+
 /// parse type
 /// ```ebfn
 /// type :=
@@ -218,9 +246,10 @@ pub fn ty<'tokens, I>() -> impl Parser<'tokens, I, cst::Type, ErrorChumsky<'toke
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
+    let builtin = ty_builtin().map(cst::Type::Builtin);
     let var = ty_variable().map(cst::Type::Variable);
 
-    var.labelled("type")
+    choice((builtin, var)).labelled("type")
 }
 
 /// parse type definition
