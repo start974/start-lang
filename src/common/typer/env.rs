@@ -143,7 +143,6 @@ pub struct Help {
     doc: Option<Documentation>,
 }
 
-
 impl Pretty for Help {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         let doc_ty = match &self.kind {
@@ -151,15 +150,13 @@ impl Pretty for Help {
                 .append(theme.operator(&":"))
                 .append(Doc::softline())
                 .append(self.ty.pretty(theme).group()),
-            IdentifierKind::Type => {
-                match &self.ty {
-                    Type::Builtin(_) => theme.comment(&"(builtin)"),
-                    ty => Doc::nil()
-                        .append(theme.operator(&":="))
-                        .append(Doc::softline())
-                        .append(ty.pretty(theme).group()),
-                }
-            }
+            IdentifierKind::Type => match &self.ty {
+                Type::Builtin(_) => theme.comment(&"(builtin)"),
+                ty => Doc::nil()
+                    .append(theme.operator(&":="))
+                    .append(Doc::softline())
+                    .append(ty.pretty(theme).group()),
+            },
         };
 
         let documentation = match &self.doc {
@@ -270,20 +267,14 @@ impl Env {
         loc: Location,
     ) -> Result<Help, ErrorVariableNotFound> {
         match self.table.get(id) {
-            Some(info) => {
-                Ok(Help {
-                    id: info.id.clone(),
-                    ty: info.ty.clone(),
-                    loc,
-                    kind: info.kind,
-                    doc: info.doc.clone(),
-                })
-            }
-            None => Err(ErrorVariableNotFound::new(
-                id.clone(),
-                None,
+            Some(info) => Ok(Help {
+                id: info.id.clone(),
+                ty: info.ty.clone(),
                 loc,
-            )),
+                kind: info.kind,
+                doc: info.doc.clone(),
+            }),
+            None => Err(ErrorVariableNotFound::new(id.clone(), None, loc)),
         }
     }
 

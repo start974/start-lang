@@ -3,13 +3,12 @@ use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
 
-
 mod constant;
 mod definition;
 
+pub use super::super::env::Variable as ExpressionVariable;
 pub use constant::{Constant, ConstantKind};
 pub use definition::Definition as ExpressionDefinition;
-pub use super::super::env::Variable as ExpressionVariable;
 
 // ==========================================================================
 // Expression

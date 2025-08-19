@@ -1,3 +1,4 @@
+use crate::typer::ast::Identifier;
 use crate::typer::env::IdentifierKind;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
@@ -6,8 +7,20 @@ use tower_lsp::lsp_types::{Hover, HoverContents, MarkedString, Position, Range};
 // ===========================================================================
 // Symbol
 // ===========================================================================
-pub type Symbol = Arc<String>;
+pub type Symbol = Arc<Identifier>;
 
+// ===========================================================================
+// Symbol Range
+// ===========================================================================
+#[derive(Debug, Clone)]
+struct SymbolRange {
+    /// start character
+    start: u32,
+    /// end character
+    end: u32,
+    /// symbol
+    symbol: Symbol,
+}
 // ===========================================================================
 // Symbol Information
 // ===========================================================================
@@ -26,12 +39,14 @@ pub struct SymbolInfo {
     pub refs_range: Vec<Range>,
 }
 
+
+
 #[derive(Debug, Clone, Default)]
 pub struct Document {
     /// symbol information
     symbols: HashMap<Symbol, SymbolInfo>,
-    /// range table for quick access (line -> char_start, char_end, symbol)
-    range_table: BTreeMap<u32, BTreeMap<(u32, u32), Symbol>>,
+    /// range table for quick access `(line -> (char_start, char_end -> symbol)`
+    range_table: BTreeMap<u32, Vec<SymbolRange>>,
 }
 
 impl Document {
@@ -41,12 +56,13 @@ impl Document {
             "location must be on the same line"
         );
         let line = range.start.line;
-        let char_start = range.start.character;
-        let char_end = range.end.character;
-        self.range_table
-            .entry(line)
-            .or_default()
-            .insert((char_start, char_end), symbol.clone());
+        let start = range.start.character;
+        let end = range.end.character;
+        let range = self.range_table.entry(line).or_default();
+        let idx = range
+            .binary_search_by(|range| range.start.cmp(&start))
+            .unwrap_or_else(|x| x);
+        range.insert(idx, SymbolRange { start, end, symbol });
     }
 
     /// add a symbol information
@@ -66,28 +82,16 @@ impl Document {
         );
     }
 
-    fn get_symbol_at_position(&self, position: &Position) -> Option<(Symbol, Range)> {
-        use std::ops::Bound;
-        let line = position.line;
-        let character = position.character;
-        let line_map = self.range_table.get(&line)?;
-        let bound = Bound::Included((character, character));
-        dbg!(bound);
-        let mut iter = line_map.range((Bound::Unbounded, Bound::Included(&(character, u32::MAX))));
-        let (&(start_char, end_char), symbol) = iter.next_back()?;
-        if character >= start_char && character < end_char
-        {
-            let range = Range {
-                start: Position {
-                    line,
-                    character: start_char,
-                },
-                end: Position {
-                    line,
-                    character: end_char,
-                },
-            };
-            Some((symbol.clone(), range))
+    fn get_symbol_at_position(&self, position: &Position) -> Option<&SymbolRange> {
+        let spans = self.range_table.get(&position.line)?;
+        let idx = match spans.binary_search_by(|range| range.start.cmp(&position.character)) {
+            Ok(i) => i,            // start == position.charater
+            Err(0) => return None, // position.character not in any ranges
+            Err(i) => i - 1,       // start < position.character
+        };
+        let range = &spans[idx];
+        if position.character <= range.end {
+            Some(range)
         } else {
             None
         }
@@ -95,10 +99,18 @@ impl Document {
 
     /// get hover information on position
     pub fn get_hover(&self, position: &Position) -> Option<Hover> {
-        let (symbol, range) = self.get_symbol_at_position(position)?;
-        let symbol_info = self.symbols.get(&symbol)?;
-        let ty_string =
-            MarkedString::from_language_code("startlang".to_string(), symbol_info.ty.clone());
+        let range = self.get_symbol_at_position(position)?;
+        let symbol_info = self.symbols.get(&range.symbol)?;
+        let ty_string = {
+            let op = match symbol_info.kind {
+                IdentifierKind::Expr => ":",
+                IdentifierKind::Type => ":=",
+            };
+            MarkedString::from_language_code(
+                "startlang".to_string(),
+                format!("{} {} {}", range.symbol.name(), op, symbol_info.ty.clone()),
+            )
+        };
         let contents = match &symbol_info.doc {
             Some(doc) => {
                 let sep = MarkedString::from_markdown("-----".to_string());
@@ -108,7 +120,16 @@ impl Document {
         };
         Some(Hover {
             contents,
-            range: Some(range),
+            range: Some(Range {
+                start: Position {
+                    line: position.line,
+                    character: range.start,
+                },
+                end: Position {
+                    line: position.line,
+                    character: range.end,
+                },
+            }),
         })
     }
 }
@@ -117,18 +138,22 @@ impl Document {
 mod tests {
     use super::*;
     use tower_lsp::lsp_types::{MarkedString, Position, Range};
+    use crate::typer::ast::{IdentifierBuilder};
 
     #[test]
     fn test_document_hover() {
         let mut doc = Document::default();
-        let symbol = Arc::new("myVar".to_string());
+        let id_builder = IdentifierBuilder::default();
+        let id = id_builder.get("var");
+        let symbol = Arc::new(id.as_ref().clone());
+
         let symbol_info = SymbolInfo {
             symbol: symbol.clone(),
             doc: Some(MarkedString::from_markdown(
                 "This is my variable".to_string(),
             )),
             kind: IdentifierKind::Expr,
-            ty: "Int".to_string(),
+            ty: "Nat".to_string(),
             def_range: Range {
                 start: Position {
                     line: 0,
@@ -151,18 +176,16 @@ mod tests {
             }],
         };
         doc.add_symbol(symbol_info);
-        dbg!(&doc);
 
         let hover = doc.get_hover(&Position {
             line: 0,
             character: 2,
         });
-        dbg!(&hover);
         let hover = hover.unwrap();
         assert_eq!(
             hover.contents,
             HoverContents::Array(vec![
-                MarkedString::from_language_code("startlang".to_string(), "Int".to_string()),
+                MarkedString::from_language_code("startlang".to_string(), "var : Nat".to_string()),
                 MarkedString::from_markdown("-----".to_string()),
                 MarkedString::from_markdown("This is my variable".to_string()),
             ])

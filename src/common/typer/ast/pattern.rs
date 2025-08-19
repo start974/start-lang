@@ -1,8 +1,8 @@
-use std::rc::Rc;
 use crate::typer::ast::Identifier;
 use crate::utils::location::{Located, LocatedSet, Location};
 use crate::utils::pretty::Pretty;
 use crate::utils::theme::{Doc, Theme};
+use std::rc::Rc;
 
 // ==========================================================================
 // Pattern Variable
