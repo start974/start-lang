@@ -181,15 +181,18 @@ pub trait Interpreter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::MetaToken> {
-        let source_id = self.source_id();
-        match lexer::lex(source_id.clone(), offset_source, content) {
-            Ok(tokens) => tokens,
-            Err(errs) => {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Option<Vec<lexer::MetaToken>> {
+        let mut lexer = lexer::Lexer::new(self.source_id().clone());
+        lexer.set_offset(offset_source);
+        lexer.add_content(content);
+        match lexer.run() {
+            Some(Ok(tokens)) => Some(tokens),
+            None => None,
+            Some(Err(errs)) => {
                 for err in errs {
                     self.fail(err);
                 }
-                Vec::new()
+                None
             }
         }
     }
@@ -224,15 +227,15 @@ pub trait Interpreter {
                 break;
             }
             let offset_source = self.get_offset_source(offset);
-            let tokens = self.lex(content, offset_source);
-            match tokens.last() {
+            match self.lex(content, offset_source) {
                 None => break,
-                Some(last_token) => {
+                Some(tokens) => {
                     self.debug(DebugFlag::Lexer, &tokens);
                     if let Some(cmd) = self.parse(&tokens) {
                         self.debug(DebugFlag::Parser, &cmd);
                         self.run_command(cmd);
                     }
+                    let last_token = tokens.last().unwrap();
                     offset += last_token.loc().end() - offset_source;
                 }
             }

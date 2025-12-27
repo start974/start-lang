@@ -1,5 +1,4 @@
 use super::{comment::Comment, meta::CommentOrLines, token, ErrorChumsky, Meta};
-use crate::utils::location::{Location, SourceId};
 use chumsky::prelude::*;
 use chumsky::text::{newline, whitespace};
 use num_bigint::BigUint;
@@ -34,11 +33,7 @@ pub fn comment<'src>() -> impl Parser<'src, &'src str, Comment, ErrorChumsky<'sr
 // ===========================================================================
 pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, ErrorChumsky<'src>> + Sized {
     /// meta(rule) = (LINE{2,} | WS* COMMENT)* WS* rule
-    fn with_meta(
-        self,
-        source_id: SourceId,
-        offset: usize,
-    ) -> impl Parser<'src, &'src str, Meta<T>, ErrorChumsky<'src>> {
+    fn with_meta(self) -> impl Parser<'src, &'src str, Meta<T, SimpleSpan>, ErrorChumsky<'src>> {
         let lines = newline().repeated().at_least(2).to(CommentOrLines::Lines);
         let comment = whitespace()
             .ignore_then(comment())
@@ -49,11 +44,7 @@ pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, ErrorChumsky<'src>> + Si
             .collect::<Vec<CommentOrLines>>();
 
         // Ajoute la location à la rule
-        let rule_loc = self.map_with(move |value, e| {
-            let span: SimpleSpan = e.span();
-            let loc = Location::new(source_id.clone(), span.start, span.end).with_offset(offset);
-            (value, loc)
-        });
+        let rule_loc = self.map_with(move |value, e| (value, e.span()));
 
         // Consomme les derniers espaces/lignes avant le rule
         meta_items
@@ -288,4 +279,42 @@ pub fn operator<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorCh
         just('(').to(token::Operator::LParen),
         just(')').to(token::Operator::RParen),
     ))
+}
+
+// ===========================================================================
+// End of command (Dot)
+// ===========================================================================
+pub fn dot<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>> {
+    just('.').to(token::Operator::Dot)
+}
+
+// ===========================================================================
+// Lexer
+// ===========================================================================
+
+/// make a lexing with offset to token until "." (end of a command)
+/// return offset rest to lexing
+pub fn lexer<'src>(
+) -> impl Parser<'src, &'src str, Vec<Meta<token::Token, SimpleSpan>>, ErrorChumsky<'src>> {
+    use token::Token;
+
+    let token = choice((
+        operator().map(Token::Operator),
+        identifier().map(Token::Identifier),
+        number().map(Token::Number),
+        character().map(Token::Character),
+    ))
+    .with_meta();
+
+    let token_dot = dot().map(Token::Operator).with_meta().lazy();
+    let token_end = end().to(Token::EndOfInput).with_meta();
+
+    token
+        .repeated()
+        .collect::<Vec<_>>()
+        .then(choice((token_dot, token_end)))
+        .map(move |(mut tokens, end)| {
+            tokens.push(end);
+            tokens
+        })
 }

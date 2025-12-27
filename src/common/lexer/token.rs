@@ -89,7 +89,7 @@ impl Pretty for Token {
     }
 }
 
-pub type MetaToken = Meta<Token>;
+pub type MetaToken = Meta<Token, Location>;
 
 impl Pretty for Vec<MetaToken> {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {

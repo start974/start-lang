@@ -52,15 +52,18 @@ impl Formatter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::token::MetaToken> {
-        let source_id = self.source_id();
-        match lexer::lex(source_id.clone(), offset_source, content) {
-            Ok(tokens) => tokens,
-            Err(errs) => {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Option<Vec<lexer::token::MetaToken>> {
+        let mut lexer = lexer::Lexer::new(self.source_id().clone());
+        lexer.set_offset(offset_source);
+        lexer.add_content(content);
+        match lexer.run() {
+            Some(Ok(tokens)) => Some(tokens),
+            None => None,
+            Some(Err(errs)) => {
                 for err in errs {
                     self.fail(err);
                 }
-                Vec::new()
+                None
             }
         }
     }
@@ -90,10 +93,9 @@ impl Formatter {
             if content.is_empty() {
                 break;
             }
-            let tokens = self.lex(content, offset);
-            match tokens.last() {
+            match self.lex(content, offset) {
                 None => break,
-                Some(last_token) => {
+                Some(tokens) => {
                     match self.parse(&tokens) {
                         None => {
                             break;
@@ -104,6 +106,7 @@ impl Formatter {
                             break;
                         }
                     }
+                    let last_token = tokens.last().unwrap();
                     offset = last_token.loc().end();
                 }
             }

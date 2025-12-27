@@ -1,6 +1,6 @@
-use crate::utils::location::SourceId;
+use crate::utils::location::{Located as _, Location, SourceId};
+use ariadne::Span as _;
 use chumsky::prelude::*;
-use lexing::WithMeta as _;
 
 pub mod comment;
 pub mod error;
@@ -14,53 +14,69 @@ pub use meta::Meta;
 pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, char>>;
 pub use token::MetaToken;
 
-/// make a lexing with offset to token until "." (end of a command)
-/// return offset rest to lexing
-pub fn lexer<'src>(
+pub struct Lexer {
     source_id: SourceId,
+    content: String,
     offset: usize,
-) -> impl Parser<'src, &'src str, Vec<MetaToken>, ErrorChumsky<'src>> {
-    use token::Token;
-
-    let token = choice((
-        lexing::operator().map(Token::Operator),
-        lexing::identifier().map(Token::Identifier),
-        lexing::number().map(Token::Number),
-        lexing::character().map(Token::Character),
-    ))
-    .with_meta(source_id.clone(), offset);
-
-    let token_dot = just('.')
-        .to(Token::Operator(token::Operator::Dot))
-        .with_meta(source_id.clone(), offset)
-        .lazy();
-
-    let token_end = end()
-        .to(Token::EndOfInput)
-        .with_meta(source_id.clone(), offset);
-
-    token
-        .repeated()
-        .collect::<Vec<_>>()
-        .then(choice((token_dot, token_end)))
-        .map(move |(mut tokens, end)| {
-            tokens.push(end);
-            tokens
-        })
 }
 
-/// apply lexer on [source_id] with [offset] on [content]
-pub fn lex<'src>(
-    source_id: SourceId,
-    offset: usize,
-    content: &'src str,
-) -> Result<Vec<MetaToken>, Vec<Error<'src>>> {
-    lexer(source_id.clone(), offset)
-        .parse(content)
-        .into_result()
-        .map_err(|errs| {
-            errs.iter()
-                .map(|e| Error::new(e.clone(), source_id.clone(), offset))
-                .collect()
-        })
+impl Lexer {
+    pub fn new(source_id: SourceId) -> Self {
+        Self {
+            source_id,
+            offset: 0,
+            content: String::new(),
+        }
+    }
+
+    //TODO: remove
+    pub fn set_offset(&mut self, offset: usize) {
+        self.offset = offset;
+    }
+
+    /// feed content to lex
+    pub fn add_content(&mut self, content: &str) {
+        self.content.push_str(content);
+    }
+
+    /// feed content
+    pub fn with_content(mut self, content: &str) -> Self {
+        self.add_content(content);
+        self
+    }
+
+    pub fn run(&mut self) -> Option<Result<Vec<MetaToken>, Vec<Error>>> {
+        if self.content.is_empty() {
+            None
+        } else {
+            let source_id = self.source_id.clone();
+            let offset = self.offset;
+
+            let res: Result<Vec<MetaToken>, Vec<Error>> = lexing::lexer()
+                .parse(&self.content)
+                .into_result()
+                .map(|tokens| {
+                    tokens
+                        .into_iter()
+                        .map(|token| {
+                            token.map_location(|span| {
+                                Location::new(source_id.clone(), span.start, span.end)
+                                    .with_offset(offset)
+                            })
+                        })
+                        .collect()
+                })
+                .map_err(|errs| {
+                    errs.iter()
+                        .map(|e| Error::new(e.clone(), source_id.clone(), offset))
+                        .collect()
+                });
+            if let Ok(tokens) = &res {
+                let last_tokens = tokens.last().unwrap();
+                self.offset = last_tokens.loc().end();
+                self.content = self.content[self.offset - offset..].to_string();
+            };
+            Some(res)
+        }
+    }
 }

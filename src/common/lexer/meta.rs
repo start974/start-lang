@@ -12,14 +12,14 @@ pub enum CommentOrLines {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Meta<T> {
+pub struct Meta<T, Loc = Location> {
     before: Vec<CommentOrLines>,
     pub value: T,
-    loc: Location,
+    loc: Loc,
 }
 
-impl<T> Meta<T> {
-    pub fn new(value: T, loc: Location) -> Self {
+impl<T, Loc> Meta<T, Loc> {
+    pub fn new(value: T, loc: Loc) -> Self {
         Self {
             before: Vec::new(),
             value,
@@ -64,7 +64,7 @@ impl<T> Meta<T> {
     }
 
     /// map value
-    pub fn map<U, F>(self, f: F) -> Meta<U>
+    pub fn map<U, F>(self, f: F) -> Meta<U, Loc>
     where
         F: FnOnce(T) -> U,
     {
@@ -72,6 +72,18 @@ impl<T> Meta<T> {
             value: f(self.value),
             before: self.before,
             loc: self.loc,
+        }
+    }
+
+    /// map location
+    pub fn map_location<Loc2, F>(self, f: F) -> Meta<T, Loc2>
+    where
+        F: FnOnce(Loc) -> Loc2,
+    {
+        Meta {
+            value: self.value,
+            before: self.before,
+            loc: f(self.loc),
         }
     }
 
@@ -128,7 +140,7 @@ impl<T> Meta<T> {
     }
 }
 
-impl<T> std::fmt::Display for Meta<T>
+impl<T, Loc> std::fmt::Display for Meta<T, Loc>
 where
     T: std::fmt::Display,
 {
@@ -137,13 +149,13 @@ where
     }
 }
 
-impl<T> Located for Meta<T> {
+impl<T> Located for Meta<T, Location> {
     fn loc(&self) -> Location {
         self.loc.clone()
     }
 }
 
-impl<T> Pretty for Meta<T>
+impl<T, Loc> Pretty for Meta<T, Loc>
 where
     T: Pretty,
 {
@@ -152,7 +164,7 @@ where
     }
 }
 
-impl<T> AsIdentifier for Meta<T>
+impl<T, Loc> AsIdentifier for Meta<T, Loc>
 where
     T: AsIdentifier,
 {
@@ -161,7 +173,7 @@ where
     }
 }
 
-impl<T> AsNumber for Meta<T>
+impl<T, Loc> AsNumber for Meta<T, Loc>
 where
     T: AsNumber,
 {
@@ -170,7 +182,7 @@ where
     }
 }
 
-impl<T> AsCharacter for Meta<T>
+impl<T, Loc> AsCharacter for Meta<T, Loc>
 where
     T: AsCharacter,
 {
