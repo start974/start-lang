@@ -1,10 +1,12 @@
-use super::{comment::Comment, meta::CommentOrLines, token, ErrorChumsky, Meta};
-use crate::utils::location::{Location, SourceId};
+use crate::token;
 use chumsky::prelude::*;
 use chumsky::text::{newline, whitespace};
+use cst::{Comment, Meta, meta::CommentOrLines};
+use location::{Location, SourceId};
 use num_bigint::BigUint;
 use std::rc::Rc;
 
+pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, char>>;
 // ===========================================================================
 // Commment
 // ===========================================================================
@@ -288,4 +290,42 @@ pub fn operator<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorCh
         just('(').to(token::Operator::LParen),
         just(')').to(token::Operator::RParen),
     ))
+}
+
+// ===========================================================================
+// Lexer
+// ===========================================================================
+/// make a lexing with offset to token until "." (end of a command)
+/// return offset rest to lexing
+pub fn lexer<'src>(
+    source_id: SourceId,
+    offset: usize,
+) -> impl Parser<'src, &'src str, Vec<token::MetaToken>, ErrorChumsky<'src>> {
+    use token::Token;
+
+    let token = choice((
+        operator().map(Token::Operator),
+        identifier().map(Token::Identifier),
+        number().map(Token::Number),
+        character().map(Token::Character),
+    ))
+    .with_meta(source_id.clone(), offset);
+
+    let token_dot = just('.')
+        .to(Token::Operator(token::Operator::Dot))
+        .with_meta(source_id.clone(), offset)
+        .lazy();
+
+    let token_end = end()
+        .to(Token::EndOfInput)
+        .with_meta(source_id.clone(), offset);
+
+    token
+        .repeated()
+        .collect::<Vec<_>>()
+        .then(choice((token_dot, token_end)))
+        .map(move |(mut tokens, end)| {
+            tokens.push(end);
+            tokens
+        })
 }

@@ -1,6 +1,6 @@
-use crate::utils::error::{ErrorCode, ErrorReport, Message};
-use crate::utils::location::{Located, Location, SourceId};
 use chumsky::error::Rich;
+use error::{ErrorCode, ErrorReport, Message};
+use location::{Located, Location, SourceId};
 
 pub struct Error<'src> {
     loc: Location,

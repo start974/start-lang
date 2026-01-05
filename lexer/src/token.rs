@@ -1,12 +1,6 @@
+use cst::Meta;
 use num_bigint::BigUint;
-
-use crate::utils::{
-    location::{Located, Location},
-    pretty::Pretty,
-    theme::{Doc, Theme},
-};
-
-use super::Meta;
+use pp::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Operator {
@@ -90,31 +84,3 @@ impl Pretty for Token {
 }
 
 pub type MetaToken = Meta<Token>;
-
-impl Pretty for Vec<MetaToken> {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        Doc::intersperse(
-            self.iter().map(|token| {
-                Doc::nil()
-                    .append(Doc::text("["))
-                    .append(token.pretty(theme))
-                    .append(Doc::text("]"))
-            }),
-            Doc::line(),
-        )
-    }
-}
-
-impl Located for Vec<MetaToken> {
-    fn loc(&self) -> Location {
-        if self.is_empty() {
-            Location::unknown()
-        } else if self.len() == 1 {
-            self.first().unwrap().loc()
-        } else {
-            let first = self.first().unwrap().loc();
-            let last = self.last().unwrap().loc();
-            first.union(last)
-        }
-    }
-}
