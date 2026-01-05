@@ -1,7 +1,6 @@
-use super::{operator, ty};
-use crate::utils::location::{Located, Location};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
+use crate::{operator, ty};
+use location::{Located, Location};
+use pp::prelude::*;
 
 #[derive(Debug)]
 pub struct TypeDefinition {

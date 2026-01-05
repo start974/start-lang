@@ -1,6 +1,4 @@
-use crate::typer::ast::Documentation;
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
+use pp::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Comment {
@@ -13,15 +11,6 @@ impl Comment {
     pub fn with_is_doc(mut self, is_doc: bool) -> Self {
         self.is_doc = is_doc;
         self
-    }
-
-    /// get documentation content
-    pub fn get_doc(&self) -> Option<Documentation> {
-        if self.is_doc() {
-            Some(Documentation::from(self.content.clone()))
-        } else {
-            None
-        }
     }
 
     /// is doc

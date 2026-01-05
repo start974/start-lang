@@ -1,10 +1,7 @@
-use super::parenthesis::PrettyPrecedence;
-use super::AsIdentifier;
-use super::{operator, parenthesis::Parenthesed, Constant, Type};
-use crate::lexer::meta::Meta;
-use crate::utils::location::{Located, Location};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
+use super::{Constant, Type, operator, parenthesis::Parenthesed};
+use crate::{AsIdentifier, Meta};
+use location::{Located, Location};
+use pp::{prelude::*, pretty::PrettyPrecedence};
 
 // ============================================================================
 // Variable
