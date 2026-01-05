@@ -1,0 +1,9 @@
+[package]
+name = "cst"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+pp = { path = "../pp" }
+location = { path = "../location" }
+num-bigint = "0.4.6"

@@ -1,7 +1,6 @@
 use super::AsIdentifier;
-use crate::lexer::Meta;
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
+use crate::Meta;
+use pp::prelude::*;
 
 // ============================================================================
 // Variable

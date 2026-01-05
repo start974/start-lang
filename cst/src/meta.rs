@@ -1,9 +1,7 @@
-use super::comment::Comment;
-use crate::parser::cst::{AsCharacter, AsIdentifier, AsNumber};
-use crate::typer::ast::Documentation;
-use crate::utils::location::{Located, Location};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
+use crate::Comment;
+use crate::{AsCharacter, AsIdentifier, AsNumber};
+use location::{Located, Location};
+use pp::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CommentOrLines {
@@ -116,15 +114,6 @@ impl<T> Meta<T> {
                 _ => Doc::nil(),
             })
             .append(self.value.pretty(theme))
-    }
-
-    /// get documentation content on meta before
-    pub fn get_doc(&self) -> Option<Documentation> {
-        if let Some(CommentOrLines::Comment(comment)) = self.before.last() {
-            comment.get_doc()
-        } else {
-            None
-        }
     }
 }
 

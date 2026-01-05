@@ -1,7 +1,6 @@
-use super::{operator, Expression, Pattern, Type};
-use crate::utils::location::{Located, Location};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
+use super::{Expression, Pattern, Type, operator};
+use location::{Located, Location};
+use pp::prelude::*;
 
 // ============================================================================
 // Optional Type

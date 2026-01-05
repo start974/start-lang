@@ -1,9 +1,6 @@
-use crate::lexer::meta::Meta;
-use crate::utils::location::{Located, Location};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
-
-use super::AsIdentifier;
+use crate::{AsIdentifier, Meta};
+use location::{Located, Location};
+use pp::prelude::*;
 
 // ============================================================================
 // Variable

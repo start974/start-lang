@@ -1,7 +1,6 @@
-use crate::lexer::meta::Meta;
-use crate::utils::location::{Located, Location};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
+use crate::Meta;
+use location::{Located, Location};
+use pp::{prelude::*, pretty::PrettyPrecedence};
 
 // ============================================================================
 // parenthesized
@@ -59,38 +58,5 @@ where
                 .append(doc_val)
                 .append(self.r_paren.pretty_meta(theme))
         }
-    }
-}
-
-// ============================================================================
-// Level of expression
-// ============================================================================
-pub trait PrettyPrecedence {
-    /// get level of type
-    fn precedence(&self) -> u8;
-
-    /// pretty with precedence
-    fn pretty_precedence(&self, min_prec: u8, theme: &Theme) -> Doc<'_>;
-}
-
-impl<T> Pretty for T
-where
-    T: PrettyPrecedence,
-{
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        self.pretty_precedence(self.precedence(), theme)
-    }
-}
-
-impl<T> PrettyPrecedence for Box<T>
-where
-    T: PrettyPrecedence,
-{
-    fn precedence(&self) -> u8 {
-        self.as_ref().precedence()
-    }
-
-    fn pretty_precedence(&self, min_prec: u8, theme: &Theme) -> Doc<'_> {
-        self.as_ref().pretty_precedence(min_prec, theme)
     }
 }

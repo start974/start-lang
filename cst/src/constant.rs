@@ -1,9 +1,8 @@
 use super::{AsCharacter, AsNumber};
-use crate::lexer::meta::Meta;
-use crate::utils::location::{Located, Location};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
+use crate::Meta;
+use location::{Located, Location};
 use num_bigint::BigUint;
+use pp::prelude::*;
 
 // ============================================================================
 // Number

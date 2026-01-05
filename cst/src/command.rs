@@ -1,8 +1,8 @@
-use super::{expression, help, operator, Expression, ExpressionDefinition, TypeDefinition};
-use crate::lexer::meta::Meta;
-use crate::utils::location::{Located, Location};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
+use super::{Expression, ExpressionDefinition, TypeDefinition, expression, help, operator};
+use crate::meta::Meta;
+use location::{Located, Location};
+use pp::pretty::Pretty;
+use pp::theme::{Doc, Theme};
 
 // ============================================================================
 // Definition Keyword

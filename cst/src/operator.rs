@@ -1,6 +1,5 @@
-use crate::lexer::meta::Meta;
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
+use crate::Meta;
+use pp::prelude::*;
 
 // ============================================================================
 // Eq Def
