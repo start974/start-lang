@@ -1,10 +1,8 @@
-use super::location::Report;
-use super::location::{Located, SourceId};
-use super::pretty::StreamColored;
-use super::theme::MessageTheme;
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
 use ariadne::{Cache, Config, IndexType, Label, ReportKind};
+use location::{Located, Report, SourceId};
+use pp::prelude::*;
+use pp::pretty::{Pretty, StreamColored};
+use pp::theme::MessageTheme;
 use std::fmt::Display;
 
 // ===========================================================================

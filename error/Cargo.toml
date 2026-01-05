@@ -1,0 +1,9 @@
+[package]
+name = "error"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+pp = {path = "../pp"}
+location = {path = "../location"}
+ariadne = { version = "0.5.1", features = ["auto-color"] }
