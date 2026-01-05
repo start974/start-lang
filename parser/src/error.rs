@@ -1,8 +1,8 @@
-use crate::lexer::token::Token;
-use crate::lexer::MetaToken;
-use crate::utils::error::{ErrorCode, ErrorReport, Message};
-use crate::utils::location::{Located, Location, SourceId};
 use chumsky::error::{Rich, RichPattern};
+use error::{ErrorCode, ErrorReport, Message};
+use lexer::MetaToken;
+use lexer::token::Token;
+use location::{Located, Location, SourceId};
 
 pub struct Error {
     loc: Location,
