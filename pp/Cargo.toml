@@ -1,0 +1,10 @@
+[package]
+name = "pp"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+pretty = "0.12.4"
+colored = "3.0.0"
+ariadne = { version = "0.5.1", features = ["auto-color"] }
+num-bigint = "0.4.6"
