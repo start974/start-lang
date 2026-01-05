@@ -1,0 +1,15 @@
+[package]
+name = "parser"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+location = {path = "../location"}
+pp = {path = "../pp"}
+error = {path = "../error"}
+cst = {path = "../cst"}
+lexer = {path = "../lexer"}
+
+chumsky = "0.10.1"
+num-bigint = "0.4.6"
+
