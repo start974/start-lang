@@ -39,19 +39,19 @@ impl ErrorReport for Error<'_> {
     fn text(&self) -> Option<Message> {
         let mut msg = Message::nil();
         if self.err.expected().len() == 1 {
-            msg.add_text("Lexer expected ");
+            msg = msg.with_text("Lexer expected ");
             let expect_str = self.err.expected().next().unwrap().to_string();
-            msg.extend(Message::quoted(expect_str));
+            msg = msg.append(Message::quoted(expect_str));
             if self.err.found().is_some() {
-                msg.add_text(", found ")
+                msg = msg.with_text(", found ")
             }
         } else {
-            msg.add_text("Lexer unknow token ");
+            msg = msg.with_text("Lexer unknow token ");
         };
         if let Some(found) = self.err.found() {
-            msg.extend(Message::quoted(found.to_string().escape_default()).important());
+            msg = msg.append(Message::quoted(found.to_string().escape_default()).important());
         }
-        msg.add_text(".");
+        msg = msg.with_text(".");
         Some(msg)
     }
 }
