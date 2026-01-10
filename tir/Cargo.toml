@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 location = { path = "../location" }
 pp = {path = "../pp" }
-error = { path = "../error" }
+errors = { path = "../errors" }
 cst = { path = "../cst" }
 
 num-bigint = "0.4.6"

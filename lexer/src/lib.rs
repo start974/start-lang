@@ -1,9 +1,10 @@
+use chumsky::Parser as _;
+use error::Errors;
+
 pub mod error;
 pub mod lexing;
 pub mod token;
 
-use chumsky::Parser as _;
-pub use error::Error;
 pub use location::SourceId;
 pub use token::MetaToken;
 pub use token::MetaTokenStream;
@@ -15,14 +16,14 @@ pub fn lex<'src>(
     source_id: SourceId,
     offset: usize,
     content: &'src str,
-) -> Result<MetaTokenStream, Vec<Error<'src>>> {
+) -> Result<MetaTokenStream, Errors> {
     lexer(source_id.clone(), offset)
         .parse(content)
         .into_result()
         .map(MetaTokenStream::from)
         .map_err(|errs| {
             errs.iter()
-                .map(|e| Error::new(e.clone(), source_id.clone(), offset))
+                .map(|e| error::error_lexing(e.clone(), source_id.clone(), offset))
                 .collect()
         })
 }

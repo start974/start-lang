@@ -5,6 +5,6 @@ edition = "2024"
 
 [dependencies]
 cst = { path = "../cst" }
-tir = { path = "../tir" }
-error = { path = "../error" }
+errors = { path = "../errors" }
 location = { path = "../location" }
+tir = { path = "../tir" }

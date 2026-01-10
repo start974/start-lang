@@ -43,3 +43,11 @@ impl From<Error> for Errors {
         Self { errs: vec![e] }
     }
 }
+
+impl FromIterator<Error> for Errors {
+    fn from_iter<T: IntoIterator<Item = Error>>(iter: T) -> Self {
+        Self {
+            errs: iter.into_iter().collect(),
+        }
+    }
+}
