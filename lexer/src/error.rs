@@ -1,5 +1,5 @@
 use chumsky::error::Rich;
-use error::{Error, Message};
+use errors::{Error, Message};
 use location::{Location, SourceId};
 
 pub fn error_lexing<'src>(err: Rich<'src, char>, source_id: SourceId, offset: usize) -> Error {

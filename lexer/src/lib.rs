@@ -1,5 +1,5 @@
 use chumsky::Parser as _;
-use error::Errors;
+use errors::Errors;
 
 pub mod error;
 pub mod lexing;
@@ -12,11 +12,7 @@ pub use token::MetaTokenStream;
 pub use lexing::lexer;
 
 /// apply lexer on [source_id] with [offset] on [content]
-pub fn lex<'src>(
-    source_id: SourceId,
-    offset: usize,
-    content: &'src str,
-) -> Result<MetaTokenStream, Errors> {
+pub fn lex(source_id: SourceId, offset: usize, content: &str) -> Result<MetaTokenStream, Errors> {
     lexer(source_id.clone(), offset)
         .parse(content)
         .into_result()
