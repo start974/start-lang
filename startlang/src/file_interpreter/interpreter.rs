@@ -3,12 +3,11 @@ use crate::interpreter;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use crate::interpreter::Interpreter as _;
-use crate::typer::Typer;
-use crate::utils::error::{ErrorPrint as _, ErrorReport};
-use crate::utils::location::SourceId;
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::Theme;
-use crate::vm;
+use typing::Typer;
+use error::{ErrorPrint as _, ErrorReport};
+use location::SourceId;
+use pp::pretty::Pretty;
+use pp::theme::Theme;
 use ariadne::Source;
 use std::fs::read_to_string;
 use std::path::Path;
@@ -105,7 +104,7 @@ impl interpreter::Interpreter for Interpreter {
         }
     }
 
-    fn print_summay(&self, _: &crate::typer::ast::ExpressionDefinition) {}
+    fn print_summay(&self, _: &tir::ExpressionDefinition) {}
 
     fn eprint<E>(&mut self, error: &E)
     where

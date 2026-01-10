@@ -7,5 +7,6 @@ edition = "2024"
 location = { path = "../location" }
 pp = {path = "../pp" }
 error = { path = "../error" }
+cst = { path = "../cst" }
 
 num-bigint = "0.4.6"

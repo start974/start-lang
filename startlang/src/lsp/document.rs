@@ -1,5 +1,5 @@
-use crate::typer::ast::Identifier;
-use crate::typer::env::IdentifierKind;
+use tir::Identifier;
+use tir::env::IdentifierKind;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 use tower_lsp::lsp_types::{Hover, HoverContents, MarkedString, Position, Range};
@@ -135,7 +135,7 @@ impl Document {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::typer::ast::IdentifierBuilder;
+    use tir::IdentifierBuilder;
     use tower_lsp::lsp_types::{MarkedString, Position, Range};
 
     #[test]

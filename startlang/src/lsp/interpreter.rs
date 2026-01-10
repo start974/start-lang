@@ -4,12 +4,11 @@ use super::position_memo::PositionMemo;
 use crate::interpreter::flag::{DebugFlag, Flag};
 use crate::interpreter::{self, Interpreter as _};
 use crate::lsp::document::SymbolInfo;
-use crate::typer::Typer;
-use crate::utils::error::{ErrorCode, ErrorReport};
-use crate::utils::location::{Located, SourceId};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{MessageTheme, Theme};
-use crate::vm;
+use typing::Typer;
+use error::{ErrorCode, ErrorReport};
+use location::{Located, SourceId};
+use pp::pretty::Pretty;
+use pp::theme::{MessageTheme, Theme};
 use ariadne::Span as _;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -165,7 +164,7 @@ impl interpreter::Interpreter for Interpreter {
         self.diagnostics.push(diag);
     }
 
-    fn print_summay(&self, _: &crate::typer::ast::ExpressionDefinition) {}
+    fn print_summay(&self, _: &tir::ExpressionDefinition) {}
 
     fn eprint<E>(&mut self, err: &E)
     where

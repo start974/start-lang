@@ -1,5 +1,5 @@
-use crate::utils::error::{ErrorCode, ErrorReport, Message};
-use crate::utils::location::{Located, Location};
+use error::{ErrorCode, ErrorReport, Message};
+use location::{Located, Location};
 use std::path::PathBuf;
 
 // ===========================================================================

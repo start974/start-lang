@@ -1,6 +1,5 @@
-use crate::typer::ast::{ExpressionDefinition, Pattern, Typed};
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::{Doc, Theme};
+use tir::{ExpressionDefinition, Pattern, Typed};
+use pp::prelude::*;
 
 pub struct SummaryDefinition<'a>(&'a ExpressionDefinition);
 

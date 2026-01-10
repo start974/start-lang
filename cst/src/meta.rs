@@ -1,5 +1,5 @@
-use crate::Comment;
 use crate::{AsCharacter, AsIdentifier, AsNumber};
+use crate::{Comment, Documentation};
 use location::{Located, Location};
 use pp::prelude::*;
 
@@ -59,6 +59,17 @@ impl<T> Meta<T> {
         self.before
             .iter()
             .any(|item| matches!(item, CommentOrLines::Comment(_)))
+    }
+
+    /// get doctumentation if exist
+    pub fn get_doc(&self) -> Option<Documentation> {
+        self.before.last().and_then(|col| {
+            if let CommentOrLines::Comment(c) = col {
+                c.to_doc()
+            } else {
+                None
+            }
+        })
     }
 
     /// map value

@@ -6,7 +6,7 @@ members = [
   "lexer",
   "location",
   "parser",
-  "pp",
+  "pp", "startlang",
   "tir",
   "typing"
 , "vm"]

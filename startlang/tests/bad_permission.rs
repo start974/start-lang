@@ -1,4 +1,4 @@
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 use std::fs::{self, File};
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
@@ -19,8 +19,7 @@ where
     perms.set_mode(perm);
     fs::set_permissions(&path, perms.clone()).unwrap();
 
-    let output = Command::cargo_bin("startlang")
-        .unwrap()
+    let output = cargo_bin_cmd!("startlang")
         .args(f_args(path_str))
         .output();
 
