@@ -1,6 +1,6 @@
 use crate::message::Message;
-use ariadne::{Config, IndexType, Label, ReportKind};
-use location::{Located, Location, Report};
+use ariadne::{Cache, Config, IndexType, Label, ReportKind};
+use location::{Located, Location, Report, SourceId};
 use pp::theme::Theme;
 
 pub struct Error {
@@ -23,16 +23,23 @@ impl Error {
         }
     }
 
+    pub fn code(&self) -> i32 {
+        self.code
+    }
+
+    /// add location to error
     pub fn with_location(mut self, loc: Location) -> Self {
         self.location = loc;
         self
     }
 
+    /// add text to error
     pub fn with_text(mut self, text: Message) -> Self {
         self.text = Some(text);
         self
     }
 
+    /// add note to error
     pub fn with_note(mut self, note: Message) -> Self {
         self.note = Some(note);
         self
@@ -57,6 +64,11 @@ impl Error {
             report_builder.add_note(note.make_string(&theme.error.note));
         }
         report_builder.finish()
+    }
+
+    /// print error on stderr
+    pub fn eprint(&self, theme: &Theme, cache: &mut impl Cache<SourceId>) {
+        self.report(theme).eprint(cache).unwrap();
     }
 }
 

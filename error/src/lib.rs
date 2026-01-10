@@ -3,31 +3,32 @@ use location::{Located, Report, SourceId};
 use pp::theme::Theme;
 
 mod error;
+mod errors;
 mod message;
-mod result_ext;
+mod result_errors;
 
 pub use error::Error;
+pub use errors::Errors;
 pub use message::Message;
-pub use result_ext::ResultExt;
-
-// ===========================================================================
-// Error structure
-// ===========================================================================
+pub use result_errors::ResultErrors;
 
 // ===========================================================================
 // Error trait
 // ===========================================================================
 
+#[deprecated()]
 pub trait ErrorCode {
     /// error code
     fn code(&self) -> i32;
 }
 
+#[deprecated()]
 pub trait ErrorPrint {
     /// print error on stderr
     fn eprint(&self, theme: &Theme, cache: &mut impl Cache<SourceId>) -> std::io::Result<()>;
 }
 
+#[deprecated()]
 pub trait ErrorReport: ErrorCode + Located {
     /// head message of error
     fn head(&self) -> Message;
