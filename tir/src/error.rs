@@ -1,168 +1,36 @@
 use crate::env::IdentifierKind;
 use crate::{Identifier, Type};
-use error::{ErrorCode, ErrorReport, Message};
-use location::{Located, Location};
+use errors::{Error, Message};
+use location::Span;
 
-// =======================================================================
-// Error Variable Not Found
-// =======================================================================
-
-#[derive(Debug)]
-pub struct ErrorVariableNotFound {
-    identifier: Identifier,
-    kind: Option<IdentifierKind>,
-    loc: Location,
+pub fn variable_not_found(identifier: Identifier, kind: IdentifierKind, span: Span) -> Error {
+    Error::new(301, Message::text("Variable not found."))
+        .with_span(span)
+        .with_text({
+            match kind {
+                IdentifierKind::Type => Message::text("Type variable "),
+                IdentifierKind::Expr => Message::text("Expression variable "),
+                IdentifierKind::Unknown => Message::text("Variable "),
+            }
+            .append(Message::text(identifier.name()).important())
+            .with_text(" not found.")
+        })
 }
 
-impl ErrorVariableNotFound {
-    pub fn new(identifier: Identifier, kind: Option<IdentifierKind>, loc: Location) -> Self {
-        Self {
-            identifier,
-            kind,
-            loc,
-        }
-    }
-}
-
-impl ErrorCode for ErrorVariableNotFound {
-    fn code(&self) -> i32 {
-        301
-    }
-}
-
-impl Located for ErrorVariableNotFound {
-    fn loc(&self) -> Location {
-        self.loc.clone()
-    }
-}
-
-impl ErrorReport for ErrorVariableNotFound {
-    fn head(&self) -> Message {
-        Message::text("Variable not found.")
-    }
-
-    fn text(&self) -> Option<Message> {
-        let msg = match self.kind {
-            Some(IdentifierKind::Type) => Message::text("Type variable "),
-            Some(IdentifierKind::Expr) => Message::text("Expression variable "),
-            None => Message::text("Variable "),
-        }
-        .append(Message::text(self.identifier.name()).important())
-        .with_text(" not found.");
-        Some(msg)
-    }
-}
-
-// =======================================================================
-// Error Unexpected Type
-// =======================================================================
-pub struct ErrorUnexpectedType {
-    expected: Type,
-    found: Type,
-    loc: Location,
-}
-
-impl ErrorUnexpectedType {
-    pub fn new(expected: &Type, found: &Type, location: &Location) -> Self {
-        Self {
-            expected: expected.clone(),
-            found: found.clone(),
-            loc: location.clone(),
-        }
-    }
-}
-
-impl ErrorCode for ErrorUnexpectedType {
-    fn code(&self) -> i32 {
-        302
-    }
-}
-
-impl Located for ErrorUnexpectedType {
-    fn loc(&self) -> Location {
-        self.loc.clone()
-    }
-}
-
-impl ErrorReport for ErrorUnexpectedType {
-    fn head(&self) -> Message {
-        Message::text("Type mismatch.")
-    }
-
-    fn text(&self) -> Option<Message> {
-        let msg = Message::text("Found type ")
-            .append(Message::of_pretty(&self.found).important())
-            .with_text(".");
-        Some(msg)
-    }
-
-    fn note(&self) -> Option<Message> {
-        let msg = Message::text("Expected : ")
-            .append(Message::of_pretty(&self.expected).important())
-            .with_line()
-            .with_text("Found    : ")
-            .append(Message::of_pretty(&self.found).important());
-        Some(msg)
-    }
-}
-
-// =======================================================================
-// ErrorFromParser
-// =======================================================================
-pub enum Error {
-    VariableNotFound(ErrorVariableNotFound),
-    UnexpectedType(ErrorUnexpectedType),
-}
-
-impl From<ErrorVariableNotFound> for Error {
-    fn from(e: ErrorVariableNotFound) -> Self {
-        Error::VariableNotFound(e)
-    }
-}
-
-impl From<ErrorUnexpectedType> for Error {
-    fn from(e: ErrorUnexpectedType) -> Self {
-        Error::UnexpectedType(e)
-    }
-}
-
-impl ErrorCode for Error {
-    fn code(&self) -> i32 {
-        match self {
-            Error::VariableNotFound(e) => e.code(),
-            Error::UnexpectedType(e) => e.code(),
-        }
-    }
-}
-
-impl Located for Error {
-    fn loc(&self) -> Location {
-        match self {
-            Error::VariableNotFound(e) => e.loc(),
-            Error::UnexpectedType(e) => e.loc(),
-        }
-    }
-}
-
-impl ErrorReport for Error {
-    fn head(&self) -> Message {
-        match self {
-            Error::VariableNotFound(e) => e.head(),
-            Error::UnexpectedType(e) => e.head(),
-        }
-    }
-
-    fn text(&self) -> Option<Message> {
-        match self {
-            Error::VariableNotFound(e) => e.text(),
-            Error::UnexpectedType(e) => e.text(),
-        }
-    }
-
-    fn note(&self) -> Option<Message> {
-        match self {
-            Error::VariableNotFound(e) => e.note(),
-            Error::UnexpectedType(e) => e.note(),
-        }
-    }
+pub fn unexpected_type(expected: &Type, found: &Type, span: Span) -> Error {
+    let found = Message::of_pretty(found).important();
+    Error::new(302, Message::text("Type mismatch."))
+        .with_span(span)
+        .with_text(
+            Message::text("Found type ")
+                .append(found.clone())
+                .with_text("."),
+        )
+        .with_note(
+            Message::text("Expected : ")
+                .append(Message::of_pretty(expected).important())
+                .with_line()
+                .with_text("Found    : ")
+                .append(found),
+        )
 }

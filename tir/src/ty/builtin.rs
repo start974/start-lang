@@ -1,4 +1,4 @@
-use location::{Located, LocatedSet, Location};
+use location::{Span, Spanned, SpannedSet};
 use pp::prelude::*;
 
 // ==========================================================================
@@ -29,8 +29,10 @@ impl Pretty for Kind {
 // ==========================================================================
 #[derive(Debug, Clone)]
 pub struct Builtin {
+    /// kind of builtin type
     kind: Kind,
-    loc: Location,
+    /// span of builtin type
+    span: Span,
 }
 
 impl Builtin {
@@ -38,7 +40,7 @@ impl Builtin {
     fn new(kind: Kind) -> Self {
         Builtin {
             kind,
-            loc: Location::unknown(), // Builtin types do not have a specific location
+            span: Span::default(),
         }
     }
 
@@ -72,14 +74,14 @@ impl Pretty for Builtin {
     }
 }
 
-impl Located for Builtin {
-    fn loc(&self) -> Location {
-        self.loc.clone()
+impl Spanned for Builtin {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 
-impl LocatedSet for Builtin {
-    fn set_loc(&mut self, loc: &impl Located) {
-        self.loc = loc.loc().clone();
+impl SpannedSet for Builtin {
+    fn set_span(&mut self, span: Span) {
+        self.span = span;
     }
 }

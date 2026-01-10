@@ -1,5 +1,5 @@
 use super::super::ty::{Type, TypeBuiltin, Typed, TypedMut};
-use location::{Located, LocatedSet, Location};
+use location::{Span, Spanned, SpannedSet};
 use num_bigint::BigUint;
 use pp::prelude::*;
 
@@ -16,8 +16,8 @@ pub struct Constant {
     kind: ConstantKind,
     /// type of constant
     ty: Type,
-    /// location of the constant
-    loc: Location,
+    /// span of the constant
+    span: Span,
 }
 
 impl Constant {
@@ -25,7 +25,7 @@ impl Constant {
         Self {
             kind,
             ty,
-            loc: Location::unknown(),
+            span: Span::default(),
         }
     }
     /// create natural number constant
@@ -49,15 +49,15 @@ impl Constant {
     }
 }
 
-impl Located for Constant {
-    fn loc(&self) -> Location {
-        self.loc.clone()
+impl Spanned for Constant {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 
-impl LocatedSet for Constant {
-    fn set_loc(&mut self, loc: &impl Located) {
-        self.loc = loc.loc().clone();
+impl SpannedSet for Constant {
+    fn set_span(&mut self, span: Span) {
+        self.span = span;
     }
 }
 

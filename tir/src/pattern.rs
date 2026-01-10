@@ -1,5 +1,5 @@
 use crate::Identifier;
-use location::{Located, LocatedSet, Location};
+use location::{Span, Spanned, SpannedSet};
 use pp::prelude::*;
 use std::rc::Rc;
 
@@ -9,8 +9,8 @@ use std::rc::Rc;
 pub struct PatternVar {
     /// identifier of the variable
     id: Rc<Identifier>,
-    /// location of the pattern
-    loc: Location,
+    /// span of the pattern
+    span: Span,
 }
 
 impl PatternVar {
@@ -24,7 +24,7 @@ impl From<Rc<Identifier>> for PatternVar {
     fn from(id: Rc<Identifier>) -> Self {
         Self {
             id,
-            loc: Location::unknown(),
+            span: Span::default(),
         }
     }
 }
@@ -35,15 +35,15 @@ impl Pretty for PatternVar {
     }
 }
 
-impl Located for PatternVar {
-    fn loc(&self) -> Location {
-        self.loc.clone()
+impl Spanned for PatternVar {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 
-impl LocatedSet for PatternVar {
-    fn set_loc(&mut self, loc: &impl Located) {
-        self.loc = loc.loc().clone();
+impl SpannedSet for PatternVar {
+    fn set_span(&mut self, span: Span) {
+        self.span = span;
     }
 }
 
@@ -71,10 +71,10 @@ impl Pretty for Pattern {
     }
 }
 
-impl Located for Pattern {
-    fn loc(&self) -> Location {
+impl Spanned for Pattern {
+    fn span(&self) -> Span {
         match self {
-            Pattern::Variable(var) => var.loc(),
+            Pattern::Variable(var) => var.span(),
         }
     }
 }
