@@ -1,9 +1,10 @@
-use chumsky::error::{Rich, RichPattern};
+use crate::ErrorChumsky;
 use errors::{Error, Message};
-use lexer::MetaToken;
-use location::{Location, SourceId};
+use location::Span;
 
-pub fn error_parsing(err: Rich<'_, MetaToken>, source_id: SourceId) -> Error {
+pub fn error_parsing(err: &ErrorChumsky<'_>) -> Error {
+    use chumsky::error::RichPattern;
+
     let expected: Vec<_> = err
         .expected()
         .map(RichPattern::to_string)
@@ -12,9 +13,9 @@ pub fn error_parsing(err: Rich<'_, MetaToken>, source_id: SourceId) -> Error {
         .map(Message::important)
         .collect();
     let res = Error::new(202, Message::text("Parsing error"))
-        .with_location({
+        .with_span({
             let span = err.span();
-            Location::new(source_id, span.start, span.end)
+            Span::new(span.start, span.end)
         })
         .with_text(
             Message::text("Parsing expect ")
