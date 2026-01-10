@@ -1,12 +1,10 @@
-use crate::{ErrorChumsky, token};
+use crate::{Lexer, token};
 use chumsky::prelude::*;
 use chumsky::text::{newline, whitespace};
 use cst::{Comment, Meta, meta::CommentOrLines};
-use location::{Location, SourceId};
+use location::Span;
 use num_bigint::BigUint;
 use std::rc::Rc;
-
-trait Lexer<'src, T> = Parser<'src, char, T, ErrorChumsky<'src>>;
 
 // ===========================================================================
 // Commment
@@ -37,7 +35,7 @@ pub fn comment<'src>() -> impl Lexer<'src, Comment> {
 // ===========================================================================
 pub trait WithMeta<'src, T>: Lexer<'src, T> + Sized {
     /// meta(rule) = (LINE{2,} | WS* COMMENT)* WS* rule
-    fn with_meta(self) -> impl Parser<'src, &'src str, Meta<T>, ErrorChumsky<'src>> {
+    fn with_meta(self, offset: usize) -> impl Lexer<'src, Meta<T>> {
         let lines = newline().repeated().at_least(2).to(CommentOrLines::Lines);
         let comment = whitespace()
             .ignore_then(comment())
@@ -47,21 +45,18 @@ pub trait WithMeta<'src, T>: Lexer<'src, T> + Sized {
             .repeated()
             .collect::<Vec<CommentOrLines>>();
 
-        // Ajoute la location à la rule
-        let rule_loc = self.map_with(move |value, e| (value, e.span));
-
         // Consomme les derniers espaces/lignes avant le rule
         meta_items
             .then_ignore(whitespace())
-            .then(rule_loc)
-            .map(move |(comments, (value, loc))| Meta::new(value, loc).with_items(&comments))
+            .then(self.map_with(move |value, e| {
+                let span: chumsky::span::SimpleSpan = e.span();
+                (value, Span::new(span.start, span.end).with_offset(offset))
+            }))
+            .map(move |(comments, (value, span))| Meta::new(value, span).with_items(&comments))
     }
 }
 
-impl<'src, T, P> WithMeta<'src, T> for P where
-    P: Parser<'src, &'src str, T, ErrorChumsky<'src>> + Sized
-{
-}
+impl<'src, T, L> WithMeta<'src, T> for L where L: Lexer<'src, T> + Sized {}
 
 // ===========================================================================
 // Identifier
@@ -73,7 +68,7 @@ impl<'src, T, P> WithMeta<'src, T> for P where
 /// ```ebnf
 /// INDENTIFIER := <IDENT> "'"*
 /// ```
-pub fn identifier<'src>() -> impl Parser<'src, &'src str, String, ErrorChumsky<'src>> {
+pub fn identifier<'src>() -> impl Lexer<'src, String> {
     text::unicode::ident()
         .then(just('\'').repeated().collect::<String>())
         .map(|(ident, quotes)| format!("{ident}{quotes}"))
@@ -84,28 +79,28 @@ pub fn identifier<'src>() -> impl Parser<'src, &'src str, String, ErrorChumsky<'
 // Number
 // ===========================================================================
 /// lex ascii digits
-fn digit<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
+fn digit<'src>() -> impl Lexer<'src, char> {
     any()
         .filter(|c: &char| c.is_ascii_digit())
         .labelled("digit")
 }
 
 /// lex ascii hexadecimal digits
-fn digit_hex<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
+fn digit_hex<'src>() -> impl Lexer<'src, char> {
     any()
         .filter(|c: &char| c.is_ascii_hexdigit())
         .labelled("digit_hex")
 }
 
 /// lex ascii octal digits (0-7)
-fn digit_oct<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
+fn digit_oct<'src>() -> impl Lexer<'src, char> {
     digit()
         .filter(|c: &char| *c != '8' && *c != '9')
         .labelled("digit_oct")
 }
 
 /// lex ascii binary digits (0-1)
-fn digit_bin<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
+fn digit_bin<'src>() -> impl Lexer<'src, char> {
     any()
         .filter(|c: &char| *c == '0' || *c == '1')
         .labelled("digit_bin")
@@ -113,10 +108,7 @@ fn digit_bin<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
 
 /// lex number with a base
 /// digit ("_"* digit)*
-fn number_f<'src>(
-    radix: u32,
-    digit: impl Parser<'src, &'src str, char, ErrorChumsky<'src>>,
-) -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
+fn number_f<'src>(radix: u32, digit: impl Lexer<'src, char>) -> impl Lexer<'src, BigUint> {
     let digit = Rc::new(digit);
     let underscores = just('_').repeated();
 
@@ -139,33 +131,33 @@ fn number_base_prefixed<'src>(
     prefix_lower: char,
     prefix_upper: char,
     radix: u32,
-    digit: impl Parser<'src, &'src str, char, ErrorChumsky<'src>>,
-) -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
+    digit: impl Lexer<'src, char>,
+) -> impl Lexer<'src, BigUint> {
     let prefix = just("0").then(just(prefix_lower).or(just(prefix_upper)));
     prefix.ignore_then(number_f(radix, digit))
 }
 
 /// lex number `digit ( digit | _)*
-fn number_dec<'src>() -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
+fn number_dec<'src>() -> impl Lexer<'src, BigUint> {
     number_f(10, digit()).labelled("number_dec")
 }
 /// lex hexadecimal number `"0" ("x" | "X") digit_hex ( digit_hex | _)*`
-pub fn number_hex<'src>() -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
+pub fn number_hex<'src>() -> impl Lexer<'src, BigUint> {
     number_base_prefixed('x', 'X', 16, digit_hex()).labelled("number_hex")
 }
 
 /// lex octal number `"0" ("o" | "O") digit_oct ( digit_oct | _)*`
-pub fn number_oct<'src>() -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
+pub fn number_oct<'src>() -> impl Lexer<'src, BigUint> {
     number_base_prefixed('o', 'O', 8, digit_oct()).labelled("number_oct")
 }
 
 /// lex binary number `"0" ("b" | "B") digit_bin ( digit_bin | _)*`
-pub fn number_bin<'src>() -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
+pub fn number_bin<'src>() -> impl Lexer<'src, BigUint> {
     number_base_prefixed('b', 'B', 2, digit_bin()).labelled("number_bin")
 }
 
 /// lex number
-pub fn number<'src>() -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src>> {
+pub fn number<'src>() -> impl Lexer<'src, BigUint> {
     // lex decimal number or hexadecimal or octal or binary
     choice((number_hex(), number_oct(), number_bin(), number_dec())).labelled("number")
 }
@@ -176,10 +168,10 @@ pub fn number<'src>() -> impl Parser<'src, &'src str, BigUint, ErrorChumsky<'src
 
 /// char with number
 fn escape_number_char<'src>(
-    digit: impl Parser<'src, &'src str, char, ErrorChumsky<'src>>,
+    digit: impl Lexer<'src, char>,
     number_digit: usize,
     radix: u32,
-) -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
+) -> impl Lexer<'src, char> {
     let digits = digit.repeated().exactly(number_digit).collect::<String>();
 
     digits.try_map(move |digits, span| {
@@ -191,14 +183,14 @@ fn escape_number_char<'src>(
 
 fn escape_number_char_prefixed<'src>(
     prefix: char,
-    digit: impl Parser<'src, &'src str, char, ErrorChumsky<'src>>,
+    digit: impl Lexer<'src, char>,
     number_digit: usize,
     radix: u32,
-) -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
+) -> impl Lexer<'src, char> {
     just(prefix).ignore_then(escape_number_char(digit, number_digit, radix))
 }
 
-fn escape_unicode_char<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
+fn escape_unicode_char<'src>() -> impl Lexer<'src, char> {
     just('u')
         .ignore_then(
             digit_hex()
@@ -222,7 +214,7 @@ fn escape_unicode_char<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsk
 ///    | digit{3} | "x" digit_hex{2} | "o" digit_oct{3}
 ///    | "u{" digit_hex+ "}")
 ///```
-fn escape_char<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
+fn escape_char<'src>() -> impl Lexer<'src, char> {
     just('\\').ignore_then(choice((
         just('\\').to('\\'),
         just('\"').to('\"'),
@@ -244,7 +236,7 @@ fn escape_char<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>>
 /// | [U+0000 .. U+D7FF]
 /// | [U+E000 .. U+10FFFF]
 /// ```
-fn character_lit<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
+fn character_lit<'src>() -> impl Lexer<'src, char> {
     choice((
         escape_char(),
         any().filter(|c: &char| {
@@ -258,7 +250,7 @@ fn character_lit<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src
 /// ```ebnf
 /// CHARACTER := "'" CHARACTER_LIT "'"
 /// ```
-pub fn character<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src>> {
+fn character<'src>() -> impl Lexer<'src, char> {
     let quote = just('\'').labelled("'");
     character_lit()
         .delimited_by(quote, quote)
@@ -273,7 +265,7 @@ pub fn character<'src>() -> impl Parser<'src, &'src str, char, ErrorChumsky<'src
 // Operator
 // ===========================================================================
 /// lex operators
-pub fn operator<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorChumsky<'src>> {
+fn operator<'src>() -> impl Lexer<'src, token::Operator> {
     choice((
         just("?:").to(token::Operator::TypeOf),
         just("?").to(token::Operator::Help),
@@ -290,10 +282,7 @@ pub fn operator<'src>() -> impl Parser<'src, &'src str, token::Operator, ErrorCh
 // ===========================================================================
 /// make a lexing with offset to token until "." (end of a command)
 /// return offset rest to lexing
-pub fn lexer<'src>(
-    source_id: SourceId,
-    offset: usize,
-) -> impl Parser<'src, &'src str, Vec<token::MetaToken>, ErrorChumsky<'src>> {
+pub fn lexer<'src>(offset: usize) -> impl Lexer<'src, Vec<token::MetaToken>> {
     use token::Token;
 
     let token = choice((
@@ -302,16 +291,14 @@ pub fn lexer<'src>(
         number().map(Token::Number),
         character().map(Token::Character),
     ))
-    .with_meta(source_id.clone(), offset);
+    .with_meta(offset);
 
     let token_dot = just('.')
         .to(Token::Operator(token::Operator::Dot))
-        .with_meta(source_id.clone(), offset)
+        .with_meta(offset)
         .lazy();
 
-    let token_end = end()
-        .to(Token::EndOfInput)
-        .with_meta(source_id.clone(), offset);
+    let token_end = end().to(Token::EndOfInput).with_meta(offset);
 
     token
         .repeated()
