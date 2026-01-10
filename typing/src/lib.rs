@@ -1,7 +1,7 @@
 use cst::{self, AsCharacter as _, AsIdentifier as _, AsNumber as _};
-use error::ResultExt as _;
-use location::{Located as _, LocatedSet};
-use tir::{Typed, env::Env, error::Error};
+use errors::{Errors, ResultErrors as _};
+use location::{Spanned as _, SpannedSet as _};
+use tir::{Typed, env::Env};
 
 #[derive(Debug, Default)]
 pub struct Typer {
@@ -9,11 +9,7 @@ pub struct Typer {
     env: Env,
 }
 
-type Result<T, E = Vec<Error>> = std::result::Result<T, E>;
-
-fn to_errs(err: Error) -> Vec<Error> {
-    vec![err]
-}
+type Result<T, E = Errors> = std::result::Result<T, E>;
 
 impl Typer {
     /// get environment
@@ -34,7 +30,7 @@ impl Typer {
                 }
             }
         }
-        .with_loc(constant)
+        .with_spanned(constant)
     }
 
     /// convert expression0
@@ -49,13 +45,12 @@ impl Typer {
                 Ok(tir::Expression::Constant(c_ty))
             }
             Expression0::Variable(var) => {
-                let loc = var.loc();
+                let span = var.span();
                 let id = self.id_builder.get(var.name());
                 let var = self
                     .env
-                    .get_expr_var(&id, loc.clone())
-                    .map_err(Error::from)
-                    .map_err(to_errs)?;
+                    .get_expr_var(&id, span)
+                    .map_err(Errors::from)?;
                 Ok(tir::Expression::Variable(var))
             }
             Expression0::Paren(expr) => self.expression(expr.inner()),
@@ -75,9 +70,7 @@ impl Typer {
                     let ty_res = self.ty(ty);
                     expr_res.combine(ty_res)?
                 };
-                expr.restrict_ty(ty)
-                    .map_err(|e| Error::from(*e))
-                    .map_err(to_errs)
+                expr.restrict_ty(ty).map_err(Errors::from)
             }
             Expression1::Expression0(expr) => self.expression0(expr),
         }
@@ -89,7 +82,7 @@ impl Typer {
         expression: &cst::expression::Expression,
     ) -> Result<tir::Expression> {
         self.expression1(expression)
-            .map(|expr| expr.with_loc(expression))
+            .map(|expr| expr.with_spanned(expression))
     }
 
     /// convert type
@@ -105,17 +98,16 @@ impl Typer {
                 Ok(tir::Type::Builtin(builtin))
             }
             cst::Type::Variable(ty_var) => {
-                let loc = ty_var.loc();
+                let span = ty_var.span();
                 let id = self.id_builder.get(ty_var.name());
                 let alias = self
                     .env
-                    .get_alias_ty(&id, loc.clone())
-                    .map_err(Error::from)
-                    .map_err(to_errs)?;
+                    .get_alias_ty(&id, span)
+                    .map_err(Errors::from)?;
                 Ok(tir::Type::Alias(alias))
             }
         }
-        .map(|ty_f| ty_f.with_loc(ty))
+        .map(|ty_f| ty_f.with_spanned(ty))
     }
 
     fn pattern(&mut self, pattern: &cst::Pattern, ty: &tir::Type) -> Result<tir::Pattern> {
@@ -123,8 +115,8 @@ impl Typer {
         match pattern {
             Pattern::Variable(var) => {
                 let id = self.id_builder.build(var.name());
-                self.env.add_expr_def(id.clone(), ty.clone(), var.loc());
-                let pattern_var = tir::PatternVar::from(id).with_loc(var);
+                self.env.add_expr_def(id.clone(), ty.clone(), var.span());
+                let pattern_var = tir::PatternVar::from(id).with_spanned(var);
                 Ok(tir::Pattern::Variable(pattern_var))
             }
         }
@@ -135,28 +127,19 @@ impl Typer {
         &mut self,
         definition: &cst::ExpressionDefinition,
     ) -> Result<tir::ExpressionDefinition> {
-        let body_res = self.expression(&definition.body);
-        let ty_opt_res = definition.typed_by().map(|ty| self.ty(ty)).transpose();
-        let pattern_res = {
-            match (&ty_opt_res, &body_res) {
-                (Ok(Some(ty)), _) => self.pattern(&definition.pattern, ty),
-                (Ok(None), Ok(body)) => self.pattern(&definition.pattern, body.ty()),
-                (_, _) => Err(Vec::new()),
-            }
-        };
-
-        let body_res = body_res
-            .combine(ty_opt_res)
-            .and_then(|(body, opt_ty)| match opt_ty {
-                Some(ty) => body
-                    .restrict_ty(ty)
-                    .map_err(|e| Error::from(*e))
-                    .map_err(to_errs),
-                None => Ok(body),
-            });
-
-        let (body, pattern) = body_res.combine(pattern_res)?;
-        Ok(tir::ExpressionDefinition::new(pattern, body))
+        self.expression(&definition.body)
+            .combine(definition.typed_by().map(|ty| self.ty(ty)).transpose())
+            .and_then(|(body, ty_opt)| {
+                if let Some(ty) = ty_opt {
+                    body.restrict_ty(ty).map_err(Errors::from)
+                } else {
+                    Ok(body)
+                }
+            })
+            .and_then(|body| {
+                self.pattern(&definition.pattern, body.ty())
+                    .map(|pattern| tir::ExpressionDefinition::new(pattern, body))
+            })
     }
 
     /// convert definition
@@ -183,7 +166,7 @@ impl Typer {
         let id = self.id_builder.build(definition.name.name());
         let ty = self.ty(&definition.ty)?;
         self.env
-            .add_type_def(id.clone(), ty.clone(), definition.name.loc());
+            .add_type_def(id.clone(), ty.clone(), definition.name.span());
         if let Some(doc) = doc {
             self.env.set_doc(&id, doc.clone());
         }
@@ -193,9 +176,6 @@ impl Typer {
     /// convert help variable
     pub fn help(&mut self, var: &cst::help::Variable) -> Result<tir::Help> {
         let id = self.id_builder.get(var.name());
-        self.env
-            .get_help(&id, var.loc())
-            .map_err(Error::from)
-            .map_err(to_errs)
+        self.env.get_help(&id, var.span()).map_err(Errors::from)
     }
 }
