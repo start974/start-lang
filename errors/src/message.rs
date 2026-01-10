@@ -1,7 +1,9 @@
 use std::fmt::Display;
 
-use pp::{pretty::{Pretty, StreamColored}, theme::{Doc, MessageTheme, Theme}};
-
+use pp::{
+    pretty::{Pretty, StreamColored},
+    theme::{Doc, MessageTheme, Theme},
+};
 
 #[derive(Debug, Clone)]
 enum MessageKind {
@@ -34,6 +36,22 @@ impl Message {
             self.add_kind(kind);
         }
         self
+    }
+
+    /// append doc if condition is true
+    pub fn append_if<F>(self, cond: bool, f_doc: F) -> Self
+    where
+        F: FnOnce() -> Self,
+    {
+        if cond { self.append(f_doc()) } else { self }
+    }
+
+    pub fn append_opt(self, doc: Option<Self>) -> Self {
+        if let Some(d) = doc {
+            self.append(d)
+        } else {
+            self
+        }
     }
 
     /// intersperse document
@@ -90,7 +108,6 @@ impl Message {
         Self::text(p.make_string(&Theme::default()))
     }
 
-
     // with pretty
     pub fn with_pretty(self, p: &impl Pretty) -> Self {
         self.append(Self::of_pretty(p))
@@ -109,7 +126,6 @@ impl Message {
             .collect();
         self
     }
-
 
     /// important message part
     pub fn important(mut self) -> Self {

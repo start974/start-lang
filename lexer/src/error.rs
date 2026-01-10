@@ -1,57 +1,25 @@
 use chumsky::error::Rich;
-use error::{ErrorCode, ErrorReport, Message};
-use location::{Located, Location, SourceId};
+use error::{Error, Message};
+use location::{Location, SourceId};
 
-pub struct Error<'src> {
-    loc: Location,
-    err: Rich<'src, char>,
-}
-
-impl<'src> Error<'src> {
-    /// make a new error
-    pub fn new(err: Rich<'src, char>, source_id: SourceId, offset: usize) -> Self {
-        let span = err.span();
-        let loc = Location::new(source_id, span.start, span.end).with_offset(offset);
-        Self {
-            loc,
-            err: err.clone(),
-        }
-    }
-}
-
-impl ErrorCode for Error<'_> {
-    fn code(&self) -> i32 {
-        201
-    }
-}
-
-impl Located for Error<'_> {
-    fn loc(&self) -> Location {
-        self.loc.clone()
-    }
-}
-
-impl ErrorReport for Error<'_> {
-    fn head(&self) -> Message {
-        Message::text("Lexing error")
-    }
-
-    fn text(&self) -> Option<Message> {
-        let mut msg = Message::nil();
-        if self.err.expected().len() == 1 {
-            msg = msg.with_text("Lexer expected ");
-            let expect_str = self.err.expected().next().unwrap().to_string();
-            msg = msg.append(Message::quoted(expect_str));
-            if self.err.found().is_some() {
-                msg = msg.with_text(", found ")
-            }
-        } else {
-            msg = msg.with_text("Lexer unknow token ");
-        };
-        if let Some(found) = self.err.found() {
-            msg = msg.append(Message::quoted(found.to_string().escape_default()).important());
-        }
-        msg = msg.with_text(".");
-        Some(msg)
-    }
+pub fn error_lexing<'src>(err: Rich<'src, char>, source_id: SourceId, offset: usize) -> Error {
+    Error::new(201, Message::text("Lexing error"))
+        .with_text({
+            let msg = if err.expected().len() == 1 {
+                Message::text("Lexer expected ")
+                    .append(Message::quoted(err.expected().next().unwrap().to_string()))
+                    .append_if(err.found().is_some(), || Message::text(", found "))
+            } else {
+                Message::text("Lexer unknow token ")
+            };
+            msg.append_opt(
+                err.found()
+                    .map(|found| Message::quoted(found.to_string().escape_default()).important()),
+            )
+            .with_text(".")
+        })
+        .with_location({
+            let span = err.span();
+            Location::new(source_id, span.start, span.end).with_offset(offset)
+        })
 }

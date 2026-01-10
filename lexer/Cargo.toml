@@ -5,8 +5,9 @@ edition = "2024"
 
 [dependencies]
 chumsky = "0.12.0"
+cst = {path = "../cst"}
+errors = {path = "../errors"}
 location = {path = "../location"}
 pp = {path = "../pp"}
-error = {path = "../error"}
-cst = {path = "../cst"}
+
 num-bigint = "0.4.6"

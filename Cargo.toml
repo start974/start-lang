@@ -2,11 +2,12 @@
 resolver = "3"
 members = [
   "cst",
-  "error",
+  "errors",
   "lexer",
   "location",
   "parser",
   "pp", "startlang",
   "tir",
-  "typing"
-, "vm"]
+  "typing",
+  "vm",
+]

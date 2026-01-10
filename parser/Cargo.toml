@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+cst = {path = "../cst"}
+errors = {path = "../errors"}
+lexer = {path = "../lexer"}
 location = {path = "../location"}
 pp = {path = "../pp"}
-error = {path = "../error"}
-cst = {path = "../cst"}
-lexer = {path = "../lexer"}
 
 chumsky = "0.12.0"
 num-bigint = "0.4.6"
