@@ -1,5 +1,4 @@
 use cst::Meta;
-use location::{Located, Location, Span};
 use num_bigint::BigUint;
 use pp::prelude::*;
 
@@ -92,8 +91,9 @@ pub struct MetaTokenStream {
 
 impl MetaTokenStream {
     pub fn last_offset(&self) -> usize {
+        use location::Spanned;
         if let Some(token) = self.tokens.last() {
-            token.loc().end()
+            token.span().end()
         } else {
             0
         }
@@ -118,15 +118,5 @@ impl From<Vec<MetaToken>> for MetaTokenStream {
 impl Pretty for MetaTokenStream {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::intersperse(self.tokens.iter().map(|t| t.pretty(theme)), Doc::hardline()).group()
-    }
-}
-
-impl Located for MetaTokenStream {
-    fn loc(&self) -> Location {
-        if let (Some(first), Some(last)) = (self.tokens.first(), self.tokens.last()) {
-            first.loc().union(last.loc())
-        } else {
-            unreachable!("MetaTokenStream should have at least one token");
-        }
     }
 }
