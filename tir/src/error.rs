@@ -42,13 +42,13 @@ impl ErrorReport for ErrorVariableNotFound {
     }
 
     fn text(&self) -> Option<Message> {
-        let mut msg = match self.kind {
+        let msg = match self.kind {
             Some(IdentifierKind::Type) => Message::text("Type variable "),
             Some(IdentifierKind::Expr) => Message::text("Expression variable "),
             None => Message::text("Variable "),
-        };
-        msg.extend(Message::text(self.identifier.name()).important());
-        msg.add_text(" not found.");
+        }
+        .append(Message::text(self.identifier.name()).important())
+        .with_text(" not found.");
         Some(msg)
     }
 }
