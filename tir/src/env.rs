@@ -1,6 +1,7 @@
-use crate::error::ErrorVariableNotFound;
+use crate::error;
 use crate::{Documentation, Identifier, Type, Typed};
-use location::{Located, LocatedSet, Location};
+use errors::Error;
+use location::{Span, Spanned, SpannedSet};
 use pp::prelude::*;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -14,8 +15,8 @@ pub struct Variable {
     identifier: Identifier,
     /// type of the variable
     ty: Type,
-    /// location of varable
-    loc: Location,
+    /// span of varable
+    span: Span,
 }
 
 impl Variable {
@@ -42,15 +43,15 @@ impl Typed for Variable {
     }
 }
 
-impl Located for Variable {
-    fn loc(&self) -> Location {
-        self.loc.clone()
+impl Spanned for Variable {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 
-impl LocatedSet for Variable {
-    fn set_loc(&mut self, loc: &impl Located) {
-        self.loc = loc.loc().clone();
+impl SpannedSet for Variable {
+    fn set_span(&mut self, span: Span) {
+        self.span = span;
     }
 }
 
@@ -69,8 +70,8 @@ pub struct Alias {
     name: Identifier,
     /// type of alias
     ty: Box<Type>,
-    /// location of alias
-    loc: Location,
+    /// span of alias
+    span: Span,
 }
 
 impl Typed for Alias {
@@ -85,18 +86,17 @@ impl Pretty for Alias {
     }
 }
 
-impl Located for Alias {
-    fn loc(&self) -> Location {
-        self.loc.clone()
+impl Spanned for Alias {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 
-impl LocatedSet for Alias {
-    fn set_loc(&mut self, loc: &impl Located) {
-        self.loc = loc.loc();
+impl SpannedSet for Alias {
+    fn set_span(&mut self, span: Span) {
+        self.span = span;
     }
 }
-
 // ==========================================================================
 // Identifier Kind
 // ==========================================================================
@@ -106,6 +106,8 @@ pub enum IdentifierKind {
     Type,
     /// identifier is a expression variable
     Expr,
+    /// unknown identifier kind
+    Unknown,
 }
 
 // ==========================================================================
@@ -123,10 +125,10 @@ pub struct IdentifierInfo {
     pub kind: IdentifierKind,
     /// type of indentifier
     pub ty: Type,
-    /// definition location
-    pub loc_def: Location,
-    /// location of references
-    pub loc_refs: Vec<Location>,
+    /// definition span
+    pub span_def: Span,
+    /// references spans
+    pub span_refs: Vec<Span>,
 }
 
 // ==========================================================================
@@ -137,7 +139,7 @@ pub struct IdentifierInfo {
 pub struct Help {
     id: Rc<Identifier>,
     ty: Type,
-    loc: Location,
+    span: Span,
     kind: IdentifierKind,
     doc: Option<Documentation>,
 }
@@ -156,6 +158,7 @@ impl Pretty for Help {
                     .append(Doc::softline())
                     .append(ty.pretty(theme).group()),
             },
+            IdentifierKind::Unknown => Doc::nil(),
         };
 
         let documentation = match &self.doc {
@@ -170,9 +173,9 @@ impl Pretty for Help {
     }
 }
 
-impl Located for Help {
-    fn loc(&self) -> Location {
-        self.loc.clone()
+impl Spanned for Help {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 // ==========================================================================
@@ -185,26 +188,26 @@ pub struct Env {
 }
 
 impl Env {
-    fn add(&mut self, id: Rc<Identifier>, loc_def: Location, ty: Type, kind: IdentifierKind) {
+    fn add(&mut self, id: Rc<Identifier>, span_def: Span, ty: Type, kind: IdentifierKind) {
         let info = IdentifierInfo {
             id: id.clone(),
             doc: None,
             kind,
             ty,
-            loc_def,
-            loc_refs: Vec::new(),
+            span_def,
+            span_refs: Vec::new(),
         };
         self.table.insert(id, info);
     }
 
     /// add expression variable definition
-    pub fn add_expr_def(&mut self, id: Rc<Identifier>, ty: Type, loc_def: Location) {
-        self.add(id, loc_def, ty, IdentifierKind::Expr);
+    pub fn add_expr_def(&mut self, id: Rc<Identifier>, ty: Type, span_def: Span) {
+        self.add(id, span_def, ty, IdentifierKind::Expr);
     }
 
     /// add type definition
-    pub fn add_type_def(&mut self, id: Rc<Identifier>, ty: Type, loc_def: Location) {
-        self.add(id, loc_def, ty, IdentifierKind::Type);
+    pub fn add_type_def(&mut self, id: Rc<Identifier>, ty: Type, span_def: Span) {
+        self.add(id, span_def, ty, IdentifierKind::Type);
     }
 
     /// set documentation for identifier
@@ -215,65 +218,57 @@ impl Env {
     }
 
     /// get variable by identifier
-    pub fn get_expr_var(
-        &mut self,
-        id: &Identifier,
-        loc: Location,
-    ) -> Result<Variable, ErrorVariableNotFound> {
+    pub fn get_expr_var(&mut self, id: &Identifier, span: Span) -> Result<Variable, Error> {
         match self.table.get_mut(id) {
             Some(info) if info.kind == IdentifierKind::Expr => {
-                info.loc_refs.push(loc.clone());
+                info.span_refs.push(span);
                 Ok(Variable {
                     identifier: id.clone(),
                     ty: info.ty.clone(),
-                    loc,
+                    span,
                 })
             }
-            _ => Err(ErrorVariableNotFound::new(
+            _ => Err(error::variable_not_found(
                 id.clone(),
-                Some(IdentifierKind::Expr),
-                loc,
+                IdentifierKind::Expr,
+                span,
             )),
         }
     }
 
     /// get type alias
-    pub fn get_alias_ty(
-        &mut self,
-        id: &Identifier,
-        loc: Location,
-    ) -> Result<Alias, ErrorVariableNotFound> {
+    pub fn get_alias_ty(&mut self, id: &Identifier, span: Span) -> Result<Alias, Error> {
         match self.table.get_mut(id) {
             Some(info) if info.kind == IdentifierKind::Type => {
-                info.loc_refs.push(loc.clone());
+                info.span_refs.push(span.clone());
                 Ok(Alias {
                     name: id.clone(),
                     ty: Box::new(info.ty.clone()),
-                    loc,
+                    span,
                 })
             }
-            _ => Err(ErrorVariableNotFound::new(
+            _ => Err(error::variable_not_found(
                 id.clone(),
-                Some(IdentifierKind::Type),
-                loc,
+                IdentifierKind::Type,
+                span,
             )),
         }
     }
 
-    pub fn get_help(
-        &mut self,
-        id: &Identifier,
-        loc: Location,
-    ) -> Result<Help, ErrorVariableNotFound> {
+    pub fn get_help(&mut self, id: &Identifier, span: Span) -> Result<Help, Error> {
         match self.table.get(id) {
             Some(info) => Ok(Help {
                 id: info.id.clone(),
                 ty: info.ty.clone(),
-                loc,
+                span,
                 kind: info.kind,
                 doc: info.doc.clone(),
             }),
-            None => Err(ErrorVariableNotFound::new(id.clone(), None, loc)),
+            None => Err(error::variable_not_found(
+                id.clone(),
+                IdentifierKind::Unknown,
+                span,
+            )),
         }
     }
 

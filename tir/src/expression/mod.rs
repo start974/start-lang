@@ -1,5 +1,5 @@
 use crate::ty::{Type, Typed, TypedMut};
-use location::{Located, LocatedSet, Location};
+use location::{Span, Spanned, SpannedSet};
 use pp::prelude::*;
 
 mod constant;
@@ -39,20 +39,20 @@ impl Typed for Expression {
     }
 }
 
-impl Located for Expression {
-    fn loc(&self) -> Location {
+impl Spanned for Expression {
+    fn span(&self) -> Span {
         match self {
-            Expression::Constant(c) => c.loc(),
-            Expression::Variable(v) => v.loc(),
+            Expression::Constant(c) => c.span(),
+            Expression::Variable(v) => v.span(),
         }
     }
 }
 
-impl LocatedSet for Expression {
-    fn set_loc(&mut self, loc: &impl Located) {
+impl SpannedSet for Expression {
+    fn set_span(&mut self, span: Span) {
         match self {
-            Expression::Constant(c) => c.set_loc(loc),
-            Expression::Variable(v) => v.set_loc(loc),
+            Expression::Constant(c) => c.set_span(span),
+            Expression::Variable(v) => v.set_span(span),
         }
     }
 }

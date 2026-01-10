@@ -1,10 +1,11 @@
-use crate::error::ErrorUnexpectedType;
-use location::{Located, LocatedSet, Location};
+use errors::Error;
+use location::{Spanned, SpannedSet};
 use pp::prelude::*;
 
 mod builtin;
 
 pub use crate::env::Alias as TypeAlias;
+use crate::error;
 pub use builtin::Builtin as TypeBuiltin;
 
 #[derive(Debug, Clone)]
@@ -29,20 +30,20 @@ impl Pretty for Type {
     }
 }
 
-impl Located for Type {
-    fn loc(&self) -> Location {
+impl Spanned for Type {
+    fn span(&self) -> location::Span {
         match self {
-            Type::Builtin(builtin) => builtin.loc(),
-            Type::Alias(alias) => alias.loc(),
+            Type::Builtin(builtin) => builtin.span(),
+            Type::Alias(alias) => alias.span(),
         }
     }
 }
 
-impl LocatedSet for Type {
-    fn set_loc(&mut self, loc: &impl Located) {
+impl SpannedSet for Type {
+    fn set_span(&mut self, span: location::Span) {
         match self {
-            Type::Builtin(builtin) => builtin.set_loc(loc),
-            Type::Alias(alias) => alias.set_loc(loc),
+            Type::Builtin(builtin) => builtin.set_span(span),
+            Type::Alias(alias) => alias.set_span(span),
         }
     }
 }
@@ -71,7 +72,7 @@ pub trait Typed {
     fn ty(&self) -> &Type;
 
     /// restrict object type to other type
-    fn restrict_ty(mut self, ty: Type) -> Result<Self, Box<ErrorUnexpectedType>>
+    fn restrict_ty(mut self, ty: Type) -> Result<Self, Error>
     where
         Self: Sized + TypedMut,
     {
@@ -79,11 +80,7 @@ pub trait Typed {
             *self.ty_mut() = ty;
             Ok(self)
         } else {
-            Err(Box::new(ErrorUnexpectedType::new(
-                &ty,
-                self.ty(),
-                &ty.loc(),
-            )))
+            Err(error::unexpected_type(&ty, self.ty(), ty.span()))
         }
     }
 }
