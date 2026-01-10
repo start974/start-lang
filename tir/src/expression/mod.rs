@@ -6,7 +6,7 @@ mod constant;
 mod definition;
 
 pub use crate::env::Variable as ExpressionVariable;
-pub use constant::{Constant, ConstantKind};
+pub use constant::{Constant, ConstantKind, NConst};
 pub use definition::Definition as ExpressionDefinition;
 
 // ==========================================================================
