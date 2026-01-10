@@ -23,7 +23,7 @@ impl Span {
     }
 
     /// union of spans
-    pub fn union(&self, other: &Span) -> Span {
+    pub fn union(&self, other: Span) -> Span {
         Span(
             std::cmp::min(self.start(), other.start()),
             std::cmp::max(self.end(), other.end()),
