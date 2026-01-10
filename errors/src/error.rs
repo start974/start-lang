@@ -1,12 +1,12 @@
 use crate::message::Message;
 use ariadne::{Cache, Config, IndexType, Label, ReportKind};
-use location::{Located, Location, Report, SourceId};
+use location::{Location, Report, SourceId, Span, Spanned, SpannedSet};
 use pp::theme::Theme;
 
 pub struct Error {
     code: i32,
     header: Message,
-    location: Location,
+    span: Span,
     text: Option<Message>,
     note: Option<Message>,
 }
@@ -17,7 +17,7 @@ impl Error {
         Self {
             code,
             header,
-            location: Location::unknown(),
+            span: Span::default(),
             text: None,
             note: None,
         }
@@ -25,12 +25,6 @@ impl Error {
 
     pub fn code(&self) -> i32 {
         self.code
-    }
-
-    /// add location to error
-    pub fn with_location(mut self, loc: Location) -> Self {
-        self.location = loc;
-        self
     }
 
     /// add text to error
@@ -46,8 +40,8 @@ impl Error {
     }
 
     /// report of error
-    pub fn report(&self, theme: &Theme) -> Report<'_> {
-        let loc = self.location.clone();
+    pub fn report<'a, 'id>(&self, id_source: &'a SourceId, theme: &Theme) -> Report<'a, 'id> {
+        let loc = Location::new(id_source, self.span);
         let mut report_builder = Report::build(ReportKind::Error, loc.clone())
             .with_config(Config::default().with_index_type(IndexType::Byte))
             .with_code(self.code)
@@ -67,13 +61,19 @@ impl Error {
     }
 
     /// print error on stderr
-    pub fn eprint(&self, theme: &Theme, cache: &mut impl Cache<SourceId>) {
-        self.report(theme).eprint(cache).unwrap();
+    pub fn eprint(&self, id_source: &SourceId, theme: &Theme, cache: &mut impl Cache<SourceId>) {
+        self.report(id_source, theme).eprint(cache).unwrap();
     }
 }
 
-impl Located for Error {
-    fn loc(&self) -> Location {
-        self.location.clone()
+impl Spanned for Error {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
+impl SpannedSet for Error {
+    fn set_span(&mut self, span: Span) {
+        self.span = span;
     }
 }

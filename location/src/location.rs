@@ -1,23 +1,15 @@
 use crate::{SourceId, Span};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Location {
-    id: SourceId,
+pub struct Location<'a> {
+    id: &'a SourceId,
     span: Span,
 }
 
-impl Location {
+impl<'a> Location<'a> {
     /// Create a new location with the given start and end positions in the source.
-    pub fn new(id: SourceId, span: Span) -> Self {
+    pub fn new(id: &'a SourceId, span: Span) -> Self {
         Self { id, span }
-    }
-
-    /// unknown location
-    pub fn unknown() -> Self {
-        Self {
-            span: Span::new(0, 0),
-            id: SourceId::Unknown,
-        }
     }
 
     /// add offset to location
@@ -29,51 +21,30 @@ impl Location {
     }
 
     /// union of location
-    pub fn union(self, other: Location) -> Location {
+    pub fn union(self, other: Location<'a>) -> Location<'a> {
         if self.id != other.id {
             panic!("Cannot union locations from different sources");
         }
         Location {
             span: self.span.union(&other.span),
-            id: self.id.clone(),
+            id: self.id,
         }
     }
 
     /// get identifier
-    pub fn id(&self) -> &SourceId {
-        &self.id
+    pub fn id(&self) -> &'a SourceId {
+        self.id
     }
 
-    /// start position
-    pub fn start(&self) -> usize {
-        self.span.start()
-    }
-
-    /// end position
-    pub fn end(&self) -> usize {
-        self.span.end()
+    /// get span
+    pub fn span(&self) -> &Span {
+        &self.span
     }
 }
 
-impl ariadne::Span for Location {
-    type SourceId = SourceId;
-
-    fn start(&self) -> usize {
-        self.span.start()
-    }
-
-    fn end(&self) -> usize {
-        self.span.end()
-    }
-
-    fn source(&self) -> &Self::SourceId {
-        &self.id
-    }
-}
-
-pub trait Located {
+pub trait Located<'a> {
     /// get location
-    fn location(&self) -> &Location;
+    fn location(&self) -> &Location<'a>;
 }
 
 pub trait LocatedSet: Sized {
@@ -84,5 +55,21 @@ pub trait LocatedSet: Sized {
     fn with_location(mut self, location: Location) -> Self {
         self.set_location(location);
         self
+    }
+}
+
+impl<'a> ariadne::Span for Location<'a> {
+    type SourceId = SourceId;
+
+    fn start(&self) -> usize {
+        self.span().start()
+    }
+
+    fn end(&self) -> usize {
+        self.span().start()
+    }
+
+    fn source(&self) -> &Self::SourceId {
+        self.id()
     }
 }
