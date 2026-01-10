@@ -240,7 +240,7 @@ impl Env {
     pub fn get_alias_ty(&mut self, id: &Identifier, span: Span) -> Result<Alias, Error> {
         match self.table.get_mut(id) {
             Some(info) if info.kind == IdentifierKind::Type => {
-                info.span_refs.push(span.clone());
+                info.span_refs.push(span);
                 Ok(Alias {
                     name: id.clone(),
                     ty: Box::new(info.ty.clone()),
