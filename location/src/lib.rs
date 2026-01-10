@@ -1,5 +1,5 @@
 use pp::prelude::*;
-use ariadne::Span;
+pub use ariadne::Span;
 use chumsky::span::SimpleSpan;
 use std::path::PathBuf;
 

@@ -1,10 +1,9 @@
 #![allow(deprecated)]
 #![allow(dead_code)]
 
-use assert_cmd::cargo::cargo_bin;
+use assert_cmd::cargo::cargo_bin_cmd;
 use core::panic;
 use fs_extra::dir::CopyOptions;
-use startlang::lsp::backend::Backend;
 use std::fmt::Debug;
 use std::fs;
 use std::io::Write;
@@ -40,7 +39,8 @@ pub struct TestContext {
 
 impl TestContext {
     pub fn new(base: &str) -> Self {
-        let mut child = tokio::process::Command::new(cargo_bin!("startlang"))
+        let cmd = cargo_bin_cmd!("startlang");
+        let mut child = tokio::process::Command::new(cmd.get_program())
             .arg("lsp")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -87,7 +87,7 @@ impl TestContext {
         self.version_id += 1;
         TextDocumentItem {
             uri: self.doc_uri(path),
-            language_id: Backend::name().to_string(),
+            language_id: "startlang".to_string(),
             version: self.version_id,
             text: text.to_owned(),
         }

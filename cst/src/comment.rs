@@ -1,5 +1,7 @@
 use pp::prelude::*;
 
+use crate::documentation::Documentation;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Comment {
     content: Vec<String>,
@@ -16,6 +18,15 @@ impl Comment {
     /// is doc
     pub fn is_doc(&self) -> bool {
         self.is_doc
+    }
+
+    /// comment to documentation
+    pub fn to_doc(&self) -> Option<Documentation> {
+        if self.is_doc {
+            Some(Documentation::from(self.content.clone()))
+        } else {
+            None
+        }
     }
 }
 

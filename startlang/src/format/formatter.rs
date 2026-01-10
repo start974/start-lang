@@ -1,14 +1,14 @@
+use super::Mode;
 use super::diff::print_diff;
 use super::error::ErrorFileWrite;
-use super::Mode;
 use crate::file_interpreter::error::ErrorFileRead;
-use crate::parser::CommandOrEnd;
-use crate::utils::error::{ErrorCode, ErrorPrint};
-use crate::utils::location::{Located as _, SourceId};
-use crate::utils::pretty::Pretty as _;
-use crate::utils::theme::Theme;
-use crate::{lexer, parser};
-use ariadne::{Source, Span as _};
+use ariadne::Source;
+use error::{ErrorCode, ErrorPrint};
+use lexer::MetaTokenStream;
+use location::SourceId;
+use parser::CommandOrEnd;
+use pp::pretty::Pretty as _;
+use pp::theme::Theme;
 use std::path::{Path, PathBuf};
 
 pub struct Formatter {
@@ -52,21 +52,21 @@ impl Formatter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::token::MetaToken> {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Option<lexer::MetaTokenStream> {
         let source_id = self.source_id();
         match lexer::lex(source_id.clone(), offset_source, content) {
-            Ok(tokens) => tokens,
+            Ok(tokens) => Some(tokens),
             Err(errs) => {
                 for err in errs {
                     self.fail(err);
                 }
-                Vec::new()
+                None
             }
         }
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: &[lexer::token::MetaToken]) -> Option<CommandOrEnd> {
+    fn parse(&mut self, tokens: MetaTokenStream) -> Option<CommandOrEnd> {
         let source_id = self.source_id();
         match parser::parse(source_id.clone(), tokens) {
             Ok(cmd) => Some(cmd),
@@ -80,21 +80,21 @@ impl Formatter {
     }
 
     /// run the interpreter
-    fn parse_content(&mut self) -> Option<parser::cst::File> {
+    fn parse_content(&mut self) -> Option<cst::File> {
         let mut offset = 0;
         let content_copy = self.content.clone();
-        let mut cst_file = parser::cst::File::default();
+        let mut cst_file = cst::File::default();
 
         loop {
             let content = &content_copy[offset..];
             if content.is_empty() {
                 break;
             }
-            let tokens = self.lex(content, offset);
-            match tokens.last() {
+            match self.lex(content, offset) {
                 None => break,
-                Some(last_token) => {
-                    match self.parse(&tokens) {
+                Some(tokens) => {
+                    let offset_end = tokens.last_offset();
+                    match self.parse(tokens) {
                         None => {
                             break;
                         }
@@ -104,7 +104,7 @@ impl Formatter {
                             break;
                         }
                     }
-                    offset = last_token.loc().end();
+                    offset = offset_end
                 }
             }
         }

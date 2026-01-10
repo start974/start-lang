@@ -7,4 +7,4 @@ edition = "2024"
 tir = { path = "../tir" }
 pp = { path = "../pp" }
 location = { path = "../location" }
-bigdecimal = "0.3.0"
+bigdecimal = "0.4.10"

@@ -4,13 +4,12 @@ use crate::interpreter;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use crate::interpreter::Interpreter as _;
-use crate::typer::ast;
-use crate::typer::Typer;
-use crate::utils::error::ErrorPrint;
-use crate::utils::location::SourceId;
-use crate::utils::pretty::Pretty;
-use crate::utils::theme::Theme;
-use crate::vm::Env;
+use typing::Typer;
+use error::ErrorPrint;
+use location::SourceId;
+use pp::pretty::Pretty;
+use pp::theme::Theme;
+use vm::Env;
 use ariadne::Source;
 
 pub struct Interpreter {
@@ -109,7 +108,7 @@ impl interpreter::Interpreter for Interpreter {
         println!("{}", doc.make_string(&self.theme));
     }
 
-    fn print_summay(&self, def: &ast::ExpressionDefinition) {
+    fn print_summay(&self, def: &tir::ExpressionDefinition) {
         let summary = SummaryDefinition::from(def);
         println!("       {}", summary.make_string(&self.theme));
     }

@@ -1,0 +1,16 @@
+[package]
+name = "startlang"
+version = "0.0.1"
+edition = "2021"
+
+[build-dependencies]
+cc="*"
+glob = "0.3.3"
+
+
+
+[dependencies]
+chumsky = "0.10.1"
+color-print = "0.3.7"
+num-bigint = "0.4.6"
+pretty = "0.12.4"

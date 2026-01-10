@@ -1,15 +1,10 @@
 use super::error::UnknownOption;
 use super::flag::{DebugFlag, Flag};
-use crate::lexer;
-use crate::parser::cst::AsIdentifier as _;
-use crate::parser::{self, cst};
-use crate::typer::ast::Typed as _;
-use crate::typer::{self, ast};
-use crate::utils::error::{ErrorCode, ErrorReport};
-use crate::utils::location::{Located, SourceId};
-use crate::utils::pretty::Pretty;
-use crate::vm;
-use ariadne::Span as _;
+use cst::AsIdentifier as _;
+use error::{ErrorCode, ErrorReport};
+use location::{Located, SourceId};
+use pp::pretty::Pretty;
+use tir::Typed as _;
 
 pub trait Interpreter {
     /// get content
@@ -31,7 +26,7 @@ pub trait Interpreter {
     fn get_offset_source(&self, offset: usize) -> usize;
 
     /// get mutable reference on typer
-    fn mut_typer(&mut self) -> &mut typer::Typer;
+    fn mut_typer(&mut self) -> &mut typing::Typer;
 
     /// get vm
     fn mut_vm(&mut self) -> &mut vm::Env;
@@ -48,7 +43,7 @@ pub trait Interpreter {
         Doc: Pretty + Located;
 
     /// active printing of summarry definition
-    fn print_summay(&self, def: &ast::ExpressionDefinition);
+    fn print_summay(&self, def: &tir::ExpressionDefinition);
 
     /// pretty debug
     fn debug<Doc>(&mut self, flag: DebugFlag, doc: &Doc)
@@ -82,7 +77,7 @@ pub trait Interpreter {
     fn run_expr_definition(
         &mut self,
         cst_def: cst::ExpressionDefinition,
-        doc: Option<ast::Documentation>,
+        doc: Option<cst::Documentation>,
     ) {
         self.mut_typer()
             .definition(&cst_def, doc)
@@ -101,7 +96,7 @@ pub trait Interpreter {
     }
 
     /// run command type definition
-    fn run_type_definition(&mut self, def: cst::TypeDefinition, doc: Option<ast::Documentation>) {
+    fn run_type_definition(&mut self, def: cst::TypeDefinition, doc: Option<tir::Documentation>) {
         if let Err(errs) = self.mut_typer().type_definition(&def, doc) {
             for err in errs {
                 self.fail(err);
@@ -181,21 +176,21 @@ pub trait Interpreter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Vec<lexer::MetaToken> {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Option<lexer::MetaTokenStream> {
         let source_id = self.source_id();
         match lexer::lex(source_id.clone(), offset_source, content) {
-            Ok(tokens) => tokens,
+            Ok(tokens) => Some(tokens),
             Err(errs) => {
                 for err in errs {
                     self.fail(err);
                 }
-                Vec::new()
+                None
             }
         }
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: &[lexer::MetaToken]) -> Option<cst::Command> {
+    fn parse(&mut self, tokens: lexer::MetaTokenStream) -> Option<cst::Command> {
         let source_id = self.source_id();
         match parser::parse(source_id.clone(), tokens) {
             Ok(parser::CommandOrEnd::Command(cmd)) => Some(*cmd),
@@ -224,16 +219,16 @@ pub trait Interpreter {
                 break;
             }
             let offset_source = self.get_offset_source(offset);
-            let tokens = self.lex(content, offset_source);
-            match tokens.last() {
+            match self.lex(content, offset_source) {
                 None => break,
-                Some(last_token) => {
+                Some(tokens) => {
+                    let offset_end = tokens.last_offset();
                     self.debug(DebugFlag::Lexer, &tokens);
-                    if let Some(cmd) = self.parse(&tokens) {
+                    if let Some(cmd) = self.parse(tokens) {
                         self.debug(DebugFlag::Parser, &cmd);
                         self.run_command(cmd);
                     }
-                    offset += last_token.loc().end() - offset_source;
+                    offset += offset_end - offset_source;
                 }
             }
         }

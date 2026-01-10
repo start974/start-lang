@@ -1,7 +1,7 @@
-use crate::parser::cst::expression::Variable;
-use crate::parser::cst::AsIdentifier as _;
-use crate::utils::error::{ErrorCode, ErrorReport, Message};
-use crate::utils::location::{Located, Location};
+use cst::expression::Variable;
+use cst::AsIdentifier as _;
+use error::{ErrorCode, ErrorReport, Message};
+use location::{Located, Location};
 
 // =======================================================================
 // Unknown Option

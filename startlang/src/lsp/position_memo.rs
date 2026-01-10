@@ -1,4 +1,4 @@
-use crate::utils::location::Location;
+use location::Location;
 use ariadne::Span as _;
 use tower_lsp::lsp_types::{Position, Range};
 

@@ -5,5 +5,5 @@ edition = "2024"
 
 [dependencies]
 pp = { path = "../pp" }
-ariadne = { version = "0.5.1" }
-chumsky = "0.10.1"
+ariadne = { version = "0.6.0" }
+chumsky = "0.12.0"

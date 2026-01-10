@@ -1,4 +1,5 @@
 use cst::Meta;
+use location::{Located, Location, Span};
 use num_bigint::BigUint;
 use pp::prelude::*;
 
@@ -84,3 +85,48 @@ impl Pretty for Token {
 }
 
 pub type MetaToken = Meta<Token>;
+
+pub struct MetaTokenStream {
+    tokens: Vec<MetaToken>,
+}
+
+impl MetaTokenStream {
+    pub fn last_offset(&self) -> usize {
+        if let Some(token) = self.tokens.last() {
+            token.loc().end()
+        } else {
+            0
+        }
+    }
+}
+
+impl IntoIterator for MetaTokenStream {
+    type Item = MetaToken;
+    type IntoIter = std::vec::IntoIter<MetaToken>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.tokens.into_iter()
+    }
+}
+
+impl From<Vec<MetaToken>> for MetaTokenStream {
+    fn from(tokens: Vec<MetaToken>) -> Self {
+        Self { tokens }
+    }
+}
+
+impl Pretty for MetaTokenStream {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::intersperse(self.tokens.iter().map(|t| t.pretty(theme)), Doc::hardline()).group()
+    }
+}
+
+impl Located for MetaTokenStream {
+    fn loc(&self) -> Location {
+        if let (Some(first), Some(last)) = (self.tokens.first(), self.tokens.last()) {
+            first.loc().union(last.loc())
+        } else {
+            unreachable!("MetaTokenStream should have at least one token");
+        }
+    }
+}

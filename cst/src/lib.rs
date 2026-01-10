@@ -1,6 +1,7 @@
 pub mod command;
 pub mod comment;
 pub mod constant;
+pub mod documentation;
 pub mod expression;
 pub mod expression_definition;
 pub mod file;
@@ -16,6 +17,7 @@ pub use command::Command;
 pub use command::CommandKind;
 pub use comment::Comment;
 pub use constant::Constant;
+pub use documentation::Documentation;
 pub use expression::Expression;
 pub use expression_definition::ExpressionDefinition;
 pub use file::EndOfFile;
