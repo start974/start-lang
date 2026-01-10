@@ -1,13 +1,11 @@
-use chumsky::error::Rich;
+use crate::ErrorChumsky;
+use chumsky::span::Span;
 use errors::{Error, Message};
 use location::{Location, SourceId};
 
-pub fn error_lexing<'src>(err: Rich<'src, char>, source_id: SourceId, offset: usize) -> Error {
+pub fn error_lexing<'src>(err: ErrorChumsky<'src>, offset: usize) -> Error {
     Error::new(201, Message::text("Lexing error"))
-        .with_location({
-            let span = err.span();
-            Location::new(source_id, span.start, span.end).with_offset(offset)
-        })
+        .with_span({ err.span().into().with_offset() })
         .with_text({
             let msg = if err.expected().len() == 1 {
                 Message::text("Lexer expected ")

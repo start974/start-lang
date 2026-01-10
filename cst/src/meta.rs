@@ -1,6 +1,6 @@
 use crate::{AsCharacter, AsIdentifier, AsNumber};
 use crate::{Comment, Documentation};
-use location::{Located, Location};
+use location::{Span, Spanned};
 use pp::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,15 +13,15 @@ pub enum CommentOrLines {
 pub struct Meta<T> {
     before: Vec<CommentOrLines>,
     pub value: T,
-    loc: Location,
+    span: Span,
 }
 
 impl<T> Meta<T> {
-    pub fn new(value: T, loc: Location) -> Self {
+    pub fn new(value: T, span: Span) -> Self {
         Self {
             before: Vec::new(),
             value,
-            loc,
+            span,
         }
     }
 
@@ -80,7 +80,7 @@ impl<T> Meta<T> {
         Meta {
             value: f(self.value),
             before: self.before,
-            loc: self.loc,
+            span: self.span,
         }
     }
 
@@ -137,9 +137,9 @@ where
     }
 }
 
-impl<T> Located for Meta<T> {
-    fn loc(&self) -> Location {
-        self.loc.clone()
+impl<T> Spanned for Meta<T> {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 

@@ -1,6 +1,6 @@
 use super::{Expression, ExpressionDefinition, TypeDefinition, expression, help, operator};
 use crate::meta::Meta;
-use location::{Located, Location};
+use location::{Span, Spanned};
 use pp::pretty::Pretty;
 use pp::theme::{Doc, Theme};
 
@@ -189,27 +189,27 @@ impl Pretty for CommandKind {
     }
 }
 
-impl Located for CommandKind {
-    fn loc(&self) -> Location {
-        let loc_keyword = match self {
-            CommandKind::ExpressionDefinition { keyword, .. } => keyword.loc(),
-            CommandKind::TypeDefinition { keyword, .. } => keyword.loc(),
-            CommandKind::Eval { keyword, .. } => keyword.loc(),
-            CommandKind::TypeOf { keyword, .. } => keyword.loc(),
-            CommandKind::Help { keyword, .. } => keyword.loc(),
-            CommandKind::Set { keyword, .. } => keyword.loc(),
-            CommandKind::UnSet { keyword, .. } => keyword.loc(),
+impl Spanned for CommandKind {
+    fn span(&self) -> Span {
+        let span_keyword = match self {
+            CommandKind::ExpressionDefinition { keyword, .. } => keyword.span(),
+            CommandKind::TypeDefinition { keyword, .. } => keyword.span(),
+            CommandKind::Eval { keyword, .. } => keyword.span(),
+            CommandKind::TypeOf { keyword, .. } => keyword.span(),
+            CommandKind::Help { keyword, .. } => keyword.span(),
+            CommandKind::Set { keyword, .. } => keyword.span(),
+            CommandKind::UnSet { keyword, .. } => keyword.span(),
         };
-        let loc_content = match self {
-            CommandKind::ExpressionDefinition { def, .. } => def.loc(),
-            CommandKind::TypeDefinition { def, .. } => def.loc(),
-            CommandKind::Eval { expr, .. } => expr.loc(),
-            CommandKind::TypeOf { expr, .. } => expr.loc(),
-            CommandKind::Help { var, .. } => var.loc(),
-            CommandKind::Set { var, .. } => var.loc(),
-            CommandKind::UnSet { var, .. } => var.loc(),
+        let span_content = match self {
+            CommandKind::ExpressionDefinition { def, .. } => def.span(),
+            CommandKind::TypeDefinition { def, .. } => def.span(),
+            CommandKind::Eval { expr, .. } => expr.span(),
+            CommandKind::TypeOf { expr, .. } => expr.span(),
+            CommandKind::Help { var, .. } => var.span(),
+            CommandKind::Set { var, .. } => var.span(),
+            CommandKind::UnSet { var, .. } => var.span(),
         };
-        loc_keyword.union(loc_content)
+        span_keyword.union(span_content)
     }
 }
 
@@ -236,8 +236,8 @@ impl Pretty for Command {
     }
 }
 
-impl Located for Command {
-    fn loc(&self) -> Location {
-        self.kind.loc().union(self.dot.loc())
+impl Spanned for Command {
+    fn span(&self) -> Span {
+        self.kind.span().union(self.dot.span())
     }
 }

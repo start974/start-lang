@@ -1,5 +1,5 @@
 use crate::{operator, ty};
-use location::{Located, Location};
+use location::{Span, Spanned};
 use pp::prelude::*;
 
 #[derive(Debug)]
@@ -22,8 +22,8 @@ impl Pretty for TypeDefinition {
     }
 }
 
-impl Located for TypeDefinition {
-    fn loc(&self) -> Location {
-        self.name.loc().union(self.ty.loc())
+impl Spanned for TypeDefinition {
+    fn span(&self) -> Span {
+        self.name.span().union(self.ty.span())
     }
 }

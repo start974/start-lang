@@ -1,4 +1,4 @@
-use crate::token;
+use crate::{ErrorChumsky, token};
 use chumsky::prelude::*;
 use chumsky::text::{newline, whitespace};
 use cst::{Comment, Meta, meta::CommentOrLines};
@@ -6,7 +6,8 @@ use location::{Location, SourceId};
 use num_bigint::BigUint;
 use std::rc::Rc;
 
-pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, char>>;
+trait Lexer<'src, T> = Parser<'src, char, T, ErrorChumsky<'src>>;
+
 // ===========================================================================
 // Commment
 // ===========================================================================
@@ -14,7 +15,7 @@ pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, char>>;
 /// ```ebnf
 /// COMMENT := "(*" <ANY>* "*)"
 /// ```
-pub fn comment<'src>() -> impl Parser<'src, &'src str, Comment, ErrorChumsky<'src>> {
+pub fn comment<'src>() -> impl Lexer<'src, Comment> {
     let start = just("(*")
         .ignore_then(just("*").or_not())
         .map(|opt| opt.is_some());
@@ -34,13 +35,9 @@ pub fn comment<'src>() -> impl Parser<'src, &'src str, Comment, ErrorChumsky<'sr
 // ===========================================================================
 // Meta
 // ===========================================================================
-pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, ErrorChumsky<'src>> + Sized {
+pub trait WithMeta<'src, T>: Lexer<'src, T> + Sized {
     /// meta(rule) = (LINE{2,} | WS* COMMENT)* WS* rule
-    fn with_meta(
-        self,
-        source_id: SourceId,
-        offset: usize,
-    ) -> impl Parser<'src, &'src str, Meta<T>, ErrorChumsky<'src>> {
+    fn with_meta(self) -> impl Parser<'src, &'src str, Meta<T>, ErrorChumsky<'src>> {
         let lines = newline().repeated().at_least(2).to(CommentOrLines::Lines);
         let comment = whitespace()
             .ignore_then(comment())
@@ -51,11 +48,7 @@ pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, ErrorChumsky<'src>> + Si
             .collect::<Vec<CommentOrLines>>();
 
         // Ajoute la location à la rule
-        let rule_loc = self.map_with(move |value, e| {
-            let span: SimpleSpan = e.span();
-            let loc = Location::new(source_id.clone(), span.start, span.end).with_offset(offset);
-            (value, loc)
-        });
+        let rule_loc = self.map_with(move |value, e| (value, e.span));
 
         // Consomme les derniers espaces/lignes avant le rule
         meta_items
