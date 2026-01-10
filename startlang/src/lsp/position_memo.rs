@@ -1,5 +1,5 @@
-use location::Location;
 use ariadne::Span as _;
+use location::Location;
 use tower_lsp::lsp_types::{Position, Range};
 
 #[derive(Debug)]

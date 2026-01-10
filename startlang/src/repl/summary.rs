@@ -1,5 +1,5 @@
-use tir::{ExpressionDefinition, Pattern, Typed};
 use pp::prelude::*;
+use tir::{ExpressionDefinition, Pattern, Typed};
 
 pub struct SummaryDefinition<'a>(&'a ExpressionDefinition);
 

@@ -1,7 +1,7 @@
 use super::super::ty::{Type, TypeBuiltin, Typed, TypedMut};
 use location::{Located, LocatedSet, Location};
-use pp::prelude::*;
 use num_bigint::BigUint;
+use pp::prelude::*;
 
 pub type NConst = BigUint;
 

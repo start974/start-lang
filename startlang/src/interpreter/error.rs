@@ -1,5 +1,5 @@
-use cst::expression::Variable;
 use cst::AsIdentifier as _;
+use cst::expression::Variable;
 use error::{ErrorCode, ErrorReport, Message};
 use location::{Located, Location};
 
