@@ -1,0 +1,11 @@
+[package]
+name = "tir"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+location = { path = "../location" }
+pp = {path = "../pp" }
+error = { path = "../error" }
+
+num-bigint = "0.4.6"
