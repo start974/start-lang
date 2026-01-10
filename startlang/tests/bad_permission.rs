@@ -19,9 +19,7 @@ where
     perms.set_mode(perm);
     fs::set_permissions(&path, perms.clone()).unwrap();
 
-    let output = cargo_bin_cmd!("startlang")
-        .args(f_args(path_str))
-        .output();
+    let output = cargo_bin_cmd!("startlang").args(f_args(path_str)).output();
 
     perms.set_mode(0o644);
     fs::set_permissions(&path, perms).unwrap();

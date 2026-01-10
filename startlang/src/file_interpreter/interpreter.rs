@@ -1,17 +1,17 @@
 use super::error::ErrorFileRead;
 use crate::interpreter;
+use crate::interpreter::Interpreter as _;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
-use crate::interpreter::Interpreter as _;
-use typing::Typer;
+use ariadne::Source;
 use error::{ErrorPrint as _, ErrorReport};
 use location::SourceId;
 use pp::pretty::Pretty;
 use pp::theme::Theme;
-use ariadne::Source;
 use std::fs::read_to_string;
 use std::path::Path;
 use std::path::PathBuf;
+use typing::Typer;
 
 pub struct Interpreter {
     source_id: SourceId,

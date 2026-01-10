@@ -2,7 +2,7 @@ pub mod interpreter;
 mod summary;
 
 use crate::interpreter::Interpreter;
-use rustyline::{error::ReadlineError, history::FileHistory, DefaultEditor, Editor};
+use rustyline::{DefaultEditor, Editor, error::ReadlineError, history::FileHistory};
 
 const HISTORY_FILE: &str = ".start-history.txt";
 fn finish(rl: &mut Editor<(), FileHistory>) {

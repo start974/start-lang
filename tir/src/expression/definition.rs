@@ -1,5 +1,5 @@
-use super::super::ty::{Type, Typed};
 use super::super::Pattern;
+use super::super::ty::{Type, Typed};
 use super::Expression;
 use location::{Located, Location};
 use pp::prelude::*;

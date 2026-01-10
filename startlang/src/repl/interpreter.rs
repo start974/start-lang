@@ -1,16 +1,16 @@
 use super::summary::SummaryDefinition;
 use crate::file_interpreter;
 use crate::interpreter;
+use crate::interpreter::Interpreter as _;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
-use crate::interpreter::Interpreter as _;
-use typing::Typer;
+use ariadne::Source;
 use error::ErrorPrint;
 use location::SourceId;
 use pp::pretty::Pretty;
 use pp::theme::Theme;
+use typing::Typer;
 use vm::Env;
-use ariadne::Source;
 
 pub struct Interpreter {
     all_content: String,

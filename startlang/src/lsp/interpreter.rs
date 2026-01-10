@@ -4,15 +4,15 @@ use super::position_memo::PositionMemo;
 use crate::interpreter::flag::{DebugFlag, Flag};
 use crate::interpreter::{self, Interpreter as _};
 use crate::lsp::document::SymbolInfo;
-use typing::Typer;
+use ariadne::Span as _;
 use error::{ErrorCode, ErrorReport};
 use location::{Located, SourceId};
 use pp::pretty::Pretty;
 use pp::theme::{MessageTheme, Theme};
-use ariadne::Span as _;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tower_lsp::lsp_types::{Diagnostic, Url};
+use typing::Typer;
 
 #[derive(Debug)]
 pub struct Interpreter {
