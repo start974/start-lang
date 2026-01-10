@@ -1,12 +1,15 @@
-use chumsky::{Parser as _, input::Input as _, span::SimpleSpan};
+#![feature(trait_alias)]
+
 use cst::{Command, EndOfFile};
 use errors::Errors;
 use lexer::MetaTokenStream;
-use location::{Located as _, SourceId};
 
-pub mod error;
-pub mod parsing;
+mod error;
+mod extra;
+mod parsing;
 
+pub use extra::ErrorChumsky;
+pub use extra::Parser;
 pub use parsing::parser;
 
 pub enum CommandOrEnd {
@@ -15,17 +18,11 @@ pub enum CommandOrEnd {
 }
 
 /// parse tokens
-pub fn parse(source_id: SourceId, tokens: MetaTokenStream) -> Result<CommandOrEnd, Errors> {
-    let tokens_spanned = tokens
-        .into_iter()
-        .map(|token| (token.clone(), token.loc().to_simple_span()))
-        .collect::<Vec<_>>();
-    let span_end: SimpleSpan = tokens_spanned.last().unwrap().1;
-    let input = tokens_spanned.map(span_end, |(t, s)| (t, s));
-
-    parser().parse(input).into_result().map_err(|errs| {
-        errs.iter()
-            .map(|e| error::error_parsing(e.clone(), source_id.clone()))
-            .collect()
-    })
+pub fn parse(tokens: MetaTokenStream) -> Result<CommandOrEnd, Errors> {
+    use chumsky::input::Stream;
+    let stream = Stream::from_iter(tokens);
+    parser()
+        .parse(stream)
+        .into_result()
+        .map_err(|errs| errs.iter().map(error::error_parsing).collect())
 }

@@ -4,20 +4,19 @@ use errors::Errors;
 pub mod error;
 pub mod lexing;
 pub mod token;
+mod extra;
 
 pub use token::MetaToken;
 pub use token::MetaTokenStream;
+pub use extra::Lexer;
+pub use extra::ErrorChumsky;
 
-type ErrorChumsky<'src> = chumsky::error::Rich<'src, char>;
-pub trait Lexer<'src, T> =
-    chumsky::Parser<'src, &'src str, T, chumsky::extra::Err<ErrorChumsky<'src>>>;
 
 pub use lexing::lexer;
 
 /// apply lexer on [source_id] with [offset] on [content]
 pub fn lex(content: &str, offset: usize) -> Result<MetaTokenStream, Errors> {
     use chumsky::Parser as _;
-
     lexer(offset)
         .parse(content)
         .into_result()
