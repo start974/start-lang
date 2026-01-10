@@ -1,76 +1,38 @@
 use chumsky::error::{Rich, RichPattern};
-use error::{ErrorCode, ErrorReport, Message};
+use errors::{Error, Message};
 use lexer::MetaToken;
-use lexer::token::Token;
-use location::{Located, Location, SourceId};
+use location::{Location, SourceId};
 
-pub struct Error {
-    loc: Location,
-    expected: Vec<String>,
-    found: Option<Token>,
-}
-
-impl Error {
-    /// make a new error
-    pub fn new(err: Rich<'_, MetaToken>, source_id: SourceId) -> Self {
-        let span = err.span();
-        let loc = Location::new(source_id, span.start, span.end);
-        Self {
-            loc,
-            expected: {
-                err.expected()
-                    .map(RichPattern::to_string)
-                    .filter(|s| !s.is_empty())
-                    .collect()
-            },
-            found: err.found().map(|meta| meta.value.clone()),
-        }
-    }
-}
-
-impl ErrorCode for Error {
-    fn code(&self) -> i32 {
-        202
-    }
-}
-
-impl Located for Error {
-    fn loc(&self) -> Location {
-        self.loc.clone()
-    }
-}
-
-impl ErrorReport for Error {
-    fn head(&self) -> Message {
-        Message::text("Parsing error")
-    }
-
-    fn text(&self) -> Option<Message> {
-        let msg = Message::text("Parsing expect ")
-            .append(Message::intersperse(
-                self.expected.iter().map(|s| Message::quoted(s).important()),
-                Message::text(" or "),
-            ))
-            .with_text(".");
-        Some(msg)
-    }
-
-    fn note(&self) -> Option<Message> {
-        match &self.found {
-            None => None,
-            Some(found) => {
-                let expected_list = Message::intersperse(
-                    self.expected.iter().map(|s| Message::quoted(s).important()),
-                    Message::text(", "),
-                );
-                let msg = Message::text("Expected : ")
-                    .append(expected_list)
-                    .with_line()
-                    .with_text("Found    : ")
-                    .append(Message::quoted(found.to_string()).important())
-                    .with_text(".");
-                Some(msg)
-            }
-        }
+pub fn error_parsing(err: Rich<'_, MetaToken>, source_id: SourceId) -> Error {
+    let expected: Vec<_> = err
+        .expected()
+        .map(RichPattern::to_string)
+        .filter(|s| !s.is_empty())
+        .map(Message::quoted)
+        .map(Message::important)
+        .collect();
+    let res = Error::new(202, Message::text("Parsing error"))
+        .with_location({
+            let span = err.span();
+            Location::new(source_id, span.start, span.end)
+        })
+        .with_text(
+            Message::text("Parsing expect ")
+                .append(Message::intersperse(
+                    expected.clone(),
+                    Message::text(" or "),
+                ))
+                .with_text("."),
+        );
+    match err.found().map(|meta| meta.value.clone()) {
+        None => res,
+        Some(found) => res.with_note(
+            Message::text("Expected : ")
+                .append(Message::intersperse(expected, Message::text(", ")))
+                .with_line()
+                .with_text("Found    : ")
+                .append(Message::quoted(found.to_string()).important())
+                .with_text("."),
+        ),
     }
 }
