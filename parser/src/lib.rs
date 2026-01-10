@@ -1,12 +1,12 @@
 use chumsky::{Parser as _, input::Input as _, span::SimpleSpan};
 use cst::{Command, EndOfFile};
+use errors::Errors;
 use lexer::MetaTokenStream;
 use location::{Located as _, SourceId};
 
 pub mod error;
 pub mod parsing;
 
-pub use error::Error;
 pub use parsing::parser;
 
 pub enum CommandOrEnd {
@@ -15,7 +15,7 @@ pub enum CommandOrEnd {
 }
 
 /// parse tokens
-pub fn parse(source_id: SourceId, tokens: MetaTokenStream) -> Result<CommandOrEnd, Vec<Error>> {
+pub fn parse(source_id: SourceId, tokens: MetaTokenStream) -> Result<CommandOrEnd, Errors> {
     let tokens_spanned = tokens
         .into_iter()
         .map(|token| (token.clone(), token.loc().to_simple_span()))
@@ -25,7 +25,7 @@ pub fn parse(source_id: SourceId, tokens: MetaTokenStream) -> Result<CommandOrEn
 
     parser().parse(input).into_result().map_err(|errs| {
         errs.iter()
-            .map(|e| Error::new(e.clone(), source_id.clone()))
+            .map(|e| error::error_parsing(e.clone(), source_id.clone()))
             .collect()
     })
 }
