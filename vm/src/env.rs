@@ -1,6 +1,6 @@
-use crate::typer::ast::{Expression, ExpressionDefinition, Identifier, Pattern};
+use tir::{Expression, ExpressionDefinition, Identifier, Pattern};
 
-use super::value::{Constant, Value};
+use super::value::Value;
 use std::collections::HashMap;
 
 #[derive(Debug, Default)]
@@ -20,7 +20,7 @@ impl Env {
     /// eval expression
     pub fn eval(&self, expr: &Expression) -> Option<Value> {
         match expr {
-            Expression::Constant(c) => Some(Value::from(Constant::from(c))),
+            Expression::Constant(c) => Some(Value::from(c)),
             Expression::Variable(var) => self.get(var.identifier()).cloned(),
         }
     }

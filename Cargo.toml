@@ -9,4 +9,4 @@ members = [
   "pp",
   "tir",
   "typing"
-]
+, "vm"]

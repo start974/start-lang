@@ -1,7 +1,7 @@
 use cst::{self, AsCharacter as _, AsIdentifier as _, AsNumber as _};
 use error::ResultExt as _;
 use location::{Located as _, LocatedSet};
-use tir::{env::Env, error::Error, Typed};
+use tir::{Typed, env::Env, error::Error};
 
 #[derive(Debug, Default)]
 pub struct Typer {
