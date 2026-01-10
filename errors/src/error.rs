@@ -39,6 +39,12 @@ impl Error {
         self
     }
 
+    /// add span to error
+    pub fn with_span(mut self, span: Span) -> Self {
+        self.span = span;
+        self
+    }
+
     /// report of error
     pub fn report<'a, 'id>(&self, id_source: &'a SourceId, theme: &Theme) -> Report<'a, 'id> {
         let loc = Location::new(id_source, self.span);

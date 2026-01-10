@@ -1,5 +1,5 @@
 use crate::{AsIdentifier, Meta};
-use location::{Located, Location};
+use location::{Span, Spanned};
 use pp::prelude::*;
 
 // ============================================================================
@@ -51,10 +51,10 @@ impl Pretty for Pattern {
     }
 }
 
-impl Located for Pattern {
-    fn loc(&self) -> Location {
+impl Spanned for Pattern {
+    fn span(&self) -> Span {
         match self {
-            Pattern::Variable(var) => var.loc(),
+            Pattern::Variable(var) => var.span(),
         }
     }
 }

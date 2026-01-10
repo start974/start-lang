@@ -1,6 +1,6 @@
 use super::{Constant, Type, operator, parenthesis::Parenthesed};
 use crate::{AsIdentifier, Meta};
-use location::{Located, Location};
+use location::{Span, Spanned};
 use pp::{prelude::*, pretty::PrettyPrecedence};
 
 // ============================================================================
@@ -70,12 +70,12 @@ impl PrettyPrecedence for Expression0 {
     }
 }
 
-impl Located for Expression0 {
-    fn loc(&self) -> Location {
+impl Spanned for Expression0 {
+    fn span(&self) -> Span {
         match self {
-            Expression0::Variable(var) => var.loc(),
-            Expression0::Constant(constant) => constant.loc(),
-            Expression0::Paren(parent) => parent.loc(),
+            Expression0::Variable(var) => var.span(),
+            Expression0::Constant(constant) => constant.span(),
+            Expression0::Paren(parent) => parent.span(),
         }
     }
 }
@@ -99,11 +99,11 @@ impl PrettyPrecedence for Expression1 {
     }
 }
 
-impl Located for Expression1 {
-    fn loc(&self) -> Location {
+impl Spanned for Expression1 {
+    fn span(&self) -> Span {
         match self {
-            Expression1::TypedExpression { expr, ty, .. } => expr.loc().union(ty.loc()),
-            Expression1::Expression0(expr) => expr.loc(),
+            Expression1::TypedExpression { expr, ty, .. } => expr.span().union(ty.span()),
+            Expression1::Expression0(expr) => expr.span(),
         }
     }
 }

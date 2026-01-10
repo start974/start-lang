@@ -1,5 +1,5 @@
 use crate::Meta;
-use location::{Located, Location};
+use location::{Span, Spanned};
 use pp::{prelude::*, pretty::PrettyPrecedence};
 
 // ============================================================================
@@ -28,9 +28,9 @@ impl<Left, Val, Right> Parenthesed<Left, Val, Right> {
     }
 }
 
-impl<Left, Val, Right> Located for Parenthesed<Left, Val, Right> {
-    fn loc(&self) -> Location {
-        self.l_paren.loc().union(self.r_paren.loc())
+impl<Left, Val, Right> Spanned for Parenthesed<Left, Val, Right> {
+    fn span(&self) -> Span {
+        self.l_paren.span().union(self.r_paren.span())
     }
 }
 

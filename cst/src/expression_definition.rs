@@ -1,5 +1,5 @@
 use super::{Expression, Pattern, Type, operator};
-use location::{Located, Location};
+use location::{Span, Spanned};
 use pp::prelude::*;
 
 // ============================================================================
@@ -48,9 +48,9 @@ impl ExpressionDefinition {
     }
 }
 
-impl Located for ExpressionDefinition {
-    fn loc(&self) -> Location {
-        self.pattern.loc().union(self.body.loc())
+impl Spanned for ExpressionDefinition {
+    fn span(&self) -> Span {
+        self.pattern.span().union(self.body.span())
     }
 }
 

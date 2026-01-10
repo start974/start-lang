@@ -1,5 +1,5 @@
 use crate::{AsIdentifier, Meta};
-use location::{Located, Location};
+use location::{Span, Spanned};
 use pp::prelude::*;
 
 // ============================================================================
@@ -68,11 +68,11 @@ impl Pretty for Type {
     }
 }
 
-impl Located for Type {
-    fn loc(&self) -> Location {
+impl Spanned for Type {
+    fn span(&self) -> Span {
         match self {
-            Type::Variable(var) => var.loc(),
-            Type::Builtin(builtin) => builtin.loc(),
+            Type::Variable(var) => var.span(),
+            Type::Builtin(builtin) => builtin.span(),
         }
     }
 }
