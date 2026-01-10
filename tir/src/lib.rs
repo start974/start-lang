@@ -1,10 +1,10 @@
 mod documentation;
-mod env;
+pub mod env;
+pub mod error;
 mod expression;
 mod identifier;
 mod pattern;
 mod ty;
-pub mod error;
 
 pub use documentation::*;
 pub use env::Help;
