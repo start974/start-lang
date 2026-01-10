@@ -5,10 +5,18 @@ use pp::theme::Theme;
 use crate::Error;
 
 pub struct Errors {
+    source_id: SourceId,
     errs: Vec<Error>,
 }
 
 impl Errors {
+    pub fn with_source_id(source_id: SourceId) -> Self {
+        Self {
+            source_id,
+            errs: Vec::new(),
+        }
+    }
+
     /// add error
     pub fn append(mut self, e: Error) -> Self {
         self.errs.push(e);
@@ -24,7 +32,7 @@ impl Errors {
     /// print all errors on stderr
     pub fn eprint(&self, theme: &Theme, cache: &mut impl Cache<SourceId>) {
         for err in &self.errs {
-            err.eprint(theme, cache);
+            err.eprint(&self.source_id, theme, cache);
         }
     }
 
@@ -40,13 +48,17 @@ impl Errors {
 
 impl From<Error> for Errors {
     fn from(e: Error) -> Self {
-        Self { errs: vec![e] }
+        Self {
+            source_id: SourceId::Unknown,
+            errs: vec![e],
+        }
     }
 }
 
 impl FromIterator<Error> for Errors {
     fn from_iter<T: IntoIterator<Item = Error>>(iter: T) -> Self {
         Self {
+            source_id: SourceId::Unknown,
             errs: iter.into_iter().collect(),
         }
     }

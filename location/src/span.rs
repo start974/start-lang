@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Span(usize, usize);
 
 impl Span {
@@ -36,7 +36,7 @@ pub trait Spanned {
     fn span(&self) -> Span;
 }
 
-pub trait SpannedSet : Sized {
+pub trait SpannedSet: Sized {
     /// set span
     fn set_span(&mut self, span: Span);
 
