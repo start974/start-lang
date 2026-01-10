@@ -26,7 +26,7 @@ impl<'a> Location<'a> {
             panic!("Cannot union locations from different sources");
         }
         Location {
-            span: self.span.union(&other.span),
+            span: self.span.union(other.span),
             id: self.id,
         }
     }
