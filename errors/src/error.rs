@@ -27,6 +27,18 @@ impl Error {
         self.code
     }
 
+    pub fn header(&self) -> &Message {
+        &self.header
+    }
+
+    pub fn text(&self) -> Option<&Message> {
+        self.text.as_ref()
+    }
+
+    pub fn note(&self) -> Option<&Message> {
+        self.note.as_ref()
+    }
+
     /// add text to error
     pub fn with_text(mut self, text: Message) -> Self {
         self.text = Some(text);

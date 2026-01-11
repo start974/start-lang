@@ -1,5 +1,4 @@
-use ariadne::Span as _;
-use location::Location;
+use location::Span;
 use tower_lsp::lsp_types::{Position, Range};
 
 #[derive(Debug)]
@@ -81,9 +80,9 @@ impl PositionMemo {
     }
 
     /// get range
-    pub fn range(&mut self, loc: &Location) -> Range {
-        let start = self.position(loc.start());
-        let end = self.position(loc.end());
+    pub fn range(&mut self, span: &Span) -> Range {
+        let start = self.position(span.start());
+        let end = self.position(span.end());
         Range { start, end }
     }
 }

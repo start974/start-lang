@@ -51,3 +51,9 @@ pub trait SpannedSet: Sized {
         self.with_span(x.span())
     }
 }
+
+impl<T> Spanned for (T, Span) {
+    fn span(&self) -> Span {
+        self.1
+    }
+}

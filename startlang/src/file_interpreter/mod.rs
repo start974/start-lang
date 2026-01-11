@@ -1,7 +1,6 @@
 use crate::interpreter::Interpreter as _;
 use std::path::Path;
 
-pub mod error;
 pub mod interpreter;
 
 pub use interpreter::Interpreter;

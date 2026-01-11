@@ -6,6 +6,7 @@ mod format;
 mod interpreter;
 mod lsp;
 mod repl;
+mod error;
 
 #[derive(Parser)]
 #[command(version)]

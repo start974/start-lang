@@ -1,4 +1,5 @@
 use cst::Meta;
+use location::{Span, Spanned};
 use num_bigint::BigUint;
 use pp::prelude::*;
 
@@ -118,5 +119,17 @@ impl From<Vec<MetaToken>> for MetaTokenStream {
 impl Pretty for MetaTokenStream {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::intersperse(self.tokens.iter().map(|t| t.pretty(theme)), Doc::hardline()).group()
+    }
+}
+
+impl Spanned for MetaTokenStream {
+    fn span(&self) -> Span {
+        if let Some(first) = self.tokens.first()
+            && let Some(last) = self.tokens.last()
+        {
+            first.span().union(last.span())
+        } else {
+            unreachable!("stram has no tokens")
+        }
     }
 }

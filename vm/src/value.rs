@@ -1,4 +1,3 @@
-use location::{Location, WithLoc};
 use pp::prelude::*;
 use tir::{Constant, NConst};
 
@@ -24,11 +23,6 @@ impl Value {
 
     pub fn char(c: char) -> Self {
         Value::Char(c)
-    }
-
-    /// make a value with location
-    pub fn with_loc(self, loc: Location) -> WithLoc<Self> {
-        WithLoc::new(loc, self)
     }
 }
 

@@ -1,9 +1,7 @@
-use super::Mode;
-use super::diff::print_diff;
-use super::error::ErrorFileWrite;
-use crate::file_interpreter::error::ErrorFileRead;
+use super::{Mode, diff::print_diff};
+use crate::error;
 use ariadne::Source;
-use error::{ErrorCode, ErrorPrint};
+use errors::Error;
 use lexer::MetaTokenStream;
 use location::SourceId;
 use parser::CommandOrEnd;
@@ -31,7 +29,7 @@ impl Formatter {
             Ok(content) => {
                 formatter.content = content;
             }
-            Err(_) => formatter.fail(ErrorFileRead::new(path.to_path_buf())),
+            Err(_) => formatter.fail(error::read_file(&path)),
         };
         formatter
     }
@@ -42,24 +40,20 @@ impl Formatter {
     }
 
     /// fail with error
-    pub fn fail<E>(&mut self, error: E)
-    where
-        E: ErrorPrint + ErrorCode,
-    {
+    pub fn fail(&mut self, error: Error) {
         let mut cache = (self.source_id(), Source::from(&self.content));
-        error.eprint(&self.theme, &mut cache).unwrap();
+        error.eprint(&self.source_id(), &self.theme, &mut cache);
         self.err_code = if self.err_code == 0 { error.code() } else { 1 };
     }
 
     /// lexing content
     fn lex(&mut self, content: &str, offset_source: usize) -> Option<lexer::MetaTokenStream> {
-        let source_id = self.source_id();
-        match lexer::lex(source_id.clone(), offset_source, content) {
+        match lexer::lex(content, offset_source) {
             Ok(tokens) => Some(tokens),
             Err(errs) => {
-                for err in errs {
+                errs.into_iter().for_each(|err| {
                     self.fail(err);
-                }
+                });
                 None
             }
         }
@@ -67,8 +61,7 @@ impl Formatter {
 
     /// parse command with lexer tokens
     fn parse(&mut self, tokens: MetaTokenStream) -> Option<CommandOrEnd> {
-        let source_id = self.source_id();
-        match parser::parse(source_id.clone(), tokens) {
+        match parser::parse(tokens) {
             Ok(cmd) => Some(cmd),
             Err(errs) => {
                 for err in errs {
@@ -127,7 +120,7 @@ impl Formatter {
 
         match mode {
             Mode::Overwrite if std::fs::write(&self.path, &formatted).is_err() => {
-                self.fail(ErrorFileWrite::new(self.path.clone()))
+                self.fail(error::write_file(&self.path))
             }
             Mode::Diff if print_diff(&self.content, &formatted) => {
                 self.err_code = 1;

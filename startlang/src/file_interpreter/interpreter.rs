@@ -1,16 +1,14 @@
-use super::error::ErrorFileRead;
-use crate::interpreter;
-use crate::interpreter::Interpreter as _;
-use crate::interpreter::flag::DebugFlag;
-use crate::interpreter::flag::Flag;
+use crate::error;
+use crate::interpreter::{
+    self, Interpreter as _,
+    flag::{DebugFlag, Flag},
+};
 use ariadne::Source;
-use error::{ErrorPrint as _, ErrorReport};
+use errors::Error;
 use location::SourceId;
-use pp::pretty::Pretty;
-use pp::theme::Theme;
+use pp::{pretty::Pretty, theme::Theme};
 use std::fs::read_to_string;
-use std::path::Path;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use typing::Typer;
 
 pub struct Interpreter {
@@ -34,7 +32,7 @@ impl Interpreter {
             Ok(content) => {
                 interpreter.content = content;
             }
-            Err(_) => interpreter.fail(ErrorFileRead::new(path.to_path_buf())),
+            Err(_) => interpreter.fail(error::read_file(path)),
         }
         interpreter
     }
@@ -106,12 +104,9 @@ impl interpreter::Interpreter for Interpreter {
 
     fn print_summay(&self, _: &tir::ExpressionDefinition) {}
 
-    fn eprint<E>(&mut self, error: &E)
-    where
-        E: ErrorReport,
-    {
+    fn eprint(&mut self, error: &Error) {
         let mut cache = (self.source_id.clone(), Source::from(&self.content));
-        error.eprint(&self.theme, &mut cache).unwrap();
+        error.eprint(&self.source_id, &self.theme, &mut cache)
     }
 
     fn print<Doc>(&mut self, doc: &Doc)
