@@ -1,110 +1,6 @@
-pub use colored::{Color, Styles};
-use colored::{ColoredString, Colorize};
+use crate::{ColorInfo, Doc, ErrorTheme, MessageTheme};
+use colored::Color;
 use num_bigint::BigUint;
-use pretty::RcDoc;
-
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct ColorInfo {
-    fg_color: Option<Color>,
-    bg_color: Option<Color>,
-    styles: Vec<Styles>,
-}
-
-impl ColorInfo {
-    /// set fg color
-    pub fn fg_color<S: Into<Color>>(mut self, color: S) -> Self {
-        self.fg_color = Some(color.into());
-        self
-    }
-
-    /*
-    /// set bg color
-    pub fn bg_color<S: Into<Color>>(mut self, color: S) -> Self {
-        self.bg_color = Some(color.into());
-        self
-    }
-    */
-
-    // set style
-    pub fn style(mut self, style: Styles) -> Self {
-        self.styles.push(style);
-        self
-    }
-
-    /// color a string
-    pub fn colorize(&self, s: &str) -> ColoredString {
-        let mut cs = s.normal();
-        for style in self.styles.iter() {
-            cs = match style {
-                Styles::Clear => s.clear(),
-                Styles::Bold => s.bold(),
-                Styles::Dimmed => s.dimmed(),
-                Styles::Italic => s.italic(),
-                Styles::Underline => s.underline(),
-                Styles::Blink => s.blink(),
-                Styles::Reversed => panic!("deprecated"),
-                Styles::Hidden => s.hidden(),
-                Styles::Strikethrough => s.strikethrough(),
-            };
-        }
-        if let Some(c) = self.fg_color {
-            cs = cs.color(c)
-        }
-        if let Some(c) = self.bg_color {
-            cs = cs.on_color(c)
-        }
-        cs
-    }
-}
-pub struct MessageTheme {
-    /// limit to try to align
-    pub width: usize,
-    /// important color
-    pub important: ColorInfo,
-    /// normal color
-    pub normal: ColorInfo,
-}
-
-impl Default for MessageTheme {
-    fn default() -> Self {
-        Self {
-            width: 120,
-            important: ColorInfo::default(),
-            normal: ColorInfo::default(),
-        }
-    }
-}
-
-impl MessageTheme {
-    /// pretty normal message
-    pub fn normal<'a>(&self, text: &impl ToString) -> Doc<'a> {
-        Doc::text(text.to_string()).annotate(self.normal.clone())
-    }
-
-    /// pretty important message
-    pub fn important<'a>(&self, text: &impl ToString) -> Doc<'a> {
-        Doc::text(text.to_string()).annotate(self.important.clone())
-    }
-}
-
-#[derive(Default)]
-pub struct ErrorTheme {
-    /// error message
-    pub head: MessageTheme,
-    /// text message
-    pub text: MessageTheme,
-    /// info message
-    pub note: MessageTheme,
-    /// label color
-    pub label_color: Option<ariadne::Color>,
-}
-
-impl ErrorTheme {
-    /// get label color
-    pub fn label_color(&self) -> &Option<ariadne::Color> {
-        &self.label_color
-    }
-}
 
 pub struct Theme {
     /// limit to try to align
@@ -153,8 +49,6 @@ impl Default for Theme {
     }
 }
 
-pub type Doc<'a> = RcDoc<'a, ColorInfo>;
-
 impl Theme {
     /// create a default theme
     pub fn default_theme() -> Self {
@@ -162,42 +56,28 @@ impl Theme {
             width: 80,
             keyword: ColorInfo::default().fg_color(Color::Magenta),
             operator: ColorInfo::default().fg_color(Color::Red),
-            def_var: ColorInfo::default()
-                .fg_color(Color::Blue)
-                .style(Styles::Bold),
+            def_var: ColorInfo::default().fg_color(Color::Blue).bold(),
             expr_var: ColorInfo::default().fg_color(Color::Blue),
             character: ColorInfo::default().fg_color(Color::Green),
             number: ColorInfo::default().fg_color(Color::Green),
             boolean: ColorInfo::default().fg_color(Color::Green),
-            ty_var: ColorInfo::default()
-                .fg_color(Color::Yellow)
-                .style(Styles::Italic),
-            comment: ColorInfo::default()
-                .fg_color(Color::BrightBlack)
-                .style(Styles::Italic),
-            documentation: ColorInfo::default()
-                .fg_color(Color::White)
-                .style(Styles::Italic),
+            ty_var: ColorInfo::default().fg_color(Color::Yellow).italic(),
+            comment: ColorInfo::default().fg_color(Color::BrightBlack).italic(),
+            documentation: ColorInfo::default().fg_color(Color::White).italic(),
             error: ErrorTheme {
                 head: MessageTheme {
                     width: 120,
-                    important: ColorInfo::default()
-                        .fg_color(Color::Red)
-                        .style(Styles::Bold),
+                    important: ColorInfo::default().fg_color(Color::Red).bold(),
                     normal: ColorInfo::default().fg_color(Color::Red),
                 },
                 text: MessageTheme {
                     width: 120,
-                    important: ColorInfo::default()
-                        .fg_color(Color::Red)
-                        .style(Styles::Bold),
+                    important: ColorInfo::default().fg_color(Color::Red).bold(),
                     normal: ColorInfo::default(),
                 },
                 note: MessageTheme {
                     width: 120,
-                    important: ColorInfo::default()
-                        .fg_color(Color::Yellow)
-                        .style(Styles::Bold),
+                    important: ColorInfo::default().fg_color(Color::Yellow).bold(),
                     normal: ColorInfo::default().fg_color(Color::Yellow),
                 },
                 label_color: Some(ariadne::Color::Red),
@@ -223,6 +103,11 @@ impl Theme {
     /// pprint variable expression
     pub fn expr_var<'a>(&self, var: &impl ToString) -> Doc<'a> {
         Doc::text(var.to_string()).annotate(self.expr_var.clone())
+    }
+
+    /// pprint type variable
+    pub fn ty_var<'a>(&self, var: &impl ToString) -> Doc<'a> {
+        Doc::text(var.to_string()).annotate(self.ty_var.clone())
     }
 
     /// pprint constant expression
@@ -259,11 +144,6 @@ impl Theme {
         Doc::text(if b { "true" } else { "false" }).annotate(self.boolean.clone())
     }
 
-    /// pprint type variable
-    pub fn ty_var<'a>(&self, var: &impl ToString) -> Doc<'a> {
-        Doc::text(var.to_string()).annotate(self.ty_var.clone())
-    }
-
     /// pprint comment color
     pub fn comment<'a>(&self, comment: &impl ToString) -> Doc<'a> {
         Doc::text(comment.to_string()).annotate(self.comment.clone())
@@ -271,5 +151,183 @@ impl Theme {
 
     pub fn documentation<'a>(&self, doc: &impl ToString) -> Doc<'a> {
         Doc::text(doc.to_string()).annotate(self.documentation.clone())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::Pretty;
+
+    #[test]
+    fn default_theme() {
+        let theme = Theme::default();
+        assert_eq!(theme.width, 80);
+        assert_eq!(theme.keyword, ColorInfo::default());
+        assert_eq!(theme.operator, ColorInfo::default());
+        assert_eq!(theme.def_var, ColorInfo::default());
+        assert_eq!(theme.expr_var, ColorInfo::default());
+        assert_eq!(theme.character, ColorInfo::default());
+        assert_eq!(theme.number, ColorInfo::default());
+        assert_eq!(theme.boolean, ColorInfo::default());
+        assert_eq!(theme.ty_var, ColorInfo::default());
+        assert_eq!(theme.comment, ColorInfo::default());
+        assert_eq!(theme.documentation, ColorInfo::default());
+    }
+
+    #[test]
+    fn keyword_theme() {
+        struct Keyword;
+        impl Pretty for Keyword {
+            fn pretty(&self, theme: &Theme) -> Doc<'_> {
+                theme.keyword(&"keyword")
+            }
+        }
+        let theme = Theme::default();
+
+        assert_eq!(Keyword.make_string(&theme), "keyword");
+    }
+
+    #[test]
+    fn width_theme() {
+        struct LongInput;
+        impl Pretty for LongInput {
+            fn pretty(&self, theme: &Theme) -> Doc<'_> {
+                theme
+                    .keyword(&"ThisIsAVeryLongKeywordThatShouldTestTheWidthSettingOfTheTheme")
+                    .append(Doc::softline())
+                    .append(theme.operator(&"+"))
+                    .append(Doc::softline())
+                    .append(theme.operator(&"a"))
+                    .append(Doc::softline())
+                    .append(theme.operator(&"+"))
+                    .append(Doc::softline())
+                    .append(theme.keyword(&"AnotherVeryLongKeywordToTestTheWidth"))
+            }
+        }
+        let theme = Theme::default();
+        assert_eq!(
+            LongInput.make_string(&theme),
+            "ThisIsAVeryLongKeywordThatShouldTestTheWidthSettingOfTheTheme + a +\nAnotherVeryLongKeywordToTestTheWidth"
+        );
+    }
+
+    #[test]
+    fn operator() {
+        struct Operator;
+        impl Pretty for Operator {
+            fn pretty(&self, theme: &Theme) -> Doc<'_> {
+                theme.operator(&"+")
+            }
+        }
+        let theme = Theme::default();
+        assert_eq!(Operator.make_string(&theme), "+");
+    }
+
+    #[test]
+    fn def_var() {
+        struct DefVar;
+        impl Pretty for DefVar {
+            fn pretty(&self, theme: &Theme) -> Doc<'_> {
+                theme.def_var(&"x")
+            }
+        }
+        let theme = Theme::default();
+        assert_eq!(DefVar.make_string(&theme), "x");
+    }
+
+    #[test]
+    fn expr_var() {
+        struct ExprVar;
+        impl Pretty for ExprVar {
+            fn pretty(&self, theme: &Theme) -> Doc<'_> {
+                theme.expr_var(&"y")
+            }
+        }
+        let theme = Theme::default();
+
+        assert_eq!(ExprVar.make_string(&theme), "y");
+    }
+
+    #[test]
+    fn ty_var() {
+        struct TyVar;
+        impl Pretty for TyVar {
+            fn pretty(&self, theme: &Theme) -> Doc<'_> {
+                theme.ty_var(&"τ")
+            }
+        }
+        let theme = Theme::default();
+        assert_eq!(TyVar.make_string(&theme), "τ");
+    }
+
+    #[test]
+    fn character() {
+        struct Character;
+        impl Pretty for Character {
+            fn pretty(&self, theme: &Theme) -> Doc<'_> {
+                theme
+                    .character('\\')
+                    .append(theme.character('\''))
+                    .append(theme.character('\n'))
+                    .append(theme.character('\r'))
+                    .append(theme.character('\t'))
+                    .append(theme.character('a'))
+            }
+        }
+        let theme = Theme::default();
+        assert_eq!(Character.make_string(&theme), "'\\\\''\\\'''\\n''\\r''\\t''a'");
+    }
+
+    #[test]
+    fn number() {
+        struct Number;
+        impl Pretty for Number {
+            fn pretty(&self, theme: &Theme) -> Doc<'_> {
+                theme.number(&BigUint::from(1234567890u64))
+            }
+        }
+        let theme = Theme::default();
+        assert_eq!(Number.make_string(&theme), "1_234_567_890");
+    }
+
+    #[test]
+    fn boolean() {
+        struct Boolean;
+        impl Pretty for Boolean {
+            fn pretty(&self, theme: &Theme) -> Doc<'_> {
+                theme.boolean(true).append(theme.boolean(false))
+            }
+        }
+        let theme = Theme::default();
+        assert_eq!(Boolean.make_string(&theme), "truefalse");
+    }
+
+    #[test]
+    fn comment() {
+        struct Comment;
+        impl Pretty for Comment {
+            fn pretty(&self, theme: &Theme) -> Doc<'_> {
+                theme.comment(&"(* This is a comment *)")
+            }
+        }
+        let theme = Theme::default();
+        assert_eq!(Comment.make_string(&theme), "(* This is a comment *)");
+    }
+
+    #[test]
+    fn documentation() {
+        struct Documentation;
+        impl Pretty for Documentation {
+            fn pretty(&self, theme: &Theme) -> Doc<'_> {
+                theme.documentation(&"(** This is a doc comment *)")
+            }
+        }
+        let theme = Theme::default();
+
+        assert_eq!(
+            Documentation.make_string(&theme),
+            "(** This is a doc comment *)"
+        );
     }
 }
