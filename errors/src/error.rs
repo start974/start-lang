@@ -124,4 +124,17 @@ mod tests {
         assert_eq!(error.note().unwrap().make_string(&theme), "This is a note.");
         assert_eq!(error.span(), Span::new(0, 5));
     }
+
+    #[test]
+    fn report_generation() {
+        let theme = Theme::default();
+        let error = Error::new(1002, Message::text("Another error"))
+            .with_span(Span::new(10, 20))
+            .with_text(Message::text("Detailed error description."));
+        let report = error.report(&SourceId::Unknown, &theme);
+        let dbg_str = format!("{:?}", report);
+        eprintln!("{}", dbg_str);
+        assert!(dbg_str.contains("Another error"));
+        assert!(dbg_str.contains("1002"));
+    }
 }

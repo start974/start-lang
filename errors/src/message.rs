@@ -234,4 +234,14 @@ mod test {
         let result = m.make_string(&MessageTheme::default());
         assert_eq!(result, expected);
     }
+
+    #[test]
+    fn many_append() {
+        let msg = Message::text("Start")
+            .append(Message::text(" Middle").normal())
+            .append(Message::text(" End").important());
+        let expected = "Start Middle End";
+        let result = msg.make_string(&MessageTheme::default());
+        assert_eq!(result, expected);
+    }
 }
