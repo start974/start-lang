@@ -1,4 +1,3 @@
-mod error;
 pub mod flag;
 mod interpret;
 

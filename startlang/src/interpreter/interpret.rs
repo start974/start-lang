@@ -1,8 +1,8 @@
-use super::error::UnknownOption;
 use super::flag::{DebugFlag, Flag};
+use crate::error;
 use cst::AsIdentifier as _;
-use error::{ErrorCode, ErrorReport};
-use location::{Located, SourceId};
+use errors::Error;
+use location::{SourceId, Spanned};
 use pp::pretty::Pretty;
 use tir::Typed as _;
 
@@ -40,7 +40,7 @@ pub trait Interpreter {
     /// print
     fn print<Doc>(&mut self, doc: &Doc)
     where
-        Doc: Pretty + Located;
+        Doc: Pretty + Spanned;
 
     /// active printing of summarry definition
     fn print_summay(&self, def: &tir::ExpressionDefinition);
@@ -48,29 +48,23 @@ pub trait Interpreter {
     /// pretty debug
     fn debug<Doc>(&mut self, flag: DebugFlag, doc: &Doc)
     where
-        Doc: Pretty + Located,
+        Doc: Pretty + Spanned,
     {
         if self.is_active_debug(flag) {
             self.print(doc);
         }
     }
     /// print error
-    fn eprint<E>(&mut self, error: &E)
-    where
-        E: ErrorReport + ErrorCode;
+    fn eprint(&mut self, error: &Error);
 
     /// fail with error
-    fn fail<E>(&mut self, error: E)
-    where
-        E: ErrorReport + ErrorCode,
-    {
+    fn fail(&mut self, error: Error) {
         self.eprint(&error);
-        let code = if self.get_error_code() == 0 {
+        self.set_error_code(if self.get_error_code() == 0 {
             error.code()
         } else {
             1
-        };
-        self.set_error_code(code);
+        });
     }
 
     /// run command expr definition
@@ -112,7 +106,7 @@ pub trait Interpreter {
                 self.debug(DebugFlag::Typer, &expr);
                 if self.get_error_code() == 0 {
                     let value = self.mut_vm().eval(&expr).unwrap();
-                    self.print(&value.with_loc(expr.loc()));
+                    self.print(&(value, expr.span()));
                 }
             })
             .unwrap_or_else(|errs| {
@@ -154,7 +148,7 @@ pub trait Interpreter {
             "DebugLexer" => self.set_flag(b, Flag::Debug(DebugFlag::Lexer)),
             "DebugParser" => self.set_flag(b, Flag::Debug(DebugFlag::Parser)),
             "DebugTyper" => self.set_flag(b, Flag::Debug(DebugFlag::Typer)),
-            _ => self.fail(UnknownOption::from(var)),
+            _ => self.fail(error::unknown_option(&var)),
         }
     }
 
@@ -177,8 +171,7 @@ pub trait Interpreter {
 
     /// lexing content
     fn lex(&mut self, content: &str, offset_source: usize) -> Option<lexer::MetaTokenStream> {
-        let source_id = self.source_id();
-        match lexer::lex(source_id.clone(), offset_source, content) {
+        match lexer::lex(content, offset_source) {
             Ok(tokens) => Some(tokens),
             Err(errs) => {
                 for err in errs {
@@ -191,8 +184,7 @@ pub trait Interpreter {
 
     /// parse command with lexer tokens
     fn parse(&mut self, tokens: lexer::MetaTokenStream) -> Option<cst::Command> {
-        let source_id = self.source_id();
-        match parser::parse(source_id.clone(), tokens) {
+        match parser::parse(tokens) {
             Ok(parser::CommandOrEnd::Command(cmd)) => Some(*cmd),
             Ok(parser::CommandOrEnd::End(_)) => None,
             Err(errs) => {

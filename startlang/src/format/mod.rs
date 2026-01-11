@@ -1,7 +1,6 @@
 use std::path::Path;
 
 mod diff;
-mod error;
 mod formatter;
 
 #[derive(Debug, Clone, Copy)]

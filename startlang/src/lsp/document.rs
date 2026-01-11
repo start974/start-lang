@@ -103,6 +103,7 @@ impl Document {
             let op = match symbol_info.kind {
                 IdentifierKind::Expr => ":",
                 IdentifierKind::Type => ":=",
+                IdentifierKind::Unknown => unreachable!("unknown identifier kind"),
             };
             MarkedString::from_language_code(
                 "startlang".to_string(),

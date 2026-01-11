@@ -5,7 +5,7 @@ use crate::interpreter::Interpreter as _;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use ariadne::Source;
-use error::ErrorPrint;
+use errors::Error;
 use location::SourceId;
 use pp::pretty::Pretty;
 use pp::theme::Theme;
@@ -113,11 +113,8 @@ impl interpreter::Interpreter for Interpreter {
         println!("       {}", summary.make_string(&self.theme));
     }
 
-    fn eprint<E>(&mut self, error: &E)
-    where
-        E: ErrorPrint,
-    {
+    fn eprint(&mut self, error: &Error) {
         let mut cache = (self.source_id().clone(), Source::from(&self.all_content));
-        error.eprint(&self.theme, &mut cache).unwrap();
+        error.eprint(self.source_id(), &self.theme, &mut cache)
     }
 }

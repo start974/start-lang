@@ -6,5 +6,4 @@ edition = "2024"
 [dependencies]
 tir = { path = "../tir" }
 pp = { path = "../pp" }
-location = { path = "../location" }
 bigdecimal = "0.4.10"

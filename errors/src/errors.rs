@@ -63,3 +63,12 @@ impl FromIterator<Error> for Errors {
         }
     }
 }
+
+impl IntoIterator for Errors {
+    type Item = Error;
+    type IntoIter = std::vec::IntoIter<Error>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.errs.into_iter()
+    }
+}

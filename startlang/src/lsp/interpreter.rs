@@ -1,14 +1,17 @@
-use super::backend::Backend;
-use super::document::Document;
-use super::position_memo::PositionMemo;
-use crate::interpreter::flag::{DebugFlag, Flag};
-use crate::interpreter::{self, Interpreter as _};
-use crate::lsp::document::SymbolInfo;
-use ariadne::Span as _;
-use error::{ErrorCode, ErrorReport};
-use location::{Located, SourceId};
-use pp::pretty::Pretty;
-use pp::theme::{MessageTheme, Theme};
+use super::{backend::Backend, document::Document, position_memo::PositionMemo};
+use crate::{
+    interpreter::{
+        self, Interpreter as _,
+        flag::{DebugFlag, Flag},
+    },
+    lsp::document::SymbolInfo,
+};
+use errors::Error;
+use location::{SourceId, Spanned};
+use pp::{
+    pretty::Pretty,
+    theme::{MessageTheme, Theme},
+};
 use std::path::PathBuf;
 use std::sync::Arc;
 use tower_lsp::lsp_types::{Diagnostic, Url};
@@ -64,10 +67,6 @@ impl Interpreter {
         let mut document = Document::default();
         let env = self.typer.env();
         for info in env.iter() {
-            if info.loc_def.id() != self.source_id() {
-                //TODO: include location from other files
-                continue;
-            }
             document.add_symbol(SymbolInfo {
                 symbol: Arc::new(info.id.as_ref().clone()),
                 doc: info
@@ -77,11 +76,11 @@ impl Interpreter {
                     .map(MarkedString::from_markdown),
                 kind: info.kind,
                 ty: info.ty.make_string(&theme),
-                def_range: self.position_memo.range(&info.loc_def),
+                def_range: self.position_memo.range(&info.span_def),
                 refs_range: info
-                    .loc_refs
+                    .span_refs
                     .iter()
-                    .map(|loc| self.position_memo.range(loc))
+                    .map(|span| self.position_memo.range(span))
                     .collect::<Vec<_>>(),
             });
         }
@@ -140,15 +139,15 @@ impl interpreter::Interpreter for Interpreter {
 
     fn print<Doc>(&mut self, doc: &Doc)
     where
-        Doc: Pretty + Located,
+        Doc: Pretty + Spanned,
     {
         use tower_lsp::lsp_types::*;
         let theme = Theme::default();
-        let loc = doc.loc();
+        let span = doc.span();
 
         let range = Range {
-            start: self.position_memo.position(loc.start()),
-            end: self.position_memo.position(loc.end()),
+            start: self.position_memo.position(span.start()),
+            end: self.position_memo.position(span.end()),
         };
         let diag = Diagnostic {
             range,
@@ -166,21 +165,18 @@ impl interpreter::Interpreter for Interpreter {
 
     fn print_summay(&self, _: &tir::ExpressionDefinition) {}
 
-    fn eprint<E>(&mut self, err: &E)
-    where
-        E: ErrorReport + ErrorCode,
-    {
+    fn eprint(&mut self, err: &Error) {
         use tower_lsp::lsp_types::*;
         let theme = MessageTheme::default();
-        let loc = err.loc();
+        let span = err.span();
         let range = Range {
-            start: self.position_memo.position(loc.start()),
-            end: self.position_memo.position(loc.end()),
+            start: self.position_memo.position(span.start()),
+            end: self.position_memo.position(span.end()),
         };
         let message = err
             .text()
             .map(|msg| msg.make_string(&theme))
-            .unwrap_or_else(|| err.head().make_string(&theme));
+            .unwrap_or_else(|| err.header().make_string(&theme));
 
         let related_information = err
             .note()
