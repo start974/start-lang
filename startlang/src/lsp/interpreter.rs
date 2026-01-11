@@ -1,10 +1,10 @@
-use super::{backend::Backend, document::Document, position_memo::PositionMemo};
+use super::{backend::Backend, position_memo::PositionMemo};
 use crate::{
     interpreter::{
         self, Interpreter as _,
         flag::{DebugFlag, Flag},
     },
-    lsp::document::SymbolInfo,
+    //lsp::document::SymbolInfo,
 };
 use errors::Error;
 use location::{SourceId, Spanned};
@@ -13,7 +13,6 @@ use pp::{
     theme::{MessageTheme, Theme},
 };
 use std::path::PathBuf;
-use std::sync::Arc;
 use tower_lsp::lsp_types::{Diagnostic, Url};
 use typing::Typer;
 
@@ -59,33 +58,36 @@ impl Interpreter {
         &self.diagnostics
     }
 
-    /// get document content
-    pub fn document(&mut self) -> Document {
-        use tower_lsp::lsp_types::MarkedString;
+    ///// get document content
+    //pub fn document(&mut self) -> Document {
+    //use tower_lsp::lsp_types::MarkedString;
 
-        let theme = Theme::default();
-        let mut document = Document::default();
-        let env = self.typer.env();
-        for info in env.iter() {
-            document.add_symbol(SymbolInfo {
-                symbol: Arc::new(info.id.as_ref().clone()),
-                doc: info
-                    .doc
-                    .clone()
-                    .map(|doc| doc.to_string())
-                    .map(MarkedString::from_markdown),
-                kind: info.kind,
-                ty: info.ty.make_string(&theme),
-                def_range: self.position_memo.range(&info.span_def),
-                refs_range: info
-                    .span_refs
-                    .iter()
-                    .map(|span| self.position_memo.range(span))
-                    .collect::<Vec<_>>(),
-            });
-        }
-        document
-    }
+    /*        let theme = Theme::default();*/
+    /*let mut document = Document::default();*/
+    /*let env = self.typer.env();*/
+    /*        for info in env.iter() {*/
+    /*if self.source_id != info.source_id {*/
+    /*continue;*/
+    /*}*/
+    /*document.add_symbol(SymbolInfo {*/
+    /*symbol: Arc::new(info.id.as_ref().clone()),*/
+    /*doc: info*/
+    /*.doc*/
+    /*.clone()*/
+    /*.map(|doc| doc.to_string())*/
+    /*.map(MarkedString::from_markdown),*/
+    /*kind: info.kind,*/
+    /*ty: info.ty.make_string(&theme),*/
+    /*def_range: self.position_memo.range(&info.span_def),*/
+    /*refs_range: info*/
+    /*.span_refs*/
+    /*.iter()*/
+    /*.map(|span| self.position_memo.range(span))*/
+    /*.collect::<Vec<_>>(),*/
+    /*});*/
+    /*}*/
+    //document
+    //}
 }
 
 impl interpreter::Interpreter for Interpreter {

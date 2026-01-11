@@ -1,23 +1,23 @@
 use super::interpreter::Interpreter;
 use crate::interpreter::Interpreter as _;
-use crate::lsp::document::Document;
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::Mutex;
+//use crate::lsp::document::Document;
+//use std::collections::HashMap;
+//use std::sync::Arc;
+//use tokio::sync::Mutex;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer};
 
 #[derive(Debug)]
 pub struct Backend {
     client: Client,
-    documents: Arc<Mutex<HashMap<Url, Document>>>,
+    //documents: Arc<Mutex<HashMap<Url, Document>>>,
 }
 
 impl From<Client> for Backend {
     fn from(client: Client) -> Self {
         Self {
             client,
-            documents: Arc::new(Mutex::new(HashMap::new())),
+            //documents: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 }
@@ -40,23 +40,34 @@ impl Backend {
             .log_message(MessageType::INFO, "LSP on change")
             .await;
 
-        let (document, diags) = {
-            let uri = params.uri.clone();
-            let text = params.text.clone();
-            tokio::task::spawn_blocking(move || {
-                let mut interpreter = Interpreter::new(uri, text);
-                interpreter.run();
-                let document = interpreter.document();
-                let diags = interpreter.diagnostics().to_vec();
-                (document, diags)
-            })
-        }
+        /*let (document, diags) = {*/
+        /*let uri = params.uri.clone();*/
+        /*let text = params.text.clone();*/
+        /*tokio::task::spawn_blocking(move || {*/
+        /*let mut interpreter = Interpreter::new(uri, text);*/
+        /*interpreter.run();*/
+        /*//let document = interpreter.document();*/
+        /*let diags = interpreter.diagnostics().to_vec();*/
+        /*(document, diags)*/
+        /*})*/
+        /*}*/
+        /*.await*/
+        /*.unwrap();*/
+
+        let uri = params.uri.clone();
+        let text = params.text.clone();
+        let diags = tokio::task::spawn_blocking(move || {
+            let mut interpreter = Interpreter::new(uri, text);
+            interpreter.run();
+            //let document = interpreter.document();
+            interpreter.diagnostics().to_vec()
+        })
         .await
         .unwrap();
 
         let uri = params.uri.clone();
-        let mut documents = self.documents.lock().await;
-        documents.insert(uri.clone(), document);
+        //let mut documents = self.documents.lock().await;
+        //documents.insert(uri.clone(), document);
 
         self.client
             .publish_diagnostics(uri, diags, Some(params.version))
@@ -75,7 +86,7 @@ impl LanguageServer for Backend {
                 text_document_sync: Some(TextDocumentSyncCapability::Kind(
                     TextDocumentSyncKind::FULL,
                 )),
-                hover_provider: Some(HoverProviderCapability::Simple(true)),
+                //hover_provider: Some(HoverProviderCapability::Simple(true)),
                 ..Default::default()
             },
             server_info: Some(ServerInfo {
@@ -114,11 +125,11 @@ impl LanguageServer for Backend {
         }
     }
 
-    async fn hover(&self, params: HoverParams) -> tower_lsp::jsonrpc::Result<Option<Hover>> {
-        let text_doc = params.text_document_position_params;
-        let pos = text_doc.position;
-        let uri = text_doc.text_document.uri;
-        let documents = self.documents.lock().await;
-        Ok(documents.get(&uri).and_then(|doc| doc.get_hover(&pos)))
-    }
+    /*    async fn hover(&self, params: HoverParams) -> tower_lsp::jsonrpc::Result<Option<Hover>> {*/
+    /*let text_doc = params.text_document_position_params;*/
+    /*let pos = text_doc.position;*/
+    /*let uri = text_doc.text_document.uri;*/
+    /*let documents = self.documents.lock().await;*/
+    /*Ok(documents.get(&uri).and_then(|doc| doc.get_hover(&pos)))*/
+    /*}*/
 }

@@ -1,5 +1,5 @@
 pub mod diagnostic;
-pub mod hover;
+//pub mod hover;
 pub mod initialize;
 pub mod shutdown;
 

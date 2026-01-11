@@ -1,7 +1,7 @@
 use tower_lsp::{LspService, Server};
 
 pub mod backend;
-pub mod document;
+//pub mod document;
 pub mod interpreter;
 mod position_memo;
 
