@@ -163,7 +163,6 @@ impl interpreter::Interpreter for Interpreter {
     fn print_summay(&self, _: &tir::ExpressionDefinition) {}
 
     fn eprint(&mut self, err: &Error) {
-
         use tower_lsp::lsp_types::*;
         let theme = MessageTheme::default();
         let span = err.span();
