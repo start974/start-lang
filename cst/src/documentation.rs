@@ -1,4 +1,4 @@
-use pp::prelude::*;
+use pp::pretty::*;
 
 #[derive(Debug, Clone)]
 pub struct Documentation {

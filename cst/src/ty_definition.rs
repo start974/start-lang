@@ -1,6 +1,6 @@
 use crate::{operator, ty};
 use location::{Span, Spanned};
-use pp::prelude::*;
+use pp::pretty::*;
 
 #[derive(Debug)]
 pub struct TypeDefinition {

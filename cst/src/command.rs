@@ -2,7 +2,7 @@ use super::{Expression, ExpressionDefinition, TypeDefinition, expression, help, 
 use crate::meta::Meta;
 use location::{Span, Spanned};
 use pp::pretty::Pretty;
-use pp::theme::{Doc, Theme};
+use pp::pretty::*;
 
 // ============================================================================
 // Definition Keyword

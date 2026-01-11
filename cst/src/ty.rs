@@ -1,6 +1,6 @@
 use crate::{AsIdentifier, Meta};
 use location::{Span, Spanned};
-use pp::prelude::*;
+use pp::pretty::*;
 
 // ============================================================================
 // Variable

@@ -1,6 +1,6 @@
 use super::Command;
 use crate::Meta;
-use pp::prelude::*;
+use pp::pretty::*;
 
 // ============================================================================
 // EndOf File

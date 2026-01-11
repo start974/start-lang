@@ -1,7 +1,7 @@
 use super::{Constant, Type, operator, parenthesis::Parenthesed};
 use crate::{AsIdentifier, Meta};
 use location::{Span, Spanned};
-use pp::{prelude::*, pretty::PrettyPrecedence};
+use pp::pretty::*;
 
 // ============================================================================
 // Variable

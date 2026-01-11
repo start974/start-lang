@@ -107,10 +107,9 @@ impl SpannedSet for Error {
 // ============================================================================
 #[cfg(test)]
 mod tests {
-    use pp::theme::MessageTheme;
-
     use super::*;
     use crate::Message;
+    use pp::MessageTheme;
 
     #[test]
     fn error_report() {

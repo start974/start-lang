@@ -1,6 +1,6 @@
 use errors::Error;
 use location::{Spanned, SpannedSet};
-use pp::prelude::*;
+use pp::pretty::*;
 
 mod builtin;
 

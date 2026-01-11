@@ -1,6 +1,6 @@
 use crate::Identifier;
 use location::{Span, Spanned, SpannedSet};
-use pp::prelude::*;
+use pp::pretty::*;
 use std::rc::Rc;
 
 // ==========================================================================

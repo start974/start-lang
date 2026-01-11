@@ -2,7 +2,7 @@ use super::super::Pattern;
 use super::super::ty::{Type, Typed};
 use super::Expression;
 use location::{Span, Spanned};
-use pp::prelude::*;
+use pp::pretty::*;
 
 // ==========================================================================
 // Expression Definition
