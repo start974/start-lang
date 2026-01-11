@@ -66,13 +66,12 @@ impl Error {
     pub fn report<'a, 'id>(&self, id_source: &'a SourceId, theme: &Theme) -> Report<'a, 'id> {
         let config = Config::default().with_index_type(IndexType::Byte);
         let loc = Location::new(id_source, self.span);
-        let mut report_builder = Report::build(ReportKind::Error, loc.clone())
+        let mut report_builder = Report::build(ReportKind::Error, loc)
             .with_config(config)
             .with_code(self.code)
             .with_message(self.header.make_string(&theme.error.head));
         if let Some(text) = &self.text {
-            let mut label =
-                Label::new(loc.clone()).with_message(text.make_string(&theme.error.text));
+            let mut label = Label::new(loc).with_message(text.make_string(&theme.error.text));
             if let Some(color) = theme.error.label_color() {
                 label = label.with_color(*color);
             }

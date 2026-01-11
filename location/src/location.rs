@@ -1,6 +1,6 @@
 use crate::{SourceId, Span};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Location<'a> {
     id: &'a SourceId,
     span: Span,
@@ -100,7 +100,7 @@ mod tests {
 
     impl<'a> Located<'a> for TestLocated<'a> {
         fn location(&self) -> Location<'a> {
-            self.0.clone()
+            self.0
         }
     }
 
@@ -117,7 +117,7 @@ mod tests {
         let loc1 = Location::new(&source_id, Span::new(0, 5));
         let loc2 = Location::new(&source_id, Span::new(3, 10));
         let loc3 = Location::new(&source_id2, Span::new(0, 5));
-        assert_eq!(loc1.clone().union(loc2).unwrap().span(), &Span::new(0, 10));
+        assert_eq!(loc1.union(loc2).unwrap().span(), &Span::new(0, 10));
         assert!(loc1.union(loc3).is_none());
     }
 
@@ -138,9 +138,9 @@ mod tests {
         let mut test_located = TestLocated::default();
         assert_eq!(test_located.location(), Location::unknown());
 
-        test_located.set_location(loc1.clone());
+        test_located.set_location(loc1);
         assert_eq!(test_located.location(), loc1);
 
-        assert_eq!(test_located.with_location(loc2.clone()).location(), loc2);
+        assert_eq!(test_located.with_location(loc2).location(), loc2);
     }
 }

@@ -66,6 +66,21 @@ impl<T> Spanned for (T, Span) {
 mod tests {
     use super::*;
 
+    #[derive(Default)]
+    struct TestSpanned(Span);
+
+    impl Spanned for TestSpanned {
+        fn span(&self) -> Span {
+            self.0
+        }
+    }
+
+    impl SpannedSet for TestSpanned {
+        fn set_span(&mut self, span: Span) {
+            self.0 = span
+        }
+    }
+
     #[test]
     fn union() {
         let span1 = Span::new(1, 5);
@@ -79,5 +94,19 @@ mod tests {
         let span = Span::new(2, 6);
         let offset_span = span.with_offset(3);
         assert_eq!(offset_span, Span::new(5, 9));
+    }
+
+    #[test]
+    fn spanned_trait() {
+        let span0 = Span::new(4, 8);
+        let mut spanned = TestSpanned(span0);
+        assert_eq!(spanned.span(), span0);
+
+        let span1 = Span::new(0, 2);
+        spanned.set_span(span1);
+        assert_eq!(spanned.span(), span1);
+
+        let span2 = Span::new(5, 10);
+        assert_eq!(spanned.with_span(span2).span(), span2);
     }
 }
