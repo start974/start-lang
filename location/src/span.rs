@@ -57,3 +57,27 @@ impl<T> Spanned for (T, Span) {
         self.1
     }
 }
+
+// ============================================================================
+// Test
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn union() {
+        let span1 = Span::new(1, 5);
+        let span2 = Span::new(3, 7);
+        let union = span1.union(span2);
+        assert_eq!(union, Span::new(1, 7));
+    }
+
+    #[test]
+    fn with_offset() {
+        let span = Span::new(2, 6);
+        let offset_span = span.with_offset(3);
+        assert_eq!(offset_span, Span::new(5, 9));
+    }
+}

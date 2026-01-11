@@ -22,3 +22,21 @@ impl std::fmt::Display for SourceId {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn source_id_display() {
+        let id_unknown = SourceId::Unknown;
+        let id_repl = SourceId::Repl;
+        let id_file = SourceId::File(PathBuf::from("test.st"));
+        let id_url = SourceId::Url("test".to_string());
+
+        assert_eq!(id_unknown.to_string(), "unknown");
+        assert_eq!(id_repl.to_string(), "REPL");
+        assert_eq!(id_file.to_string(), "test.st");
+        assert_eq!(id_url.to_string(), "test");
+    }
+}
