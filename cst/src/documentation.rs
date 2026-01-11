@@ -30,3 +30,30 @@ impl Pretty for Documentation {
         .group()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn documentation_display() {
+        let doc = Documentation::from(vec![
+            "This is line 1.".to_string(),
+            "This is line 2.".to_string(),
+        ]);
+        let expected = "This is line 1.\nThis is line 2.\n";
+        assert_eq!(format!("{}", doc), expected);
+    }
+
+    #[test]
+    fn documentation_pretty() {
+        let doc = Documentation::from(vec![
+            "This is line 1.".to_string(),
+            "This is line 2.".to_string(),
+        ]);
+        let theme = Theme::default();
+        let pp_str = doc.make_string(&theme);
+        let expected = "This is line 1.\nThis is line 2.";
+        assert_eq!(pp_str, expected);
+    }
+}
