@@ -145,10 +145,7 @@ impl interpreter::Interpreter for Interpreter {
         let theme = Theme::default();
         let span = doc.span();
 
-        let range = Range {
-            start: self.position_memo.position(span.start()),
-            end: self.position_memo.position(span.end()),
-        };
+        let range = self.position_memo.range(&span);
         let diag = Diagnostic {
             range,
             message: doc.make_string(&theme),
@@ -166,13 +163,12 @@ impl interpreter::Interpreter for Interpreter {
     fn print_summay(&self, _: &tir::ExpressionDefinition) {}
 
     fn eprint(&mut self, err: &Error) {
+
         use tower_lsp::lsp_types::*;
         let theme = MessageTheme::default();
         let span = err.span();
-        let range = Range {
-            start: self.position_memo.position(span.start()),
-            end: self.position_memo.position(span.end()),
-        };
+
+        let range = self.position_memo.range(&span);
         let message = err
             .text()
             .map(|msg| msg.make_string(&theme))
@@ -184,7 +180,7 @@ impl interpreter::Interpreter for Interpreter {
                 let uri = if let SourceId::Url(uri) = self.source_id.clone() {
                     uri.parse().unwrap()
                 } else {
-                    unreachable!("source id is url")
+                    unreachable!("source id is not url")
                 };
                 DiagnosticRelatedInformation {
                     location: Location { uri, range },
