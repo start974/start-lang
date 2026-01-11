@@ -1,5 +1,5 @@
-use crate::ErrorChumsky;
-use crate::token;
+use super::ErrorChumsky;
+use super::token;
 use chumsky::extra::Err;
 use chumsky::prelude::*;
 use chumsky::text::{newline, whitespace};

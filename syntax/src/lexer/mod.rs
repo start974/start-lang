@@ -1,5 +1,4 @@
 use errors::Errors;
-pub mod error;
 pub mod lexing;
 pub mod token;
 
@@ -19,7 +18,7 @@ pub fn lex(content: &str, offset: usize) -> Result<MetaTokenStream, Errors> {
         .map(MetaTokenStream::from)
         .map_err(|errs| {
             errs.iter()
-                .map(|e| error::error_lexing(e, offset))
+                .map(|e| crate::error::lexing(e, offset))
                 .collect()
         })
 }

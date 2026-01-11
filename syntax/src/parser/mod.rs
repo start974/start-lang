@@ -1,8 +1,7 @@
+use crate::lexer::{MetaToken, MetaTokenStream};
 use cst::{Command, EndOfFile};
 use errors::Errors;
-use lexer::{MetaToken, MetaTokenStream};
 
-mod error;
 mod parsing;
 
 pub use parsing::parser;
@@ -38,5 +37,5 @@ pub fn parse(tokens: MetaTokenStream) -> Result<CommandOrEnd, Errors> {
     parser()
         .parse(input)
         .into_result()
-        .map_err(|errs: Vec<ErrorChumsky>| errs.iter().map(error::error_parsing).collect())
+        .map_err(|errs: Vec<ErrorChumsky>| errs.iter().map(crate::error::parsing).collect())
 }
