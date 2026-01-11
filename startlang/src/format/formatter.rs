@@ -2,12 +2,10 @@ use super::{Mode, diff::print_diff};
 use crate::error;
 use ariadne::Source;
 use errors::Error;
-use lexer::MetaTokenStream;
 use location::SourceId;
-use parser::CommandOrEnd;
-use pp::pretty::Pretty as _;
-use pp::theme::Theme;
+use pp::pretty::*;
 use std::path::{Path, PathBuf};
+use syntax::{lexer::MetaTokenStream, parser::CommandOrEnd};
 
 pub struct Formatter {
     path: PathBuf,
@@ -47,8 +45,8 @@ impl Formatter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Option<lexer::MetaTokenStream> {
-        match lexer::lex(content, offset_source) {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Option<MetaTokenStream> {
+        match syntax::lexer::lex(content, offset_source) {
             Ok(tokens) => Some(tokens),
             Err(errs) => {
                 errs.into_iter().for_each(|err| {
@@ -61,7 +59,7 @@ impl Formatter {
 
     /// parse command with lexer tokens
     fn parse(&mut self, tokens: MetaTokenStream) -> Option<CommandOrEnd> {
-        match parser::parse(tokens) {
+        match syntax::parser::parse(tokens) {
             Ok(cmd) => Some(cmd),
             Err(errs) => {
                 for err in errs {

@@ -4,6 +4,7 @@ use cst::AsIdentifier as _;
 use errors::Error;
 use location::{SourceId, Spanned};
 use pp::pretty::Pretty;
+use syntax::lexer::MetaTokenStream;
 use tir::Typed as _;
 
 pub trait Interpreter {
@@ -170,8 +171,9 @@ pub trait Interpreter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Option<lexer::MetaTokenStream> {
-        match lexer::lex(content, offset_source) {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Option<MetaTokenStream> {
+        use syntax::lexer::lex;
+        match lex(content, offset_source) {
             Ok(tokens) => Some(tokens),
             Err(errs) => {
                 for err in errs {
@@ -183,10 +185,11 @@ pub trait Interpreter {
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: lexer::MetaTokenStream) -> Option<cst::Command> {
-        match parser::parse(tokens) {
-            Ok(parser::CommandOrEnd::Command(cmd)) => Some(*cmd),
-            Ok(parser::CommandOrEnd::End(_)) => None,
+    fn parse(&mut self, tokens: MetaTokenStream) -> Option<cst::Command> {
+        use syntax::parser::{CommandOrEnd, parse};
+        match parse(tokens) {
+            Ok(CommandOrEnd::Command(cmd)) => Some(*cmd),
+            Ok(CommandOrEnd::End(_)) => None,
             Err(errs) => {
                 for err in errs {
                     self.fail(err);

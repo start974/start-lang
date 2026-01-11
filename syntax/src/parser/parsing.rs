@@ -1,7 +1,7 @@
+use crate::lexer::token::{MetaToken, Operator, Token};
 use chumsky::input::ValueInput;
 use chumsky::prelude::*;
 use cst::*;
-use crate::lexer::token::{MetaToken, Operator, Token};
 
 use super::CommandOrEnd;
 
