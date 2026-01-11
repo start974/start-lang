@@ -1,5 +1,5 @@
 pub use colored::{Color, Styles};
-use colored::{ColoredString,  Style};
+use colored::{ColoredString, Style};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ColorInfo {

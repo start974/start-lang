@@ -1,6 +1,6 @@
 use crate::ty::{Type, Typed, TypedMut};
 use location::{Span, Spanned, SpannedSet};
-use pp::prelude::*;
+use pp::pretty::*;
 
 mod constant;
 mod definition;

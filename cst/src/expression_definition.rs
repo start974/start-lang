@@ -1,6 +1,6 @@
 use super::{Expression, Pattern, Type, operator};
 use location::{Span, Spanned};
-use pp::prelude::*;
+use pp::pretty::*;
 
 // ============================================================================
 // Optional Type

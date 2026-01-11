@@ -1,9 +1,6 @@
 use std::fmt::Display;
 
-use pp::{
-    pretty::{Pretty, StreamColored},
-    theme::{Doc, MessageTheme, Theme},
-};
+use pp::{Doc, MessageTheme, Pretty, StreamColored, Theme};
 
 #[derive(Debug, Clone)]
 enum MessageKind {

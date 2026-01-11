@@ -1,4 +1,4 @@
-use pp::prelude::*;
+use pp::pretty::*;
 use tir::{ExpressionDefinition, Pattern, Typed};
 
 pub struct SummaryDefinition<'a>(&'a ExpressionDefinition);

@@ -8,10 +8,7 @@ use crate::{
 };
 use errors::Error;
 use location::{SourceId, Spanned};
-use pp::{
-    pretty::Pretty,
-    theme::{MessageTheme, Theme},
-};
+use pp::{MessageTheme, Pretty, Theme};
 use std::path::PathBuf;
 use tower_lsp::lsp_types::{Diagnostic, Url};
 use typing::Typer;

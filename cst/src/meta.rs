@@ -1,7 +1,7 @@
 use crate::{AsCharacter, AsIdentifier, AsNumber};
 use crate::{Comment, Documentation};
 use location::{Span, Spanned};
-use pp::prelude::*;
+use pp::pretty::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CommentOrLines {

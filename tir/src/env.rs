@@ -2,7 +2,7 @@ use crate::error;
 use crate::{Documentation, Identifier, Type, Typed};
 use errors::Error;
 use location::{Span, Spanned, SpannedSet};
-use pp::prelude::*;
+use pp::pretty::*;
 use std::collections::HashMap;
 use std::rc::Rc;
 

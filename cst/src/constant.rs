@@ -2,7 +2,7 @@ use super::{AsCharacter, AsNumber};
 use crate::Meta;
 use location::{Span, Spanned};
 use num_bigint::BigUint;
-use pp::prelude::*;
+use pp::pretty::*;
 
 // ============================================================================
 // Number

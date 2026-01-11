@@ -276,7 +276,10 @@ mod test {
             }
         }
         let theme = Theme::default();
-        assert_eq!(Character.make_string(&theme), "'\\\\''\\\'''\\n''\\r''\\t''a'");
+        assert_eq!(
+            Character.make_string(&theme),
+            "'\\\\''\\\'''\\n''\\r''\\t''a'"
+        );
     }
 
     #[test]

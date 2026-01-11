@@ -1,4 +1,4 @@
-use pp::prelude::*;
+use pp::pretty::*;
 
 use crate::documentation::Documentation;
 

@@ -1,6 +1,6 @@
 use super::AsIdentifier;
 use crate::Meta;
-use pp::prelude::*;
+use pp::pretty::*;
 
 // ============================================================================
 // Variable
