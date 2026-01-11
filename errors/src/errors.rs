@@ -36,6 +36,11 @@ impl Errors {
         }
     }
 
+    /// lenght of errors
+    pub fn lenght(&self) -> usize {
+        self.errs.len()
+    }
+
     /// get code
     pub fn code(&self) -> i32 {
         if self.errs.len() > 1 {
@@ -70,5 +75,45 @@ impl IntoIterator for Errors {
 
     fn into_iter(self) -> Self::IntoIter {
         self.errs.into_iter()
+    }
+}
+
+// ============================================================================
+// Test
+// ============================================================================
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{Error, Message};
+    use location::Span;
+
+    #[test]
+    fn singleton() {
+        let err = Error::new(1001, Message::text("Header")).with_span(Span::new(0, 1));
+        let errs = Errors::from(err);
+
+        assert_eq!(errs.code(), 1001);
+        assert_eq!(errs.lenght(), 1);
+    }
+
+    #[test]
+    fn append() {
+        let err1 = Error::new(1001, Message::text("Header1")).with_span(Span::new(0, 1));
+        let err2 = Error::new(1002, Message::text("Header2")).with_span(Span::new(2, 3));
+        let errs = Errors::from(err1).append(err2);
+        assert_eq!(errs.code(), 1);
+        assert_eq!(errs.lenght(), 2);
+    }
+
+    #[test]
+    fn combine() {
+        let err1 = Error::new(1001, Message::text("Header1")).with_span(Span::new(0, 1));
+        let err2 = Error::new(1002, Message::text("Header2")).with_span(Span::new(2, 3));
+        let errs1 = Errors::from(err1);
+        let errs2 = Errors::from(err2);
+        let combined = errs1.combine(errs2);
+
+        assert_eq!(combined.code(), 1);
+        assert_eq!(combined.lenght(), 2);
     }
 }
