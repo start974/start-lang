@@ -2,15 +2,14 @@
 
 use errors::Errors;
 pub mod error;
+mod extra;
 pub mod lexing;
 pub mod token;
-mod extra;
 
+pub use extra::ErrorChumsky;
+pub use extra::Lexer;
 pub use token::MetaToken;
 pub use token::MetaTokenStream;
-pub use extra::Lexer;
-pub use extra::ErrorChumsky;
-
 
 pub use lexing::lexer;
 

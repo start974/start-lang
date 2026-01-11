@@ -1,12 +1,12 @@
 use clap::{ArgGroup, Parser, Subcommand};
 use std::process::exit;
 
+mod error;
 mod file_interpreter;
 mod format;
 mod interpreter;
 mod lsp;
 mod repl;
-mod error;
 
 #[derive(Parser)]
 #[command(version)]

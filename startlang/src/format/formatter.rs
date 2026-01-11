@@ -29,7 +29,7 @@ impl Formatter {
             Ok(content) => {
                 formatter.content = content;
             }
-            Err(_) => formatter.fail(error::read_file(&path)),
+            Err(_) => formatter.fail(error::read_file(path)),
         };
         formatter
     }
