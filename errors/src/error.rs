@@ -3,6 +3,7 @@ use ariadne::{Cache, Config, IndexType, Label, ReportKind};
 use location::{Location, Report, SourceId, Span, Spanned, SpannedSet};
 use pp::theme::Theme;
 
+#[derive(Debug)]
 pub struct Error {
     code: i32,
     header: Message,
