@@ -21,13 +21,14 @@ impl<'a> Location<'a> {
     }
 
     /// union of location
-    pub fn union(self, other: Location<'a>) -> Location<'a> {
-        if self.id != other.id {
-            panic!("Cannot union locations from different sources");
-        }
-        Location {
-            span: self.span.union(other.span),
-            id: self.id,
+    pub fn union(self, other: Location<'a>) -> Option<Location<'a>> {
+        if self.id == other.id {
+            Some(Location {
+                span: self.span.union(other.span),
+                id: self.id,
+            })
+        } else {
+            None
         }
     }
 
@@ -71,5 +72,33 @@ impl<'a> ariadne::Span for Location<'a> {
 
     fn source(&self) -> &Self::SourceId {
         self.id()
+    }
+}
+
+// ==========================================================================
+// Test
+// ==========================================================================
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::SourceId;
+
+    #[test]
+    fn location_union() {
+        let source_id = SourceId::File(std::path::PathBuf::from("test.rs"));
+        let source_id2 = SourceId::File(std::path::PathBuf::from("other.rs"));
+        let loc1 = Location::new(&source_id, Span::new(0, 5));
+        let loc2 = Location::new(&source_id, Span::new(3, 10));
+        let loc3 = Location::new(&source_id2, Span::new(0, 5));
+        assert_eq!(loc1.clone().union(loc2).unwrap().span(), &Span::new(0, 10));
+        assert!(loc1.union(loc3).is_none());
+    }
+
+    #[test]
+    fn location_offset() {
+        let source_id = SourceId::File(std::path::PathBuf::from("test.rs"));
+        let loc = Location::new(&source_id, Span::new(5, 15));
+        let offset_loc = loc.with_offset(10);
+        assert_eq!(offset_loc.span(), &Span::new(15, 25));
     }
 }
