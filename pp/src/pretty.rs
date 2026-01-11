@@ -1,6 +1,9 @@
-use super::theme::{ColorInfo, Doc, Theme};
+use crate::color_info::ColorInfo;
 use pretty::{Render, RenderAnnotated};
 use std::collections::VecDeque;
+
+pub use crate::{Theme, Doc};
+
 
 // ===========================================================================
 // Pretty Trait
