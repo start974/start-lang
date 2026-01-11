@@ -12,6 +12,14 @@ impl<'a> Location<'a> {
         Self { id, span }
     }
 
+    /// unknown location
+    pub fn unknown() -> Self {
+        Location {
+            span: Span::default(),
+            id: &SourceId::Unknown,
+        }
+    }
+
     /// add offset to location
     pub fn with_offset(self, offset: usize) -> Self {
         Location {
@@ -45,15 +53,15 @@ impl<'a> Location<'a> {
 
 pub trait Located<'a> {
     /// get location
-    fn location(&self) -> &Location<'a>;
+    fn location(&self) -> Location<'a>;
 }
 
-pub trait LocatedSet: Sized {
+pub trait LocatedSet<'a>: Sized {
     /// set location
-    fn set_location(&mut self, location: Location);
+    fn set_location(&mut self, location: Location<'a>);
 
     /// with location
-    fn with_location(mut self, location: Location) -> Self {
+    fn with_location(mut self, location: Location<'a>) -> Self {
         self.set_location(location);
         self
     }
@@ -83,10 +91,29 @@ mod tests {
     use super::*;
     use crate::SourceId;
 
+    struct TestLocated<'a>(Location<'a>);
+    impl<'a> Default for TestLocated<'a> {
+        fn default() -> Self {
+            Self(Location::unknown())
+        }
+    }
+
+    impl<'a> Located<'a> for TestLocated<'a> {
+        fn location(&self) -> Location<'a> {
+            self.0.clone()
+        }
+    }
+
+    impl<'a> LocatedSet<'a> for TestLocated<'a> {
+        fn set_location(&mut self, location: Location<'a>) {
+            self.0 = location
+        }
+    }
+
     #[test]
     fn location_union() {
-        let source_id = SourceId::File(std::path::PathBuf::from("test.rs"));
-        let source_id2 = SourceId::File(std::path::PathBuf::from("other.rs"));
+        let source_id = SourceId::File(std::path::PathBuf::from("test.st"));
+        let source_id2 = SourceId::File(std::path::PathBuf::from("other.st"));
         let loc1 = Location::new(&source_id, Span::new(0, 5));
         let loc2 = Location::new(&source_id, Span::new(3, 10));
         let loc3 = Location::new(&source_id2, Span::new(0, 5));
@@ -96,9 +123,24 @@ mod tests {
 
     #[test]
     fn location_offset() {
-        let source_id = SourceId::File(std::path::PathBuf::from("test.rs"));
+        let source_id = SourceId::File(std::path::PathBuf::from("test.st"));
         let loc = Location::new(&source_id, Span::new(5, 15));
         let offset_loc = loc.with_offset(10);
         assert_eq!(offset_loc.span(), &Span::new(15, 25));
+    }
+
+    #[test]
+    fn located_traits() {
+        let source_id = SourceId::File(std::path::PathBuf::from("test.st"));
+        let loc1 = Location::new(&source_id, Span::new(0, 10));
+        let loc2 = Location::new(&source_id, Span::new(10, 20));
+
+        let mut test_located = TestLocated::default();
+        assert_eq!(test_located.location(), Location::unknown());
+
+        test_located.set_location(loc1.clone());
+        assert_eq!(test_located.location(), loc1);
+
+        assert_eq!(test_located.with_location(loc2.clone()).location(), loc2);
     }
 }
