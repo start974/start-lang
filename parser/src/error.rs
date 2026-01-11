@@ -12,7 +12,7 @@ pub fn error_parsing(err: &ErrorChumsky<'_>) -> Error {
         .map(Message::quoted)
         .map(Message::important)
         .collect();
-    let res = Error::new(202, Message::text("Parsing error"))
+    Error::new(202, Message::text("Parsing error"))
         .with_span({
             let span = err.span();
             Span::new(span.start, span.end)
@@ -24,16 +24,15 @@ pub fn error_parsing(err: &ErrorChumsky<'_>) -> Error {
                     Message::text(" or "),
                 ))
                 .with_text("."),
-        );
-    match err.found().map(|meta| meta.value.clone()) {
-        None => res,
-        Some(found) => res.with_note(
-            Message::text("Expected : ")
-                .append(Message::intersperse(expected, Message::text(", ")))
-                .with_line()
-                .with_text("Found    : ")
-                .append(Message::quoted(found.to_string()).important())
-                .with_text("."),
-        ),
-    }
+        )
+        .with_note(Message::from(
+            err.found().map(|meta| meta.value.clone()).map(|found| {
+                Message::text("Expected : ")
+                    .append(Message::intersperse(expected, Message::text(", ")))
+                    .with_line()
+                    .with_text("Found    : ")
+                    .append(Message::quoted(found.to_string()).important())
+                    .with_text(".")
+            }),
+        ))
 }

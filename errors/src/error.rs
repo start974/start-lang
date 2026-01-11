@@ -42,13 +42,17 @@ impl Error {
 
     /// add text to error
     pub fn with_text(mut self, text: Message) -> Self {
-        self.text = Some(text);
+        if !text.is_nil() {
+            self.text = Some(text);
+        }
         self
     }
 
     /// add note to error
     pub fn with_note(mut self, note: Message) -> Self {
-        self.note = Some(note);
+        if !note.is_nil() {
+            self.note = Some(note);
+        }
         self
     }
 

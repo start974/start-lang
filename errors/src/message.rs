@@ -159,6 +159,16 @@ impl Message {
         let _ = self.pretty(theme).render_raw(theme.width, &mut stream);
         buffer
     }
+
+    pub fn is_nil(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+impl From<Option<Message>> for Message {
+    fn from(opt: Option<Message>) -> Self {
+        if let Some(m) = opt { m } else { Message::nil() }
+    }
 }
 
 #[cfg(test)]
@@ -168,20 +178,23 @@ mod test {
     #[test]
     fn nil() {
         let m = Message::nil();
-        assert!(m.0.is_empty());
+        assert!(m.is_nil());
 
         let m = m.append(Message::nil());
-        assert!(m.0.is_empty());
+        assert!(m.is_nil());
 
         let m = m.append_if(false, || Message::text("test"));
-        assert!(m.0.is_empty());
+        assert!(m.is_nil());
 
         let nil = Message::nil();
         let m = m.append_if(true, || nil);
-        assert!(m.0.is_empty());
+        assert!(m.is_nil());
 
         let m = m.append_opt(None);
-        assert!(m.0.is_empty());
+        assert!(m.is_nil());
+
+        let m = Message::from(None);
+        assert!(m.is_nil());
     }
 
     #[test]
