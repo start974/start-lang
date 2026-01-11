@@ -59,9 +59,10 @@ impl Error {
 
     /// report of error
     pub fn report<'a, 'id>(&self, id_source: &'a SourceId, theme: &Theme) -> Report<'a, 'id> {
+        let config = Config::default().with_index_type(IndexType::Byte);
         let loc = Location::new(id_source, self.span);
         let mut report_builder = Report::build(ReportKind::Error, loc.clone())
-            .with_config(Config::default().with_index_type(IndexType::Byte))
+            .with_config(config)
             .with_code(self.code)
             .with_message(self.header.make_string(&theme.error.head));
         if let Some(text) = &self.text {

@@ -1,3 +1,4 @@
+use chumsky::span::SimpleSpan;
 use cst::Meta;
 use location::{Span, Spanned};
 use num_bigint::BigUint;
@@ -91,13 +92,22 @@ pub struct MetaTokenStream {
 }
 
 impl MetaTokenStream {
-    pub fn last_offset(&self) -> usize {
+    pub fn last_simple_span(&self) -> SimpleSpan {
         use location::Spanned;
-        if let Some(token) = self.tokens.last() {
-            token.span().end()
+        let span = if let Some(token) = self.tokens.last() {
+            token.span()
         } else {
-            0
+            Span::new(0, 0)
+        };
+        SimpleSpan {
+            start: span.start(),
+            end: span.end(),
+            context: (),
         }
+    }
+
+    pub fn last_offset(&self) -> usize {
+        self.last_simple_span().end
     }
 }
 
@@ -119,6 +129,16 @@ impl From<Vec<MetaToken>> for MetaTokenStream {
 impl Pretty for MetaTokenStream {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::intersperse(self.tokens.iter().map(|t| t.pretty(theme)), Doc::hardline()).group()
+        //.append({
+        //let span = self.span();
+        //let start = span.start().to_string();
+        //let end = span.end().to_string();
+        //Doc::text("[")
+        //.append(Doc::text(start))
+        //.append(Doc::text(", "))
+        //.append(Doc::text(end))
+        //.append(Doc::text("]"))
+        //})
     }
 }
 

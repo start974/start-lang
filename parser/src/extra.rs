@@ -1,7 +1,7 @@
-use chumsky::{error::Rich, extra::Err, input::Stream};
+use chumsky::{error::Rich, extra::Err, input::ValueInput, span::SimpleSpan};
 use lexer::MetaToken;
-use std::vec::IntoIter;
 
 pub type ErrorChumsky<'tokens> = Rich<'tokens, MetaToken>;
-type SteamToken = Stream<IntoIter<MetaToken>>;
-pub trait Parser<'tokens, T> = chumsky::Parser<'tokens, SteamToken, T, Err<ErrorChumsky<'tokens>>>;
+pub trait Input<'tokens> = ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>;
+pub trait Parser<'tokens, I: Input<'tokens>, T> =
+    chumsky::Parser<'tokens, I, T, Err<ErrorChumsky<'tokens>>>;
