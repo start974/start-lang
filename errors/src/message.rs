@@ -46,6 +46,7 @@ impl Message {
         if cond { self.append(f_doc()) } else { self }
     }
 
+    /// append optional document
     pub fn append_opt(self, doc: Option<Self>) -> Self {
         if let Some(d) = doc {
             self.append(d)
@@ -157,5 +158,80 @@ impl Message {
         let mut stream = StreamColored::new(&mut buffer);
         let _ = self.pretty(theme).render_raw(theme.width, &mut stream);
         buffer
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn nil() {
+        let m = Message::nil();
+        assert!(m.0.is_empty());
+
+        let m = m.append(Message::nil());
+        assert!(m.0.is_empty());
+
+        let m = m.append_if(false, || Message::text("test"));
+        assert!(m.0.is_empty());
+
+        let nil = Message::nil();
+        let m = m.append_if(true, || nil);
+        assert!(m.0.is_empty());
+
+        let m = m.append_opt(None);
+        assert!(m.0.is_empty());
+    }
+
+    #[test]
+    fn basic() {
+        let m = Message::text("Hello")
+            .with_quoted("World")
+            .with_line()
+            .important()
+            .with_text("Important Message")
+            .normal()
+            .with_text(" End.");
+
+        let expected = "Hello\"World\"\nImportant Message End.";
+        let result = m.make_string(&MessageTheme::default());
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn intersperse() {
+        let msgs = vec![
+            Message::text("One"),
+            Message::text("Two"),
+            Message::text("Three"),
+        ];
+        let sep = Message::text(", ");
+        let m = Message::intersperse(msgs, sep);
+
+        let expected = "One, Two, Three";
+        let result = m.make_string(&MessageTheme::default());
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn pretty() {
+        struct TestPretty;
+        impl Pretty for TestPretty {
+            fn pretty(&self, _theme: &Theme) -> Doc<'_> {
+                Doc::text("PrettyContent")
+            }
+        }
+
+        let p = TestPretty;
+        let m = Message::of_pretty(&p)
+            .with_line()
+            .important()
+            .with_text("Important Pretty:")
+            .with_pretty(&p);
+
+        let expected = "PrettyContent\nImportant Pretty:PrettyContent";
+        let result = m.make_string(&MessageTheme::default());
+        assert_eq!(result, expected);
     }
 }

@@ -97,3 +97,31 @@ impl SpannedSet for Error {
         self.span = span;
     }
 }
+
+// ============================================================================
+// Test
+// ============================================================================
+#[cfg(test)]
+mod tests {
+    use pp::theme::MessageTheme;
+
+    use super::*;
+    use crate::Message;
+
+    #[test]
+    fn error_report() {
+        let theme = MessageTheme::default();
+        let error = Error::new(1001, Message::text("Test error"))
+            .with_span(Span::new(0, 5))
+            .with_text(Message::text("This is a test error message."))
+            .with_note(Message::text("This is a note."));
+        assert_eq!(error.code(), 1001);
+        assert_eq!(error.header().make_string(&theme), "Test error");
+        assert_eq!(
+            error.text().unwrap().make_string(&theme),
+            "This is a test error message."
+        );
+        assert_eq!(error.note().unwrap().make_string(&theme), "This is a note.");
+        assert_eq!(error.span(), Span::new(0, 5));
+    }
+}
