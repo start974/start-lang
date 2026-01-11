@@ -1,4 +1,4 @@
-use crate::Parser;
+use crate::{Parser, extra::Input};
 use chumsky::prelude::{choice, recursive, select};
 use cst::*;
 use lexer::token::{Operator, Token};
@@ -8,8 +8,9 @@ use crate::CommandOrEnd;
 // ===========================================================================
 // Operator
 // ===========================================================================
-pub fn operator<'tokens, Op>(op: Operator, res: Op) -> impl Parser<'tokens, Meta<Op>>
+pub fn operator<'tokens, I, Op>(op: Operator, res: Op) -> impl Parser<'tokens, I, Meta<Op>>
 where
+    I: Input<'tokens>,
     Op: Clone,
 {
     select! {ref meta @ Meta{ value: Token::Operator(ref token_op), ..} if token_op == &op =>
@@ -26,7 +27,10 @@ where
 /// pattern :=
 /// | IDENTIFIER
 ///```
-pub fn pattern<'tokens>() -> impl Parser<'tokens, cst::Pattern> {
+pub fn pattern<'tokens, I>() -> impl Parser<'tokens, I, cst::Pattern>
+where
+    I: Input<'tokens>,
+{
     let variable = select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
             meta.clone().map(|_| cst::pattern::VariableT::from(s.clone()))
     }
@@ -46,7 +50,10 @@ pub fn pattern<'tokens>() -> impl Parser<'tokens, cst::Pattern> {
 /// | NUMBER
 /// | CHARACTER
 ///```
-pub fn constant<'tokens>() -> impl Parser<'tokens, cst::Constant> {
+pub fn constant<'tokens, I>() -> impl Parser<'tokens, I, cst::Constant>
+where
+    I: Input<'tokens>,
+{
     use cst::constant::{BuiltinT, CharacterT, Constant, NumberT};
     let number = select! {ref meta @ Meta{ value: Token::Number(ref n), ..} =>
             meta.clone().map(|_| NumberT::from(n.clone()))
@@ -73,7 +80,10 @@ pub fn constant<'tokens>() -> impl Parser<'tokens, cst::Constant> {
 /// ```ebfn
 /// variable := IDENTIFIER
 ///```
-pub fn variable<'tokens>() -> impl Parser<'tokens, cst::expression::Variable> {
+pub fn variable<'tokens, I>() -> impl Parser<'tokens, I, cst::expression::Variable>
+where
+    I: Input<'tokens>,
+{
     use cst::expression::VariableT;
     select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
             meta.clone().map(|_| VariableT::from(s.clone()))
@@ -87,9 +97,12 @@ pub fn variable<'tokens>() -> impl Parser<'tokens, cst::expression::Variable> {
 /// | variable
 /// | "(" expression ")"
 ///```
-fn expression0<'tokens>(
-    expr: impl Parser<'tokens, cst::Expression>,
-) -> impl Parser<'tokens, cst::expression::Expression0> {
+fn expression0<'tokens, I>(
+    expr: impl Parser<'tokens, I, cst::Expression>,
+) -> impl Parser<'tokens, I, cst::expression::Expression0>
+where
+    I: Input<'tokens>,
+{
     use cst::expression::Expression0;
     use cst::parenthesis::Parenthesed;
 
@@ -114,9 +127,12 @@ fn expression0<'tokens>(
 /// | expr@0 COLON ty
 /// | expr@0
 ///```
-fn expression1<'tokens>(
-    expr0: impl Parser<'tokens, cst::expression::Expression0> + Clone,
-) -> impl Parser<'tokens, cst::expression::Expression1> {
+fn expression1<'tokens, I>(
+    expr0: impl Parser<'tokens, I, cst::expression::Expression0> + Clone,
+) -> impl Parser<'tokens, I, cst::expression::Expression1>
+where
+    I: Input<'tokens>,
+{
     use cst::expression::Expression1;
 
     let colon = operator(Operator::Colon, cst::operator::ColonT()).labelled(":");
@@ -140,7 +156,10 @@ fn expression1<'tokens>(
 /// | expr@0 colon ty
 /// | expr@0
 ///```
-pub fn expression<'tokens>() -> impl Parser<'tokens, cst::Expression> {
+pub fn expression<'tokens, I>() -> impl Parser<'tokens, I, cst::Expression>
+where
+    I: Input<'tokens>,
+{
     recursive(move |expr| {
         let expr0 = expression0(expr.clone()).boxed();
         expression1(expr0).boxed()
@@ -152,7 +171,10 @@ pub fn expression<'tokens>() -> impl Parser<'tokens, cst::Expression> {
 /// ```ebfn
 /// expr_definition := pattern (colon type)? EQ_DEF expression
 ///```
-pub fn expression_definition<'tokens>() -> impl Parser<'tokens, cst::ExpressionDefinition> {
+pub fn expression_definition<'tokens, I>() -> impl Parser<'tokens, I, cst::ExpressionDefinition>
+where
+    I: Input<'tokens>,
+{
     use cst::expression_definition::{ExpressionDefinition, TypedBy};
 
     let typed_by = {
@@ -181,7 +203,10 @@ pub fn expression_definition<'tokens>() -> impl Parser<'tokens, cst::ExpressionD
 /// ```ebfn
 /// type_variable := IDENTIFIER
 /// ```
-pub fn ty_variable<'tokens>() -> impl Parser<'tokens, cst::ty::Variable> {
+pub fn ty_variable<'tokens, I>() -> impl Parser<'tokens, I, cst::ty::Variable>
+where
+    I: Input<'tokens>,
+{
     select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
             meta.clone().map(|_| cst::ty::VariableT::from(s.clone()))
     }
@@ -189,7 +214,10 @@ pub fn ty_variable<'tokens>() -> impl Parser<'tokens, cst::ty::Variable> {
 }
 
 /// parse type builtin
-pub fn ty_builtin<'tokens>() -> impl Parser<'tokens, cst::ty::Builtin> {
+pub fn ty_builtin<'tokens, I>() -> impl Parser<'tokens, I, cst::ty::Builtin>
+where
+    I: Input<'tokens>,
+{
     select! {
         ref meta @ Meta{ value: Token::Identifier(ref s), ..} if s == "__Type_Nat__" =>
             meta.clone().map(|_| cst::ty::BuiltinT::Nat),
@@ -208,7 +236,10 @@ pub fn ty_builtin<'tokens>() -> impl Parser<'tokens, cst::ty::Builtin> {
 /// type :=
 /// | type_variable
 /// ```
-pub fn ty<'tokens>() -> impl Parser<'tokens, cst::Type> {
+pub fn ty<'tokens, I>() -> impl Parser<'tokens, I, cst::Type>
+where
+    I: Input<'tokens>,
+{
     let builtin = ty_builtin().map(cst::Type::Builtin);
     let var = ty_variable().map(cst::Type::Variable);
 
@@ -219,7 +250,10 @@ pub fn ty<'tokens>() -> impl Parser<'tokens, cst::Type> {
 /// ```ebfn
 /// type_definition := type_variable EQ_DEF type
 /// ```
-pub fn type_definition<'tokens>() -> impl Parser<'tokens, cst::TypeDefinition> {
+pub fn type_definition<'tokens, I>() -> impl Parser<'tokens, I, cst::TypeDefinition>
+where
+    I: Input<'tokens>,
+{
     let eq_def = operator(Operator::EqDef, cst::operator::EqDefT()).labelled(":=");
     ty_variable()
         .then(eq_def)
@@ -234,7 +268,10 @@ pub fn type_definition<'tokens>() -> impl Parser<'tokens, cst::TypeDefinition> {
 /// ```ebfn
 /// help_variable := IDENTIFIER
 /// ```
-pub fn help_variable<'tokens>() -> impl Parser<'tokens, cst::help::Variable> {
+pub fn help_variable<'tokens, I>() -> impl Parser<'tokens, I, cst::help::Variable>
+where
+    I: Input<'tokens>,
+{
     use cst::help::VariableT;
     select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
             meta.clone().map(|_| VariableT::from(s.clone()))
@@ -245,7 +282,10 @@ pub fn help_variable<'tokens>() -> impl Parser<'tokens, cst::help::Variable> {
 // Command
 // ===========================================================================
 
-fn keyword_definition<'tokens>() -> impl Parser<'tokens, cst::command::DefinitionKeyword> {
+fn keyword_definition<'tokens, I>() -> impl Parser<'tokens, I, cst::command::DefinitionKeyword>
+where
+    I: Input<'tokens>,
+{
     use cst::command::DefinitionKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Def" =>
@@ -255,7 +295,10 @@ fn keyword_definition<'tokens>() -> impl Parser<'tokens, cst::command::Definitio
     }
 }
 
-fn keyword_eval<'tokens>() -> impl Parser<'tokens, cst::command::EvalKeyword> {
+fn keyword_eval<'tokens, I>() -> impl Parser<'tokens, I, cst::command::EvalKeyword>
+where
+    I: Input<'tokens>,
+{
     use cst::command::EvalKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Eval" =>
@@ -265,7 +308,10 @@ fn keyword_eval<'tokens>() -> impl Parser<'tokens, cst::command::EvalKeyword> {
     }
 }
 
-fn keyword_type_of<'tokens>() -> impl Parser<'tokens, cst::command::TypeOfKeyword> {
+fn keyword_type_of<'tokens, I>() -> impl Parser<'tokens, I, cst::command::TypeOfKeyword>
+where
+    I: Input<'tokens>,
+{
     use cst::command::TypeOfKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "TypeOf" =>
@@ -275,7 +321,10 @@ fn keyword_type_of<'tokens>() -> impl Parser<'tokens, cst::command::TypeOfKeywor
     }
 }
 
-fn keyword_help<'tokens>() -> impl Parser<'tokens, cst::command::HelpKeyword> {
+fn keyword_help<'tokens, I>() -> impl Parser<'tokens, I, cst::command::HelpKeyword>
+where
+    I: Input<'tokens>,
+{
     use cst::command::HelpKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Help" =>
@@ -285,7 +334,10 @@ fn keyword_help<'tokens>() -> impl Parser<'tokens, cst::command::HelpKeyword> {
     }
 }
 
-fn keyword_type<'tokens>() -> impl Parser<'tokens, cst::command::TypeKeyword> {
+fn keyword_type<'tokens, I>() -> impl Parser<'tokens, I, cst::command::TypeKeyword>
+where
+    I: Input<'tokens>,
+{
     use cst::command::TypeKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Type" =>
@@ -295,7 +347,10 @@ fn keyword_type<'tokens>() -> impl Parser<'tokens, cst::command::TypeKeyword> {
     }
 }
 
-fn keyword_set<'tokens>() -> impl Parser<'tokens, cst::command::SetKeyword> {
+fn keyword_set<'tokens, I>() -> impl Parser<'tokens, I, cst::command::SetKeyword>
+where
+    I: Input<'tokens>,
+{
     use cst::command::SetKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Set" =>
@@ -303,7 +358,10 @@ fn keyword_set<'tokens>() -> impl Parser<'tokens, cst::command::SetKeyword> {
     }
 }
 
-fn keyword_unset<'tokens>() -> impl Parser<'tokens, cst::command::UnsetKeyword> {
+fn keyword_unset<'tokens, I>() -> impl Parser<'tokens, I, cst::command::UnsetKeyword>
+where
+    I: Input<'tokens>,
+{
     use cst::command::UnsetKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Unset" =>
@@ -320,7 +378,10 @@ fn keyword_unset<'tokens>() -> impl Parser<'tokens, cst::command::UnsetKeyword> 
 /// | keyword_set variable
 /// | keyword_unset variable
 ///```
-fn command_kind<'tokens>() -> impl Parser<'tokens, cst::CommandKind> {
+fn command_kind<'tokens, I>() -> impl Parser<'tokens, I, cst::CommandKind>
+where
+    I: Input<'tokens>,
+{
     use cst::command::CommandKind;
 
     choice((
@@ -352,7 +413,10 @@ fn command_kind<'tokens>() -> impl Parser<'tokens, cst::CommandKind> {
 /// ```ebfn
 /// command := command_kind "."
 ///```
-fn command<'tokens>() -> impl Parser<'tokens, cst::Command> {
+fn command<'tokens, I>() -> impl Parser<'tokens, I, cst::Command>
+where
+    I: Input<'tokens>,
+{
     let dot = operator(Operator::Dot, cst::operator::DotT()).labelled(".");
     command_kind()
         .then(dot)
@@ -365,7 +429,10 @@ fn command<'tokens>() -> impl Parser<'tokens, cst::Command> {
 // ===========================================================================
 
 /// parse end of input
-fn end_of_input<'tokens>() -> impl Parser<'tokens, cst::EndOfFile> {
+fn end_of_input<'tokens, I>() -> impl Parser<'tokens, I, cst::EndOfFile>
+where
+    I: Input<'tokens>,
+{
     use cst::file::EndOfFileT;
     select! {meta @ Meta{ value: Token::EndOfInput, ..} =>
         meta.map(|_| EndOfFileT())
@@ -378,7 +445,10 @@ fn end_of_input<'tokens>() -> impl Parser<'tokens, cst::EndOfFile> {
 // ===========================================================================
 
 /// parse with lexer tokens
-pub fn parser<'tokens>() -> impl Parser<'tokens, CommandOrEnd> {
+pub fn parser<'tokens, I>() -> impl Parser<'tokens, I, CommandOrEnd>
+where
+    I: Input<'tokens>,
+{
     let command = command().map(Box::new).map(CommandOrEnd::Command);
     let eoi = end_of_input().map(CommandOrEnd::End);
     choice((command, eoi))

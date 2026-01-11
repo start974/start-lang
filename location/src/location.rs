@@ -66,7 +66,7 @@ impl<'a> ariadne::Span for Location<'a> {
     }
 
     fn end(&self) -> usize {
-        self.span().start()
+        self.span().end()
     }
 
     fn source(&self) -> &Self::SourceId {

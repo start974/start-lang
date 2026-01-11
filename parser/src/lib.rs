@@ -19,10 +19,28 @@ pub enum CommandOrEnd {
 
 /// parse tokens
 pub fn parse(tokens: MetaTokenStream) -> Result<CommandOrEnd, Errors> {
-    use chumsky::input::Stream;
-    let stream = Stream::from_iter(tokens);
+    use chumsky::prelude::*;
+    use location::Spanned;
+
+    let eoi: SimpleSpan = tokens.last_simple_span();
+    let tokens_spanned = tokens
+        .into_iter()
+        .map(|token| {
+            let span = token.span();
+            (
+                token.clone(),
+                SimpleSpan {
+                    start: span.start(),
+                    end: span.end(),
+                    context: (),
+                },
+            )
+        })
+        .collect::<Vec<_>>();
+    let input = tokens_spanned.map(eoi, |(t, s)| (t, s));
+
     parser()
-        .parse(stream)
+        .parse(input)
         .into_result()
-        .map_err(|errs| errs.iter().map(error::error_parsing).collect())
+        .map_err(|errs: Vec<ErrorChumsky>| errs.iter().map(error::error_parsing).collect())
 }

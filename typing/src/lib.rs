@@ -47,10 +47,7 @@ impl Typer {
             Expression0::Variable(var) => {
                 let span = var.span();
                 let id = self.id_builder.get(var.name());
-                let var = self
-                    .env
-                    .get_expr_var(&id, span)
-                    .map_err(Errors::from)?;
+                let var = self.env.get_expr_var(&id, span).map_err(Errors::from)?;
                 Ok(tir::Expression::Variable(var))
             }
             Expression0::Paren(expr) => self.expression(expr.inner()),
@@ -100,10 +97,7 @@ impl Typer {
             cst::Type::Variable(ty_var) => {
                 let span = ty_var.span();
                 let id = self.id_builder.get(ty_var.name());
-                let alias = self
-                    .env
-                    .get_alias_ty(&id, span)
-                    .map_err(Errors::from)?;
+                let alias = self.env.get_alias_ty(&id, span).map_err(Errors::from)?;
                 Ok(tir::Type::Alias(alias))
             }
         }
@@ -130,15 +124,19 @@ impl Typer {
         self.expression(&definition.body)
             .combine(definition.typed_by().map(|ty| self.ty(ty)).transpose())
             .and_then(|(body, ty_opt)| {
+                match &ty_opt {
+                    Some(ty) => self.pattern(&definition.pattern, ty),
+                    None => self.pattern(&definition.pattern, body.ty()),
+                }
+                .map(|pattern| (pattern, ty_opt, body))
+            })
+            .and_then(|(pattern, ty_opt, body)| {
                 if let Some(ty) = ty_opt {
                     body.restrict_ty(ty).map_err(Errors::from)
                 } else {
                     Ok(body)
                 }
-            })
-            .and_then(|body| {
-                self.pattern(&definition.pattern, body.ty())
-                    .map(|pattern| tir::ExpressionDefinition::new(pattern, body))
+                .map(|body| tir::ExpressionDefinition::new(pattern, body))
             })
     }
 
