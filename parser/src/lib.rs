@@ -1,15 +1,10 @@
-#![feature(trait_alias)]
-
 use cst::{Command, EndOfFile};
 use errors::Errors;
-use lexer::MetaTokenStream;
+use lexer::{MetaToken, MetaTokenStream};
 
 mod error;
-mod extra;
 mod parsing;
 
-pub use extra::ErrorChumsky;
-pub use extra::Parser;
 pub use parsing::parser;
 
 pub enum CommandOrEnd {
@@ -17,6 +12,7 @@ pub enum CommandOrEnd {
     End(EndOfFile),
 }
 
+pub type ErrorChumsky<'tokens> = chumsky::error::Rich<'tokens, MetaToken>;
 /// parse tokens
 pub fn parse(tokens: MetaTokenStream) -> Result<CommandOrEnd, Errors> {
     use chumsky::prelude::*;

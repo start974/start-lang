@@ -1,16 +1,21 @@
-use crate::{Parser, extra::Input};
-use chumsky::prelude::{choice, recursive, select};
+use chumsky::input::ValueInput;
+use chumsky::prelude::*;
 use cst::*;
-use lexer::token::{Operator, Token};
+use lexer::token::{MetaToken, Operator, Token};
 
 use crate::CommandOrEnd;
+
+pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, MetaToken>>;
 
 // ===========================================================================
 // Operator
 // ===========================================================================
-pub fn operator<'tokens, I, Op>(op: Operator, res: Op) -> impl Parser<'tokens, I, Meta<Op>>
+pub fn operator<'tokens, I, Op>(
+    op: Operator,
+    res: Op,
+) -> impl Parser<'tokens, I, Meta<Op>, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
     Op: Clone,
 {
     select! {ref meta @ Meta{ value: Token::Operator(ref token_op), ..} if token_op == &op =>
@@ -27,9 +32,9 @@ where
 /// pattern :=
 /// | IDENTIFIER
 ///```
-pub fn pattern<'tokens, I>() -> impl Parser<'tokens, I, cst::Pattern>
+pub fn pattern<'tokens, I>() -> impl Parser<'tokens, I, cst::Pattern, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     let variable = select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
             meta.clone().map(|_| cst::pattern::VariableT::from(s.clone()))
@@ -50,9 +55,9 @@ where
 /// | NUMBER
 /// | CHARACTER
 ///```
-pub fn constant<'tokens, I>() -> impl Parser<'tokens, I, cst::Constant>
+pub fn constant<'tokens, I>() -> impl Parser<'tokens, I, cst::Constant, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::constant::{BuiltinT, CharacterT, Constant, NumberT};
     let number = select! {ref meta @ Meta{ value: Token::Number(ref n), ..} =>
@@ -80,9 +85,10 @@ where
 /// ```ebfn
 /// variable := IDENTIFIER
 ///```
-pub fn variable<'tokens, I>() -> impl Parser<'tokens, I, cst::expression::Variable>
+pub fn variable<'tokens, I>()
+-> impl Parser<'tokens, I, cst::expression::Variable, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::expression::VariableT;
     select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
@@ -98,10 +104,10 @@ where
 /// | "(" expression ")"
 ///```
 fn expression0<'tokens, I>(
-    expr: impl Parser<'tokens, I, cst::Expression>,
-) -> impl Parser<'tokens, I, cst::expression::Expression0>
+    expr: impl Parser<'tokens, I, cst::Expression, ErrorChumsky<'tokens>>,
+) -> impl Parser<'tokens, I, cst::expression::Expression0, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::expression::Expression0;
     use cst::parenthesis::Parenthesed;
@@ -128,10 +134,10 @@ where
 /// | expr@0
 ///```
 fn expression1<'tokens, I>(
-    expr0: impl Parser<'tokens, I, cst::expression::Expression0> + Clone,
-) -> impl Parser<'tokens, I, cst::expression::Expression1>
+    expr0: impl Parser<'tokens, I, cst::expression::Expression0, ErrorChumsky<'tokens>> + Clone,
+) -> impl Parser<'tokens, I, cst::expression::Expression1, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::expression::Expression1;
 
@@ -156,9 +162,9 @@ where
 /// | expr@0 colon ty
 /// | expr@0
 ///```
-pub fn expression<'tokens, I>() -> impl Parser<'tokens, I, cst::Expression>
+pub fn expression<'tokens, I>() -> impl Parser<'tokens, I, cst::Expression, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     recursive(move |expr| {
         let expr0 = expression0(expr.clone()).boxed();
@@ -171,9 +177,10 @@ where
 /// ```ebfn
 /// expr_definition := pattern (colon type)? EQ_DEF expression
 ///```
-pub fn expression_definition<'tokens, I>() -> impl Parser<'tokens, I, cst::ExpressionDefinition>
+pub fn expression_definition<'tokens, I>()
+-> impl Parser<'tokens, I, cst::ExpressionDefinition, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::expression_definition::{ExpressionDefinition, TypedBy};
 
@@ -203,9 +210,9 @@ where
 /// ```ebfn
 /// type_variable := IDENTIFIER
 /// ```
-pub fn ty_variable<'tokens, I>() -> impl Parser<'tokens, I, cst::ty::Variable>
+pub fn ty_variable<'tokens, I>() -> impl Parser<'tokens, I, cst::ty::Variable, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
             meta.clone().map(|_| cst::ty::VariableT::from(s.clone()))
@@ -214,9 +221,9 @@ where
 }
 
 /// parse type builtin
-pub fn ty_builtin<'tokens, I>() -> impl Parser<'tokens, I, cst::ty::Builtin>
+pub fn ty_builtin<'tokens, I>() -> impl Parser<'tokens, I, cst::ty::Builtin, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     select! {
         ref meta @ Meta{ value: Token::Identifier(ref s), ..} if s == "__Type_Nat__" =>
@@ -236,9 +243,9 @@ where
 /// type :=
 /// | type_variable
 /// ```
-pub fn ty<'tokens, I>() -> impl Parser<'tokens, I, cst::Type>
+pub fn ty<'tokens, I>() -> impl Parser<'tokens, I, cst::Type, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     let builtin = ty_builtin().map(cst::Type::Builtin);
     let var = ty_variable().map(cst::Type::Variable);
@@ -250,9 +257,10 @@ where
 /// ```ebfn
 /// type_definition := type_variable EQ_DEF type
 /// ```
-pub fn type_definition<'tokens, I>() -> impl Parser<'tokens, I, cst::TypeDefinition>
+pub fn type_definition<'tokens, I>()
+-> impl Parser<'tokens, I, cst::TypeDefinition, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     let eq_def = operator(Operator::EqDef, cst::operator::EqDefT()).labelled(":=");
     ty_variable()
@@ -268,9 +276,10 @@ where
 /// ```ebfn
 /// help_variable := IDENTIFIER
 /// ```
-pub fn help_variable<'tokens, I>() -> impl Parser<'tokens, I, cst::help::Variable>
+pub fn help_variable<'tokens, I>()
+-> impl Parser<'tokens, I, cst::help::Variable, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::help::VariableT;
     select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
@@ -282,9 +291,10 @@ where
 // Command
 // ===========================================================================
 
-fn keyword_definition<'tokens, I>() -> impl Parser<'tokens, I, cst::command::DefinitionKeyword>
+fn keyword_definition<'tokens, I>()
+-> impl Parser<'tokens, I, cst::command::DefinitionKeyword, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::command::DefinitionKeywordT;
     select! {
@@ -295,9 +305,10 @@ where
     }
 }
 
-fn keyword_eval<'tokens, I>() -> impl Parser<'tokens, I, cst::command::EvalKeyword>
+fn keyword_eval<'tokens, I>()
+-> impl Parser<'tokens, I, cst::command::EvalKeyword, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::command::EvalKeywordT;
     select! {
@@ -308,9 +319,10 @@ where
     }
 }
 
-fn keyword_type_of<'tokens, I>() -> impl Parser<'tokens, I, cst::command::TypeOfKeyword>
+fn keyword_type_of<'tokens, I>()
+-> impl Parser<'tokens, I, cst::command::TypeOfKeyword, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::command::TypeOfKeywordT;
     select! {
@@ -321,9 +333,10 @@ where
     }
 }
 
-fn keyword_help<'tokens, I>() -> impl Parser<'tokens, I, cst::command::HelpKeyword>
+fn keyword_help<'tokens, I>()
+-> impl Parser<'tokens, I, cst::command::HelpKeyword, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::command::HelpKeywordT;
     select! {
@@ -334,9 +347,10 @@ where
     }
 }
 
-fn keyword_type<'tokens, I>() -> impl Parser<'tokens, I, cst::command::TypeKeyword>
+fn keyword_type<'tokens, I>()
+-> impl Parser<'tokens, I, cst::command::TypeKeyword, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::command::TypeKeywordT;
     select! {
@@ -347,9 +361,10 @@ where
     }
 }
 
-fn keyword_set<'tokens, I>() -> impl Parser<'tokens, I, cst::command::SetKeyword>
+fn keyword_set<'tokens, I>()
+-> impl Parser<'tokens, I, cst::command::SetKeyword, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::command::SetKeywordT;
     select! {
@@ -358,9 +373,10 @@ where
     }
 }
 
-fn keyword_unset<'tokens, I>() -> impl Parser<'tokens, I, cst::command::UnsetKeyword>
+fn keyword_unset<'tokens, I>()
+-> impl Parser<'tokens, I, cst::command::UnsetKeyword, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::command::UnsetKeywordT;
     select! {
@@ -378,9 +394,9 @@ where
 /// | keyword_set variable
 /// | keyword_unset variable
 ///```
-fn command_kind<'tokens, I>() -> impl Parser<'tokens, I, cst::CommandKind>
+pub fn command_kind<'tokens, I>() -> impl Parser<'tokens, I, cst::CommandKind, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::command::CommandKind;
 
@@ -413,9 +429,9 @@ where
 /// ```ebfn
 /// command := command_kind "."
 ///```
-fn command<'tokens, I>() -> impl Parser<'tokens, I, cst::Command>
+pub fn command<'tokens, I>() -> impl Parser<'tokens, I, cst::Command, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     let dot = operator(Operator::Dot, cst::operator::DotT()).labelled(".");
     command_kind()
@@ -429,9 +445,9 @@ where
 // ===========================================================================
 
 /// parse end of input
-fn end_of_input<'tokens, I>() -> impl Parser<'tokens, I, cst::EndOfFile>
+pub fn end_of_input<'tokens, I>() -> impl Parser<'tokens, I, cst::EndOfFile, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     use cst::file::EndOfFileT;
     select! {meta @ Meta{ value: Token::EndOfInput, ..} =>
@@ -445,9 +461,9 @@ where
 // ===========================================================================
 
 /// parse with lexer tokens
-pub fn parser<'tokens, I>() -> impl Parser<'tokens, I, CommandOrEnd>
+pub fn parser<'tokens, I>() -> impl Parser<'tokens, I, CommandOrEnd, ErrorChumsky<'tokens>>
 where
-    I: Input<'tokens>,
+    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
     let command = command().map(Box::new).map(CommandOrEnd::Command);
     let eoi = end_of_input().map(CommandOrEnd::End);
