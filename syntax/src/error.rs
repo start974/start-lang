@@ -1,4 +1,4 @@
-use crate::lexer::ErrorChumsky as ErrorLexer;
+use crate::lexer::lexing::ErrorChumsky as ErrorLexer;
 use crate::parser::ErrorChumsky as ErrorParser;
 use errors::{Error, Message};
 use location::Span;

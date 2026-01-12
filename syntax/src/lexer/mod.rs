@@ -7,8 +7,6 @@ pub use token::MetaTokenStream;
 
 pub use lexing::lexer;
 
-pub type ErrorChumsky<'src> = chumsky::error::Rich<'src, char>;
-
 /// apply lexer on [source_id] with [offset] on [content]
 pub fn lex(content: &str, offset: usize) -> Result<MetaTokenStream, Errors> {
     use chumsky::Parser as _;

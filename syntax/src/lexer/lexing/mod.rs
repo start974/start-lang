@@ -1,13 +1,18 @@
-use super::ErrorChumsky;
 use super::token;
 use chumsky::extra::Err;
 use chumsky::prelude::*;
-use chumsky::text::{newline, whitespace};
-use cst::{Comment, Meta, meta::CommentOrLines};
+use cst::Comment;
 use location::Span;
 use num_bigint::BigUint;
 use std::rc::Rc;
 
+pub mod with_meta;
+
+pub use chumsky::prelude::Parser;
+pub use with_meta::WithMeta;
+
+pub type ErrorChumsky<'src> = chumsky::error::Rich<'src, char>;
+pub type ExtraChumsky<'src> = chumsky::extra::Err<ErrorChumsky<'src>>;
 // ===========================================================================
 // Commment
 // ===========================================================================
@@ -30,43 +35,6 @@ pub fn comment<'src>() -> impl Parser<'src, &'src str, Comment, Err<ErrorChumsky
         .then_ignore(just("*)"))
         .map(|(is_doc, str)| Comment::from(str).with_is_doc(is_doc))
         .labelled("comment")
-}
-
-// ===========================================================================
-// Meta
-// ===========================================================================
-pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, Err<ErrorChumsky<'src>>> + Sized {
-    /// meta(rule) = (LINE{2,} | WS* COMMENT)* WS* rule
-    fn with_meta(
-        self,
-        offset: usize,
-    ) -> impl Parser<'src, &'src str, Meta<T>, Err<ErrorChumsky<'src>>> {
-        let lines = newline().repeated().at_least(2).to(CommentOrLines::Lines);
-        let comment = whitespace()
-            .ignore_then(comment())
-            .map(CommentOrLines::Comment);
-
-        let meta_items = (lines.or(comment))
-            .repeated()
-            .collect::<Vec<CommentOrLines>>();
-
-        // Ajoute la location à la rule
-        let rule_loc = self.map_with(move |value, e| {
-            let span: SimpleSpan = e.span();
-            (value, Span::new(span.start, span.end).with_offset(offset))
-        });
-
-        // Consomme les derniers espaces/lignes avant le rule
-        meta_items
-            .then_ignore(whitespace())
-            .then(rule_loc)
-            .map(move |(comments, (value, loc))| Meta::new(value, loc).with_items(&comments))
-    }
-}
-
-impl<'src, T, P> WithMeta<'src, T> for P where
-    P: Parser<'src, &'src str, T, Err<ErrorChumsky<'src>>> + Sized
-{
 }
 
 // ===========================================================================
