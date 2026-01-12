@@ -178,3 +178,157 @@ where
         self.value.as_character()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use location::Span;
+
+    #[test]
+    fn meta_comment_and_lines() {
+        let mut meta = Meta::new(42, Span::new(0, 2));
+        let comment = Comment::from("This is a comment");
+        meta.add_comment(comment.clone());
+        assert!(meta.has_comment());
+        assert_eq!(meta.before.len(), 1);
+
+        meta.add_lines();
+        assert_eq!(meta.before.len(), 2);
+
+        // Adding another lines should not duplicate
+        meta.add_lines();
+        assert_eq!(meta.before.len(), 2);
+
+        meta.add_comment(comment);
+        assert_eq!(meta.before.len(), 3);
+    }
+
+    #[test]
+    fn with_items() {
+        let items = vec![
+            CommentOrLines::Comment(Comment::from("First comment")),
+            CommentOrLines::Lines,
+            CommentOrLines::Lines,
+            CommentOrLines::Comment(Comment::from("Second Doc").with_is_doc(true)),
+            CommentOrLines::Lines,
+        ];
+
+        let meta = Meta::new(100, Span::new(0, 3)).with_items(&items);
+        assert_eq!(meta.before.len(), 4);
+        assert!(meta.has_comment());
+        assert!(meta.get_doc().is_none());
+    }
+
+    #[test]
+    fn pretty() {
+        struct TestPretty;
+        impl Pretty for TestPretty {
+            fn pretty(&self, _theme: &Theme) -> Doc<'_> {
+                Doc::text("TestPrettyMeta")
+            }
+        }
+        let theme = Theme::default();
+
+        {
+            let meta = Meta::new(TestPretty, Span::default()).with_items(&[
+                CommentOrLines::Lines,
+                CommentOrLines::Comment(Comment::from("First comment")),
+                CommentOrLines::Lines,
+                CommentOrLines::Lines,
+                CommentOrLines::Lines,
+                CommentOrLines::Comment(Comment::from("Second Doc").with_is_doc(true)),
+            ]);
+
+            assert_eq!(meta.before.len(), 3);
+            assert!(meta.get_doc().is_some());
+            let theme = Theme::default();
+            assert_eq!(
+                meta.make_string(&theme).to_string(),
+                "(* First comment *)\n\n(** Second Doc *)\nTestPrettyMeta"
+            );
+        }
+
+        {
+            let meta = Meta::new(TestPretty, Span::default()).with_items(&[
+                CommentOrLines::Lines,
+                CommentOrLines::Comment(Comment::from("First comment")),
+            ]);
+
+            assert_eq!(
+                meta.make_string(&theme).to_string(),
+                "(* First comment *)\nTestPrettyMeta"
+            );
+        }
+
+        {
+            let meta = Meta::new(TestPretty, Span::default());
+            assert_eq!(meta.make_string(&theme).to_string(), "TestPrettyMeta");
+        }
+    }
+
+    #[test]
+    fn map_value() {
+        let meta = Meta::new(10, Span::new(0, 2));
+        let new_meta = meta.map(|v| v * 2);
+        assert_eq!(new_meta.value, 20);
+        assert_eq!(new_meta.span(), Span::new(0, 2));
+    }
+
+    #[test]
+    fn as_identifier() {
+        struct Ident {
+            name: String,
+        }
+        impl AsIdentifier for Ident {
+            fn name(&self) -> &str {
+                &self.name
+            }
+        }
+
+        let ident = Ident {
+            name: "myIdent".to_string(),
+        };
+        let meta = Meta::new(ident, Span::new(0, 7));
+        assert_eq!(meta.name(), "myIdent");
+    }
+
+    #[test]
+    fn as_number() {
+        struct Num {
+            value: num_bigint::BigUint,
+        }
+        impl AsNumber for Num {
+            fn as_number(&self) -> &num_bigint::BigUint {
+                &self.value
+            }
+        }
+
+        let num = Num {
+            value: num_bigint::BigUint::from(123u32),
+        };
+        let meta = Meta::new(num, Span::new(0, 3));
+        assert_eq!(meta.as_number(), &num_bigint::BigUint::from(123u32));
+    }
+
+    #[test]
+    fn as_character() {
+        struct Char {
+            value: char,
+        }
+        impl AsCharacter for Char {
+            fn as_character(&self) -> char {
+                self.value
+            }
+        }
+
+        let ch = Char { value: 'A' };
+        let meta = Meta::new(ch, Span::new(0, 1));
+        assert_eq!(meta.as_character(), 'A');
+    }
+
+    #[test]
+    fn display_meta() {
+        let meta = Meta::new(42, Span::new(0, 2));
+        assert_eq!(format!("{}", meta), "42");
+    }
+}
