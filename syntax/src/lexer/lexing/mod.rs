@@ -6,22 +6,22 @@ use location::Span;
 use num_bigint::BigUint;
 use std::rc::Rc;
 
+mod character;
 mod comment;
 mod identifier;
 mod number;
-mod with_meta;
-mod character;
 mod operator;
+mod with_meta;
 
+use character::character;
 pub use chumsky::prelude::Parser;
 pub use comment::comment;
 pub use identifier::identifier;
 pub use number::{
     digit, digit_bin, digit_hex, digit_oct, number, number_bin, number_dec, number_hex, number_oct,
 };
-use character::character;
-pub use with_meta::WithMeta;
 pub use operator::operator;
+pub use with_meta::WithMeta;
 
 pub type ErrorChumsky<'src> = chumsky::error::Rich<'src, char>;
 pub type ExtraChumsky<'src> = chumsky::extra::Err<ErrorChumsky<'src>>;
@@ -61,3 +61,24 @@ pub fn lexer<'src>(
         })
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn lexer_test() {
+        use token::Token::*;
+        let parser = lexer(0);
+
+        let result = parser.parse("var_name 123 'a' ?: .").into_result();
+        assert!(result.is_ok());
+        let tokens = result.unwrap();
+
+        assert_eq!(tokens.len(), 5);
+        assert_eq!(tokens[0].value, Identifier("var_name".to_string()));
+        assert_eq!(tokens[1].value, Number(BigUint::from(123u32)));
+        assert_eq!(tokens[2].value, Character('a'));
+        assert_eq!(tokens[3].value, Operator(token::Operator::TypeOf));
+        assert_eq!(tokens[4].value, Operator(token::Operator::Dot));
+    }
+}
