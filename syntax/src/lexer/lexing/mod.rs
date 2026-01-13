@@ -8,31 +8,16 @@ use std::rc::Rc;
 
 mod with_meta;
 mod comment;
+mod identifier;
 
 pub use chumsky::prelude::Parser;
 pub use with_meta::WithMeta;
 pub use comment::comment;
+pub use identifier::identifier;
 
 pub type ErrorChumsky<'src> = chumsky::error::Rich<'src, char>;
 pub type ExtraChumsky<'src> = chumsky::extra::Err<ErrorChumsky<'src>>;
 
-
-// ===========================================================================
-// Identifier
-// ===========================================================================
-
-/// lex identifier defined in
-/// [Unicode Standard Annex #31](https://www.unicode.org/reports/tr31/) named `<IDENT>` in ebnf
-/// follwing by quotes
-/// ```ebnf
-/// INDENTIFIER := <IDENT> "'"*
-/// ```
-pub fn identifier<'src>() -> impl Parser<'src, &'src str, String, Err<ErrorChumsky<'src>>> {
-    text::unicode::ident()
-        .then(just('\'').repeated().collect::<String>())
-        .map(|(ident, quotes)| format!("{ident}{quotes}"))
-        .labelled("identifier")
-}
 
 // ===========================================================================
 // Number
