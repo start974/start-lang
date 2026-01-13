@@ -11,6 +11,7 @@ mod identifier;
 mod number;
 mod with_meta;
 mod character;
+mod operator;
 
 pub use chumsky::prelude::Parser;
 pub use comment::comment;
@@ -20,29 +21,10 @@ pub use number::{
 };
 use character::character;
 pub use with_meta::WithMeta;
+pub use operator::operator;
 
 pub type ErrorChumsky<'src> = chumsky::error::Rich<'src, char>;
 pub type ExtraChumsky<'src> = chumsky::extra::Err<ErrorChumsky<'src>>;
-
-// ===========================================================================
-// Keyword
-// ===========================================================================
-
-// ===========================================================================
-// Operator
-// ===========================================================================
-/// lex operators
-pub fn operator<'src>() -> impl Parser<'src, &'src str, token::Operator, Err<ErrorChumsky<'src>>> {
-    choice((
-        just("?:").to(token::Operator::TypeOf),
-        just("?").to(token::Operator::Help),
-        just(":=").to(token::Operator::EqDef),
-        just(':').to(token::Operator::Colon),
-        just('$').to(token::Operator::Eval),
-        just('(').to(token::Operator::LParen),
-        just(')').to(token::Operator::RParen),
-    ))
-}
 
 // ===========================================================================
 // Lexer
@@ -78,3 +60,4 @@ pub fn lexer<'src>(
             tokens
         })
 }
+
