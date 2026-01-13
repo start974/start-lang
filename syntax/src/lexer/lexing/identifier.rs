@@ -1,12 +1,14 @@
 use super::*;
 use chumsky::{Parser, text::unicode::ident};
 
-/// lex identifier defined in
-/// [Unicode Standard Annex #31](https://www.unicode.org/reports/tr31/) named `<IDENT>` in ebnf
-/// follwing by quotes
-/// ```ebnf
-/// INDENTIFIER := <IDENT> "'"*
-/// ```
+/**
+lex identifier defined in
+[Unicode Standard Annex #31](https://www.unicode.org/reports/tr31/) named `<IDENT>` in ebnf
+follwing by quotes
+```ebnf
+INDENTIFIER := <IDENT> "'"*
+```
+*/
 pub fn identifier<'src>() -> impl Parser<'src, &'src str, String, Err<ErrorChumsky<'src>>> {
     ident()
         .then(just('\'').repeated().collect::<String>())
