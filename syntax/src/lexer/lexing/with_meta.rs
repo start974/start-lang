@@ -5,8 +5,18 @@ use cst::{Meta, meta::CommentOrLines};
 // ===========================================================================
 // Meta
 // ===========================================================================
+/**
+trait to add meta information (comments or empty lines) before a rule
+and location information to it
+*/
 pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, Err<ErrorChumsky<'src>>> + Sized {
-    /// meta(rule) = (LINE{2,} | WS* COMMENT)* WS* rule
+    /**
+      parses a rule with optional meta information (comments or empty lines) before it
+      and adds location information to it
+      ```ebnf
+      meta(rule) = (LINE{2,} | WS* COMMENT)* WS* rule
+      ```
+    */
     fn with_meta(
         self,
         offset: usize,

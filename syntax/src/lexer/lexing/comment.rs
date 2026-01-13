@@ -1,9 +1,11 @@
 use super::*;
 
-/// lex comment
-/// ```ebnf
-/// COMMENT := "(*" <ANY>* "*)"
-/// ```
+/**
+lex comment
+```ebnf
+COMMENT := "(*" <ANY>* "*)"
+```
+*/
 pub fn comment<'src>() -> impl Parser<'src, &'src str, Comment, Err<ErrorChumsky<'src>>> {
     let start = just("(*")
         .ignore_then(just("*").or_not())

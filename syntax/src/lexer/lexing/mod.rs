@@ -6,108 +6,21 @@ use location::Span;
 use num_bigint::BigUint;
 use std::rc::Rc;
 
-mod with_meta;
 mod comment;
 mod identifier;
+mod number;
+mod with_meta;
 
 pub use chumsky::prelude::Parser;
-pub use with_meta::WithMeta;
 pub use comment::comment;
 pub use identifier::identifier;
+pub use number::{
+    digit, digit_bin, digit_hex, digit_oct, number, number_bin, number_dec, number_hex, number_oct,
+};
+pub use with_meta::WithMeta;
 
 pub type ErrorChumsky<'src> = chumsky::error::Rich<'src, char>;
 pub type ExtraChumsky<'src> = chumsky::extra::Err<ErrorChumsky<'src>>;
-
-
-// ===========================================================================
-// Number
-// ===========================================================================
-/// lex ascii digits
-fn digit<'src>() -> impl Parser<'src, &'src str, char, Err<ErrorChumsky<'src>>> {
-    any()
-        .filter(|c: &char| c.is_ascii_digit())
-        .labelled("digit")
-}
-
-/// lex ascii hexadecimal digits
-fn digit_hex<'src>() -> impl Parser<'src, &'src str, char, Err<ErrorChumsky<'src>>> {
-    any()
-        .filter(|c: &char| c.is_ascii_hexdigit())
-        .labelled("digit_hex")
-}
-
-/// lex ascii octal digits (0-7)
-fn digit_oct<'src>() -> impl Parser<'src, &'src str, char, Err<ErrorChumsky<'src>>> {
-    digit()
-        .filter(|c: &char| *c != '8' && *c != '9')
-        .labelled("digit_oct")
-}
-
-/// lex ascii binary digits (0-1)
-fn digit_bin<'src>() -> impl Parser<'src, &'src str, char, Err<ErrorChumsky<'src>>> {
-    any()
-        .filter(|c: &char| *c == '0' || *c == '1')
-        .labelled("digit_bin")
-}
-
-/// lex number with a base
-/// digit ("_"* digit)*
-fn number_f<'src>(
-    radix: u32,
-    digit: impl Parser<'src, &'src str, char, Err<ErrorChumsky<'src>>>,
-) -> impl Parser<'src, &'src str, BigUint, Err<ErrorChumsky<'src>>> {
-    let digit = Rc::new(digit);
-    let underscores = just('_').repeated();
-
-    digit
-        .clone()
-        .then(
-            underscores
-                .ignore_then(digit.clone())
-                .repeated()
-                .collect::<String>(),
-        )
-        .map(move |(digit1, digits2)| {
-            let number_str = format!("{digit1}{digits2}");
-            BigUint::parse_bytes(number_str.as_bytes(), radix).expect("Failed to parse number")
-        })
-}
-
-/// lex number with a base
-fn number_base_prefixed<'src>(
-    prefix_lower: char,
-    prefix_upper: char,
-    radix: u32,
-    digit: impl Parser<'src, &'src str, char, Err<ErrorChumsky<'src>>>,
-) -> impl Parser<'src, &'src str, BigUint, Err<ErrorChumsky<'src>>> {
-    let prefix = just("0").then(just(prefix_lower).or(just(prefix_upper)));
-    prefix.ignore_then(number_f(radix, digit))
-}
-
-/// lex number `digit ( digit | _)*
-fn number_dec<'src>() -> impl Parser<'src, &'src str, BigUint, Err<ErrorChumsky<'src>>> {
-    number_f(10, digit()).labelled("number_dec")
-}
-/// lex hexadecimal number `"0" ("x" | "X") digit_hex ( digit_hex | _)*`
-pub fn number_hex<'src>() -> impl Parser<'src, &'src str, BigUint, Err<ErrorChumsky<'src>>> {
-    number_base_prefixed('x', 'X', 16, digit_hex()).labelled("number_hex")
-}
-
-/// lex octal number `"0" ("o" | "O") digit_oct ( digit_oct | _)*`
-pub fn number_oct<'src>() -> impl Parser<'src, &'src str, BigUint, Err<ErrorChumsky<'src>>> {
-    number_base_prefixed('o', 'O', 8, digit_oct()).labelled("number_oct")
-}
-
-/// lex binary number `"0" ("b" | "B") digit_bin ( digit_bin | _)*`
-pub fn number_bin<'src>() -> impl Parser<'src, &'src str, BigUint, Err<ErrorChumsky<'src>>> {
-    number_base_prefixed('b', 'B', 2, digit_bin()).labelled("number_bin")
-}
-
-/// lex number
-pub fn number<'src>() -> impl Parser<'src, &'src str, BigUint, Err<ErrorChumsky<'src>>> {
-    // lex decimal number or hexadecimal or octal or binary
-    choice((number_hex(), number_oct(), number_bin(), number_dec())).labelled("number")
-}
 
 // ===========================================================================
 // Character
