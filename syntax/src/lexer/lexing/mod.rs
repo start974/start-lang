@@ -6,36 +6,16 @@ use location::Span;
 use num_bigint::BigUint;
 use std::rc::Rc;
 
-pub mod with_meta;
+mod with_meta;
+mod comment;
 
 pub use chumsky::prelude::Parser;
 pub use with_meta::WithMeta;
+pub use comment::comment;
 
 pub type ErrorChumsky<'src> = chumsky::error::Rich<'src, char>;
 pub type ExtraChumsky<'src> = chumsky::extra::Err<ErrorChumsky<'src>>;
-// ===========================================================================
-// Commment
-// ===========================================================================
-/// lex comment
-/// ```ebnf
-/// COMMENT := "(*" <ANY>* "*)"
-/// ```
-pub fn comment<'src>() -> impl Parser<'src, &'src str, Comment, Err<ErrorChumsky<'src>>> {
-    let start = just("(*")
-        .ignore_then(just("*").or_not())
-        .map(|opt| opt.is_some());
 
-    start
-        .then(
-            any()
-                .and_is(just("*)").not())
-                .repeated()
-                .collect::<String>(),
-        )
-        .then_ignore(just("*)"))
-        .map(|(is_doc, str)| Comment::from(str).with_is_doc(is_doc))
-        .labelled("comment")
-}
 
 // ===========================================================================
 // Identifier

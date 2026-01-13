@@ -1,6 +1,6 @@
 use super::*;
 use chumsky::text::{newline, whitespace};
-use cst::{meta::CommentOrLines, Meta};
+use cst::{Meta, meta::CommentOrLines};
 
 // ===========================================================================
 // Meta
