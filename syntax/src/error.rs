@@ -1,5 +1,5 @@
 use crate::lexer::lexing::ErrorChumsky as ErrorLexer;
-use crate::parser::ErrorChumsky as ErrorParser;
+use crate::parser::parsing::ErrorChumsky as ErrorParser;
 use errors::{Error, Message};
 use location::Span;
 
@@ -36,10 +36,7 @@ pub fn parsing(err: &ErrorParser<'_>) -> Error {
         .map(Message::important)
         .collect();
     Error::new(202, Message::text("Parsing error"))
-        .with_span({
-            let span = err.span();
-            Span::new(span.start, span.end)
-        })
+        .with_span(*err.span())
         .with_text(
             Message::text("Parsing expect ")
                 .append(Message::intersperse(

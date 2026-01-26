@@ -1,6 +1,5 @@
-use chumsky::span::SimpleSpan;
 use cst::Meta;
-use location::{Span, GetSpan};
+use location::{GetSpan, Span};
 use num_bigint::BigUint;
 use pp::pretty::*;
 
@@ -92,22 +91,12 @@ pub struct MetaTokenStream {
 }
 
 impl MetaTokenStream {
-    pub fn last_simple_span(&self) -> SimpleSpan {
-        use location::GetSpan;
-        let span = if let Some(token) = self.tokens.last() {
-            token.span()
-        } else {
-            Span::new(0, 0)
-        };
-        SimpleSpan {
-            start: span.start(),
-            end: span.end(),
-            context: (),
-        }
+    pub fn last_span(&self) -> Span {
+        self.tokens.last().unwrap().span()
     }
 
     pub fn last_offset(&self) -> usize {
-        self.last_simple_span().end
+        self.last_span().end()
     }
 }
 
