@@ -91,12 +91,8 @@ pub struct TokenStream {
 }
 
 impl TokenStream {
-    pub fn last_span(&self) -> Span {
-        self.tokens.last().unwrap().span()
-    }
-
     pub fn last_offset(&self) -> usize {
-        self.last_span().end()
+        self.tokens.last().unwrap().span().end()
     }
 }
 
@@ -143,3 +139,44 @@ impl GetSpan for TokenStream {
     }
 }
 
+impl chumsky::input::Input<'_> for TokenStream {
+    type Span = Span;
+
+    type Token = Token;
+
+    type MaybeToken = Token;
+
+    type Cursor = usize;
+
+    type Cache = Self;
+
+    fn begin(self) -> (Self::Cursor, Self::Cache) {
+        (0, self)
+    }
+
+    fn cursor_location(cursor: &Self::Cursor) -> usize {
+        *cursor
+    }
+
+    unsafe fn next_maybe(
+        cache: &mut Self::Cache,
+        cursor: &mut Self::Cursor,
+    ) -> Option<Self::MaybeToken> {
+        let val = cache.tokens.get(*cursor).cloned();
+        *cursor += 1;
+        val
+    }
+
+    unsafe fn span(cache: &mut Self::Cache, range: std::ops::Range<&Self::Cursor>) -> Self::Span {
+        let get_span = |i: usize| cache.tokens.get(i).map(|token| token.span()).unwrap();
+        let start = get_span(*range.start).start();
+        let end = get_span(range.end - 1).end();
+        Span::new(start, end)
+    }
+}
+
+impl chumsky::input::ValueInput<'_> for TokenStream {
+    unsafe fn next(cache: &mut Self::Cache, cursor: &mut Self::Cursor) -> Option<Self::Token> {
+        unsafe { <Self as chumsky::input::Input>::next_maybe(cache, cursor) }
+    }
+}
