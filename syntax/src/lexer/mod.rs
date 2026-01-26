@@ -14,7 +14,7 @@ pub fn lex(content: &str, offset: usize) -> Result<TokenStream, Errors> {
     lexer(offset)
         .parse(content)
         .into_result()
-        .map(TokenStream::from)
+        .map(TokenStream::from_iter)
         .map_err(|errs| {
             errs.iter()
                 .map(|e| crate::error::lexing(e, offset))

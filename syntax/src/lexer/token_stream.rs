@@ -1,7 +1,7 @@
 use crate::lexer::Token;
 use chumsky::input::{Input, ValueInput};
-use pp::pretty::*;
 use location::{GetSpan, Span};
+use pp::pretty::*;
 
 pub struct TokenStream {
     tokens: Vec<Token>,
@@ -22,9 +22,11 @@ impl IntoIterator for TokenStream {
     }
 }
 
-impl From<Vec<Token>> for TokenStream {
-    fn from(tokens: Vec<Token>) -> Self {
-        Self { tokens }
+impl FromIterator<Token> for TokenStream {
+    fn from_iter<I: IntoIterator<Item = Token>>(iter: I) -> Self {
+        Self {
+            tokens: iter.into_iter().collect(),
+        }
     }
 }
 
