@@ -37,7 +37,7 @@ impl Pretty for Operator {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Token {
+pub enum TokenKind {
     Identifier(String),
     Number(BigUint),
     Character(char),
@@ -45,52 +45,52 @@ pub enum Token {
     EndOfInput,
 }
 
-impl std::fmt::Display for Token {
+impl std::fmt::Display for TokenKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Token::Identifier(s) => write!(f, "{s}"),
-            Token::Number(n) => write!(f, "{n}"),
-            Token::Character(c) => write!(f, "'{c}'"),
-            Token::Operator(op) => write!(f, "{op}"),
-            Token::EndOfInput => write!(f, "end of input"),
+            TokenKind::Identifier(s) => write!(f, "{s}"),
+            TokenKind::Number(n) => write!(f, "{n}"),
+            TokenKind::Character(c) => write!(f, "'{c}'"),
+            TokenKind::Operator(op) => write!(f, "{op}"),
+            TokenKind::EndOfInput => write!(f, "end of input"),
         }
     }
 }
-impl Pretty for Token {
+impl Pretty for TokenKind {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Token::Identifier(s) => Doc::nil()
+            TokenKind::Identifier(s) => Doc::nil()
                 .append(Doc::text("IDENTIFIER("))
                 .append(Doc::text(s))
                 .append(Doc::text(")"))
                 .group(),
-            Token::Number(n) => Doc::nil()
+            TokenKind::Number(n) => Doc::nil()
                 .append(Doc::text("NUMBER("))
                 .append(theme.number(n))
                 .append(Doc::text(")"))
                 .group(),
-            Token::Character(c) => Doc::nil()
+            TokenKind::Character(c) => Doc::nil()
                 .append(Doc::text("CHARACTER('"))
                 .append(theme.character(*c))
                 .append(Doc::text("')"))
                 .group(),
-            Token::Operator(op) => Doc::nil()
+            TokenKind::Operator(op) => Doc::nil()
                 .append(Doc::text("OPERATOR("))
                 .append(op.pretty(theme))
                 .append(Doc::text(")"))
                 .group(),
-            Token::EndOfInput => Doc::nil().append(Doc::text("END_OF_INPUT")).group(),
+            TokenKind::EndOfInput => Doc::nil().append(Doc::text("END_OF_INPUT")).group(),
         }
     }
 }
 
-pub type MetaToken = Meta<Token>;
+pub type Token = Meta<TokenKind>;
 
-pub struct MetaTokenStream {
-    tokens: Vec<MetaToken>,
+pub struct TokenStream {
+    tokens: Vec<Token>,
 }
 
-impl MetaTokenStream {
+impl TokenStream {
     pub fn last_span(&self) -> Span {
         self.tokens.last().unwrap().span()
     }
@@ -100,22 +100,22 @@ impl MetaTokenStream {
     }
 }
 
-impl IntoIterator for MetaTokenStream {
-    type Item = MetaToken;
-    type IntoIter = std::vec::IntoIter<MetaToken>;
+impl IntoIterator for TokenStream {
+    type Item = Token;
+    type IntoIter = std::vec::IntoIter<Token>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.tokens.into_iter()
     }
 }
 
-impl From<Vec<MetaToken>> for MetaTokenStream {
-    fn from(tokens: Vec<MetaToken>) -> Self {
+impl From<Vec<Token>> for TokenStream {
+    fn from(tokens: Vec<Token>) -> Self {
         Self { tokens }
     }
 }
 
-impl Pretty for MetaTokenStream {
+impl Pretty for TokenStream {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::intersperse(self.tokens.iter().map(|t| t.pretty(theme)), Doc::hardline()).group()
         //.append({
@@ -131,7 +131,7 @@ impl Pretty for MetaTokenStream {
     }
 }
 
-impl GetSpan for MetaTokenStream {
+impl GetSpan for TokenStream {
     fn span(&self) -> Span {
         if let Some(first) = self.tokens.first()
             && let Some(last) = self.tokens.last()
@@ -142,3 +142,4 @@ impl GetSpan for MetaTokenStream {
         }
     }
 }
+

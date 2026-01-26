@@ -5,7 +5,7 @@ use errors::Error;
 use location::SourceId;
 use pp::pretty::*;
 use std::path::{Path, PathBuf};
-use syntax::{lexer::MetaTokenStream, parser::CommandOrEnd};
+use syntax::{lexer::TokenStream, parser::CommandOrEnd};
 
 pub struct Formatter {
     path: PathBuf,
@@ -45,7 +45,7 @@ impl Formatter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Option<MetaTokenStream> {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Option<TokenStream> {
         match syntax::lexer::lex(content, offset_source) {
             Ok(tokens) => Some(tokens),
             Err(errs) => {
@@ -58,7 +58,7 @@ impl Formatter {
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: MetaTokenStream) -> Option<CommandOrEnd> {
+    fn parse(&mut self, tokens: TokenStream) -> Option<CommandOrEnd> {
         match syntax::parser::parse(tokens) {
             Ok(cmd) => Some(cmd),
             Err(errs) => {

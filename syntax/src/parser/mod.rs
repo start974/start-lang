@@ -1,4 +1,4 @@
-use crate::lexer::MetaTokenStream;
+use crate::lexer::TokenStream;
 use cst::{Command, EndOfFile};
 use errors::Errors;
 
@@ -13,7 +13,7 @@ pub enum CommandOrEnd {
 }
 
 /// parse tokens
-pub fn parse(tokens: MetaTokenStream) -> Result<CommandOrEnd, Errors> {
+pub fn parse(tokens: TokenStream) -> Result<CommandOrEnd, Errors> {
     use chumsky::prelude::*;
     use location::GetSpan;
 

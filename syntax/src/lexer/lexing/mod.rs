@@ -33,23 +33,23 @@ pub type ExtraChumsky<'src> = chumsky::extra::Err<ErrorChumsky<'src>>;
 /// return offset rest to lexing
 pub fn lexer<'src>(
     offset: usize,
-) -> impl Parser<'src, &'src str, Vec<token::MetaToken>, Err<ErrorChumsky<'src>>> {
-    use token::Token;
+) -> impl Parser<'src, &'src str, Vec<token::Token>, Err<ErrorChumsky<'src>>> {
+    use token::TokenKind;
 
     let token = choice((
-        operator().map(Token::Operator),
-        identifier().map(Token::Identifier),
-        number().map(Token::Number),
-        character().map(Token::Character),
+        operator().map(TokenKind::Operator),
+        identifier().map(TokenKind::Identifier),
+        number().map(TokenKind::Number),
+        character().map(TokenKind::Character),
     ))
     .with_meta(offset);
 
     let token_dot = just('.')
-        .to(Token::Operator(token::Operator::Dot))
+        .to(TokenKind::Operator(token::Operator::Dot))
         .with_meta(offset)
         .lazy();
 
-    let token_end = end().to(Token::EndOfInput).with_meta(offset);
+    let token_end = end().to(TokenKind::EndOfInput).with_meta(offset);
 
     token
         .repeated()
@@ -67,7 +67,7 @@ mod test {
 
     #[test]
     fn lexer_test() {
-        use token::Token::*;
+        use token::TokenKind::*;
         let parser = lexer(0);
 
         let result = parser.parse("var_name 123 'a' ?: .").into_result();
