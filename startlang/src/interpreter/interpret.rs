@@ -1,6 +1,6 @@
 use super::flag::{DebugFlag, Flag};
 use crate::error;
-use cst::AsIdentifier as _;
+use cst::{AsIdentifier as _, meta_info::GetMetaInfo as _};
 use errors::Error;
 use location::{GetSpan, SourceId};
 use pp::pretty::Pretty;
@@ -107,7 +107,28 @@ pub trait Interpreter {
                 self.debug(DebugFlag::Typer, &expr);
                 if self.get_error_code() == 0 {
                     let value = self.mut_vm().eval(&expr).unwrap();
-                    self.print(&(value, expr.span()));
+
+                    //TODO: rm this code ...
+                    struct Val {
+                        value: vm::value::Value,
+                        span: location::Span,
+                    }
+                    impl location::GetSpan for Val {
+                        fn span(&self) -> location::Span {
+                            self.span
+                        }
+                    }
+
+                    impl Pretty for Val {
+                        fn pretty(&self, theme: &pp::Theme) -> pp::Doc<'_> {
+                            self.value.pretty(theme)
+                        }
+                    }
+
+                    self.print(&Val {
+                        value,
+                        span: expr.span(),
+                    });
                 }
             })
             .unwrap_or_else(|errs| {
@@ -158,10 +179,10 @@ pub trait Interpreter {
     fn run_command(&mut self, cmd: cst::Command) {
         match cmd.kind {
             cst::CommandKind::ExpressionDefinition { keyword, def } => {
-                self.run_expr_definition(*def, keyword.get_doc())
+                self.run_expr_definition(*def, keyword.meta_info().get_doc())
             }
             cst::CommandKind::TypeDefinition { keyword, def } => {
-                self.run_type_definition(def, keyword.get_doc())
+                self.run_type_definition(def, keyword.meta_info().get_doc())
             }
             cst::CommandKind::Eval { expr, .. } => self.run_eval(expr),
             cst::CommandKind::TypeOf { expr, .. } => self.run_typeof(expr),

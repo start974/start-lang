@@ -4,6 +4,7 @@ use pp::theme::Theme;
 
 use crate::Error;
 
+#[derive(Debug)]
 pub struct Errors {
     source_id: SourceId,
     errs: Vec<Error>,

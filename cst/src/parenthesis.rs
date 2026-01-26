@@ -1,5 +1,5 @@
 use crate::Meta;
-use location::{Span, GetSpan};
+use location::{GetSpan, Span};
 use pp::pretty::*;
 
 // ============================================================================
@@ -34,29 +34,16 @@ impl<Left, Val, Right> GetSpan for Parenthesed<Left, Val, Right> {
     }
 }
 
-impl<Left, Val, Right> PrettyPrecedence for Parenthesed<Left, Val, Right>
+impl<Left, Val, Right> Pretty for Parenthesed<Left, Val, Right>
 where
     Left: Pretty,
-    Val: PrettyPrecedence,
+    Val: Pretty,
     Right: Pretty,
 {
-    fn precedence(&self) -> u8 {
-        self.inner.precedence()
-    }
-
-    fn pretty_precedence(&self, prec: u8, theme: &Theme) -> Doc<'_> {
-        let val_prec = self.inner.precedence();
-        let doc_val = self.inner.pretty_precedence(self.precedence(), theme);
-        if prec < val_prec {
-            Doc::nil()
-                .append(self.l_paren.pretty(theme))
-                .append(doc_val)
-                .append(self.r_paren.pretty(theme))
-        } else {
-            Doc::nil()
-                .append(self.l_paren.pretty_meta(theme))
-                .append(doc_val)
-                .append(self.r_paren.pretty_meta(theme))
-        }
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::nil()
+            .append(self.l_paren.pretty(theme))
+            .append(self.inner.pretty(theme))
+            .append(self.r_paren.pretty(theme))
     }
 }

@@ -1,6 +1,9 @@
 use super::*;
 use chumsky::text::{newline, whitespace};
-use cst::{Meta, meta::CommentOrLines};
+use cst::{
+    Meta,
+    meta_info::{CommentOrLines, MetaInfo, SetMetaInfo},
+};
 
 // ===========================================================================
 // Meta
@@ -31,16 +34,17 @@ pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, Err<ErrorChumsky<'src>>>
             .collect::<Vec<CommentOrLines>>();
 
         // Ajoute la location à la rule
-        let rule_loc = self.map_with(move |value, e| {
-            let span: SimpleSpan = e.span();
-            (value, Span::new(span.start, span.end).with_offset(offset))
-        });
+        let rule_loc =
+            self.map_with(move |value, e| (value, Span::from(e.span()).with_offset(offset)));
 
         // Consomme les derniers espaces/lignes avant le rule
         meta_items
             .then_ignore(whitespace())
             .then(rule_loc)
-            .map(move |(comments, (value, loc))| Meta::new(value, loc).with_items(&comments))
+            .map(move |(comments, (value, loc))| {
+                let meta_info = MetaInfo::default().with_items(&comments);
+                Meta::new(value, loc).with_meta_info(meta_info)
+            })
     }
 }
 
@@ -53,6 +57,7 @@ impl<'src, T, P> WithMeta<'src, T> for P where
 mod tests {
     use super::*;
     use chumsky::prelude::*;
+    use cst::meta_info::GetMetaInfo as _;
     use location::GetSpan as _;
 
     #[test]
@@ -66,8 +71,8 @@ mod tests {
         let meta = result.unwrap();
         assert_eq!(meta.value, "myIdentifier'''");
         assert_eq!(meta.span(), Span::new(25, 40));
-        assert!(meta.has_comment());
-        assert!(meta.get_doc().is_none());
+        assert!(meta.meta_info().has_comment());
+        assert!(meta.meta_info().get_doc().is_none());
     }
 
     #[test]
@@ -80,8 +85,8 @@ mod tests {
         let meta = result.unwrap();
         assert_eq!(meta.value, "myIdentifier'''");
         assert_eq!(meta.span(), Span::new(35, 50));
-        assert!(meta.has_comment());
-        assert!(meta.get_doc().is_some());
+        assert!(meta.meta_info().has_comment());
+        assert!(meta.meta_info().get_doc().is_some());
     }
 
     #[test]
@@ -95,7 +100,7 @@ mod tests {
         let meta = result.unwrap();
         assert_eq!(meta.value, "myIdentifier");
         assert_eq!(meta.span(), Span::new(3, 15));
-        assert!(!meta.has_comment());
-        assert!(meta.get_doc().is_none());
+        assert!(meta.meta_info().has_comment());
+        assert!(meta.meta_info().get_doc().is_some());
     }
 }

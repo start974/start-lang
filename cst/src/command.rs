@@ -1,5 +1,6 @@
 use super::{Expression, ExpressionDefinition, TypeDefinition, expression, operator};
 use crate::meta::Meta;
+use crate::meta_info::GetMetaInfo as _;
 use location::{GetSpan, Span};
 use pp::pretty::Pretty;
 use pp::pretty::*;
@@ -226,12 +227,12 @@ impl Pretty for Command {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
             .append(self.kind.pretty(theme))
-            .append(if self.dot.has_comment() {
+            .append(if self.dot.meta_info().has_comment() {
                 Doc::line()
             } else {
                 Doc::nil()
             })
-            .append(self.dot.pretty_with_end_line(theme, false))
+            .append(self.dot.pretty(theme))
             .group()
     }
 }
