@@ -1,6 +1,6 @@
 use crate::{AsCharacter, AsIdentifier, AsNumber};
 use crate::{Comment, Documentation};
-use location::{Span, Spanned};
+use location::{Span, GetSpan};
 use pp::pretty::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -137,7 +137,7 @@ where
     }
 }
 
-impl<T> Spanned for Meta<T> {
+impl<T> GetSpan for Meta<T> {
     fn span(&self) -> Span {
         self.span
     }

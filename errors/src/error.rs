@@ -1,6 +1,6 @@
 use crate::message::Message;
 use ariadne::{Cache, Config, IndexType, Label, ReportKind};
-use location::{Location, Report, SourceId, Span, Spanned, SpannedSet};
+use location::{Location, Report, SourceId, Span, GetSpan, SetSpan};
 use pp::theme::Theme;
 
 #[derive(Debug)]
@@ -89,13 +89,13 @@ impl Error {
     }
 }
 
-impl Spanned for Error {
+impl GetSpan for Error {
     fn span(&self) -> Span {
         self.span
     }
 }
 
-impl SpannedSet for Error {
+impl SetSpan for Error {
     fn set_span(&mut self, span: Span) {
         self.span = span;
     }

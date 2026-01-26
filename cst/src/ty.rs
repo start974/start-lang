@@ -1,5 +1,5 @@
 use crate::{AsIdentifier, Meta};
-use location::{Span, Spanned};
+use location::{Span, GetSpan};
 use pp::pretty::*;
 
 // ============================================================================
@@ -68,7 +68,7 @@ impl Pretty for Type {
     }
 }
 
-impl Spanned for Type {
+impl GetSpan for Type {
     fn span(&self) -> Span {
         match self {
             Type::Variable(var) => var.span(),

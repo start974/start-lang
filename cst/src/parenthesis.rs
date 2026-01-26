@@ -1,5 +1,5 @@
 use crate::Meta;
-use location::{Span, Spanned};
+use location::{Span, GetSpan};
 use pp::pretty::*;
 
 // ============================================================================
@@ -28,7 +28,7 @@ impl<Left, Val, Right> Parenthesed<Left, Val, Right> {
     }
 }
 
-impl<Left, Val, Right> Spanned for Parenthesed<Left, Val, Right> {
+impl<Left, Val, Right> GetSpan for Parenthesed<Left, Val, Right> {
     fn span(&self) -> Span {
         self.l_paren.span().union(self.r_paren.span())
     }

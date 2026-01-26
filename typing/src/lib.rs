@@ -1,6 +1,6 @@
 use cst::{self, AsCharacter as _, AsIdentifier as _, AsNumber as _};
 use errors::{Errors, ResultErrors as _};
-use location::{Spanned as _, SpannedSet as _};
+use location::{GetSpan as _, SetSpan as _};
 use tir::{Typed, env::Env};
 
 #[derive(Debug, Default)]

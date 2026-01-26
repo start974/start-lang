@@ -53,7 +53,7 @@ impl<'src, T, P> WithMeta<'src, T> for P where
 mod tests {
     use super::*;
     use chumsky::prelude::*;
-    use location::Spanned as _;
+    use location::GetSpan as _;
 
     #[test]
     fn with_meta_comment() {

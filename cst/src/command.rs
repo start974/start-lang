@@ -1,6 +1,6 @@
 use super::{Expression, ExpressionDefinition, TypeDefinition, expression, help, operator};
 use crate::meta::Meta;
-use location::{Span, Spanned};
+use location::{Span, GetSpan};
 use pp::pretty::Pretty;
 use pp::pretty::*;
 
@@ -189,7 +189,7 @@ impl Pretty for CommandKind {
     }
 }
 
-impl Spanned for CommandKind {
+impl GetSpan for CommandKind {
     fn span(&self) -> Span {
         let span_keyword = match self {
             CommandKind::ExpressionDefinition { keyword, .. } => keyword.span(),
@@ -236,7 +236,7 @@ impl Pretty for Command {
     }
 }
 
-impl Spanned for Command {
+impl GetSpan for Command {
     fn span(&self) -> Span {
         self.kind.span().union(self.dot.span())
     }

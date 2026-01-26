@@ -1,7 +1,7 @@
 use crate::error;
 use crate::{Documentation, Identifier, Type, Typed};
 use errors::Error;
-use location::{Span, Spanned, SpannedSet};
+use location::{Span, GetSpan, SetSpan};
 use pp::pretty::*;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -43,13 +43,13 @@ impl Typed for Variable {
     }
 }
 
-impl Spanned for Variable {
+impl GetSpan for Variable {
     fn span(&self) -> Span {
         self.span
     }
 }
 
-impl SpannedSet for Variable {
+impl SetSpan for Variable {
     fn set_span(&mut self, span: Span) {
         self.span = span;
     }
@@ -86,13 +86,13 @@ impl Pretty for Alias {
     }
 }
 
-impl Spanned for Alias {
+impl GetSpan for Alias {
     fn span(&self) -> Span {
         self.span
     }
 }
 
-impl SpannedSet for Alias {
+impl SetSpan for Alias {
     fn set_span(&mut self, span: Span) {
         self.span = span;
     }
@@ -173,7 +173,7 @@ impl Pretty for Help {
     }
 }
 
-impl Spanned for Help {
+impl GetSpan for Help {
     fn span(&self) -> Span {
         self.span
     }

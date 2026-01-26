@@ -1,5 +1,5 @@
 use super::{Expression, Pattern, Type, operator};
-use location::{Span, Spanned};
+use location::{Span, GetSpan};
 use pp::pretty::*;
 
 // ============================================================================
@@ -48,7 +48,7 @@ impl ExpressionDefinition {
     }
 }
 
-impl Spanned for ExpressionDefinition {
+impl GetSpan for ExpressionDefinition {
     fn span(&self) -> Span {
         self.pattern.span().union(self.body.span())
     }

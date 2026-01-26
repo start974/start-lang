@@ -15,7 +15,7 @@ pub type ErrorChumsky<'tokens> = chumsky::error::Rich<'tokens, MetaToken>;
 /// parse tokens
 pub fn parse(tokens: MetaTokenStream) -> Result<CommandOrEnd, Errors> {
     use chumsky::prelude::*;
-    use location::Spanned;
+    use location::GetSpan;
 
     let eoi: SimpleSpan = tokens.last_simple_span();
     let tokens_spanned = tokens

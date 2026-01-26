@@ -1,7 +1,7 @@
 use super::super::Pattern;
 use super::super::ty::{Type, Typed};
 use super::Expression;
-use location::{Span, Spanned};
+use location::{Span, GetSpan};
 use pp::pretty::*;
 
 // ==========================================================================
@@ -68,7 +68,7 @@ impl Pretty for Definition {
     }
 }
 
-impl Spanned for Definition {
+impl GetSpan for Definition {
     fn span(&self) -> Span {
         self.pattern.span().union(self.body.span())
     }

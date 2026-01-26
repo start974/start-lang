@@ -7,8 +7,8 @@ pub use location::LocatedSet;
 pub use location::Location;
 pub use source_id::SourceId;
 pub use span::Span;
-pub use span::Spanned;
-pub use span::SpannedSet;
+pub use span::GetSpan;
+pub use span::SetSpan;
 
 // ==========================================================================
 // Report

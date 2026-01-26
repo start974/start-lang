@@ -1,6 +1,6 @@
 use chumsky::span::SimpleSpan;
 use cst::Meta;
-use location::{Span, Spanned};
+use location::{Span, GetSpan};
 use num_bigint::BigUint;
 use pp::pretty::*;
 
@@ -93,7 +93,7 @@ pub struct MetaTokenStream {
 
 impl MetaTokenStream {
     pub fn last_simple_span(&self) -> SimpleSpan {
-        use location::Spanned;
+        use location::GetSpan;
         let span = if let Some(token) = self.tokens.last() {
             token.span()
         } else {
@@ -142,7 +142,7 @@ impl Pretty for MetaTokenStream {
     }
 }
 
-impl Spanned for MetaTokenStream {
+impl GetSpan for MetaTokenStream {
     fn span(&self) -> Span {
         if let Some(first) = self.tokens.first()
             && let Some(last) = self.tokens.last()

@@ -2,7 +2,7 @@ use super::flag::{DebugFlag, Flag};
 use crate::error;
 use cst::AsIdentifier as _;
 use errors::Error;
-use location::{SourceId, Spanned};
+use location::{SourceId, GetSpan};
 use pp::pretty::Pretty;
 use syntax::lexer::MetaTokenStream;
 use tir::Typed as _;
@@ -41,7 +41,7 @@ pub trait Interpreter {
     /// print
     fn print<Doc>(&mut self, doc: &Doc)
     where
-        Doc: Pretty + Spanned;
+        Doc: Pretty + GetSpan;
 
     /// active printing of summarry definition
     fn print_summay(&self, def: &tir::ExpressionDefinition);
@@ -49,7 +49,7 @@ pub trait Interpreter {
     /// pretty debug
     fn debug<Doc>(&mut self, flag: DebugFlag, doc: &Doc)
     where
-        Doc: Pretty + Spanned,
+        Doc: Pretty + GetSpan,
     {
         if self.is_active_debug(flag) {
             self.print(doc);

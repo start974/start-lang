@@ -1,42 +1,46 @@
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Span(usize, usize);
+pub struct Span {
+    start: usize,
+    end: usize,
+}
 
 impl Span {
     /// new span
     pub fn new(start: usize, end: usize) -> Self {
-        Self(start, end)
+        Self { start, end }
     }
 
     /// start position
     pub fn start(&self) -> usize {
-        self.0
+        self.start
     }
 
     /// end position
     pub fn end(&self) -> usize {
-        self.1
+        self.end
     }
 
     /// add offset to span
     pub fn with_offset(&self, offset: usize) -> Span {
-        Span(self.start() + offset, self.end() + offset)
+        Self::new(self.start() + offset, self.end() + offset)
     }
 
     /// union of spans
     pub fn union(&self, other: Span) -> Span {
-        Span(
-            std::cmp::min(self.start(), other.start()),
-            std::cmp::max(self.end(), other.end()),
+        use std::cmp::{max, min};
+        Span::new(
+            min(self.start(), other.start()),
+            max(self.end(), other.end()),
         )
     }
 }
 
-pub trait Spanned {
+pub trait GetSpan {
     /// get span
     fn span(&self) -> Span;
 }
 
-pub trait SpannedSet: Sized {
+pub trait SetSpan: Sized {
     /// set span
     fn set_span(&mut self, span: Span);
 
@@ -47,14 +51,46 @@ pub trait SpannedSet: Sized {
     }
 
     /// with item spanned
-    fn with_spanned(self, x: &impl Spanned) -> Self {
+    fn with_spanned(self, x: &impl GetSpan) -> Self {
         self.with_span(x.span())
     }
 }
 
-impl<T> Spanned for (T, Span) {
+impl From<std::ops::Range<usize>> for Span {
+    fn from(range: std::ops::Range<usize>) -> Self {
+        Span::new(range.start, range.end)
+    }
+}
+
+impl From<chumsky::span::SimpleSpan> for Span {
+    fn from(value: chumsky::span::SimpleSpan) -> Self {
+        Self::new(value.start, value.end)
+    }
+}
+
+impl<T> GetSpan for (T, Span) {
     fn span(&self) -> Span {
         self.1
+    }
+}
+
+impl chumsky::span::Span for Span {
+    type Context = ();
+
+    type Offset = usize;
+
+    fn new(_: Self::Context, range: std::ops::Range<Self::Offset>) -> Self {
+        Self::from(range)
+    }
+
+    fn context(&self) -> Self::Context {}
+
+    fn start(&self) -> Self::Offset {
+        self.start
+    }
+
+    fn end(&self) -> Self::Offset {
+        self.end
     }
 }
 
@@ -69,13 +105,13 @@ mod tests {
     #[derive(Default)]
     struct TestSpanned(Span);
 
-    impl Spanned for TestSpanned {
+    impl GetSpan for TestSpanned {
         fn span(&self) -> Span {
             self.0
         }
     }
 
-    impl SpannedSet for TestSpanned {
+    impl SetSpan for TestSpanned {
         fn set_span(&mut self, span: Span) {
             self.0 = span
         }
