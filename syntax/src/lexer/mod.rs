@@ -1,9 +1,10 @@
 use errors::Errors;
 pub mod lexing;
 pub mod token;
+mod token_stream;
 
 pub use token::Token;
-pub use token::TokenStream;
+pub use token_stream::TokenStream;
 
 pub use lexing::lexer;
 

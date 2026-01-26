@@ -25,7 +25,7 @@ pub fn lexing<'src>(err: &ErrorLexer<'src>, offset: usize) -> Error {
         })
 }
 
-pub fn parsing(err: &ErrorParser<'_>) -> Error {
+pub fn parsing(err: &ErrorParser) -> Error {
     use chumsky::error::RichPattern;
 
     let expected: Vec<_> = err
