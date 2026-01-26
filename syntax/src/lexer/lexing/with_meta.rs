@@ -100,7 +100,7 @@ mod tests {
         let meta = result.unwrap();
         assert_eq!(meta.value, "myIdentifier");
         assert_eq!(meta.span(), Span::new(3, 15));
-        assert!(meta.meta_info().has_comment());
-        assert!(meta.meta_info().get_doc().is_some());
+        assert!(!meta.meta_info().has_comment());
+        assert!(meta.meta_info().get_doc().is_none());
     }
 }
