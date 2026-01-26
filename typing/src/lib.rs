@@ -172,7 +172,7 @@ impl Typer {
     }
 
     /// convert help variable
-    pub fn help(&mut self, var: &cst::help::Variable) -> Result<tir::Help> {
+    pub fn help(&mut self, var: &cst::expression::Variable) -> Result<tir::Help> {
         let id = self.id_builder.get(var.name());
         self.env.get_help(&id, var.span()).map_err(Errors::from)
     }

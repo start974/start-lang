@@ -132,7 +132,7 @@ pub trait Interpreter {
             })
     }
 
-    fn run_help(&mut self, var: cst::help::Variable) {
+    fn run_help(&mut self, var: cst::expression::Variable) {
         match self.mut_typer().help(&var) {
             Ok(help) => self.print(&help),
             Err(errs) => {

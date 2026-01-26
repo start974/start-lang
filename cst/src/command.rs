@@ -1,6 +1,6 @@
-use super::{Expression, ExpressionDefinition, TypeDefinition, expression, help, operator};
+use super::{Expression, ExpressionDefinition, TypeDefinition, expression, operator};
 use crate::meta::Meta;
-use location::{Span, GetSpan};
+use location::{GetSpan, Span};
 use pp::pretty::Pretty;
 use pp::pretty::*;
 
@@ -149,7 +149,7 @@ pub enum CommandKind {
     },
     Help {
         keyword: HelpKeyword,
-        var: help::Variable,
+        var: expression::Variable,
     },
     Set {
         keyword: SetKeyword,

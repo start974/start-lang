@@ -5,7 +5,6 @@ pub mod documentation;
 pub mod expression;
 pub mod expression_definition;
 pub mod file;
-pub mod help;
 pub mod meta;
 pub mod operator;
 pub mod parenthesis;
