@@ -19,7 +19,7 @@ pub use constant::Constant;
 pub use documentation::Documentation;
 pub use expression::Expression;
 pub use expression_definition::ExpressionDefinition;
-pub use file::EndOfFile;
+pub use file::EndOfInput;
 pub use file::File;
 pub use meta::Meta;
 pub use pattern::Pattern;

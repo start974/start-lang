@@ -7,11 +7,11 @@ use pp::pretty::*;
 // ============================================================================
 
 #[derive(Debug, Default)]
-pub struct EndOfFileT();
+pub struct EndOfInputT();
 
-pub type EndOfFile = Meta<EndOfFileT>;
+pub type EndOfInput = Meta<EndOfInputT>;
 
-impl Pretty for EndOfFileT {
+impl Pretty for EndOfInputT {
     fn pretty(&self, _: &Theme) -> Doc<'_> {
         Doc::nil()
     }
@@ -23,7 +23,7 @@ impl Pretty for EndOfFileT {
 #[derive(Debug, Default)]
 pub struct File {
     commands: Vec<Command>,
-    end: Option<EndOfFile>,
+    end: Option<EndOfInput>,
 }
 
 impl File {
@@ -38,7 +38,7 @@ impl File {
     }
 
     /// set end of file
-    pub fn set_end(&mut self, end: EndOfFile) {
+    pub fn set_end(&mut self, end: EndOfInput) {
         self.end = Some(end);
     }
 }

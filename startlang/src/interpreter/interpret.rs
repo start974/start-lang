@@ -2,7 +2,7 @@ use super::flag::{DebugFlag, Flag};
 use crate::error;
 use cst::AsIdentifier as _;
 use errors::Error;
-use location::{SourceId, GetSpan};
+use location::{GetSpan, SourceId};
 use pp::pretty::Pretty;
 use syntax::lexer::TokenStream;
 use tir::Typed as _;
@@ -132,6 +132,7 @@ pub trait Interpreter {
             })
     }
 
+    /// run help
     fn run_help(&mut self, var: cst::expression::Variable) {
         match self.mut_typer().help(&var) {
             Ok(help) => self.print(&help),

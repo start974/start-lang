@@ -1,5 +1,5 @@
 use crate::lexer::TokenStream;
-use cst::{Command, EndOfFile};
+use cst::{Command, EndOfInput};
 use errors::Errors;
 
 pub mod parsing;
@@ -8,7 +8,7 @@ use parsing::parser;
 
 pub enum CommandOrEnd {
     Command(Box<Command>),
-    End(EndOfFile),
+    End(EndOfInput),
 }
 
 /// parse tokens
