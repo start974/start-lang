@@ -1,55 +1,63 @@
 mod class;
+mod pratt;
 
-pub use class::Class;
+pub use class::*;
+pub use pratt::*;
 
+/// Represents a grammar syntax node for PEG parsing and Pratt operators.
 #[derive(Debug, Clone)]
 pub enum Syntax {
-    // ----------------------------
-    // Atomes de base
-    // ----------------------------
-    //Literal(String), // "abc"
-    Class(Class), // [a-z], [^0-9]
-                  /*    RuleRef(String), // référence à une règle existante*/
-                  /*WsOpt,           // '-' : whitespace optionnel*/
-                  /*WsReq,           // '_' : whitespace obligatoire*/
+    /// A literal string, e.g. 'a', '1', or "abc".
+    Literal(String),
 
-                  /*// ----------------------------*/
-                  /*// Composition PEG*/
-                  /*// ----------------------------*/
-                  /*Seq(Vec<Syntax>),    // a b c*/
-                  /*Choice(Vec<Syntax>), // a / b / c*/
-                  /*Group(Box<Syntax>),  // ( ... )*/
+    /// A character class, e.g. [a-z], [^0-9].
+    Class(Class),
 
-                  /*Optional(Box<Syntax>),                          // a?*/
-                  /*Repeat0(Box<Syntax>),                           // a**/
-                  /*Repeat1(Box<Syntax>),                           // a+*/
-                  /*RepeatRange(Box<Syntax>, usize, Option<usize>), // a{n,m}*/
+    /// Reference to another grammar rule by name.
+    RuleRef(String),
 
-                  /*Not(Box<Syntax>), // !a*/
+    /// Sequence of syntaxes, e.g. `a b c`.
+    Seq(Vec<Syntax>),
 
-                  /*// ----------------------------*/
-                  /*// Pratt / opérateurs*/
-                  /*// ----------------------------*/
-                  /*Prefix {*/
-                      /*op: String,       // opérateur préfixe, ex: "type", "!"*/
-                      /*rhs: Box<Syntax>, // opérande*/
-                      /*bp: u8,           // binding power*/
-                  /*},*/
-                  /*Postfix {*/
-                      /*lhs: Box<Syntax>, // opérande*/
-                      /*op: String,       // opérateur postfix, ex: repeat, guard*/
-                      /*bp: u8,           // binding power*/
-                  /*},*/
-                  /*Infix {*/
-                      /*lhs: Box<Syntax>,  // opérande gauche*/
-                      /*op: String,        // opérateur infix, ex: +, *, etc.*/
-                      /*rhs: Box<Syntax>,  // opérande droite*/
-                      /*bp: u8,            // binding power*/
-                      /*right_assoc: bool, // true si associatif à droite*/
-                  /*},*/
+    /// Choice between multiple syntaxes, e.g. `a / b / c`.
+    Choice(Vec<Syntax>),
 
-                  /*// ----------------------------*/
-                  /*// Template / AST lié*/
-                  /*// ----------------------------*/
-                  /*TemplateVar(String), // variable capturée pour AST*/
+    /// Grouped syntax, e.g. `(a b c)`.
+    Group(Box<Syntax>),
+
+    /// Optional syntax, e.g. `a?`.
+    Optional(Box<Syntax>),
+
+    /// Zero-or-more repetition, e.g. `a*`.
+    Repeat0(Box<Syntax>),
+
+    /// One-or-more repetition, e.g. `a+`.
+    Repeat1(Box<Syntax>),
+
+    /// Repetition with a specific range.
+    /// Examples:
+    /// - `a{2,5}`: between 2 and 5 times
+    /// - `a{3}`: exactly 3 times
+    /// - `a{2,}`: 2 or more times
+    /// - `a{,5}`: up to 5 times
+    RepeatRange(Box<Syntax>, Option<usize>, Option<usize>),
+
+    /// Negative lookahead: matches if the inner syntax does NOT match,
+    /// without consuming input, e.g. `!a`.
+    NegativeLookahead(Box<Syntax>),
+
+    /// Positive lookahead: matches if the inner syntax matches,
+    /// without consuming input, e.g. `&a`.
+    PositiveLookahead(Box<Syntax>),
+
+    /// A Pratt operator node, e.g. `a + b` with precedence and associativity.
+    Pratt(Pratt),
+
+    /// Template variable for parameterized rules, e.g. `<X : a>`.
+    TemplateVar {
+        /// Name of the template variable
+        name: String,
+        /// The syntax bound to this variable
+        syntax: Box<Syntax>,
+    },
 }
