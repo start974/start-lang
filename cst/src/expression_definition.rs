@@ -1,5 +1,5 @@
 use super::{Expression, Pattern, Type, operator};
-use location::{Span, GetSpan};
+use location::{GetSpan, Span};
 use pp::pretty::*;
 
 // ============================================================================

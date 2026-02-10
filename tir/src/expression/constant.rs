@@ -1,5 +1,5 @@
 use super::super::ty::{Type, TypeBuiltin, Typed, TypedMut};
-use location::{Span, GetSpan, SetSpan};
+use location::{GetSpan, SetSpan, Span};
 use num_bigint::BigUint;
 use pp::pretty::*;
 

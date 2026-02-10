@@ -8,12 +8,12 @@ use cst::{
 pub use super::*;
 
 mod constant;
-mod variable;
 mod definition;
+mod variable;
 
 pub use constant::constant;
-pub use variable::variable;
 pub use definition::definition as expression_definition;
+pub use variable::variable;
 
 /// parse expression0
 /// ```ebfn
@@ -81,4 +81,3 @@ pub fn expression() -> impl Parser<'static, TokenStream, Expression, ExtraChumsk
     })
     .labelled("expression")
 }
-

@@ -30,8 +30,6 @@ impl Comment {
     }
 }
 
-
-
 impl From<&str> for Comment {
     fn from(content: &str) -> Self {
         let content = content

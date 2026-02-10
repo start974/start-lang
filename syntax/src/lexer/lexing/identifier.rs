@@ -13,7 +13,7 @@ pub fn identifier<'src>() -> impl Parser<'src, &'src str, String, Err<ErrorChums
     ident()
         .then(just('\'').repeated().collect::<String>())
         .map(|(ident, quotes)| format!("{ident}{quotes}"))
-       .labelled("identifier")
+        .labelled("identifier")
 }
 
 #[cfg(test)]

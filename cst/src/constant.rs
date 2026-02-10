@@ -1,6 +1,6 @@
 use super::{AsCharacter, AsNumber};
 use crate::Meta;
-use location::{Span, GetSpan};
+use location::{GetSpan, Span};
 use num_bigint::BigUint;
 use pp::pretty::*;
 

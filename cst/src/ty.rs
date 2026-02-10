@@ -1,5 +1,5 @@
 use crate::{AsIdentifier, Meta};
-use location::{Span, GetSpan};
+use location::{GetSpan, Span};
 use pp::pretty::*;
 
 // ============================================================================

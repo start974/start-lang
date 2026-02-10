@@ -1,7 +1,7 @@
 use crate::error;
 use crate::{Documentation, Identifier, Type, Typed};
 use errors::Error;
-use location::{Span, GetSpan, SetSpan};
+use location::{GetSpan, SetSpan, Span};
 use pp::pretty::*;
 use std::collections::HashMap;
 use std::rc::Rc;

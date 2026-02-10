@@ -1,5 +1,5 @@
 use crate::ty::{Type, Typed, TypedMut};
-use location::{Span, GetSpan, SetSpan};
+use location::{GetSpan, SetSpan, Span};
 use pp::pretty::*;
 
 mod constant;

@@ -1,5 +1,5 @@
 use crate::{operator, ty};
-use location::{Span, GetSpan};
+use location::{GetSpan, Span};
 use pp::pretty::*;
 
 #[derive(Debug)]

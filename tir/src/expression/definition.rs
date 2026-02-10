@@ -1,7 +1,7 @@
 use super::super::Pattern;
 use super::super::ty::{Type, Typed};
 use super::Expression;
-use location::{Span, GetSpan};
+use location::{GetSpan, Span};
 use pp::pretty::*;
 
 // ==========================================================================

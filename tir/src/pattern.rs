@@ -1,5 +1,5 @@
 use crate::Identifier;
-use location::{Span, GetSpan, SetSpan};
+use location::{GetSpan, SetSpan, Span};
 use pp::pretty::*;
 use std::rc::Rc;
 
