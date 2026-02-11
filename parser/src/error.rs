@@ -1,17 +1,32 @@
 use errors::{Error, Message};
-use location::Span;
+use location::GetSpan as _;
+
+use crate::peg::{Peg, RefRule};
 
 // ===========================================================================
 // Error rule construction
 // ===========================================================================
-pub fn not_defined(name: &str, span: Span) -> Error {
+
+/// undefined grammar rule error
+pub fn not_defined(ref_rule: &RefRule) -> Error {
     Error::new(201, Message::text("Gramar rule not defined."))
         .with_text(
             Message::text("Grammar rule ")
-                .with_quoted(name)
+                .with_quoted(ref_rule.name.clone())
                 .with_text("does not exist."),
         )
-        .with_span(span)
+        .with_span(ref_rule.span())
+}
+
+/// nullable repetition error
+pub fn nullable_repetition(rule: &Peg) -> Error {
+    Error::new(202, Message::text("Nullable repetition."))
+        .with_text(
+            Message::text("rule")
+                .with_pretty(rule)
+                .with_text("cannot be nullable."),
+        )
+        .with_span(rule.span())
 }
 
 // ===========================================================================

@@ -1,6 +1,7 @@
 use std::ops::{Range, RangeInclusive};
 
 use location::{GetSpan, SetSpan, Span};
+use pp::pretty::*;
 
 /// unicode character class, e.g. [a-zA-Z0-9_]
 #[derive(Debug, Clone)]
@@ -84,6 +85,27 @@ impl SetSpan for Class {
     }
 }
 
+impl Pretty for Class {
+    fn pretty(&self, _theme: &pp::pretty::Theme) -> pp::pretty::Doc<'_> {
+        let mut doc = pp::pretty::Doc::nil();
+        doc = doc.append(Doc::text("["));
+        if self.negated {
+            doc = doc.append(Doc::text("^"));
+        }
+        for (start, end) in &self.ranges {
+            if start == end {
+                doc = doc.append(Doc::text(start.to_string()));
+            } else {
+                doc = doc
+                    .append(Doc::text(start.to_string()))
+                    .append(Doc::text("-"))
+                    .append(Doc::text(end.to_string()));
+            }
+        }
+        doc.append(Doc::text("]"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -139,5 +161,12 @@ mod tests {
         assert!(class.is_match('μ'));
         assert!(class.is_match('ω'));
         assert!(!class.is_match('a'));
+    }
+
+    #[test]
+    fn pretty() {
+        let class = Class::from('a'..='z').extend('A'..='Z').negate();
+        let string = class.make_string(&Theme::default());
+        assert_eq!(string, "[^a-zA-Z]");
     }
 }

@@ -1,8 +1,8 @@
-use location::{GetSpan, Span};
-
 use super::Peg;
+use location::{GetSpan, Span};
+use pp::pretty::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Repeat {
     /// The PEG rule that is being repeated.
     peg: Box<Peg>,
@@ -117,5 +117,61 @@ impl Repeat {
 impl GetSpan for Repeat {
     fn span(&self) -> Span {
         self.peg.span().union(self.span_op)
+    }
+}
+
+impl PrettyPrecedence for Repeat {
+    fn precedence(&self) -> usize {
+        3
+    }
+
+    fn pretty_precedence(&self, _min_prec: usize, theme: &Theme) -> Doc<'_> {
+        let peg_doc = self.peg.pretty_precedence(self.precedence(), theme);
+        let suffix = match (self.min, self.max) {
+            (0, Some(1)) => "?".to_string(),
+            (0, None) => "*".to_string(),
+            (1, None) => "+".to_string(),
+            (n, Some(m)) if n == m => format!("{{{}}}", n),
+            (n, Some(m)) => format!("{{{}, {}}}", n, m),
+            (n, None) => format!("{{{},}}", n),
+        };
+        peg_doc.append(Doc::text(suffix))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::peg::RefRule;
+
+    use super::*;
+    #[test]
+    fn pretty() {
+        let theme = Theme::default();
+        let rule = Peg::RefRule(RefRule::from("a"));
+        {
+            let optional = Repeat::optional(rule.clone());
+            assert_eq!(optional.make_string(&theme), "a?");
+        }
+        {
+            let zero_or_more = Repeat::zero_or_more(rule.clone());
+            assert_eq!(zero_or_more.make_string(&theme), "a*");
+        }
+        {
+            let one_or_more = Repeat::one_or_more(rule.clone());
+            assert_eq!(one_or_more.make_string(&theme), "a+");
+        }
+        {
+            let exactly = Repeat::exactly(rule.clone(), 3);
+            assert_eq!(exactly.make_string(&theme), "a{3}");
+        }
+        {
+            let range = Repeat::between(rule.clone(), 2, 5);
+            assert_eq!(range.make_string(&theme), "a{2, 5}");
+        }
+        {
+            let prefix = Peg::Seq(vec![rule.clone(), rule.clone()]);
+            let zero_or_more = Repeat::zero_or_more(prefix.clone());
+            assert_eq!(zero_or_more.make_string(&theme), "(a a)*");
+        }
     }
 }

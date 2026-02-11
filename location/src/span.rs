@@ -1,37 +1,56 @@
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Span {
-    start: usize,
-    end: usize,
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Span {
+    Range {
+        start: usize,
+        end: usize,
+    },
+    #[default]
+    Unknown,
 }
 
 impl Span {
     /// new span
     pub fn new(start: usize, end: usize) -> Self {
-        Self { start, end }
+        Self::Range { start, end }
     }
 
     /// start position
     pub fn start(&self) -> usize {
-        self.start
+        match self {
+            Self::Range { start, .. } => *start,
+            Self::Unknown => 0,
+        }
+    }
+
+    pub fn unknown() -> Self {
+        Self::Unknown
     }
 
     /// end position
     pub fn end(&self) -> usize {
-        self.end
+        match self {
+            Self::Range { end, .. } => *end,
+            Self::Unknown => 0,
+        }
     }
 
     /// add offset to span
     pub fn with_offset(&self, offset: usize) -> Span {
-        Self::new(self.start() + offset, self.end() + offset)
+        match self {
+            Self::Range { start, end } => Self::new(*start + offset, *end + offset),
+            Self::Unknown => Self::Unknown,
+        }
     }
 
     /// union of spans
     pub fn union(self, other: Span) -> Span {
-        use std::cmp::{max, min};
-        Span::new(
-            min(self.start(), other.start()),
-            max(self.end(), other.end()),
-        )
+        match (self, other) {
+            (Span::Unknown, x) | (x, Span::Unknown) => x,
+            (Span::Range { start: s1, end: e1 }, Span::Range { start: s2, end: e2 }) => {
+                use std::cmp::{max, min};
+                Span::new(min(s1, s2), max(e1, e2))
+            }
+        }
     }
 }
 
@@ -107,11 +126,11 @@ impl chumsky::span::Span for Span {
     fn context(&self) -> Self::Context {}
 
     fn start(&self) -> Self::Offset {
-        self.start
+        Span::start(self)
     }
 
     fn end(&self) -> Self::Offset {
-        self.end
+        Span::end(self)
     }
 }
 
@@ -140,17 +159,36 @@ mod tests {
 
     #[test]
     fn union() {
-        let span1 = Span::new(1, 5);
-        let span2 = Span::new(3, 7);
-        let union = span1.union(span2);
-        assert_eq!(union, Span::new(1, 7));
+        {
+            let span1 = Span::new(1, 5);
+            let span2 = Span::new(3, 7);
+            let union = span1.union(span2);
+            assert_eq!(union, Span::new(1, 7));
+        }
+        {
+            let span1 = Span::new(1, 5);
+            let span2 = Span::unknown();
+            assert_eq!(span1.union(span2), span1);
+        }
+        {
+            let span1 = Span::unknown();
+            let span2 = Span::unknown();
+            assert_eq!(span1.union(span2), Span::unknown());
+        }
     }
 
     #[test]
     fn with_offset() {
-        let span = Span::new(2, 6);
-        let offset_span = span.with_offset(3);
-        assert_eq!(offset_span, Span::new(5, 9));
+        {
+            let span = Span::new(2, 6);
+            let offset_span = span.with_offset(3);
+            assert_eq!(offset_span, Span::new(5, 9));
+        }
+        {
+            let span = Span::unknown();
+            let offset_span = span.with_offset(3);
+            assert_eq!(offset_span, Span::unknown());
+        }
     }
 
     #[test]

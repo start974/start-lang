@@ -1,6 +1,7 @@
 use location::{GetSpan, SetSpan, Span};
+use pp::pretty::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RefRule {
     /// name of the rule being referenced, e.g. `expr` in `expr = other` where `other` is the name of the rule being referenced
     pub name: String,
@@ -27,5 +28,26 @@ impl GetSpan for RefRule {
 impl SetSpan for RefRule {
     fn set_span(&mut self, span: Span) {
         self.span = span;
+    }
+}
+
+impl Pretty for RefRule {
+    fn pretty(&self, _theme: &Theme) -> Doc<'_> {
+        Doc::text(&self.name)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn span() {
+        let mut r = RefRule::from("expr");
+        assert_eq!(r.name, "expr");
+        assert_eq!(r.span, Span::default());
+
+        r = r.with_span(Span::new(1, 5));
+        assert_eq!(r.span, Span::new(1, 5));
     }
 }
