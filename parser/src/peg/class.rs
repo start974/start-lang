@@ -1,5 +1,7 @@
 use std::ops::{Range, RangeInclusive};
 
+use location::{GetSpan, SetSpan, Span};
+
 /// unicode character class, e.g. [a-zA-Z0-9_]
 #[derive(Debug, Clone)]
 pub struct Class {
@@ -7,6 +9,9 @@ pub struct Class {
     negated: bool,
     /// express classes as a list of ranges, e.g. [a-zA-Z0-9_] => [('a', 'z'), ('A', 'Z'), ('0', '9'), ('_', '_')]
     ranges: Vec<(char, char)>,
+
+    /// span of the class, e.g. [a-zA-Z0-9_]
+    span: Span,
 }
 
 impl From<char> for Class {
@@ -14,6 +19,7 @@ impl From<char> for Class {
         Class {
             negated: false,
             ranges: vec![(c, c)],
+            span: Span::default(),
         }
     }
 }
@@ -23,6 +29,7 @@ impl From<Range<char>> for Class {
         Class {
             negated: false,
             ranges: vec![(r.start, r.end)],
+            span: Span::default(),
         }
     }
 }
@@ -33,6 +40,7 @@ impl From<RangeInclusive<char>> for Class {
         Class {
             negated: false,
             ranges: vec![(start, end)],
+            span: Span::default(),
         }
     }
 }
@@ -61,6 +69,18 @@ impl Class {
             .iter()
             .any(|(start, end)| *start <= c && c <= *end)
             ^ self.negated
+    }
+}
+
+impl GetSpan for Class {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
+impl SetSpan for Class {
+    fn set_span(&mut self, span: Span) {
+        self.span = span;
     }
 }
 

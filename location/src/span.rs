@@ -26,7 +26,7 @@ impl Span {
     }
 
     /// union of spans
-    pub fn union(&self, other: Span) -> Span {
+    pub fn union(self, other: Span) -> Span {
         use std::cmp::{max, min};
         Span::new(
             min(self.start(), other.start()),
@@ -38,6 +38,15 @@ impl Span {
 pub trait GetSpan {
     /// get span
     fn span(&self) -> Span;
+}
+
+impl<T> GetSpan for &T
+where
+    T: GetSpan,
+{
+    fn span(&self) -> Span {
+        (*self).span()
+    }
 }
 
 pub trait SetSpan: Sized {
@@ -65,6 +74,18 @@ impl From<std::ops::Range<usize>> for Span {
 impl From<chumsky::span::SimpleSpan> for Span {
     fn from(value: chumsky::span::SimpleSpan) -> Self {
         Self::new(value.start, value.end)
+    }
+}
+
+impl<T> FromIterator<T> for Span
+where
+    T: GetSpan,
+{
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        iter.into_iter()
+            .map(|i| i.span())
+            .reduce(Span::union)
+            .unwrap_or_default()
     }
 }
 

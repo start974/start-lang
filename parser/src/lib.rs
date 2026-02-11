@@ -5,7 +5,7 @@ pub mod pratt;
 
 use std::collections::HashMap;
 
-use errors::{Errors, ResultErrors as _};
+use errors::{Errors, ResultErrorUnit as _};
 use location::GetSpan as _;
 use peg::Peg;
 use pratt::Pratt;
@@ -97,26 +97,26 @@ impl Parser {
     /*}*/
 
     fn check_peg(&self, rule: &Peg) -> Result<(), Errors> {
-        match rule.kind() {
-            peg::Kind::Literal(_) | peg::Kind::Class(_) => Ok(()),
-            peg::Kind::RuleRef(name) => {
+        use peg::Peg::*;
+        match rule {
+            Literal(_) | Class(_) => Ok(()),
+            RuleRef(ref_rule) => {
+                let name = &ref_rule.name;
                 if self.rule_exist(name) {
                     Ok(())
                 } else {
                     Err(error::not_defined(name, rule.span()).into())
                 }
             }
-            peg::Kind::Seq(pegs) | peg::Kind::Choice(pegs) =>
+            Seq(pegs) | Choice(pegs) =>
             {
                 #[allow(clippy::manual_try_fold)]
                 pegs.iter()
-                    .fold(Ok(()), |acc, x| acc.combine(self.check_peg(x)).map(|_| ()))
+                    .fold(Ok(()), |acc, x| acc.combine(self.check_peg(x)))
             }
 
-            peg::Kind::Repeat(rep) => self.check_peg(rep.rule()),
-            peg::Kind::Group(peg)
-            | peg::Kind::NegativeLookahead(peg)
-            | peg::Kind::PositiveLookahead(peg) => self.check_peg(peg),
+            Repeat(rep) => self.check_peg(rep.rule()),
+            NegativeLookahead(peg) | PositiveLookahead(peg) => self.check_peg(peg),
         }
     }
 
@@ -140,14 +140,14 @@ impl Parser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use peg::Kind::*;
+    use peg::Peg::*;
 
     #[test]
     fn test_add_peg() {
         let parser = Parser::default()
-            .add_peg("expr".to_string(), Literal("a".to_string()).into())
+            .add_peg("expr".to_string(), Literal("a".into()))
             .unwrap()
-            .add_peg("expr".to_string(), Literal("b".to_string()).into())
+            .add_peg("expr".to_string(), Literal("b".into()))
             .unwrap();
 
         assert!(parser.rule_exist("expr"));
@@ -156,8 +156,18 @@ mod tests {
 
     #[test]
     fn test_add_peg_not_exist() {
-        let parser =
-            Parser::default().add_peg("expr".to_string(), RuleRef("other".to_string()).into());
-        assert!(parser.is_err());
+        let parser = Parser::default().add_peg("expr".to_string(), RuleRef("other".into()));
+        let errors = parser.err().unwrap();
+        assert_eq!(errors.lenght(), 1);
+    }
+
+    #[test]
+    fn test_add_peg_many_not_exist() {
+        let parser = Parser::default().add_peg(
+            "expr".to_string(),
+            Seq(vec![RuleRef("other1".into()), RuleRef("other2".into())]),
+        );
+        let errors = parser.err().unwrap();
+        assert_eq!(errors.lenght(), 2);
     }
 }

@@ -1,30 +1,31 @@
 mod class;
+mod literal;
+mod ref_rule;
 mod repeat;
 
 pub use class::*;
+pub use literal::*;
+use location::{GetSpan, Span};
+pub use ref_rule::*;
 pub use repeat::*;
-use location::{GetSpan, SetSpan, Span};
 
 /// Represents a grammar syntax node for PEG parsing and Pratt operators.
 #[derive(Debug)]
-pub enum Kind {
+pub enum Peg {
     /// A literal string, e.g. 'a', '1', or "abc".
-    Literal(String),
+    Literal(Literal),
 
     /// A character class, e.g. [a-z], [^0-9].
     Class(Class),
 
     /// Reference to another grammar rule by name.
-    RuleRef(String),
+    RuleRef(RefRule),
 
     /// Sequence of syntaxes, e.g. `a b c`.
     Seq(Vec<Peg>),
 
     /// Choice between multiple syntaxes, e.g. `a / b / c`.
     Choice(Vec<Peg>),
-
-    /// Grouped syntax, e.g. `(a b c)`.
-    Group(Box<Peg>),
 
     /// Repetition with a specific range.
     /// Examples:
@@ -46,39 +47,15 @@ pub enum Kind {
     PositiveLookahead(Box<Peg>),
 }
 
-/// represents a PEG syntax node with its kind and span for error reporting.
-#[derive(Debug)]
-pub struct Peg {
-    /// kind of the syntax node, e.g. literal, class, rule reference, sequence, choice, etc.
-    kind: Kind,
-    /// span of the syntax in the input, used for error reporting
-    span: Span,
-}
-
-impl Peg {
-    /// get the kind of the syntax node
-    pub fn kind(&self) -> &Kind {
-        &self.kind
-    }
-}
-
-impl From<Kind> for Peg {
-    fn from(kind: Kind) -> Self {
-        Peg {
-            kind,
-            span: Span::default(),
-        }
-    }
-}
-
 impl GetSpan for Peg {
     fn span(&self) -> Span {
-        self.span
-    }
-}
-
-impl SetSpan for Peg {
-    fn set_span(&mut self, span: Span) {
-        self.span = span;
+        match self {
+            Peg::Literal(literal) => literal.span(),
+            Peg::Class(class) => class.span(),
+            Peg::RuleRef(ref_rule) => ref_rule.span(),
+            Peg::Seq(pegs) | Peg::Choice(pegs) => Span::from_iter(pegs),
+            Peg::Repeat(repeat) => repeat.span(),
+            Peg::NegativeLookahead(peg) | Peg::PositiveLookahead(peg) => peg.span(),
+        }
     }
 }

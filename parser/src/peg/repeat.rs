@@ -1,3 +1,5 @@
+use location::{GetSpan, Span};
+
 use super::Peg;
 
 #[derive(Debug)]
@@ -10,6 +12,9 @@ pub struct Repeat {
 
     /// The maximum number of repetitions (None for unlimited).
     max: Option<usize>,
+
+    /// span of operator `?`, `*`, `+`or {n, m}
+    span_op: Span,
 }
 
 impl Repeat {
@@ -19,6 +24,7 @@ impl Repeat {
             peg: Box::new(peg),
             min: 0,
             max: Some(1),
+            span_op: Span::default(),
         }
     }
 
@@ -28,6 +34,7 @@ impl Repeat {
             peg: Box::new(peg),
             min: 0,
             max: None,
+            span_op: Span::default(),
         }
     }
 
@@ -37,6 +44,7 @@ impl Repeat {
             peg: Box::new(peg),
             min: 1,
             max: None,
+            span_op: Span::default(),
         }
     }
 
@@ -46,6 +54,7 @@ impl Repeat {
             peg: Box::new(peg),
             min: n,
             max: Some(n),
+            span_op: Span::default(),
         }
     }
 
@@ -60,6 +69,7 @@ impl Repeat {
             peg: Box::new(peg),
             min,
             max: Some(max),
+            span_op: Span::default(),
         }
     }
 
@@ -69,6 +79,7 @@ impl Repeat {
             peg: Box::new(peg),
             min,
             max: None,
+            span_op: Span::default(),
         }
     }
 
@@ -78,6 +89,7 @@ impl Repeat {
             peg: Box::new(peg),
             min: 0,
             max: Some(max),
+            span_op: Span::default(),
         }
     }
 
@@ -94,5 +106,16 @@ impl Repeat {
     /// get peg rule
     pub fn rule(&self) -> &Peg {
         &self.peg
+    }
+
+    pub fn with_opt_span(mut self, span: Span) -> Self {
+        self.span_op = span;
+        self
+    }
+}
+
+impl GetSpan for Repeat {
+    fn span(&self) -> Span {
+        self.peg.span().union(self.span_op)
     }
 }
