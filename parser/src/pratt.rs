@@ -1,4 +1,4 @@
-use super::Syntax;
+use crate::Peg;
 
 /// Represents a Pratt operator node with precedence and associativity.
 #[derive(Debug, Clone)]
@@ -18,9 +18,9 @@ pub enum Fixity {
         /// Operator symbol, e.g. `+` in `a + b`
         operator: String,
         /// Left operand
-        left: Box<Syntax>,
+        left: Box<Peg>,
         /// Right operand
-        right: Box<Syntax>,
+        right: Box<Peg>,
         /// Associativity of the operator: left, right, or non-associative
         associativity: Assoc,
     },
@@ -29,14 +29,14 @@ pub enum Fixity {
         /// Operator symbol, e.g. `-` in `-a`
         operator: String,
         /// Operand
-        operand: Box<Syntax>,
+        operand: Box<Peg>,
     },
     /// Postfix operator, e.g. `a!`.
     Postfix {
         /// Operator symbol, e.g. `!` in `a!`
         operator: String,
         /// Operand
-        operand: Box<Syntax>,
+        operand: Box<Peg>,
     },
 }
 

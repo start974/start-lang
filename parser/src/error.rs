@@ -1,13 +1,15 @@
-use crate::grammar::Syntax;
-use location::Span;
+use location::{GetSpan, SetSpan, Span};
 
+// ===========================================================================
+// Parser Error
+// ===========================================================================
 #[derive(Debug)]
 pub struct Expected {
     /// The syntax that was expected at this point.
-    pub syntax: Syntax,
+    pub expected: String,
 
-    /// The span in the input where the expected syntax was anticipated.
-    pub span: Span,
+    /// position
+    pub position: usize,
 }
 
 #[derive(Debug)]
@@ -20,24 +22,43 @@ pub struct Found {
 }
 
 #[derive(Debug, Default)]
-pub struct ParseError {
+pub struct ParserError {
     /// expected syntax at the point of failure, used for error reporting
     expected: Vec<Expected>,
-
-    /// found token or character that caused the failure, used for error reporting
-    found: Option<Found>,
 }
 
-impl ParseError {
-    /// Add an expected syntax to the error, with its span in the input.
-    pub fn add_expected(mut self, syntax: Syntax, span: Span) -> Self {
-        self.expected.push(Expected { syntax, span });
-        self
-    }
+// ===========================================================================
+// Error Rule
+// ===========================================================================
+pub enum ErrorRuleKind {
+    RuleNotExist(String),
+}
 
-    /// Set the found token or character that caused the failure.
-    pub fn found(mut self, found: Found) -> Self {
-        self.found = Some(found);
-        self
+pub struct ErrorRule {
+    /// The kind of error that occurred.
+    kind: ErrorRuleKind,
+
+    /// span of the rule definition, used for error reporting
+    span: Span,
+}
+
+impl From<ErrorRuleKind> for ErrorRule {
+    fn from(kind: ErrorRuleKind) -> Self {
+        ErrorRule {
+            kind,
+            span: Span::default(),
+        }
+    }
+}
+
+impl GetSpan for ErrorRule {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
+impl SetSpan for ErrorRule {
+    fn set_span(&mut self, span: Span) {
+        self.span = span;
     }
 }
