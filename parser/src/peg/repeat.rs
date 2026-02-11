@@ -90,4 +90,9 @@ impl Repeat {
     pub fn max(&self) -> Option<usize> {
         self.max
     }
+
+    /// get peg rule
+    pub fn rule(&self) -> &Peg {
+        &self.peg
+    }
 }

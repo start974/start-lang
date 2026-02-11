@@ -5,11 +5,10 @@ pub mod pratt;
 
 use std::collections::HashMap;
 
-use error::ErrorRule;
+use errors::{Errors, ResultErrors as _};
+use location::GetSpan as _;
 use peg::Peg;
 use pratt::Pratt;
-
-use crate::error::ErrorRuleKind;
 
 pub trait Scanner {
     /// peek the next character without consuming it
@@ -32,7 +31,7 @@ pub trait Scanner {
 /// - Pratt rules (precedence-based parsing)
 ///
 /// Both are unified under the same rule table to avoid splitting the logic.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Default)]
 pub struct Parser {
     /// All grammar rules indexed by name.
     ///
@@ -44,7 +43,7 @@ pub struct Parser {
 
 /// A grammar rule.
 /// Peg and Pratt rules
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct Rules {
     /// operators in precedence order (highest precedence first)
     operators: Vec<Pratt>,
@@ -54,7 +53,8 @@ struct Rules {
 
 impl Parser {
     /// add peg rule to the parser, e.g. `expr = 'a' / 'b' / '(' expr ')'`
-    pub fn add_peg(mut self, name: String, rule: Peg) -> Result<Self, ErrorRule> {
+    pub fn add_peg(mut self, name: String, rule: Peg) -> Result<Self, Errors> {
+        self.check_peg(&rule)?;
         if let Some(rules) = self.rules.get_mut(&name) {
             rules.atom.push(rule);
         } else {
@@ -69,48 +69,56 @@ impl Parser {
         Ok(self)
     }
 
+    /// check if a peg rule is defined
     fn rule_exist(&self, name: &str) -> bool {
         self.rules.contains_key(name)
     }
 
-    /*    fn check_rule_peg(&self, rule: &Peg) -> Result<(), Vec<ErrorRule>> {*/
+    /*    /// check if a peg rule can match an empty string, e.g. `expr = ''` or `expr = expr?`*/
+    /*/// fail if rule is not defined, e.g. `expr = other` where `other` is not defined*/
+    /*fn nullable(&self, rule: &Peg) -> bool {*/
+    /*use peg::Kind::*;*/
     /*match rule.kind() {*/
-    /*peg::Kind::Literal(_) | peg::Kind::Class(_) => Ok(()),*/
-    /*peg::Kind::RuleRef(name) => {*/
-    /*if self.rule_exist(name) {*/
-    /*Ok(())*/
-    /*} else {*/
-    /*Err(vec![ErrorRule::from(ErrorRuleKind::RuleNotExist(*/
-    /*name.clone(),*/
-    /*))])*/
-    /*}*/
-    /*}*/
-    /*peg::Kind::Seq(pegs) => pegs*/
+    /*Literal(s) => s.is_empty(),*/
+    /*Class(_) => false,*/
+    /*RuleRef(name) => self*/
+    /*.rules*/
+    /*.get(name)*/
+    /*.unwrap_or(false)*/
+    /*.atom*/
     /*.iter()*/
-    /*.map(|peg| self.check_rule_peg(peg))*/
-    /*.collect::<Result<(), Vec<ErrorRule>>>(),*/
-    /*peg::Kind::Choice(pegs) => pegs*/
-    /*.iter()*/
-    /*.map(|peg| self.check_rule_peg(peg))*/
-    /*.collect::<Result<(), Vec<ErrorRule>>>(),*/
-    /*peg::Kind::Group(peg) => {*/
-    /*self.check_rule_peg(peg)*/
+    /*.any(|r| self.nullable(r)),*/
+    /*Seq(pegs) => pegs.iter().all(|r| self.nullable(r)),*/
+    /*Choice(pegs) => pegs.iter().any(|r| self.nullable(r)),*/
+    /*Repeat(rep) => rep.min() == 0,*/
+    /*Group(peg) => self.nullable(peg),*/
+    /*NegativeLookahead(_) | PositiveLookahead(_) => true,*/
     /*}*/
-    /*peg::Kind::Optional(peg) => {*/
-    /*self.check_rule_peg(peg)*/
     /*}*/
-    /*peg::Kind::Repeat0(peg) => {*/
 
-    /*self.check_rule_peg(peg)*/
-    /*}*/
-    /*peg::Kind::Repeat1(peg) => {*/
-    /*self.check_rule_peg(peg)*/
-    /*}*/
-    /*peg::Kind::RepeatRange(peg, _, _) => todo!(),*/
-    /*peg::Kind::NegativeLookahead(peg) => todo!(),*/
-    /*peg::Kind::PositiveLookahead(peg) => todo!(),*/
-    /*   }*/
-    //}
+    fn check_peg(&self, rule: &Peg) -> Result<(), Errors> {
+        match rule.kind() {
+            peg::Kind::Literal(_) | peg::Kind::Class(_) => Ok(()),
+            peg::Kind::RuleRef(name) => {
+                if self.rule_exist(name) {
+                    Ok(())
+                } else {
+                    Err(error::not_defined(name, rule.span()).into())
+                }
+            }
+            peg::Kind::Seq(pegs) | peg::Kind::Choice(pegs) =>
+            {
+                #[allow(clippy::manual_try_fold)]
+                pegs.iter()
+                    .fold(Ok(()), |acc, x| acc.combine(self.check_peg(x)).map(|_| ()))
+            }
+
+            peg::Kind::Repeat(rep) => self.check_peg(rep.rule()),
+            peg::Kind::Group(peg)
+            | peg::Kind::NegativeLookahead(peg)
+            | peg::Kind::PositiveLookahead(peg) => self.check_peg(peg),
+        }
+    }
 
     /// add pratt rule to the parser, e.g. `expr = expr '+' expr`
     /// with precedence 10 and left associativity
@@ -126,5 +134,30 @@ impl Parser {
                 },
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use peg::Kind::*;
+
+    #[test]
+    fn test_add_peg() {
+        let parser = Parser::default()
+            .add_peg("expr".to_string(), Literal("a".to_string()).into())
+            .unwrap()
+            .add_peg("expr".to_string(), Literal("b".to_string()).into())
+            .unwrap();
+
+        assert!(parser.rule_exist("expr"));
+        assert_eq!(parser.rules["expr"].atom.len(), 2);
+    }
+
+    #[test]
+    fn test_add_peg_not_exist() {
+        let parser =
+            Parser::default().add_peg("expr".to_string(), RuleRef("other".to_string()).into());
+        assert!(parser.is_err());
     }
 }

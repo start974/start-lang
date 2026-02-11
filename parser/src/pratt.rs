@@ -1,7 +1,7 @@
 use crate::Peg;
 
 /// Represents a Pratt operator node with precedence and associativity.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Pratt {
     /// Fixity of the operator: infix, prefix, or postfix
     pub fixity: Fixity,
@@ -11,7 +11,7 @@ pub struct Pratt {
 }
 
 /// Operator fixity for Pratt parsing.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Fixity {
     /// Infix operator, e.g. `a + b`.
     Infix {
@@ -41,7 +41,7 @@ pub enum Fixity {
 }
 
 /// Associativity of a Pratt operator.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Assoc {
     /// Left-associative, e.g. `a + b + c` is parsed as `(a + b) + c`
     Left,
