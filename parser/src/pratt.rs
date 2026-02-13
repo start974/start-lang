@@ -1,4 +1,4 @@
-use crate::Peg;
+use crate::peg::Peg;
 
 /// Represents a Pratt operator node with precedence and associativity.
 #[derive(Debug)]

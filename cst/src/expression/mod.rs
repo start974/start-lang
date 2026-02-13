@@ -61,7 +61,10 @@ impl Pretty for Expression0 {
         match self {
             Expression0::Variable(var) => var.pretty(theme),
             Expression0::Constant(constant) => constant.pretty(theme),
-            Expression0::Paren(parent) => parent.pretty(theme),
+            Expression0::Paren(parent) => Doc::nil()
+                .append(parent.l_paren.pretty(theme))
+                .append(parent.inner.pretty(theme))
+                .append(parent.r_paren.pretty(theme)),
         }
     }
 }

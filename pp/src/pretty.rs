@@ -23,6 +23,15 @@ pub trait Pretty: Sized {
     }
 }
 
+impl<T, U> Pretty for (T, U)
+where
+    T: Pretty,
+{
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        self.0.pretty(theme)
+    }
+}
+
 // ============================================================================
 // Pretty with Precedence
 // ============================================================================
@@ -56,11 +65,4 @@ where
     }
 }
 
-impl<T, U> Pretty for (T, U)
-where
-    T: Pretty,
-{
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        self.0.pretty(theme)
-    }
-}
+

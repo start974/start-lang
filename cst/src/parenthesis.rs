@@ -1,15 +1,14 @@
 use crate::Meta;
 use location::{GetSpan, Span};
-use pp::pretty::*;
 
 // ============================================================================
 // parenthesized
 // ============================================================================
 #[derive(Debug, Clone)]
 pub struct Parenthesed<Left, Val, Right> {
-    l_paren: Meta<Left>,
-    inner: Val,
-    r_paren: Meta<Right>,
+    pub l_paren: Meta<Left>,
+    pub inner: Val,
+    pub r_paren: Meta<Right>,
 }
 
 impl<Left, Val, Right> Parenthesed<Left, Val, Right> {
@@ -31,19 +30,5 @@ impl<Left, Val, Right> Parenthesed<Left, Val, Right> {
 impl<Left, Val, Right> GetSpan for Parenthesed<Left, Val, Right> {
     fn span(&self) -> Span {
         self.l_paren.span().union(self.r_paren.span())
-    }
-}
-
-impl<Left, Val, Right> Pretty for Parenthesed<Left, Val, Right>
-where
-    Left: Pretty,
-    Val: Pretty,
-    Right: Pretty,
-{
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        Doc::nil()
-            .append(self.l_paren.pretty(theme))
-            .append(self.inner.pretty(theme))
-            .append(self.r_paren.pretty(theme))
     }
 }
