@@ -1,6 +1,6 @@
-use location::Span;
-
 use super::Cst;
+use location::Span;
+use pp::pretty::*;
 
 /// Represents a CST node: either a non-terminal with children, or a token (leaf)
 #[derive(Debug, Clone)]
@@ -15,4 +15,16 @@ pub enum CstKind {
 
     /// Leaf token with content and span in input
     Token { content: String, span: Span },
+}
+
+impl Pretty for CstKind {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        match self {
+            CstKind::Node { children, .. } => Doc::intersperse(
+                children.iter().map(|child| child.pretty(theme)),
+                Doc::softline(),
+            ),
+            CstKind::Token { content, .. } => Doc::text(content),
+        }.group()
+    }
 }

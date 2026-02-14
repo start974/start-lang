@@ -1,7 +1,11 @@
-use std::collections::HashMap;
+use errors::Error;
+
 use crate::Scanner;
-use crate::peg::Peg;
+use crate::cst::{Cst, CstKind};
+use crate::error::ParseError;
+use crate::peg::{Literal, Peg};
 use crate::pratt::Pratt;
+use std::collections::HashMap;
 
 /// Full parser containing all grammar rules.
 ///
@@ -30,6 +34,16 @@ struct Rules {
     atom: Vec<Peg>,
 }
 
+type ResultParse = Result<Cst, ParseError>;
+
+/// make a parse error with expected syntax at the given position
+/// restore the scanner to the start position if parsing fails,
+/// and return an error with expected syntax
+fn error_expected(scanner: &mut impl Scanner, position: usize, expected: Peg) -> ResultParse {
+    scanner.rollback(position);
+    Err(ParseError::new(position, expected))
+}
+
 impl Parser {
     /// add peg rule to the parser, e.g. `expr = 'a' / 'b' / '(' expr ')'`
     pub fn add_peg(mut self, name: String, rule: Peg) -> Self {
@@ -49,7 +63,7 @@ impl Parser {
 
     /// add pratt rule to the parser, e.g. `expr = expr '+' expr`
     /// with precedence 10 and left associativity
-    pub fn add_pratt(&mut self, name: String, rule: Pratt) {
+    pub fn add_pratt(mut self, name: String, rule: Pratt) -> Self {
         if let Some(rules) = self.rules.get_mut(&name) {
             rules.operators.push(rule);
         } else {
@@ -60,6 +74,82 @@ impl Parser {
                     atom: Vec::new(),
                 },
             );
+        }
+        self
+    }
+
+    /// parse a literal, e.g. `'a'`
+    /// restore the scanner to the start position if parsing fails, and return an error with expected syntax
+    /// return a CST token if parsing succeeds
+    fn parse_literal(&self, scanner: &mut impl Scanner, literal: &Literal) -> ResultParse {
+        let literal_str = &literal.value;
+        let start = scanner.checkpoint();
+
+        for c in literal_str.chars() {
+            match scanner.next() {
+                Some(next) if next == c => continue,
+                _ => {
+                    return error_expected(scanner, start, Peg::Literal(literal.clone()));
+                }
+            }
+        }
+        Ok(Cst::from(CstKind::Token {
+            content: literal_str.into(),
+            span: scanner.span_from(start),
+        }))
+    }
+
+    /// parse a PEG rule, e.g. `expr = 'a' / 'b'`
+    fn parse_peg(&self, scanner: &mut impl Scanner, peg: &Peg) -> ResultParse {
+        match peg {
+            Peg::Literal(lit) => self.parse_literal(scanner, lit),
+            _ => unimplemented!("Only literal PEG rules are implemented"),
+        }
+    }
+
+    /// parse a rule by name, e.g. `expr`
+    /// fail parsing fails according to the rule's PEG or Pratt definitions
+    /// can pannic if the rule is not found,
+    pub fn parse(&self, scanner: &mut impl Scanner, rule_name: &str) -> Result<Cst, Error> {
+        let rules = self.rules.get(rule_name).unwrap();
+        let _ = self.parse_peg(scanner, &rules.atom[0]);
+        todo!("Implement parsing logic for PEG and Pratt rules, and error handling")
+    }
+}
+
+// ============================================================================
+// Test
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use pp::{Pretty, Theme};
+
+    use super::*;
+    use crate::scanner::StringScanner;
+
+    #[test]
+    fn parse_literal_success() {
+        let parser = Parser::default();
+        let mut scanner = StringScanner::from("abcdef");
+        let literal = Literal::from("abc");
+
+        {
+            let result = parser.parse_literal(&mut scanner, &literal);
+            assert!(result.is_ok());
+
+            let cst = result.unwrap();
+            let theme = Theme::default();
+            let cst_str = cst.make_string(&theme);
+            assert_eq!(cst_str, "abc");
+        }
+
+        {
+            let result = parser.parse_literal(&mut scanner, &literal);
+            let err = result.err().unwrap();
+
+            let err_expected = ParseError::new(3, Peg::Literal(literal));
+            assert_eq!(err, err_expected);
         }
     }
 }

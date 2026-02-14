@@ -37,6 +37,20 @@ impl SetSpan for Literal {
     }
 }
 
+impl PartialEq for Literal {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
+}
+
+impl Eq for Literal {}
+
+impl std::hash::Hash for Literal {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.value.hash(state);
+    }
+}
+
 impl Pretty for Literal {
     fn pretty(&self, _theme: &Theme) -> Doc<'_> {
         Doc::text(format!("\"{}\"", self.value))

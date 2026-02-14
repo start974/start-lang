@@ -12,7 +12,7 @@ use location::{GetSpan, Span};
 use pp::pretty::*;
 
 /// Represents a grammar syntax node for PEG parsing and Pratt operators.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Peg {
     /// A literal string, e.g. 'a', '1', or "abc".
     Literal(Literal),

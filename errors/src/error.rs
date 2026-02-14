@@ -102,6 +102,24 @@ impl SetSpan for Error {
 }
 
 // ============================================================================
+// Into error
+// ============================================================================
+/// into error trait, for converting other error types into this error type
+pub trait IntoError {
+    /// into error
+    fn into_error(self) -> Error;
+}
+
+impl<T> From<T> for Error
+where
+    T: IntoError,
+{
+    fn from(value: T) -> Self {
+        value.into_error()
+    }
+}
+
+// ============================================================================
 // Test
 // ============================================================================
 #[cfg(test)]

@@ -37,6 +37,20 @@ impl Pretty for RefRule {
     }
 }
 
+impl PartialEq for RefRule {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+impl Eq for RefRule {}
+
+impl std::hash::Hash for RefRule {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -8,6 +8,13 @@ pub enum Info {
     Lines,
 }
 
+impl Info {
+    /// true if this info lines
+    pub fn is_lines(&self) -> bool {
+        matches!(self, Info::Lines)
+    }
+}
+
 impl Pretty for Info {
     fn pretty(&self, _theme: &Theme) -> Doc<'_> {
         match self {

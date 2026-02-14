@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 pub enum Span {
     Range {
         start: usize,
@@ -54,6 +54,24 @@ impl Span {
     }
 }
 
+impl From<std::ops::Range<usize>> for Span {
+    fn from(range: std::ops::Range<usize>) -> Self {
+        Span::new(range.start, range.end)
+    }
+}
+
+impl From<chumsky::span::SimpleSpan> for Span {
+    fn from(value: chumsky::span::SimpleSpan) -> Self {
+        Self::new(value.start, value.end)
+    }
+}
+
+impl From<usize> for Span {
+    fn from(value: usize) -> Self {
+        Self::new(value, value)
+    }
+}
+
 pub trait GetSpan {
     /// get span
     fn span(&self) -> Span;
@@ -81,18 +99,6 @@ pub trait SetSpan: Sized {
     /// with item spanned
     fn with_spanned(self, x: &impl GetSpan) -> Self {
         self.with_span(x.span())
-    }
-}
-
-impl From<std::ops::Range<usize>> for Span {
-    fn from(range: std::ops::Range<usize>) -> Self {
-        Span::new(range.start, range.end)
-    }
-}
-
-impl From<chumsky::span::SimpleSpan> for Span {
-    fn from(value: chumsky::span::SimpleSpan) -> Self {
-        Self::new(value.start, value.end)
     }
 }
 

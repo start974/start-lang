@@ -1,48 +1,71 @@
-/*use errors::{Error, Message};*/
-/*use location::GetSpan as _;*/
-
-/*use crate::peg::{Peg, RefRule};*/
-
-// ===========================================================================
-// Error rule construction
-// ===========================================================================
-
-/*/// undefined grammar rule error*/
-/*pub fn not_defined(ref_rule: &RefRule) -> Error {*/
-/*Error::new(201, Message::text("Gramar rule not defined."))*/
-/*.with_text(*/
-/*Message::text("Grammar rule ")*/
-/*.with_quoted(ref_rule.name.clone())*/
-/*.with_text("does not exist."),*/
-/*)*/
-/*.with_span(ref_rule.span())*/
-/*}*/
-
-/*/// nullable repetition error*/
-/*pub fn nullable_repetition(rule: &Peg) -> Error {*/
-/*Error::new(202, Message::text("Nullable repetition."))*/
-/*.with_text(*/
-/*Message::text("rule")*/
-/*.with_pretty(rule)*/
-/*.with_text("cannot be nullable."),*/
-/*)*/
-/*.with_span(rule.span())*/
-/*}*/
+use crate::peg::Peg;
+use errors::{Error, IntoError, Message};
+use std::collections::HashSet;
 
 // ===========================================================================
 // Parser Error
 // ===========================================================================
-/*#[derive(Debug)]*/
-/*pub struct Expected {*/
-/*/// The syntax that was expected at this point.*/
-/*pub expected: String,*/
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseError {
+    /// Farthest failure position in the input
+    position: usize,
 
-/*/// position*/
-/*pub position: usize,*/
-/*}*/
+    /// All syntaxes that were expected at that exact position
+    expected: HashSet<Peg>,
+}
 
-/*#[derive(Debug, Default)]*/
-/*pub struct ParserError {*/
-/*/// expected syntax at the point of failure, used for error reporting*/
-/*expected: Vec<Expected>,*/
-/*}*/
+impl ParseError {
+    /// Create a new ParseError with the given position, expected syntax, and found character.
+    pub fn new(position: usize, expected: Peg) -> Self {
+        Self {
+            position,
+            expected: HashSet::from([expected]),
+        }
+    }
+    /// union this error with another error, keeping the one with the farthest position.
+    pub fn union(mut self, other: Self) -> Self {
+        if other.position > self.position {
+            other
+        } else if other.position == self.position {
+            self.expected.extend(other.expected);
+            self
+        } else {
+            self
+        }
+    }
+}
+
+impl IntoError for ParseError {
+    fn into_error(self) -> Error {
+        use location::Span;
+        Error::new(100, Message::text("Syntax error."))
+            .with_text(
+                Message::text("Expected one of:".to_string())
+                    .with_line()
+                    .append(Message::intersperse(
+                        self.expected
+                            .into_iter()
+                            .map(|peg| Message::text("- ").with_pretty(&peg)),
+                        Message::line(),
+                    )),
+            )
+            .with_span(Span::from(self.position))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn error_parse() {
+        let error = ParseError::new(5, Peg::Literal("a".into()))
+            .union(ParseError::new(5, Peg::Literal("b".into())))
+            .union(ParseError::new(4, Peg::Literal("c".into())));
+        assert_eq!(error.position, 5);
+        assert_eq!(error.expected.len(), 2);
+        assert!(error.expected.contains(&Peg::Literal("a".into())));
+        assert!(error.expected.contains(&Peg::Literal("b".into())));
+        assert!(!error.expected.contains(&Peg::Literal("c".into())));
+    }
+}

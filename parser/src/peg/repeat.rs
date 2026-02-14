@@ -113,6 +113,21 @@ impl Repeat {
         self
     }
 }
+impl PartialEq for Repeat {
+    fn eq(&self, other: &Self) -> bool {
+        self.peg == other.peg && self.min == other.min && self.max == other.max
+    }
+}
+impl Eq for Repeat {
+}
+
+impl std::hash::Hash for Repeat {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.peg.hash(state);
+        self.min.hash(state);
+        self.max.hash(state);
+    }
+}
 
 impl GetSpan for Repeat {
     fn span(&self) -> Span {

@@ -73,6 +73,21 @@ impl Class {
     }
 }
 
+impl PartialEq for Class {
+    fn eq(&self, other: &Self) -> bool {
+        self.negated == other.negated && self.ranges == other.ranges
+    }
+}
+
+impl Eq for Class {}
+
+impl std::hash::Hash for Class {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.negated.hash(state);
+        self.ranges.hash(state);
+    }
+}
+
 impl GetSpan for Class {
     fn span(&self) -> Span {
         self.span
