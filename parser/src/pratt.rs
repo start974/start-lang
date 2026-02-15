@@ -13,6 +13,13 @@ pub struct Pratt {
 /// Operator fixity for Pratt parsing.
 #[derive(Debug)]
 pub enum Fixity {
+    /// Prefix operator, e.g. `-a`.
+    Prefix {
+        /// Operator symbol, e.g. `-` in `-a`
+        operator: Literal,
+        /// Operand
+        operand: Box<Peg>,
+    },
     /// Infix operator, e.g. `a + b`.
     Infix {
         /// Operator symbol, e.g. `+` in `a + b`
@@ -24,13 +31,7 @@ pub enum Fixity {
         /// Associativity of the operator: left, right, or non-associative
         associativity: Assoc,
     },
-    /// Prefix operator, e.g. `-a`.
-    Prefix {
-        /// Operator symbol, e.g. `-` in `-a`
-        operator: Literal,
-        /// Operand
-        operand: Box<Peg>,
-    },
+
     /// Postfix operator, e.g. `a!`.
     Postfix {
         /// Operator symbol, e.g. `!` in `a!`

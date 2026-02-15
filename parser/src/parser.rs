@@ -2,7 +2,7 @@ use errors::Error;
 
 use crate::cst::{Cst, CstKind};
 use crate::error::ParseError;
-use crate::peg::{Class, Literal, Peg};
+use crate::peg::{Class, Literal, Peg, RefRule};
 use crate::pratt::Pratt;
 use crate::{Mark as _, Scanner};
 use std::collections::{BTreeMap, HashMap};
@@ -34,7 +34,7 @@ struct RuleGroup {
     operators: BTreeMap<usize, Vec<Pratt>>,
 
     /// base expressions (literal, ident, parens, etc.)
-    atom: Vec<Peg>,
+    atoms: Vec<Peg>,
 }
 
 type ResultParse = Result<Cst, ParseError>;
@@ -55,14 +55,14 @@ impl Parser {
     pub fn add_peg(mut self, name: &str, rule: Peg) -> Self {
         match self.rules.get_mut(name) {
             Some(rules) => {
-                rules.atom.push(rule);
+                rules.atoms.push(rule);
             }
             None => {
                 self.rules.insert(
                     name.into(),
                     RuleGroup {
                         operators: BTreeMap::new(),
-                        atom: vec![rule],
+                        atoms: vec![rule],
                     },
                 );
             }
@@ -72,9 +72,13 @@ impl Parser {
 
     /// add pratt rule to the parser, e.g. `expr = expr '+' expr`
     pub fn add_pratt(mut self, name: &str, rule: Pratt) -> Self {
+        assert!(
+            rule.precedence > 0,
+            "Pratt rules must have a precedence greater than 0"
+        );
         let group = self.rules.entry(name.into()).or_insert_with(|| RuleGroup {
             operators: BTreeMap::new(),
-            atom: Vec::new(),
+            atoms: Vec::new(),
         });
 
         group
@@ -120,42 +124,62 @@ impl Parser {
             .ok_or_else(|| error_expected(scanner, scanner.checkpoint(), Peg::Class(class.clone())))
     }
 
-    /*    /// parse reference to another rule, e.g. `expr`*/
-    /*fn parse_ref_rule(&self, scanner: &mut impl Scanner, ref_rule: &RefRule) -> ResultParse {*/
-    /*let name = &ref_rule.name;*/
-    /*let rules = self*/
-    /*.rules*/
-    /*.get(name)*/
-    /*.unwrap_or_else(|| panic!("Rule \"{name}\" not found in parser rules"));*/
-    /*let start = scanner.checkpoint();*/
-    /*self.parse_rules(scanner, rules).map_err(|err| {*/
-    /*if err.position() == start.position() {*/
-    /*// If the error is at the same position, it means the rule was found but parsing failed*/
-    /*error_expected(scanner, start, Peg::RefRule(ref_rule.clone()))*/
-    /*} else {*/
-    /*// If the error is at a different position, it means the rule was found and parsing was attempted, so we keep the original error*/
-    /*err*/
-    /*}*/
-    /*})*/
-    /*}*/
+    /// parse reference to another rule, e.g. `expr`
+    fn parse_ref_rule(&self, scanner: &mut impl Scanner, ref_rule: &RefRule) -> ResultParse {
+        let name = &ref_rule.name;
+        let r_group = self
+            .rules
+            .get(name)
+            .unwrap_or_else(|| panic!("Rule \"{name}\" not found in parser rules"));
+        let start = scanner.checkpoint();
+        self.parse_rule_group(scanner, r_group).map_err(|err| {
+            if err.position() == start.position() {
+                error_expected(scanner, start, Peg::RefRule(ref_rule.clone()))
+            } else {
+                err
+            }
+        })
+    }
 
     /// parse a PEG rule, e.g. `expr = 'a' / 'b'`
     fn parse_peg(&self, scanner: &mut impl Scanner, peg: &Peg) -> ResultParse {
         match peg {
             Peg::Literal(lit) => self.parse_literal(scanner, lit),
             Peg::Class(class) => self.parse_class(scanner, class),
-            //Peg::RefRule(rule_name) => self.parse_ref_rule(scanner, rule_name),
+            Peg::RefRule(rule_name) => self.parse_ref_rule(scanner, rule_name),
             _ => unimplemented!("Only literal PEG rules are implemented"),
         }
+    }
+
+    fn parse_atoms(&self, scanner: &mut impl Scanner, atoms: &[Peg]) -> Option<ResultParse> {
+        let mut acc_error: Option<ParseError> = None;
+
+        for atom in atoms {
+            match self.parse_peg(scanner, atom) {
+                Ok(node) => return Some(Ok(node)),
+                Err(err) => {
+                    acc_error = Some(match acc_error {
+                        Some(err0) => err0.union(err),
+                        None => err,
+                    })
+                }
+            }
+        }
+        acc_error.map(Err)
+    }
+
+    fn parse_rule_group(&self, scanner: &mut impl Scanner, r_group: &RuleGroup) -> ResultParse {
+        self.parse_atoms(scanner, &r_group.atoms)
+            .unwrap_or_else(|| unimplemented!("Only PEG rules are implemented"))
     }
 
     /// parse a rule by name, e.g. `expr`
     /// fail parsing fails according to the rule's PEG or Pratt definitions
     /// can pannic if the rule is not found,
     pub fn parse(&self, scanner: &mut impl Scanner, rule_name: &str) -> Result<Cst, Error> {
-        let rules = self.rules.get(rule_name).unwrap();
-        let _ = self.parse_peg(scanner, &rules.atom[0]);
-        todo!("Implement parsing logic for PEG and Pratt rules, and error handling")
+        let r_group = self.rules.get(rule_name).unwrap();
+        self.parse_rule_group(scanner, r_group)
+            .map_err(|err| err.into())
     }
 }
 
@@ -220,27 +244,27 @@ mod tests {
         }
     }
 
-/*    #[test]*/
-    /*fn parse_ref_rule() {*/
-        /*let parser = Parser::default().add_peg("expr", Peg::Literal(Literal::from("abc")));*/
-        /*let mut scanner = StringScanner::from("abcdef");*/
+    #[test]
+    fn parse_ref_rule() {
+        let parser = Parser::default().add_peg("expr", Peg::Literal(Literal::from("abc")));
+        let mut scanner = StringScanner::from("abcdef");
 
-        /*{*/
-            /*let result = parser.parse_ref_rule(&mut scanner, &RefRule::from("expr"));*/
-            /*assert!(result.is_ok());*/
+        {
+            let result = parser.parse_ref_rule(&mut scanner, &RefRule::from("expr"));
+            assert!(result.is_ok());
 
-            /*let cst = result.unwrap();*/
-            /*let theme = Theme::default();*/
-            /*let cst_str = cst.make_string(&theme);*/
-            /*assert_eq!(cst_str, "abc");*/
-        /*}*/
+            let cst = result.unwrap();
+            let theme = Theme::default();
+            let cst_str = cst.make_string(&theme);
+            assert_eq!(cst_str, "abc");
+        }
 
-        /*{*/
-            /*let result = parser.parse_ref_rule(&mut scanner, &RefRule::from("expr"));*/
-            /*let err = result.err().unwrap();*/
+        {
+            let result = parser.parse_ref_rule(&mut scanner, &RefRule::from("expr"));
+            let err = result.err().unwrap();
 
-            /*let err_expected = ParseError::new(3, Peg::Literal(Literal::from("abc")));*/
-            /*assert_eq!(err, err_expected);*/
-        /*}*/
-    /*}*/
+            let err_expected = ParseError::new(3, Peg::RefRule(RefRule::from("expr")));
+            assert_eq!(err, err_expected);
+        }
+    }
 }
