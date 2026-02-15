@@ -141,20 +141,29 @@ impl Parser {
         })
     }
 
+    /// parse choice between multiple PEG rules, e.g. `= 'a' / 'b' / '(' expr ')'`
+    fn parse_choice(&self, scanner: &mut impl Scanner, pegs: &[Peg]) -> ResultParse {
+        self.parse_or(scanner, pegs)
+            .unwrap_or_else(|| panic!("Peg rule is empty, expected at least one choice"))
+    }
+
     /// parse a PEG rule, e.g. `expr = 'a' / 'b'`
     fn parse_peg(&self, scanner: &mut impl Scanner, peg: &Peg) -> ResultParse {
         match peg {
             Peg::Literal(lit) => self.parse_literal(scanner, lit),
             Peg::Class(class) => self.parse_class(scanner, class),
             Peg::RefRule(rule_name) => self.parse_ref_rule(scanner, rule_name),
-            _ => unimplemented!("Only literal PEG rules are implemented"),
+            Peg::Choice(pegs) => self.parse_choice(scanner, pegs),
+            _ => unimplemented!("Not implemented yet"),
         }
     }
 
-    fn parse_atoms(&self, scanner: &mut impl Scanner, atoms: &[Peg]) -> Option<ResultParse> {
+    /// parse a PEG rule group, e.g. `expr = 'a' / 'b' / '(' expr ')'`
+    /// using for atoms in rule group and PEG choice
+    fn parse_or(&self, scanner: &mut impl Scanner, pegs: &[Peg]) -> Option<ResultParse> {
         let mut acc_error: Option<ParseError> = None;
 
-        for atom in atoms {
+        for atom in pegs {
             match self.parse_peg(scanner, atom) {
                 Ok(node) => return Some(Ok(node)),
                 Err(err) => {
@@ -169,7 +178,7 @@ impl Parser {
     }
 
     fn parse_rule_group(&self, scanner: &mut impl Scanner, r_group: &RuleGroup) -> ResultParse {
-        self.parse_atoms(scanner, &r_group.atoms)
+        self.parse_or(scanner, &r_group.atoms)
             .unwrap_or_else(|| unimplemented!("Only PEG rules are implemented"))
     }
 
@@ -265,6 +274,39 @@ mod tests {
 
             let err_expected = ParseError::new(3, Peg::RefRule(RefRule::from("expr")));
             assert_eq!(err, err_expected);
+        }
+    }
+
+    #[test]
+    fn parse_choice() {
+        let pegs = vec![
+            Peg::Literal(Literal::from("abc")),
+            Peg::Literal(Literal::from("def")),
+        ];
+        let parser = Parser::default();
+        let mut scanner = StringScanner::from("abcdef");
+        let theme = Theme::default();
+
+        {
+            let result = parser.parse_choice(&mut scanner, &pegs);
+            assert!(result.is_ok());
+
+            let cst = result.unwrap();
+            assert_eq!(cst.make_string(&theme), "abc");
+        }
+
+        {
+            let result = parser.parse_choice(&mut scanner, &pegs);
+            assert!(result.is_ok());
+            assert_eq!(result.unwrap().make_string(&theme), "def");
+        }
+
+        {
+            let result = parser.parse_choice(&mut scanner, &pegs);
+            assert!(result.is_err());
+            let err_expectect = ParseError::new(6, Peg::Literal(Literal::from("abc")))
+                .union(ParseError::new(6, Peg::Literal(Literal::from("def"))));
+            assert_eq!(result.err().unwrap(), err_expectect);
         }
     }
 }
