@@ -3,7 +3,7 @@ use errors::Error;
 use crate::Scanner;
 use crate::cst::{Cst, CstKind};
 use crate::error::ParseError;
-use crate::peg::{Literal, Peg};
+use crate::peg::{Class, Literal, Peg};
 use crate::pratt::Pratt;
 use std::collections::HashMap;
 
@@ -99,10 +99,26 @@ impl Parser {
         }))
     }
 
+    /// parse class, e.g. `[a-z]`
+    /// restore the scanner to the start position if parsing fails, and return an error with expected syntax
+    /// return a CST token if parsing succeeds
+    fn parse_class(&self, scanner: &mut impl Scanner, class: &Class) -> ResultParse {
+        let start = scanner.checkpoint();
+
+        match scanner.next() {
+            Some(c) if class.is_match(c) => Ok(Cst::from(CstKind::Token {
+                content: c.to_string(),
+                span: scanner.span_from(start),
+            })),
+            _ => error_expected(scanner, start, Peg::Class(class.clone())),
+        }
+    }
+
     /// parse a PEG rule, e.g. `expr = 'a' / 'b'`
     fn parse_peg(&self, scanner: &mut impl Scanner, peg: &Peg) -> ResultParse {
         match peg {
             Peg::Literal(lit) => self.parse_literal(scanner, lit),
+            Peg::Class(class) => self.parse_class(scanner, class),
             _ => unimplemented!("Only literal PEG rules are implemented"),
         }
     }
@@ -129,7 +145,7 @@ mod tests {
     use crate::scanner::StringScanner;
 
     #[test]
-    fn parse_literal_success() {
+    fn parse_literal() {
         let parser = Parser::default();
         let mut scanner = StringScanner::from("abcdef");
         let literal = Literal::from("abc");
@@ -149,6 +165,31 @@ mod tests {
             let err = result.err().unwrap();
 
             let err_expected = ParseError::new(3, Peg::Literal(literal));
+            assert_eq!(err, err_expected);
+        }
+    }
+
+    #[test]
+    fn parse_class() {
+        let parser = Parser::default();
+        let mut scanner = StringScanner::from("a1");
+        let class = Class::from('a'..='z');
+
+        {
+            let result = parser.parse_class(&mut scanner, &class);
+            assert!(result.is_ok());
+
+            let cst = result.unwrap();
+            let theme = Theme::default();
+            let cst_str = cst.make_string(&theme);
+            assert_eq!(cst_str, "a");
+        }
+
+        {
+            let result = parser.parse_class(&mut scanner, &class);
+            let err = result.err().unwrap();
+
+            let err_expected = ParseError::new(1, Peg::Class(class));
             assert_eq!(err, err_expected);
         }
     }

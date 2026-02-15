@@ -7,9 +7,9 @@ use pp::pretty::*;
 #[derive(Debug, Clone)]
 pub struct Class {
     /// for [^...] (negated class)
-    negated: bool,
+    pub negated: bool,
     /// express classes as a list of ranges, e.g. [a-zA-Z0-9_] => [('a', 'z'), ('A', 'Z'), ('0', '9'), ('_', '_')]
-    ranges: Vec<(char, char)>,
+    pub ranges: Vec<(char, char)>,
 
     /// span of the class, e.g. [a-zA-Z0-9_]
     span: Span,
