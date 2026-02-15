@@ -1,10 +1,10 @@
 use errors::Error;
 
-use crate::Scanner;
 use crate::cst::{Cst, CstKind};
 use crate::error::ParseError;
 use crate::peg::{Class, Literal, Peg};
 use crate::pratt::Pratt;
+use crate::{Mark as _, Scanner};
 use std::collections::HashMap;
 
 /// Full parser containing all grammar rules.
@@ -39,9 +39,12 @@ type ResultParse = Result<Cst, ParseError>;
 /// make a parse error with expected syntax at the given position
 /// restore the scanner to the start position if parsing fails,
 /// and return an error with expected syntax
-fn error_expected(scanner: &mut impl Scanner, position: usize, expected: Peg) -> ResultParse {
-    scanner.rollback(position);
-    Err(ParseError::new(position, expected))
+fn error_expected<S>(scanner: &mut S, start: S::Mark, expected: Peg) -> ParseError
+where
+    S: Scanner,
+{
+    scanner.rollback(start);
+    ParseError::new(start.position(), expected)
 }
 
 impl Parser {
@@ -82,36 +85,38 @@ impl Parser {
     /// restore the scanner to the start position if parsing fails, and return an error with expected syntax
     /// return a CST token if parsing succeeds
     fn parse_literal(&self, scanner: &mut impl Scanner, literal: &Literal) -> ResultParse {
-        let literal_str = &literal.value;
         let start = scanner.checkpoint();
+        let value = &literal.value;
 
-        for c in literal_str.chars() {
-            match scanner.next() {
-                Some(next) if next == c => continue,
-                _ => {
-                    return error_expected(scanner, start, Peg::Literal(literal.clone()));
-                }
-            }
-        }
-        Ok(Cst::from(CstKind::Token {
-            content: literal_str.into(),
-            span: scanner.span_from(start),
-        }))
+        value
+            .chars()
+            .try_for_each(|expected| {
+                scanner
+                    .consume_if(|c| c == expected)
+                    .map(|_| ())
+                    .ok_or_else(|| error_expected(scanner, start, Peg::Literal(literal.clone())))
+            })
+            .map(|_| {
+                Cst::from(CstKind::Token {
+                    content: value.clone(),
+                    span: scanner.span_from(start),
+                })
+            })
     }
 
     /// parse class, e.g. `[a-z]`
     /// restore the scanner to the start position if parsing fails, and return an error with expected syntax
     /// return a CST token if parsing succeeds
     fn parse_class(&self, scanner: &mut impl Scanner, class: &Class) -> ResultParse {
-        let start = scanner.checkpoint();
-
-        match scanner.next() {
-            Some(c) if class.is_match(c) => Ok(Cst::from(CstKind::Token {
-                content: c.to_string(),
-                span: scanner.span_from(start),
-            })),
-            _ => error_expected(scanner, start, Peg::Class(class.clone())),
-        }
+        scanner
+            .consume_if(|c| class.is_match(c))
+            .map(|c| {
+                Cst::from(CstKind::Token {
+                    content: c.to_string(),
+                    span: scanner.span_from(scanner.checkpoint()),
+                })
+            })
+            .ok_or_else(|| error_expected(scanner, scanner.checkpoint(), Peg::Class(class.clone())))
     }
 
     /// parse a PEG rule, e.g. `expr = 'a' / 'b'`
