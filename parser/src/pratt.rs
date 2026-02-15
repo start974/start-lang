@@ -1,4 +1,4 @@
-use crate::peg::Peg;
+use crate::peg::{Literal, Peg};
 
 /// Represents a Pratt operator node with precedence and associativity.
 #[derive(Debug)]
@@ -16,7 +16,7 @@ pub enum Fixity {
     /// Infix operator, e.g. `a + b`.
     Infix {
         /// Operator symbol, e.g. `+` in `a + b`
-        operator: String,
+        operator: Literal,
         /// Left operand
         left: Box<Peg>,
         /// Right operand
@@ -27,14 +27,14 @@ pub enum Fixity {
     /// Prefix operator, e.g. `-a`.
     Prefix {
         /// Operator symbol, e.g. `-` in `-a`
-        operator: String,
+        operator: Literal,
         /// Operand
         operand: Box<Peg>,
     },
     /// Postfix operator, e.g. `a!`.
     Postfix {
         /// Operator symbol, e.g. `!` in `a!`
-        operator: String,
+        operator: Literal,
         /// Operand
         operand: Box<Peg>,
     },

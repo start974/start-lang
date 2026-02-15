@@ -33,6 +33,11 @@ impl ParseError {
             self
         }
     }
+
+    /// position of the error in the input
+    pub fn position(&self) -> usize {
+        self.position
+    }
 }
 
 impl IntoError for ParseError {
