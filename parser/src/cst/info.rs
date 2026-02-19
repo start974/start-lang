@@ -6,6 +6,9 @@ pub enum Info {
 
     /// Information about many lines
     Lines,
+
+    /// Information spaces
+    Spaces,
 }
 
 impl Info {
@@ -30,7 +33,32 @@ impl Pretty for Info {
                 Doc::concat(vec![start, Doc::space(), mid, Doc::space(), end])
             }
             Info::Lines => Doc::hardline().append(Doc::hardline()),
+            Info::Spaces => Doc::softline(),
         }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct Infos {
+    infos: Vec<Info>,
+}
+
+impl Infos {
+    /// append an info to this infos, but if the last info is lines or spaces, do not append
+    pub fn append(mut self, info: Info) -> Self {
+        match self.infos.last() {
+            Some(Info::Lines) | Some(Info::Spaces) => self,
+            _ => {
+                self.infos.push(info);
+                self
+            }
+        }
+    }
+}
+
+impl Pretty for Infos {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        Doc::intersperse(self.infos.iter().map(|info| info.pretty(theme)), Doc::nil())
     }
 }
 

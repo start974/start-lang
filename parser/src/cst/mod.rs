@@ -13,18 +13,18 @@ pub struct Cst {
     kind: CstKind,
 
     /// Leading comments, docs, or blank lines before this node
-    leading: Vec<Info>,
+    leading: Infos,
 
     /// Trailing comments, docs, or blank lines after this node
-    trailing: Vec<Info>,
+    trailing: Infos,
 }
 
 impl From<CstKind> for Cst {
     fn from(kind: CstKind) -> Self {
         Self {
             kind,
-            leading: Vec::new(),
-            trailing: Vec::new(),
+            leading: Infos::default(),
+            trailing: Infos::default(),
         }
     }
 }
@@ -32,37 +32,24 @@ impl From<CstKind> for Cst {
 impl Cst {
     /// Add leading information (comments, docs, blank lines) to this CST node
     pub fn with_leading(mut self, info: Info) -> Self {
-        self.leading.push(info);
+        self.leading = self.leading.append(info);
         self
     }
 
     /// Add trailing information (comments, docs, blank lines) to this CST node
     pub fn with_trailing(mut self, info: Info) -> Self {
-        self.trailing.push(info);
+        self.trailing = self.trailing.append(info);
         self
-    }
-}
-
-fn pretty_infos<'a>(infos: &'a [Info], theme: &Theme) -> Doc<'a> {
-    if infos.is_empty() {
-        Doc::nil()
-    } else {
-        let mut doc = Doc::nil();
-        for info in infos {
-            doc = doc.append(info.pretty(theme));
-            if !info.is_lines() {
-                doc = doc.append(Doc::softline());
-            }
-        }
-        doc
     }
 }
 
 impl Pretty for Cst {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        let leading_doc = pretty_infos(&self.leading, theme);
-        let trailing_doc = pretty_infos(&self.trailing, theme);
-        Doc::concat(vec![leading_doc, self.kind.pretty(theme), trailing_doc])
+        Doc::concat(vec![
+            self.leading.pretty(theme),
+            self.kind.pretty(theme),
+            self.trailing.pretty(theme),
+        ])
     }
 }
 
@@ -80,21 +67,27 @@ mod tests {
                 Cst::from(CstKind::Token {
                     content: "token1".to_string(),
                     span: Span::default(),
-                }),
+                })
+                .with_leading(Info::Comment {
+                    is_doc: false,
+                    content: "This is a comment".split(" ").map(String::from).collect(),
+                })
+                .with_leading(Info::Spaces),
                 Cst::from(CstKind::Token {
                     content: "token2".to_string(),
                     span: Span::default(),
+                })
+                .with_leading(Info::Spaces),
+                Cst::from(CstKind::Token {
+                    content: "token3".to_string(),
+                    span: Span::default(),
                 }),
             ],
-        })
-        .with_leading(Info::Comment {
-            is_doc: false,
-            content: "This is a comment".split(" ").map(String::from).collect(),
         })
         .with_trailing(Info::Lines);
 
         let theme = Theme::default();
         let str = cst.make_string(&theme);
-        assert_eq!(str, "(* This is a comment *) token1 token2\n\n");
+        assert_eq!(str, "(* This is a comment *) token1 token2token3\n\n");
     }
 }

@@ -20,11 +20,11 @@ pub enum CstKind {
 impl Pretty for CstKind {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            CstKind::Node { children, .. } => Doc::intersperse(
-                children.iter().map(|child| child.pretty(theme)),
-                Doc::softline(),
-            ),
+            CstKind::Node { children, .. } => {
+                Doc::intersperse(children.iter().map(|child| child.pretty(theme)), Doc::nil())
+            }
             CstKind::Token { content, .. } => Doc::text(content),
-        }.group()
+        }
+        .group()
     }
 }
