@@ -38,7 +38,7 @@ pub enum Peg {
     /// - `a{2,5}`: between 2 and 5 times
     /// - `a{2,}`: 2 or more times
     /// - `a{,5}`: up to 5 timesa
-    Repeat(Repeat),
+    Repeat(Box<Peg>, Repeat),
 
     /// Negative lookahead: matches if the inner syntax does NOT match,
     /// without consuming input, e.g. `!a`.
@@ -47,6 +47,18 @@ pub enum Peg {
     /// Positive lookahead: matches if the inner syntax matches,
     /// without consuming input, e.g. `&a`.
     PositiveLookahead(Box<Peg>),
+}
+
+impl From<Literal> for Peg {
+    fn from(literal: Literal) -> Self {
+        Peg::Literal(literal)
+    }
+}
+
+impl From<Class> for Peg {
+    fn from(class: Class) -> Self {
+        Peg::Class(class)
+    }
 }
 
 impl Peg {
@@ -63,7 +75,7 @@ impl GetSpan for Peg {
             Peg::Class(class) => class.span(),
             Peg::RefRule(ref_rule) => ref_rule.span(),
             Peg::Seq(pegs) | Peg::Choice(pegs) => Span::from_iter(pegs),
-            Peg::Repeat(repeat) => repeat.span(),
+            Peg::Repeat(peg, repeat) => peg.span().union(repeat.span()),
             Peg::NegativeLookahead(peg) | Peg::PositiveLookahead(peg) => peg.span(),
         }
     }
@@ -81,7 +93,7 @@ impl PrettyPrecedence for Peg {
             Peg::Literal(_) | Peg::Class(_) | Peg::RefRule(_) => 0,
             Peg::Choice(_) => 1,
             Peg::Seq(_) => 2,
-            Peg::Repeat(r) => r.precedence(), // is 3
+            Peg::Repeat(_, _) => 3,
             Peg::NegativeLookahead(_) | Peg::PositiveLookahead(_) => 3,
         }
     }
@@ -96,7 +108,7 @@ impl PrettyPrecedence for Peg {
             Peg::RefRule(r) => r.pretty(theme),
 
             // ---------- postfix ----------
-            Peg::Repeat(inner) => inner.pretty_precedence(prec, theme),
+            Peg::Repeat(peg, rep) => peg.pretty_precedence(prec, theme).append(rep.pretty(theme)),
 
             // ---------- prefix ----------
             Peg::NegativeLookahead(inner) => Doc::text("!")
@@ -136,14 +148,14 @@ mod test {
     #[test]
     fn span() {
         let peg = Peg::Seq(vec![
-            Peg::Literal(Literal::from("a").with_span(Span::new(1, 1))),
+            Literal::from("a").with_span(Span::new(1, 1)).into(),
             Peg::Class(Class::from('0'..='9')),
             Peg::RefRule(RefRule::from("expr").with_span(Span::new(6, 10))),
-            Peg::Repeat(Repeat::optional(Peg::Literal(Literal::from("b")))),
-            Peg::NegativeLookahead(Box::new(Peg::Literal(Literal::from("c")))),
-            Peg::PositiveLookahead(Box::new(Peg::Literal(
-                Literal::from("d").with_span(Span::new(10, 11)),
-            ))),
+            Peg::Repeat(Box::new(Literal::from("b").into()), Repeat::optional()),
+            Peg::NegativeLookahead(Box::new(Literal::from("c").into())),
+            Peg::PositiveLookahead(Box::new(
+                Literal::from("d").with_span(Span::new(10, 11)).into(),
+            )),
         ]);
         assert_eq!(peg.span(), Span::new(1, 11));
     }
@@ -156,8 +168,8 @@ mod test {
                 Peg::Class(Class::from('0'..='9')),
             ]),
             Peg::RefRule(RefRule::from("expr")),
-            Peg::Repeat(Repeat::optional(Peg::Literal(Literal::from("b")))),
-            Peg::NegativeLookahead(Box::new(Peg::Literal(Literal::from("c")))),
+            Peg::Repeat(Box::new(Literal::from("b").into()), Repeat::optional()),
+            Peg::NegativeLookahead(Box::new(Literal::from("c").into())),
             Peg::PositiveLookahead(Box::new(Peg::Seq(vec![
                 Peg::Literal(Literal::from("d")),
                 Peg::Literal(Literal::from("e")),
