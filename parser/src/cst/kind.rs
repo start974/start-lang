@@ -11,7 +11,7 @@ pub enum CstKind {
     Node(Vec<Cst>),
 
     /// Non-terminal node with a name and child CSTs
-    Named(RefRule, Box<Cst>),
+    Named { name: RefRule, cst: Box<Cst> },
 
     /// Leaf token with content and span in input
     Token(String, Span),
@@ -23,7 +23,7 @@ impl Pretty for CstKind {
             CstKind::Node(children) => {
                 Doc::intersperse(children.iter().map(|child| child.pretty(theme)), Doc::nil())
             }
-            CstKind::Named(_, child) => child.pretty(theme),
+            CstKind::Named { cst, .. } => cst.pretty(theme),
             CstKind::Token(content, _) => Doc::text(content),
         }
         .group()

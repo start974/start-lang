@@ -7,6 +7,8 @@ use kind::*;
 use location::Span;
 use pp::pretty::*;
 
+use crate::peg::RefRule;
+
 /// Concrete Syntax Tree node
 #[derive(Debug, Clone)]
 pub struct Cst {
@@ -49,7 +51,7 @@ impl Cst {
     pub fn is_empty(&self) -> bool {
         match self.kind {
             CstKind::Node(ref children) => children.is_empty(),
-            CstKind::Named(_, ref cst) => cst.is_empty(),
+            CstKind::Named { ref cst, .. } => cst.is_empty(),
             CstKind::Token(_, _) => false,
         }
     }
@@ -81,7 +83,7 @@ impl Cst {
                         ..self
                     }
                 }
-                CstKind::Named(_, _) | CstKind::Token(_, _) => Self {
+                CstKind::Named { .. } | CstKind::Token(_, _) => Self {
                     kind: CstKind::Node(vec![self, child]),
                     leading: Infos::default(),
                     trailing: Infos::default(),
@@ -91,9 +93,12 @@ impl Cst {
     }
 
     /// add a name to cst node
-    pub fn with_name(self, name: &str) -> Self {
+    pub fn with_name(self, name: RefRule) -> Self {
         Self {
-            kind: CstKind::Named(name.into(), Box::new(self.kind.into())),
+            kind: CstKind::Named {
+                name: name,
+                cst: Box::new(self.kind.into()),
+            },
             ..self
         }
     }
@@ -139,16 +144,20 @@ mod tests {
             })
             .add_info(Info::Spaces)
             .add_info(Info::Spaces)
-            .add(Cst::token("token1", Span::default()).with_name("test1"))
+            .add(Cst::token("token1", Span::default()).with_name("test1".into()))
             .add_info(Info::Spaces)
             .add(Cst::token("token2", Span::default()))
             .add_info(Info::Spaces)
             .add(Cst::token("token3", Span::default()))
+            .add(Cst::token("token4", Span::default()))
             .add_info(Info::Lines)
             .add_info(Info::Lines);
 
         let theme = Theme::default();
         let str = cst.make_string(&theme);
-        assert_eq!(str, "(* This is a comment *) token1 token2token3\n\n");
+        assert_eq!(
+            str,
+            "(* This is a comment *) token1 token2 token3token4\n\n"
+        );
     }
 }
