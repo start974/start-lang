@@ -13,7 +13,7 @@ use crate::peg::RefRule;
 #[derive(Debug, Clone)]
 pub struct Cst {
     /// Kind of node: either a leaf token or a non-terminal node
-    kind: CstKind,
+    kind: Kind,
 
     /// Leading comments, docs, or blank lines before this node
     leading: Infos,
@@ -22,8 +22,8 @@ pub struct Cst {
     trailing: Infos,
 }
 
-impl From<CstKind> for Cst {
-    fn from(kind: CstKind) -> Self {
+impl From<Kind> for Cst {
+    fn from(kind: Kind) -> Self {
         Cst {
             kind,
             leading: Infos::default(),
@@ -34,35 +34,23 @@ impl From<CstKind> for Cst {
 
 impl Default for Cst {
     fn default() -> Self {
-        Cst {
-            kind: CstKind::Node(Vec::new()),
-            leading: Infos::default(),
-            trailing: Infos::default(),
-        }
+        Self::nil()
     }
 }
 
 impl Cst {
     /// make nil Cst
     pub fn nil() -> Self {
-        Self::default()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        match self.kind {
-            CstKind::Node(ref children) => children.is_empty(),
-            CstKind::Named { ref cst, .. } => cst.is_empty(),
-            CstKind::Token { .. } => false,
+        Self {
+            kind: Kind::Nil,
+            leading: Infos::default(),
+            trailing: Infos::default(),
         }
-    }
-
-    fn is_nil(&self) -> bool {
-        self.is_empty()
     }
 
     /// make a token
     pub fn token(content: &str, span: Span) -> Self {
-        CstKind::Token {
+        Kind::Token {
             content: content.into(),
             span,
         }
@@ -71,27 +59,31 @@ impl Cst {
 
     /// Add a child to this CST node
     pub fn add(self, child: Cst) -> Self {
-        if child.is_nil() {
-            self
+        if let Kind::Nil = child.kind {
+            Self {
+                trailing: self.trailing.concat(child.leading).concat(child.trailing),
+                ..self
+            }
         } else {
             match self.kind {
-                CstKind::Node(children) if children.is_empty() => Self {
+                Kind::Nil => Self {
+                    kind: child.kind,
                     leading: self.leading.concat(child.leading),
                     trailing: self.trailing.concat(child.trailing),
-                    kind: child.kind,
                 },
-                CstKind::Node(mut children) => {
+                Kind::Node(mut children) => {
                     children.push(child);
                     Self {
-                        kind: CstKind::Node(children),
+                        kind: Kind::Node(children),
                         ..self
                     }
                 }
-                CstKind::Named { .. } | CstKind::Token { .. } => Self {
-                    kind: CstKind::Node(vec![self, child]),
+                Kind::Named { .. } | Kind::Token { .. } => Self {
+                    kind: Kind::Node(vec![self]),
                     leading: Infos::default(),
                     trailing: Infos::default(),
-                },
+                }
+                .add(child),
             }
         }
     }
@@ -99,7 +91,7 @@ impl Cst {
     /// add a name to cst node
     pub fn with_name(self, name: RefRule) -> Self {
         Self {
-            kind: CstKind::Named {
+            kind: Kind::Named {
                 name: name,
                 cst: Box::new(self.kind.into()),
             },
@@ -109,16 +101,15 @@ impl Cst {
 
     /// Add leading information (comments, docs, blank lines) to this CST node
     pub fn add_info(self, info: Info) -> Self {
-        if self.is_empty() {
-            Self {
+        match self.kind {
+            Kind::Nil => Self {
                 leading: self.leading.append(info),
                 ..self
-            }
-        } else {
-            Self {
+            },
+            _ => Self {
                 trailing: self.trailing.append(info),
                 ..self
-            }
+            },
         }
     }
 }
@@ -157,6 +148,7 @@ mod tests {
             .add_info(Info::Lines)
             .add_info(Info::Lines);
 
+        dbg!(&cst);
         let theme = Theme::default();
         let str = cst.make_string(&theme);
         assert_eq!(

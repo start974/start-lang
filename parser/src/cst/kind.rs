@@ -6,7 +6,10 @@ use pp::pretty::*;
 
 /// Represents a CST node: either a non-terminal with children, or a token (leaf)
 #[derive(Debug, Clone)]
-pub enum CstKind {
+pub enum Kind {
+    /// nil cst
+    Nil,
+
     /// Non-terminal node with child CSTs
     Node(Vec<Cst>),
 
@@ -17,14 +20,15 @@ pub enum CstKind {
     Token { content: String, span: Span },
 }
 
-impl Pretty for CstKind {
+impl Pretty for Kind {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            CstKind::Node(children) => {
+            Kind::Nil => Doc::nil(),
+            Kind::Node(children) => {
                 Doc::intersperse(children.iter().map(|child| child.pretty(theme)), Doc::nil())
             }
-            CstKind::Named { cst, .. } => cst.pretty(theme),
-            CstKind::Token { content, .. } => Doc::text(content),
+            Kind::Named { cst, .. } => cst.pretty(theme),
+            Kind::Token { content, .. } => Doc::text(content),
         }
         .group()
     }
