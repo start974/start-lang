@@ -2,8 +2,9 @@ mod info;
 mod kind;
 
 pub use info::*;
-pub use kind::*;
 
+use kind::*;
+use location::Span;
 use pp::pretty::*;
 
 /// Concrete Syntax Tree node
@@ -21,7 +22,7 @@ pub struct Cst {
 
 impl From<CstKind> for Cst {
     fn from(kind: CstKind) -> Self {
-        Self {
+        Cst {
             kind,
             leading: Infos::default(),
             trailing: Infos::default(),
@@ -29,17 +30,87 @@ impl From<CstKind> for Cst {
     }
 }
 
+impl Default for Cst {
+    fn default() -> Self {
+        Cst {
+            kind: CstKind::Node(Vec::new()),
+            leading: Infos::default(),
+            trailing: Infos::default(),
+        }
+    }
+}
+
 impl Cst {
-    /// Add leading information (comments, docs, blank lines) to this CST node
-    pub fn with_leading(mut self, info: Info) -> Self {
-        self.leading = self.leading.append(info);
-        self
+    /// make nil Cst
+    pub fn nil() -> Self {
+        Self::default()
     }
 
-    /// Add trailing information (comments, docs, blank lines) to this CST node
-    pub fn with_trailing(mut self, info: Info) -> Self {
-        self.trailing = self.trailing.append(info);
-        self
+    pub fn is_empty(&self) -> bool {
+        match self.kind {
+            CstKind::Node(ref children) => children.is_empty(),
+            CstKind::Named(_, ref cst) => cst.is_empty(),
+            CstKind::Token(_, _) => false,
+        }
+    }
+
+    fn is_nil(&self) -> bool {
+        self.is_empty()
+    }
+
+    /// make a token
+    pub fn token(content: &str, span: Span) -> Self {
+        CstKind::Token(content.into(), span).into()
+    }
+
+    /// Add a child to this CST node
+    pub fn add(self, child: Cst) -> Self {
+        if child.is_nil() {
+            self
+        } else {
+            match self.kind {
+                CstKind::Node(children) if children.is_empty() => Self {
+                    leading: self.leading.concat(child.leading),
+                    trailing: self.trailing.concat(child.trailing),
+                    kind: child.kind,
+                },
+                CstKind::Node(mut children) => {
+                    children.push(child);
+                    Self {
+                        kind: CstKind::Node(children),
+                        ..self
+                    }
+                }
+                CstKind::Named(_, _) | CstKind::Token(_, _) => Self {
+                    kind: CstKind::Node(vec![self, child]),
+                    leading: Infos::default(),
+                    trailing: Infos::default(),
+                },
+            }
+        }
+    }
+
+    /// add a name to cst node
+    pub fn with_name(self, name: &str) -> Self {
+        Self {
+            kind: CstKind::Named(name.into(), Box::new(self.kind.into())),
+            ..self
+        }
+    }
+
+    /// Add leading information (comments, docs, blank lines) to this CST node
+    pub fn add_info(self, info: Info) -> Self {
+        if self.is_empty() {
+            Self {
+                leading: self.leading.append(info),
+                ..self
+            }
+        } else {
+            Self {
+                trailing: self.trailing.append(info),
+                ..self
+            }
+        }
     }
 }
 
@@ -61,30 +132,20 @@ mod tests {
 
     #[test]
     fn pretty_cst() {
-        let cst = Cst::from(CstKind::Node {
-            name: "Example".to_string(),
-            children: vec![
-                Cst::from(CstKind::Token {
-                    content: "token1".to_string(),
-                    span: Span::default(),
-                })
-                .with_leading(Info::Comment {
-                    is_doc: false,
-                    content: "This is a comment".split(" ").map(String::from).collect(),
-                })
-                .with_leading(Info::Spaces),
-                Cst::from(CstKind::Token {
-                    content: "token2".to_string(),
-                    span: Span::default(),
-                })
-                .with_leading(Info::Spaces),
-                Cst::from(CstKind::Token {
-                    content: "token3".to_string(),
-                    span: Span::default(),
-                }),
-            ],
-        })
-        .with_trailing(Info::Lines);
+        let cst = Cst::nil()
+            .add_info(Info::Comment {
+                is_doc: false,
+                content: "This is a comment".split(" ").map(String::from).collect(),
+            })
+            .add_info(Info::Spaces)
+            .add_info(Info::Spaces)
+            .add(Cst::token("token1", Span::default()).with_name("test1"))
+            .add_info(Info::Spaces)
+            .add(Cst::token("token2", Span::default()))
+            .add_info(Info::Spaces)
+            .add(Cst::token("token3", Span::default()))
+            .add_info(Info::Lines)
+            .add_info(Info::Lines);
 
         let theme = Theme::default();
         let str = cst.make_string(&theme);

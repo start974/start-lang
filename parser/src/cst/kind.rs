@@ -1,3 +1,5 @@
+use crate::peg::RefRule;
+
 use super::Cst;
 use location::Span;
 use pp::pretty::*;
@@ -6,24 +8,23 @@ use pp::pretty::*;
 #[derive(Debug, Clone)]
 pub enum CstKind {
     /// Non-terminal node with child CSTs
-    Node {
-        /// Name of the grammar rule for this node
-        name: String,
-        /// children nodes of this non-terminal, in order
-        children: Vec<Cst>,
-    },
+    Node(Vec<Cst>),
+
+    /// Non-terminal node with a name and child CSTs
+    Named(RefRule, Box<Cst>),
 
     /// Leaf token with content and span in input
-    Token { content: String, span: Span },
+    Token(String, Span),
 }
 
 impl Pretty for CstKind {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            CstKind::Node { children, .. } => {
+            CstKind::Node(children) => {
                 Doc::intersperse(children.iter().map(|child| child.pretty(theme)), Doc::nil())
             }
-            CstKind::Token { content, .. } => Doc::text(content),
+            CstKind::Named(_, child) => child.pretty(theme),
+            CstKind::Token(content, _) => Doc::text(content),
         }
         .group()
     }

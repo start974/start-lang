@@ -47,12 +47,28 @@ impl Infos {
     /// append an info to this infos, but if the last info is lines or spaces, do not append
     pub fn append(mut self, info: Info) -> Self {
         match self.infos.last() {
-            Some(Info::Lines) | Some(Info::Spaces) => self,
-            _ => {
+            None => {
                 self.infos.push(info);
-                self
             }
-        }
+            Some(info_end) => match (info_end, &info) {
+                (Info::Lines, Info::Lines)
+                | (Info::Lines, Info::Spaces)
+                | (Info::Spaces, Info::Spaces) => (),
+                (Info::Spaces, Info::Lines) => {
+                    self.infos.pop();
+                    self.infos.push(info);
+                }
+                (_, _) => {
+                    self.infos.push(info);
+                }
+            },
+        };
+        self
+    }
+
+    /// concat informations
+    pub fn concat(self, other: Infos) -> Infos {
+        other.infos.into_iter().fold(self, Self::append)
     }
 }
 
@@ -108,5 +124,44 @@ mod tests {
         let theme = Theme::default();
         let str = info.make_string(&theme);
         assert_eq!(str, "\n\n");
+    }
+
+    #[test]
+    fn append() {
+        let mut infos = Infos::default();
+        let theme = Theme::default();
+        let str = infos.make_string(&theme);
+        assert_eq!(str, "");
+
+        infos = infos.append(Info::Spaces);
+        let str = infos.make_string(&theme);
+        assert_eq!(str, " ");
+
+        infos = infos.append(Info::Lines);
+        let str = infos.make_string(&theme);
+        assert_eq!(str, "\n\n");
+
+        infos = infos.append(Info::Spaces);
+        let str = infos.make_string(&theme);
+        assert_eq!(str, "\n\n");
+
+        infos = infos.append(Info::Comment {
+            is_doc: false,
+            content: vec!["test".into()],
+        });
+        let str = infos.make_string(&theme);
+        assert_eq!(str, "\n\n(* test *)");
+
+        infos = infos.append(Info::Spaces);
+        let str = infos.make_string(&theme);
+        assert_eq!(str, "\n\n(* test *) ");
+
+        infos = infos.append(Info::Lines);
+        let str = infos.make_string(&theme);
+        assert_eq!(str, "\n\n(* test *)\n\n");
+
+        infos = infos.append(Info::Spaces);
+        let str = infos.make_string(&theme);
+        assert_eq!(str, "\n\n(* test *)\n\n");
     }
 }

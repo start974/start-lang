@@ -56,6 +56,12 @@ pub enum Peg {
     PositiveLookahead(Box<Peg>),
 }
 
+impl From<WhiteSpace> for Peg {
+    fn from(ws: WhiteSpace) -> Self {
+        Peg::WS(ws)
+    }
+}
+
 impl From<Literal> for Peg {
     fn from(literal: Literal) -> Self {
         Peg::Literal(literal)
@@ -65,6 +71,12 @@ impl From<Literal> for Peg {
 impl From<Class> for Peg {
     fn from(class: Class) -> Self {
         Peg::Class(class)
+    }
+}
+
+impl From<RefRule> for Peg {
+    fn from(ref_rule: RefRule) -> Self {
+        Peg::RefRule(ref_rule)
     }
 }
 

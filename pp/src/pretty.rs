@@ -64,5 +64,3 @@ where
         self.as_ref().pretty_precedence(min_prec, theme)
     }
 }
-
-

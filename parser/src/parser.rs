@@ -1,6 +1,6 @@
 use errors::Error;
 
-use crate::cst::{Cst, CstKind};
+use crate::cst::Cst;
 use crate::error::ParseError;
 use crate::peg::{Class, Literal, Peg, RefRule};
 use crate::pratt::Pratt;
@@ -90,6 +90,20 @@ impl Parser {
         self
     }
 
+    ///// parse whitespace
+    /*    fn parse_ws(&self, scanner: &mut impl Scanner, ws: &WhiteSpace) -> ResultParse {*/
+    /*let start = scanner.checkpoint();*/
+    /*scanner*/
+    /*.consume_if(|c| c.is_whitespace())*/
+    /*.map(|c| {*/
+    /*Cst::from(CstKind::Token {*/
+    /*content: c.into(),*/
+    /*span: scanner.span_from(start),*/
+    /*})*/
+    /*})*/
+    /*.ok_or_else(|| error_expected(scanner, start, ws.clone().into()))*/
+    /*}*/
+
     /// parse a literal, e.g. `'a'`
     fn parse_literal(&self, scanner: &mut impl Scanner, literal: &Literal) -> ResultParse {
         let start = scanner.checkpoint();
@@ -101,27 +115,17 @@ impl Parser {
                 scanner
                     .consume_if(|c| c == expected)
                     .map(|_| ())
-                    .ok_or_else(|| error_expected(scanner, start, Peg::Literal(literal.clone())))
+                    .ok_or_else(|| error_expected(scanner, start, literal.clone().into()))
             })
-            .map(|_| {
-                Cst::from(CstKind::Token {
-                    content: value.clone(),
-                    span: scanner.span_from(start),
-                })
-            })
+            .map(|_| Cst::token(value, scanner.span_from(start)))
     }
 
     /// parse class, e.g. `[a-z]`
     fn parse_class(&self, scanner: &mut impl Scanner, class: &Class) -> ResultParse {
         scanner
             .consume_if(|c| class.is_match(c))
-            .map(|c| {
-                Cst::from(CstKind::Token {
-                    content: c.to_string(),
-                    span: scanner.span_from(scanner.checkpoint()),
-                })
-            })
-            .ok_or_else(|| error_expected(scanner, scanner.checkpoint(), Peg::Class(class.clone())))
+            .map(|c| Cst::token(&c.to_string(), scanner.span_from(scanner.checkpoint())))
+            .ok_or_else(|| error_expected(scanner, scanner.checkpoint(), class.clone().into()))
     }
 
     /// parse reference to another rule, e.g. `expr`
@@ -134,7 +138,7 @@ impl Parser {
         let start = scanner.checkpoint();
         self.parse_rule_group(scanner, r_group).map_err(|err| {
             if err.position() == start.position() {
-                error_expected(scanner, start, Peg::RefRule(ref_rule.clone()))
+                error_expected(scanner, start, ref_rule.clone().into())
             } else {
                 err
             }
@@ -176,6 +180,9 @@ impl Parser {
         }
         acc_error.map(Err)
     }
+
+    /// parse a sequence of PEG atoms, e.g. `expr = 'a' 'b' '(' expr ')'`
+    /// using for atoms in rule group and PEG sequence
 
     fn parse_rule_group(&self, scanner: &mut impl Scanner, r_group: &RuleGroup) -> ResultParse {
         self.parse_or(scanner, &r_group.atoms)
