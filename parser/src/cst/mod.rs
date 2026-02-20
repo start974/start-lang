@@ -52,7 +52,7 @@ impl Cst {
         match self.kind {
             CstKind::Node(ref children) => children.is_empty(),
             CstKind::Named { ref cst, .. } => cst.is_empty(),
-            CstKind::Token(_, _) => false,
+            CstKind::Token { .. } => false,
         }
     }
 
@@ -62,7 +62,11 @@ impl Cst {
 
     /// make a token
     pub fn token(content: &str, span: Span) -> Self {
-        CstKind::Token(content.into(), span).into()
+        CstKind::Token {
+            content: content.into(),
+            span,
+        }
+        .into()
     }
 
     /// Add a child to this CST node
@@ -83,7 +87,7 @@ impl Cst {
                         ..self
                     }
                 }
-                CstKind::Named { .. } | CstKind::Token(_, _) => Self {
+                CstKind::Named { .. } | CstKind::Token { .. } => Self {
                     kind: CstKind::Node(vec![self, child]),
                     leading: Infos::default(),
                     trailing: Infos::default(),

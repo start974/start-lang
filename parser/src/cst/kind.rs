@@ -14,7 +14,7 @@ pub enum CstKind {
     Named { name: RefRule, cst: Box<Cst> },
 
     /// Leaf token with content and span in input
-    Token(String, Span),
+    Token { content: String, span: Span },
 }
 
 impl Pretty for CstKind {
@@ -24,7 +24,7 @@ impl Pretty for CstKind {
                 Doc::intersperse(children.iter().map(|child| child.pretty(theme)), Doc::nil())
             }
             CstKind::Named { cst, .. } => cst.pretty(theme),
-            CstKind::Token(content, _) => Doc::text(content),
+            CstKind::Token { content, .. } => Doc::text(content),
         }
         .group()
     }
