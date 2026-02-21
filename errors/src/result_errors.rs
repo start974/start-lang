@@ -13,3 +13,17 @@ impl<T> ResultErrors<T> for Result<T, Errors> {
         }
     }
 }
+
+pub trait ResultErrorUnit {
+    fn combine(self, other: Result<(), Errors>) -> Result<(), Errors>;
+}
+
+impl ResultErrorUnit for Result<(), Errors> {
+    fn combine(self, other: Result<(), Errors>) -> Result<(), Errors> {
+        match (self, other) {
+            (Ok(()), Ok(())) => Ok(()),
+            (Err(e1), Err(e2)) => Err(e1.combine(e2)),
+            (Err(e), _) | (_, Err(e)) => Err(e),
+        }
+    }
+}

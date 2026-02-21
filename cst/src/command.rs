@@ -1,6 +1,7 @@
-use super::{Expression, ExpressionDefinition, TypeDefinition, expression, help, operator};
+use super::{Expression, ExpressionDefinition, TypeDefinition, expression, operator};
 use crate::meta::Meta;
-use location::{Span, Spanned};
+use crate::meta_info::GetMetaInfo as _;
+use location::{GetSpan, Span};
 use pp::pretty::Pretty;
 use pp::pretty::*;
 
@@ -149,7 +150,7 @@ pub enum CommandKind {
     },
     Help {
         keyword: HelpKeyword,
-        var: help::Variable,
+        var: expression::Variable,
     },
     Set {
         keyword: SetKeyword,
@@ -189,7 +190,7 @@ impl Pretty for CommandKind {
     }
 }
 
-impl Spanned for CommandKind {
+impl GetSpan for CommandKind {
     fn span(&self) -> Span {
         let span_keyword = match self {
             CommandKind::ExpressionDefinition { keyword, .. } => keyword.span(),
@@ -226,17 +227,17 @@ impl Pretty for Command {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
             .append(self.kind.pretty(theme))
-            .append(if self.dot.has_comment() {
+            .append(if self.dot.meta_info().has_comment() {
                 Doc::line()
             } else {
                 Doc::nil()
             })
-            .append(self.dot.pretty_with_end_line(theme, false))
+            .append(self.dot.pretty(theme))
             .group()
     }
 }
 
-impl Spanned for Command {
+impl GetSpan for Command {
     fn span(&self) -> Span {
         self.kind.span().union(self.dot.span())
     }

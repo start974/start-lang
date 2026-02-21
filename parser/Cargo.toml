@@ -4,12 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-cst = {path = "../cst"}
-errors = {path = "../errors"}
-lexer = {path = "../lexer"}
-location = {path = "../location"}
-pp = {path = "../pp"}
-
-chumsky = "0.12.0"
-num-bigint = "0.4.6"
-
+location = { path = "../location" }
+errors = { path = "../errors" }
+pp = { path = "../pp" }

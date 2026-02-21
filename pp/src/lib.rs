@@ -11,6 +11,5 @@ pub use doc::Doc;
 pub use error_theme::ErrorTheme;
 pub use message_theme::MessageTheme;
 pub use pretty::Pretty;
-pub use pretty::PrettyPrecedence;
 pub use stream_colored::StreamColored;
 pub use theme::Theme;

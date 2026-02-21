@@ -1,9 +1,10 @@
 use super::flag::{DebugFlag, Flag};
 use crate::error;
-use cst::AsIdentifier as _;
+use cst::{AsIdentifier as _, meta_info::GetMetaInfo as _};
 use errors::Error;
-use location::{SourceId, Spanned};
+use location::{GetSpan, SourceId};
 use pp::pretty::Pretty;
+use syntax::lexer::TokenStream;
 use tir::Typed as _;
 
 pub trait Interpreter {
@@ -40,7 +41,7 @@ pub trait Interpreter {
     /// print
     fn print<Doc>(&mut self, doc: &Doc)
     where
-        Doc: Pretty + Spanned;
+        Doc: Pretty + GetSpan;
 
     /// active printing of summarry definition
     fn print_summay(&self, def: &tir::ExpressionDefinition);
@@ -48,7 +49,7 @@ pub trait Interpreter {
     /// pretty debug
     fn debug<Doc>(&mut self, flag: DebugFlag, doc: &Doc)
     where
-        Doc: Pretty + Spanned,
+        Doc: Pretty + GetSpan,
     {
         if self.is_active_debug(flag) {
             self.print(doc);
@@ -106,7 +107,28 @@ pub trait Interpreter {
                 self.debug(DebugFlag::Typer, &expr);
                 if self.get_error_code() == 0 {
                     let value = self.mut_vm().eval(&expr).unwrap();
-                    self.print(&(value, expr.span()));
+
+                    //TODO: rm this code ...
+                    struct Val {
+                        value: vm::value::Value,
+                        span: location::Span,
+                    }
+                    impl location::GetSpan for Val {
+                        fn span(&self) -> location::Span {
+                            self.span
+                        }
+                    }
+
+                    impl Pretty for Val {
+                        fn pretty(&self, theme: &pp::Theme) -> pp::Doc<'_> {
+                            self.value.pretty(theme)
+                        }
+                    }
+
+                    self.print(&Val {
+                        value,
+                        span: expr.span(),
+                    });
                 }
             })
             .unwrap_or_else(|errs| {
@@ -131,7 +153,8 @@ pub trait Interpreter {
             })
     }
 
-    fn run_help(&mut self, var: cst::help::Variable) {
+    /// run help
+    fn run_help(&mut self, var: cst::expression::Variable) {
         match self.mut_typer().help(&var) {
             Ok(help) => self.print(&help),
             Err(errs) => {
@@ -156,10 +179,10 @@ pub trait Interpreter {
     fn run_command(&mut self, cmd: cst::Command) {
         match cmd.kind {
             cst::CommandKind::ExpressionDefinition { keyword, def } => {
-                self.run_expr_definition(*def, keyword.get_doc())
+                self.run_expr_definition(*def, keyword.meta_info().get_doc())
             }
             cst::CommandKind::TypeDefinition { keyword, def } => {
-                self.run_type_definition(def, keyword.get_doc())
+                self.run_type_definition(def, keyword.meta_info().get_doc())
             }
             cst::CommandKind::Eval { expr, .. } => self.run_eval(expr),
             cst::CommandKind::TypeOf { expr, .. } => self.run_typeof(expr),
@@ -170,8 +193,9 @@ pub trait Interpreter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Option<lexer::MetaTokenStream> {
-        match lexer::lex(content, offset_source) {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Option<TokenStream> {
+        use syntax::lexer::lex;
+        match lex(content, offset_source) {
             Ok(tokens) => Some(tokens),
             Err(errs) => {
                 for err in errs {
@@ -183,10 +207,11 @@ pub trait Interpreter {
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: lexer::MetaTokenStream) -> Option<cst::Command> {
-        match parser::parse(tokens) {
-            Ok(parser::CommandOrEnd::Command(cmd)) => Some(*cmd),
-            Ok(parser::CommandOrEnd::End(_)) => None,
+    fn parse(&mut self, tokens: TokenStream) -> Option<cst::Command> {
+        use syntax::parser::{CommandOrEnd, parse};
+        match parse(tokens) {
+            Ok(CommandOrEnd::Command(cmd)) => Some(*cmd),
+            Ok(CommandOrEnd::End(_)) => None,
             Err(errs) => {
                 for err in errs {
                     self.fail(err);

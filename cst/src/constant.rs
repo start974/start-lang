@@ -1,6 +1,6 @@
 use super::{AsCharacter, AsNumber};
 use crate::Meta;
-use location::{Span, Spanned};
+use location::{GetSpan, Span};
 use num_bigint::BigUint;
 use pp::pretty::*;
 
@@ -103,7 +103,7 @@ impl From<Character> for Constant {
     }
 }
 
-impl Spanned for Constant {
+impl GetSpan for Constant {
     fn span(&self) -> Span {
         match self {
             Constant::Number(n) => n.span(),

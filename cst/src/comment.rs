@@ -30,8 +30,8 @@ impl Comment {
     }
 }
 
-impl From<String> for Comment {
-    fn from(content: String) -> Self {
+impl From<&str> for Comment {
+    fn from(content: &str) -> Self {
         let content = content
             .split("\n")
             .map(|s| s.trim().to_string())
@@ -41,6 +41,11 @@ impl From<String> for Comment {
             content,
             is_doc: false,
         }
+    }
+}
+impl From<String> for Comment {
+    fn from(content: String) -> Self {
+        Self::from(content.as_str())
     }
 }
 

@@ -7,7 +7,7 @@ use crate::{
     //lsp::document::SymbolInfo,
 };
 use errors::Error;
-use location::{SourceId, Spanned};
+use location::{GetSpan, SourceId};
 use pp::{MessageTheme, Pretty, Theme};
 use std::path::PathBuf;
 use tower_lsp::lsp_types::{Diagnostic, Url};
@@ -138,7 +138,7 @@ impl interpreter::Interpreter for Interpreter {
 
     fn print<Doc>(&mut self, doc: &Doc)
     where
-        Doc: Pretty + Spanned,
+        Doc: Pretty + GetSpan,
     {
         use tower_lsp::lsp_types::*;
         let theme = Theme::default();

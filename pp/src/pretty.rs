@@ -23,15 +23,24 @@ pub trait Pretty: Sized {
     }
 }
 
+impl<T, U> Pretty for (T, U)
+where
+    T: Pretty,
+{
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        self.0.pretty(theme)
+    }
+}
+
 // ============================================================================
 // Pretty with Precedence
 // ============================================================================
 pub trait PrettyPrecedence {
     /// get level of type
-    fn precedence(&self) -> u8;
+    fn precedence(&self) -> usize;
 
     /// pretty with precedence
-    fn pretty_precedence(&self, min_prec: u8, theme: &Theme) -> Doc<'_>;
+    fn pretty_precedence(&self, min_prec: usize, theme: &Theme) -> Doc<'_>;
 }
 
 impl<T> Pretty for T
@@ -47,20 +56,11 @@ impl<T> PrettyPrecedence for Box<T>
 where
     T: PrettyPrecedence,
 {
-    fn precedence(&self) -> u8 {
+    fn precedence(&self) -> usize {
         self.as_ref().precedence()
     }
 
-    fn pretty_precedence(&self, min_prec: u8, theme: &Theme) -> Doc<'_> {
+    fn pretty_precedence(&self, min_prec: usize, theme: &Theme) -> Doc<'_> {
         self.as_ref().pretty_precedence(min_prec, theme)
-    }
-}
-
-impl<T, U> Pretty for (T, U)
-where
-    T: Pretty,
-{
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        self.0.pretty(theme)
     }
 }

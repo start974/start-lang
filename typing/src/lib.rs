@@ -1,6 +1,6 @@
 use cst::{self, AsCharacter as _, AsIdentifier as _, AsNumber as _};
 use errors::{Errors, ResultErrors as _};
-use location::{Spanned as _, SpannedSet as _};
+use location::{GetSpan as _, SetSpan as _};
 use tir::{Typed, env::Env};
 
 #[derive(Debug, Default)]
@@ -172,7 +172,7 @@ impl Typer {
     }
 
     /// convert help variable
-    pub fn help(&mut self, var: &cst::help::Variable) -> Result<tir::Help> {
+    pub fn help(&mut self, var: &cst::expression::Variable) -> Result<tir::Help> {
         let id = self.id_builder.get(var.name());
         self.env.get_help(&id, var.span()).map_err(Errors::from)
     }

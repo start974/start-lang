@@ -1,5 +1,5 @@
 use crate::Identifier;
-use location::{Span, Spanned, SpannedSet};
+use location::{GetSpan, SetSpan, Span};
 use pp::pretty::*;
 use std::rc::Rc;
 
@@ -35,13 +35,13 @@ impl Pretty for PatternVar {
     }
 }
 
-impl Spanned for PatternVar {
+impl GetSpan for PatternVar {
     fn span(&self) -> Span {
         self.span
     }
 }
 
-impl SpannedSet for PatternVar {
+impl SetSpan for PatternVar {
     fn set_span(&mut self, span: Span) {
         self.span = span;
     }
@@ -71,7 +71,7 @@ impl Pretty for Pattern {
     }
 }
 
-impl Spanned for Pattern {
+impl GetSpan for Pattern {
     fn span(&self) -> Span {
         match self {
             Pattern::Variable(var) => var.span(),

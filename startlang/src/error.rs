@@ -1,7 +1,7 @@
 use cst::AsIdentifier as _;
 use cst::expression::Variable;
 use errors::{Error, Message};
-use location::Spanned as _;
+use location::GetSpan as _;
 use std::path::Path;
 
 pub fn read_file(path: &Path) -> Error {

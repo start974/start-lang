@@ -1,4 +1,4 @@
-use location::{Span, Spanned, SpannedSet};
+use location::{GetSpan, SetSpan, Span};
 use pp::pretty::*;
 
 // ==========================================================================
@@ -74,13 +74,13 @@ impl Pretty for Builtin {
     }
 }
 
-impl Spanned for Builtin {
+impl GetSpan for Builtin {
     fn span(&self) -> Span {
         self.span
     }
 }
 
-impl SpannedSet for Builtin {
+impl SetSpan for Builtin {
     fn set_span(&mut self, span: Span) {
         self.span = span;
     }

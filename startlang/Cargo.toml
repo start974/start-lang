@@ -10,10 +10,9 @@ glob = "0.3.3"
 [dependencies]
 cst = { path = "../cst" }
 errors = { path = "../errors" }
-lexer = { path = "../lexer" }
 location = { path = "../location" }
-parser = { path = "../parser" }
 pp = { path = "../pp" }
+syntax = { path = "../syntax" }
 tir = { path = "../tir" }
 typing = { path = "../typing" }
 vm = { path = "../vm" }

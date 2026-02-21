@@ -1,6 +1,6 @@
 use crate::message::Message;
 use ariadne::{Cache, Config, IndexType, Label, ReportKind};
-use location::{Location, Report, SourceId, Span, Spanned, SpannedSet};
+use location::{GetSpan, Location, Report, SetSpan, SourceId, Span};
 use pp::theme::Theme;
 
 #[derive(Debug)]
@@ -89,15 +89,33 @@ impl Error {
     }
 }
 
-impl Spanned for Error {
+impl GetSpan for Error {
     fn span(&self) -> Span {
         self.span
     }
 }
 
-impl SpannedSet for Error {
+impl SetSpan for Error {
     fn set_span(&mut self, span: Span) {
         self.span = span;
+    }
+}
+
+// ============================================================================
+// Into error
+// ============================================================================
+/// into error trait, for converting other error types into this error type
+pub trait IntoError {
+    /// into error
+    fn into_error(self) -> Error;
+}
+
+impl<T> From<T> for Error
+where
+    T: IntoError,
+{
+    fn from(value: T) -> Self {
+        value.into_error()
     }
 }
 

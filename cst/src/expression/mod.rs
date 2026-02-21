@@ -1,6 +1,6 @@
 use super::{Constant, Type, operator, parenthesis::Parenthesed};
 use crate::{AsIdentifier, Meta};
-use location::{Span, Spanned};
+use location::{GetSpan, Span};
 use pp::pretty::*;
 
 // ============================================================================
@@ -56,21 +56,20 @@ pub enum Expression1 {
 
 pub type Expression = Expression1;
 
-impl PrettyPrecedence for Expression0 {
-    fn precedence(&self) -> u8 {
-        0
-    }
-
-    fn pretty_precedence(&self, prec: u8, theme: &Theme) -> Doc<'_> {
+impl Pretty for Expression0 {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             Expression0::Variable(var) => var.pretty(theme),
             Expression0::Constant(constant) => constant.pretty(theme),
-            Expression0::Paren(parent) => parent.pretty_precedence(prec, theme),
+            Expression0::Paren(parent) => Doc::nil()
+                .append(parent.l_paren.pretty(theme))
+                .append(parent.inner.pretty(theme))
+                .append(parent.r_paren.pretty(theme)),
         }
     }
 }
 
-impl Spanned for Expression0 {
+impl GetSpan for Expression0 {
     fn span(&self) -> Span {
         match self {
             Expression0::Variable(var) => var.span(),
@@ -80,12 +79,8 @@ impl Spanned for Expression0 {
     }
 }
 
-impl PrettyPrecedence for Expression1 {
-    fn precedence(&self) -> u8 {
-        1
-    }
-
-    fn pretty_precedence(&self, prec: u8, theme: &Theme) -> Doc<'_> {
+impl Pretty for Expression1 {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
             Expression1::TypedExpression { expr, colon, ty } => Doc::nil()
                 .append(expr.pretty(theme))
@@ -94,12 +89,12 @@ impl PrettyPrecedence for Expression1 {
                 .append(Doc::space())
                 .append(ty.pretty(theme))
                 .group(),
-            Expression1::Expression0(expr) => expr.pretty_precedence(prec, theme),
+            Expression1::Expression0(expr) => expr.pretty(theme),
         }
     }
 }
 
-impl Spanned for Expression1 {
+impl GetSpan for Expression1 {
     fn span(&self) -> Span {
         match self {
             Expression1::TypedExpression { expr, ty, .. } => expr.span().union(ty.span()),

@@ -1,5 +1,5 @@
 use super::super::ty::{Type, TypeBuiltin, Typed, TypedMut};
-use location::{Span, Spanned, SpannedSet};
+use location::{GetSpan, SetSpan, Span};
 use num_bigint::BigUint;
 use pp::pretty::*;
 
@@ -49,13 +49,13 @@ impl Constant {
     }
 }
 
-impl Spanned for Constant {
+impl GetSpan for Constant {
     fn span(&self) -> Span {
         self.span
     }
 }
 
-impl SpannedSet for Constant {
+impl SetSpan for Constant {
     fn set_span(&mut self, span: Span) {
         self.span = span;
     }

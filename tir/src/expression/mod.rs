@@ -1,5 +1,5 @@
 use crate::ty::{Type, Typed, TypedMut};
-use location::{Span, Spanned, SpannedSet};
+use location::{GetSpan, SetSpan, Span};
 use pp::pretty::*;
 
 mod constant;
@@ -39,7 +39,7 @@ impl Typed for Expression {
     }
 }
 
-impl Spanned for Expression {
+impl GetSpan for Expression {
     fn span(&self) -> Span {
         match self {
             Expression::Constant(c) => c.span(),
@@ -48,7 +48,7 @@ impl Spanned for Expression {
     }
 }
 
-impl SpannedSet for Expression {
+impl SetSpan for Expression {
     fn set_span(&mut self, span: Span) {
         match self {
             Expression::Constant(c) => c.set_span(span),

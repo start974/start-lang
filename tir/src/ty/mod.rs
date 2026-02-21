@@ -1,5 +1,5 @@
 use errors::Error;
-use location::{Spanned, SpannedSet};
+use location::{GetSpan, SetSpan};
 use pp::pretty::*;
 
 mod builtin;
@@ -30,7 +30,7 @@ impl Pretty for Type {
     }
 }
 
-impl Spanned for Type {
+impl GetSpan for Type {
     fn span(&self) -> location::Span {
         match self {
             Type::Builtin(builtin) => builtin.span(),
@@ -39,7 +39,7 @@ impl Spanned for Type {
     }
 }
 
-impl SpannedSet for Type {
+impl SetSpan for Type {
     fn set_span(&mut self, span: location::Span) {
         match self {
             Type::Builtin(builtin) => builtin.set_span(span),

@@ -8,7 +8,7 @@ Definition (* comment1 *)
   := (* comment 5 *) 3
 (* comment 6 *)
 .
-Eval (* Eval var a *) a (* Eval last comment *).
+Eval (* Eval var a *) a (* Eval last comment *) .
 
 Def b : Nat := (* many comment
   bla bla bla
