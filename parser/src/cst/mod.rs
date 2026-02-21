@@ -59,36 +59,42 @@ impl Cst {
 
     /// Add a child to this CST node
     pub fn add(self, mut other: Cst) -> Self {
-        if let Kind::Nil = other.kind {
-            Self {
-                trailing: self.trailing.concat(other.leading).concat(other.trailing),
-                ..self
+        match (self.kind, other.kind) {
+            (Kind::Nil, kind) | (kind, Kind::Nil) => Self {
+                kind,
+                leading: self.leading.concat(self.trailing).concat(other.leading),
+                trailing: other.trailing,
+            },
+            (Kind::Node(mut children), other_kind) => {
+                let mut last = children.pop().expect("Nodes cannot be empty");
+                other.leading = other.leading.concat(last.trailing);
+                last.trailing = Infos::default();
+                children.push(last);
+                children.push(Self {
+                    kind: other_kind,
+                    ..other
+                });
+                Self {
+                    kind: Kind::Node(children),
+                    ..self
+                }
             }
-        } else {
-            match self.kind {
-                Kind::Nil => Self {
-                    kind: other.kind,
-                    leading: self.leading.concat(self.trailing).concat(other.leading),
-                    trailing: other.trailing,
-                },
-                Kind::Node(mut children) => {
-                    let mut last = children.pop().expect("Nodes cannot be empty");
-                    other.leading = other.leading.concat(last.trailing);
-                    last.trailing = Infos::default();
-                    children.push(last);
-                    children.push(other);
+            (kind_1, kind_2) => Self {
+                kind: Kind::Node(vec![
                     Self {
-                        kind: Kind::Node(children),
-                        ..self
-                    }
-                }
-                Kind::Named { .. } | Kind::Token { .. } => Self {
-                    kind: Kind::Node(vec![self]),
-                    leading: Infos::default(),
-                    trailing: Infos::default(),
-                }
-                .add(other),
-            }
+                        kind: kind_1,
+                        leading: self.leading,
+                        trailing: Infos::default(),
+                    },
+                    Self {
+                        kind: kind_2,
+                        leading: self.trailing.concat(other.leading),
+                        trailing: other.trailing,
+                    },
+                ]),
+                leading: Infos::default(),
+                trailing: Infos::default(),
+            },
         }
     }
 
@@ -116,12 +122,11 @@ impl Cst {
                 csts.push(last);
                 Self {
                     kind: Kind::Node(csts),
-                    .. self
+                    ..self
                 }
-            },
+            }
 
-            _ =>
-            Self {
+            _ => Self {
                 trailing: self.trailing.append(info),
                 ..self
             },
