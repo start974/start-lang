@@ -6,6 +6,9 @@ pub struct RefRule {
     /// name of the rule being referenced, e.g. `expr` in `expr = other` where `other` is the name of the rule being referenced
     pub name: String,
 
+    /// precedence of the rule being referenced, used for Pratt parsing
+    pub prec: Option<u8>,
+
     /// span of the rule reference, used for error reporting
     span: Span,
 }
@@ -14,7 +17,18 @@ impl From<&str> for RefRule {
     fn from(s: &str) -> Self {
         RefRule {
             name: s.to_string(),
+            prec: None,
             span: Span::default(),
+        }
+    }
+}
+
+impl RefRule {
+    /// set the precedence of the rule being referenced
+    pub fn with_precedence(self, prec: u8) -> Self {
+        Self {
+            prec: Some(prec),
+            ..self
         }
     }
 }

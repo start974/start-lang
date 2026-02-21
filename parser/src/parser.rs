@@ -3,9 +3,11 @@ use errors::Error;
 use crate::cst::Cst;
 use crate::error::ParseError;
 use crate::peg::{Class, Literal, Peg, RefRule};
-use crate::pratt::Pratt;
 use crate::{Mark as _, Scanner};
 use std::collections::{BTreeMap, HashMap};
+
+type RuleGroup = BTreeMap<u8, Vec<Peg>>;
+type ResultParse = Result<Cst, ParseError>;
 
 /// Full parser containing all grammar rules.
 ///
@@ -15,30 +17,7 @@ use std::collections::{BTreeMap, HashMap};
 ///
 /// Both are unified under the same rule table to avoid splitting the logic.
 #[derive(Debug, Default)]
-pub struct Parser {
-    /// All grammar rules indexed by name.
-    ///
-    /// Each rule may be:
-    /// - a PEG syntax rule
-    /// - or a Pratt expression rule
-    rules: HashMap<String, RuleGroup>,
-}
-
-/// A grammar rule.
-/// Peg and Pratt rules
-#[derive(Debug)]
-struct RuleGroup {
-    /// operators grouped by precedence
-    /// key = precedence level
-    /// higher key = stronger binding
-    operators: BTreeMap<usize, Vec<Pratt>>,
-
-    /// base expressions (literal, ident, parens, etc.)
-    atoms: Vec<Peg>,
-}
-
-type ResultParse = Result<Cst, ParseError>;
-
+pub struct Parser(HashMap<String, RuleGroup>);
 /// make a parse error with expected syntax at the given position
 /// restore the scanner to the start position if parsing fails,
 /// and return an error with expected syntax
@@ -52,42 +31,22 @@ where
 
 impl Parser {
     /// add peg rule to the parser, e.g. `expr = 'a' / 'b' / '(' expr ')'`
-    pub fn add_peg(mut self, name: &str, rule: Peg) -> Self {
-        match self.rules.get_mut(name) {
-            Some(rules) => {
-                rules.atoms.push(rule);
-            }
-            None => {
-                self.rules.insert(
-                    name.into(),
-                    RuleGroup {
-                        operators: BTreeMap::new(),
-                        atoms: vec![rule],
-                    },
-                );
-            }
-        }
-        self
-    }
-
-    /// add pratt rule to the parser, e.g. `expr = expr '+' expr`
-    pub fn add_pratt(mut self, name: &str, rule: Pratt) -> Self {
-        assert!(
-            rule.precedence > 0,
-            "Pratt rules must have a precedence greater than 0"
-        );
-        let group = self.rules.entry(name.into()).or_insert_with(|| RuleGroup {
-            operators: BTreeMap::new(),
-            atoms: Vec::new(),
-        });
-
-        group
-            .operators
-            .entry(rule.precedence)
+    pub fn add_rule(mut self, name: &str, prec: u8, rule: Peg) -> Self {
+        self.0
+            .entry(name.into())
+            .or_default()
+            .entry(prec)
             .or_default()
             .push(rule);
 
         self
+    }
+
+    /// get rule group by name
+    fn get_group(&self, name: &str) -> &RuleGroup {
+        self.0
+            .get(name)
+            .unwrap_or_else(|| panic!("Rule \"{name}\" not found in parser rules"))
     }
 
     ///// parse whitespace
@@ -131,24 +90,46 @@ impl Parser {
     /// parse reference to another rule, e.g. `expr`
     fn parse_ref_rule(&self, scanner: &mut impl Scanner, ref_rule: &RefRule) -> ResultParse {
         let name = &ref_rule.name;
-        let r_group = self
-            .rules
-            .get(name)
-            .unwrap_or_else(|| panic!("Rule \"{name}\" not found in parser rules"));
         let start = scanner.checkpoint();
-        self.parse_rule_group(scanner, r_group).map_err(|err| {
-            if err.position() == start.position() {
-                error_expected(scanner, start, ref_rule.clone().into())
-            } else {
-                err
+
+        // get choices with precedence
+        let (_, choices) = {
+            let r_group = self.get_group(name);
+            match ref_rule.prec {
+                // get rule at max precedence
+                None => r_group.iter().next_back(),
+                Some(prec) => r_group.range(..=prec).next_back(),
             }
-        })
+            .expect("Rules cannot be empty")
+        };
+
+        self.parse_choice(scanner, choices)
+            .map(|cst| cst.with_name(ref_rule.clone()))
+            .map_err(|err| {
+                if err.position() == start.position() {
+                    error_expected(scanner, start, ref_rule.clone().into())
+                } else {
+                    err
+                }
+            })
     }
 
     /// parse choice between multiple PEG rules, e.g. `= 'a' / 'b' / '(' expr ')'`
     fn parse_choice(&self, scanner: &mut impl Scanner, pegs: &[Peg]) -> ResultParse {
-        self.parse_or(scanner, pegs)
-            .unwrap_or_else(|| panic!("Peg rule is empty, expected at least one choice"))
+        let mut acc_error: Option<ParseError> = None;
+
+        for peg in pegs {
+            match self.parse_peg(scanner, peg) {
+                Ok(node) => return Ok(node),
+                Err(err) => {
+                    acc_error = Some(match acc_error {
+                        Some(err0) => err0.union(err),
+                        None => err,
+                    })
+                }
+            }
+        }
+        acc_error.map(Err).expect("Rule or cannot be empty")
     }
 
     /// parse a PEG rule, e.g. `expr = 'a' / 'b'`
@@ -162,39 +143,12 @@ impl Parser {
         }
     }
 
-    /// parse a PEG rule group, e.g. `expr = 'a' / 'b' / '(' expr ')'`
-    /// using for atoms in rule group and PEG choice
-    fn parse_or(&self, scanner: &mut impl Scanner, pegs: &[Peg]) -> Option<ResultParse> {
-        let mut acc_error: Option<ParseError> = None;
-
-        for atom in pegs {
-            match self.parse_peg(scanner, atom) {
-                Ok(node) => return Some(Ok(node)),
-                Err(err) => {
-                    acc_error = Some(match acc_error {
-                        Some(err0) => err0.union(err),
-                        None => err,
-                    })
-                }
-            }
-        }
-        acc_error.map(Err)
-    }
-
-    /// parse a sequence of PEG atoms, e.g. `expr = 'a' 'b' '(' expr ')'`
-    /// using for atoms in rule group and PEG sequence
-
-    fn parse_rule_group(&self, scanner: &mut impl Scanner, r_group: &RuleGroup) -> ResultParse {
-        self.parse_or(scanner, &r_group.atoms)
-            .unwrap_or_else(|| unimplemented!("Only PEG rules are implemented"))
-    }
-
     /// parse a rule by name, e.g. `expr`
     /// fail parsing fails according to the rule's PEG or Pratt definitions
     /// can pannic if the rule is not found,
     pub fn parse(&self, scanner: &mut impl Scanner, rule_name: &str) -> Result<Cst, Error> {
-        let r_group = self.rules.get(rule_name).unwrap();
-        self.parse_rule_group(scanner, r_group)
+        let ref_rule = RefRule::from(rule_name);
+        self.parse_ref_rule(scanner, &ref_rule)
             .map_err(|err| err.into())
     }
 }
@@ -261,8 +215,8 @@ mod tests {
     }
 
     #[test]
-    fn parse_ref_rule() {
-        let parser = Parser::default().add_peg("expr", Peg::Literal(Literal::from("abc")));
+    fn parse_ref_rule_simple() {
+        let parser = Parser::default().add_rule("expr", 0, Peg::Literal(Literal::from("abc")));
         let mut scanner = StringScanner::from("abcdef");
 
         {
