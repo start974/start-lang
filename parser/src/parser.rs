@@ -114,6 +114,16 @@ impl Parser {
             })
     }
 
+    /// parse sequence, e.g. `expr = 'a' 'b'`
+    fn parse_seq(&self, scanner: &mut impl Scanner, pegs: &[Peg]) -> ResultParse {
+        let start = scanner.checkpoint();
+        pegs.iter()
+            .try_fold(Cst::nil(), |acc, peg| {
+                self.parse_peg(scanner, peg).map(|cst| acc.append(cst))
+            })
+            .inspect_err(|_| scanner.rollback(start))
+    }
+
     /// parse choice between multiple PEG rules, e.g. `= 'a' / 'b' / '(' expr ')'`
     fn parse_choice(&self, scanner: &mut impl Scanner, pegs: &[Peg]) -> ResultParse {
         let mut acc_error: Option<ParseError> = None;
@@ -138,6 +148,7 @@ impl Parser {
             Peg::Literal(lit) => self.parse_literal(scanner, lit),
             Peg::Class(class) => self.parse_class(scanner, class),
             Peg::RefRule(rule_name) => self.parse_ref_rule(scanner, rule_name),
+            Peg::Seq(pegs) => self.parse_seq(scanner, pegs),
             Peg::Choice(pegs) => self.parse_choice(scanner, pegs),
             _ => unimplemented!("Not implemented yet"),
         }
@@ -172,7 +183,6 @@ mod tests {
 
         {
             let result = parser.parse_literal(&mut scanner, &literal);
-            assert!(result.is_ok());
 
             let cst = result.unwrap();
             let theme = Theme::default();
@@ -197,7 +207,6 @@ mod tests {
 
         {
             let result = parser.parse_class(&mut scanner, &class);
-            assert!(result.is_ok());
 
             let cst = result.unwrap();
             let theme = Theme::default();
@@ -221,7 +230,6 @@ mod tests {
 
         {
             let result = parser.parse_ref_rule(&mut scanner, &RefRule::from("expr"));
-            assert!(result.is_ok());
 
             let cst = result.unwrap();
             let theme = Theme::default();
@@ -239,6 +247,34 @@ mod tests {
     }
 
     #[test]
+    fn parse_seq() {
+        let pegs = vec![
+            Peg::Literal(Literal::from("abc")),
+            Peg::Literal(Literal::from("def")),
+        ];
+        let parser = Parser::default();
+        let mut scanner = StringScanner::from("abcdefabc");
+        let theme = Theme::default();
+
+        {
+            let result = parser.parse_seq(&mut scanner, &pegs);
+
+            let cst = result.unwrap();
+            let cst_str = cst.make_string(&theme);
+            assert_eq!(cst_str, "abcdef");
+        }
+
+        {
+            let result = parser.parse_seq(&mut scanner, &pegs);
+
+            let err_expected = ParseError::new(9, Peg::Literal(Literal::from("def")));
+            let err = result.err().unwrap();
+            assert_eq!(err, err_expected);
+            assert_eq!(scanner.checkpoint().position(), 6);
+        }
+    }
+
+    #[test]
     fn parse_choice() {
         let pegs = vec![
             Peg::Literal(Literal::from("abc")),
@@ -250,7 +286,6 @@ mod tests {
 
         {
             let result = parser.parse_choice(&mut scanner, &pegs);
-            assert!(result.is_ok());
 
             let cst = result.unwrap();
             assert_eq!(cst.make_string(&theme), "abc");
@@ -258,13 +293,11 @@ mod tests {
 
         {
             let result = parser.parse_choice(&mut scanner, &pegs);
-            assert!(result.is_ok());
             assert_eq!(result.unwrap().make_string(&theme), "def");
         }
 
         {
             let result = parser.parse_choice(&mut scanner, &pegs);
-            assert!(result.is_err());
             let err_expectect = ParseError::new(6, Peg::Literal(Literal::from("abc")))
                 .union(ParseError::new(6, Peg::Literal(Literal::from("def"))));
             assert_eq!(result.err().unwrap(), err_expectect);
