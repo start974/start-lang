@@ -12,11 +12,11 @@ use crate::peg::RefRule;
 /// Concrete Syntax Tree node
 #[derive(Debug, Clone)]
 pub struct Cst {
-    /// Kind of node: either a leaf token or a non-terminal node
-    kind: Kind,
-
     /// Leading comments, docs, or blank lines before this node
     leading: Infos,
+
+    /// Kind of node: either a leaf token or a non-terminal node
+    kind: Kind,
 
     /// Trailing comments, docs, or blank lines after this node
     trailing: Infos,
@@ -58,21 +58,25 @@ impl Cst {
     }
 
     /// Add a child to this CST node
-    pub fn add(self, child: Cst) -> Self {
-        if let Kind::Nil = child.kind {
+    pub fn add(self, mut other: Cst) -> Self {
+        if let Kind::Nil = other.kind {
             Self {
-                trailing: self.trailing.concat(child.leading).concat(child.trailing),
+                trailing: self.trailing.concat(other.leading).concat(other.trailing),
                 ..self
             }
         } else {
             match self.kind {
                 Kind::Nil => Self {
-                    kind: child.kind,
-                    leading: self.leading.concat(child.leading),
-                    trailing: self.trailing.concat(child.trailing),
+                    kind: other.kind,
+                    leading: self.leading.concat(self.trailing).concat(other.leading),
+                    trailing: other.trailing,
                 },
                 Kind::Node(mut children) => {
-                    children.push(child);
+                    let mut last = children.pop().expect("Nodes cannot be empty");
+                    other.leading = other.leading.concat(last.trailing);
+                    last.trailing = Infos::default();
+                    children.push(last);
+                    children.push(other);
                     Self {
                         kind: Kind::Node(children),
                         ..self
@@ -83,7 +87,7 @@ impl Cst {
                     leading: Infos::default(),
                     trailing: Infos::default(),
                 }
-                .add(child),
+                .add(other),
             }
         }
     }
@@ -106,7 +110,18 @@ impl Cst {
                 leading: self.leading.append(info),
                 ..self
             },
-            _ => Self {
+            Kind::Node(mut csts) => {
+                let mut last = csts.pop().expect("Node cannot be empty");
+                last = last.add_info(info);
+                csts.push(last);
+                Self {
+                    kind: Kind::Node(csts),
+                    .. self
+                }
+            },
+
+            _ =>
+            Self {
                 trailing: self.trailing.append(info),
                 ..self
             },
