@@ -38,28 +38,30 @@ impl Pretty for Info {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct Infos {
-    infos: Vec<Info>,
-}
+#[derive(Clone, Debug, Default)]
+pub struct Infos(Vec<Info>);
 
 impl Infos {
+    /// make nil infos
+    pub fn nil() -> Self {
+        Self(vec![])
+    }
     /// append an info to this infos, but if the last info is lines or spaces, do not append
     pub fn append(mut self, info: Info) -> Self {
-        match self.infos.last() {
+        match self.0.last() {
             None => {
-                self.infos.push(info);
+                self.0.push(info);
             }
             Some(info_end) => match (info_end, &info) {
                 (Info::Lines, Info::Lines)
                 | (Info::Lines, Info::Spaces)
                 | (Info::Spaces, Info::Spaces) => (),
                 (Info::Spaces, Info::Lines) => {
-                    self.infos.pop();
-                    self.infos.push(info);
+                    self.0.pop();
+                    self.0.push(info);
                 }
                 (_, _) => {
-                    self.infos.push(info);
+                    self.0.push(info);
                 }
             },
         };
@@ -68,13 +70,19 @@ impl Infos {
 
     /// concat informations
     pub fn concat(self, other: Infos) -> Infos {
-        other.infos.into_iter().fold(self, Self::append)
+        other.0.into_iter().fold(self, Self::append)
+    }
+}
+
+impl From<Info> for Infos {
+    fn from(info: Info) -> Self {
+        Self(vec![info])
     }
 }
 
 impl Pretty for Infos {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        Doc::intersperse(self.infos.iter().map(|info| info.pretty(theme)), Doc::nil())
+        Doc::intersperse(self.0.iter().map(|info| info.pretty(theme)), Doc::nil())
     }
 }
 
