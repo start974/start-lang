@@ -102,15 +102,9 @@ pub trait SetSpan: Sized {
     }
 }
 
-impl<T> FromIterator<T> for Span
-where
-    T: GetSpan,
-{
-    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        iter.into_iter()
-            .map(|i| i.span())
-            .reduce(Span::union)
-            .unwrap_or_default()
+impl FromIterator<Span> for Span {
+    fn from_iter<I: IntoIterator<Item = Span>>(iter: I) -> Self {
+        iter.into_iter().reduce(Span::union).unwrap_or_default()
     }
 }
 

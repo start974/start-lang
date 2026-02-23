@@ -24,7 +24,7 @@ pub enum Peg {
     RefRule(RefRule),
 
     /// Sequence of syntaxes, e.g. `a b c`.
-    Seq(Vec<Peg>),
+    Sequence(Vec<Peg>),
 
     /// Choice between multiple syntaxes, e.g. `a / b / c`.
     Choice(Vec<Peg>),
@@ -72,6 +72,11 @@ impl Peg {
     pub fn is_atom(&self) -> bool {
         matches!(self, Peg::Literal(_) | Peg::Class(_) | Peg::RefRule(_))
     }
+
+    /// make repetition
+    pub fn repetition(self, rep: Repeat) -> Self {
+        Self::Repetition(Box::new(self), rep)
+    }
 }
 
 impl GetSpan for Peg {
@@ -80,7 +85,9 @@ impl GetSpan for Peg {
             Peg::Literal(literal) => literal.span(),
             Peg::Class(class) => class.span(),
             Peg::RefRule(ref_rule) => ref_rule.span(),
-            Peg::Seq(pegs) | Peg::Choice(pegs) => Span::from_iter(pegs),
+            Peg::Sequence(pegs) | Peg::Choice(pegs) => {
+                Span::from_iter(pegs.iter().map(|peg| peg.span()))
+            }
             Peg::Repetition(peg, repeat) => peg.span().union(repeat.span()),
             Peg::NegativeLookahead(peg) | Peg::PositiveLookahead(peg) => peg.span(),
         }
@@ -98,7 +105,7 @@ impl PrettyPrecedence for Peg {
         match self {
             Peg::Literal(_) | Peg::Class(_) | Peg::RefRule(_) => 0,
             Peg::Choice(_) => 1,
-            Peg::Seq(_) => 2,
+            Peg::Sequence(_) => 2,
             Peg::Repetition(_, _) => 3,
             Peg::NegativeLookahead(_) | Peg::PositiveLookahead(_) => 3,
         }
@@ -114,7 +121,9 @@ impl PrettyPrecedence for Peg {
             Peg::RefRule(r) => r.pretty(theme),
 
             // ---------- postfix ----------
-            Peg::Repetition(peg, rep) => peg.pretty_precedence(prec, theme).append(rep.pretty(theme)),
+            Peg::Repetition(peg, rep) => {
+                peg.pretty_precedence(prec, theme).append(rep.pretty(theme))
+            }
 
             // ---------- prefix ----------
             Peg::NegativeLookahead(inner) => Doc::text("!")
@@ -126,7 +135,7 @@ impl PrettyPrecedence for Peg {
                 .append(inner.pretty_precedence(prec, theme)),
 
             // ---------- infix ----------
-            Peg::Seq(pegs) => Doc::intersperse(
+            Peg::Sequence(pegs) => Doc::intersperse(
                 pegs.iter().map(|p| p.pretty_precedence(prec + 1, theme)),
                 Doc::space(),
             ),
@@ -153,7 +162,7 @@ mod test {
     use super::*;
     #[test]
     fn span() {
-        let peg = Peg::Seq(vec![
+        let peg = Peg::Sequence(vec![
             Literal::from("a").with_span(Span::new(1, 1)).into(),
             Peg::Class(Class::from('0'..='9')),
             Peg::RefRule(RefRule::from("expr").with_span(Span::new(6, 10))),
@@ -168,7 +177,7 @@ mod test {
 
     #[test]
     fn pretty() {
-        let peg = Peg::Seq(vec![
+        let peg = Peg::Sequence(vec![
             Peg::Choice(vec![
                 Peg::Literal(Literal::from("a")),
                 Peg::Class(Class::from('0'..='9')),
@@ -176,7 +185,7 @@ mod test {
             Peg::RefRule(RefRule::from("expr")),
             Peg::Repetition(Box::new(Literal::from("b").into()), Repeat::optional()),
             Peg::NegativeLookahead(Box::new(Literal::from("c").into())),
-            Peg::PositiveLookahead(Box::new(Peg::Seq(vec![
+            Peg::PositiveLookahead(Box::new(Peg::Sequence(vec![
                 Peg::Literal(Literal::from("d")),
                 Peg::Literal(Literal::from("e")),
             ]))),

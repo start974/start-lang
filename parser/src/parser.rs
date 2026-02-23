@@ -1,13 +1,13 @@
 use errors::Error;
+use location::SetSpan as _;
 
-use crate::cst::Cst;
+use crate::cst::{Cst, Sequence, Token};
 use crate::error::ParseError;
 use crate::peg::{Class, Literal, Peg, RefRule, Repeat};
 use crate::{Mark as _, Scanner};
 use std::collections::{BTreeMap, HashMap};
 
 type RuleGroup = BTreeMap<u8, Vec<Peg>>;
-type ResultParse = Result<Cst, ParseError>;
 
 /// Full parser containing all grammar rules.
 ///
@@ -64,7 +64,11 @@ impl Parser {
     /*}*/
 
     /// parse a literal, e.g. `'a'`
-    fn parse_literal(&self, scanner: &mut impl Scanner, literal: &Literal) -> ResultParse {
+    fn parse_literal(
+        &self,
+        scanner: &mut impl Scanner,
+        literal: &Literal,
+    ) -> Result<Token, ParseError> {
         let start = scanner.checkpoint();
         let value = &literal.value;
 
@@ -76,19 +80,24 @@ impl Parser {
                     .map(|_| ())
                     .ok_or_else(|| error_expected(scanner, start, literal.clone().into()))
             })
-            .map(|_| Cst::token(value, scanner.span_from(start)))
+            .map(|()| Token::from(value.as_str()).with_span(scanner.span_from(start)))
     }
 
     /// parse class, e.g. `[a-z]`
-    fn parse_class(&self, scanner: &mut impl Scanner, class: &Class) -> ResultParse {
+    fn parse_class(&self, scanner: &mut impl Scanner, class: &Class) -> Result<Token, ParseError> {
         scanner
             .consume_if(|c| class.is_match(c))
-            .map(|c| Cst::token(&c.to_string(), scanner.span_from(scanner.checkpoint())))
+            .map(|c| c.to_string())
+            .map(|s| Token::from(s.as_str()).with_span(scanner.span_from(scanner.checkpoint())))
             .ok_or_else(|| error_expected(scanner, scanner.checkpoint(), class.clone().into()))
     }
 
     /// parse reference to another rule, e.g. `expr`
-    fn parse_ref_rule(&self, scanner: &mut impl Scanner, ref_rule: &RefRule) -> ResultParse {
+    fn parse_ref_rule(
+        &self,
+        scanner: &mut impl Scanner,
+        ref_rule: &RefRule,
+    ) -> Result<Cst, ParseError> {
         let name = &ref_rule.name;
         let start = scanner.checkpoint();
 
@@ -104,7 +113,7 @@ impl Parser {
         };
 
         self.parse_choice(scanner, choices)
-            .map(|cst| cst.with_name(ref_rule.clone()))
+            .map(|cst| cst.named(name))
             .map_err(|err| {
                 if err.position() == start.position() {
                     error_expected(scanner, start, ref_rule.clone().into())
@@ -115,17 +124,17 @@ impl Parser {
     }
 
     /// parse sequence, e.g. `expr = 'a' 'b'`
-    fn parse_seq(&self, scanner: &mut impl Scanner, pegs: &[Peg]) -> ResultParse {
+    fn parse_seq(&self, scanner: &mut impl Scanner, pegs: &[Peg]) -> Result<Sequence, ParseError> {
         let start = scanner.checkpoint();
         pegs.iter()
-            .try_fold(Cst::nil(), |acc, peg| {
+            .try_fold(Sequence::new(), |acc, peg| {
                 self.parse_peg(scanner, peg).map(|cst| acc.append(cst))
             })
             .inspect_err(|_| scanner.rollback(start))
     }
 
     /// parse choice between multiple PEG rules, e.g. `= 'a' / 'b' / '(' expr ')'`
-    fn parse_choice(&self, scanner: &mut impl Scanner, pegs: &[Peg]) -> ResultParse {
+    fn parse_choice(&self, scanner: &mut impl Scanner, pegs: &[Peg]) -> Result<Cst, ParseError> {
         let mut acc_error: Option<ParseError> = None;
 
         for peg in pegs {
@@ -148,12 +157,12 @@ impl Parser {
         scanner: &mut impl Scanner,
         peg: &Peg,
         repeat: &Repeat,
-    ) -> ResultParse {
+    ) -> Result<Sequence, ParseError> {
         let start = scanner.checkpoint();
         // parse minimal repetition
         let cst = repeat
             .iter_min()
-            .try_fold(Cst::nil(), |acc, ()| {
+            .try_fold(Sequence::new(), |acc, ()| {
                 self.parse_peg(scanner, peg).map(|cst| acc.append(cst))
             })
             .inspect_err(|_| scanner.rollback(start))?;
@@ -170,14 +179,16 @@ impl Parser {
     }
 
     /// parse a PEG rule, e.g. `expr = 'a' / 'b'`
-    fn parse_peg(&self, scanner: &mut impl Scanner, peg: &Peg) -> ResultParse {
+    fn parse_peg(&self, scanner: &mut impl Scanner, peg: &Peg) -> Result<Cst, ParseError> {
         match peg {
-            Peg::Literal(lit) => self.parse_literal(scanner, lit),
-            Peg::Class(class) => self.parse_class(scanner, class),
+            Peg::Literal(lit) => self.parse_literal(scanner, lit).map(Cst::from),
+            Peg::Class(class) => self.parse_class(scanner, class).map(Cst::from),
             Peg::RefRule(rule_name) => self.parse_ref_rule(scanner, rule_name),
-            Peg::Seq(pegs) => self.parse_seq(scanner, pegs),
+            Peg::Sequence(pegs) => self.parse_seq(scanner, pegs).map(Cst::from),
             Peg::Choice(pegs) => self.parse_choice(scanner, pegs),
-            Peg::Repetition(peg, repeat) => self.parse_repetition(scanner, peg, repeat),
+            Peg::Repetition(peg, repeat) => {
+                self.parse_repetition(scanner, peg, repeat).map(Cst::from)
+            }
             _ => unimplemented!("Not implemented yet"),
         }
     }
@@ -207,19 +218,19 @@ mod tests {
     fn parse_literal() {
         let parser = Parser::default();
         let mut scanner = StringScanner::from("abcdef");
-        let literal = Literal::from("abc");
+        let peg = Peg::Literal(Literal::from("abc"));
         let theme = Theme::default();
 
         {
-            let cst = parser.parse_literal(&mut scanner, &literal).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "abc");
         }
 
         {
-            let result = parser.parse_literal(&mut scanner, &literal);
+            let result = parser.parse_peg(&mut scanner, &peg);
             let err = result.err().unwrap();
 
-            let err_expected = ParseError::new(3, Peg::Literal(literal));
+            let err_expected = ParseError::new(3, peg);
             assert_eq!(err, err_expected);
         }
     }
@@ -228,17 +239,17 @@ mod tests {
     fn parse_class() {
         let parser = Parser::default();
         let mut scanner = StringScanner::from("a1");
-        let class = Class::from('a'..='z');
+        let peg = Peg::Class(Class::from('a'..='z'));
         let theme = Theme::default();
 
         {
-            let cst = parser.parse_class(&mut scanner, &class).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "a");
         }
 
         {
-            let err = parser.parse_class(&mut scanner, &class).err().unwrap();
-            let err_expected = ParseError::new(1, Peg::Class(class));
+            let err = parser.parse_peg(&mut scanner, &peg).err().unwrap();
+            let err_expected = ParseError::new(1, peg);
             assert_eq!(err, err_expected);
         }
     }
@@ -246,39 +257,41 @@ mod tests {
     #[test]
     fn parse_ref_rule_simple() {
         let parser = Parser::default().add_rule("expr", 0, Peg::Literal(Literal::from("abc")));
+        let peg = Peg::RefRule(RefRule::from("expr"));
         let mut scanner = StringScanner::from("abcdef");
         let theme = Theme::default();
 
         {
-            let cst = parser
-                .parse_ref_rule(&mut scanner, &RefRule::from("expr"))
-                .unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "abc");
         }
 
         {
-            let result = parser.parse_ref_rule(&mut scanner, &RefRule::from("expr"));
+            let result = parser.parse_peg(&mut scanner, &peg);
             let err = result.err().unwrap();
 
-            let err_expected = ParseError::new(3, Peg::RefRule(RefRule::from("expr")));
+            let err_expected = ParseError::new(3, peg);
             assert_eq!(err, err_expected);
         }
     }
 
     #[test]
     fn parse_seq() {
-        let pegs = vec![Literal::from("abc").into(), Literal::from("def").into()];
+        let peg = Peg::Sequence(vec![
+            Literal::from("abc").into(),
+            Literal::from("def").into(),
+        ]);
         let parser = Parser::default();
         let mut scanner = StringScanner::from("abcdefabc");
         let theme = Theme::default();
 
         {
-            let cst = parser.parse_seq(&mut scanner, &pegs).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "abcdef");
         }
 
         {
-            let err = parser.parse_seq(&mut scanner, &pegs).err().unwrap();
+            let err = parser.parse_peg(&mut scanner, &peg).err().unwrap();
             let err_expected = ParseError::new(9, Peg::Literal(Literal::from("def")));
             assert_eq!(err, err_expected);
             assert_eq!(scanner.checkpoint().position(), 6);
@@ -287,23 +300,26 @@ mod tests {
 
     #[test]
     fn parse_choice() {
-        let pegs = vec![Literal::from("abc").into(), Literal::from("def").into()];
+        let peg = Peg::Choice(vec![
+            Literal::from("abc").into(),
+            Literal::from("def").into(),
+        ]);
         let parser = Parser::default();
         let mut scanner = StringScanner::from("abcdef");
         let theme = Theme::default();
 
         {
-            let cst = parser.parse_choice(&mut scanner, &pegs).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "abc");
         }
 
         {
-            let cst = parser.parse_choice(&mut scanner, &pegs).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "def");
         }
 
         {
-            let err = parser.parse_choice(&mut scanner, &pegs).err().unwrap();
+            let err = parser.parse_peg(&mut scanner, &peg).err().unwrap();
             let err_expectect = ParseError::new(6, Peg::Literal(Literal::from("abc")))
                 .union(ParseError::new(6, Peg::Literal(Literal::from("def"))));
             assert_eq!(err, err_expectect);
@@ -312,57 +328,51 @@ mod tests {
 
     #[test]
     fn parse_optional() {
-        let peg = Literal::from("a").into();
-        let rep = Repeat::optional();
+        let peg = Peg::from(Literal::from("a")).repetition(Repeat::optional());
         let parser = Parser::default();
         let mut scanner = StringScanner::from("ab");
         let theme = Theme::default();
 
         {
-            let cst = parser.parse_repetition(&mut scanner, &peg, &rep).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "a");
         }
         {
-            let cst = parser.parse_repetition(&mut scanner, &peg, &rep).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "");
         }
     }
 
     #[test]
     fn parse_zero_or_more() {
-        let peg = Literal::from("a").into();
-        let rep = Repeat::zero_or_more();
+        let peg = Peg::from(Literal::from("a")).repetition(Repeat::zero_or_more());
         let parser = Parser::default();
         let mut scanner = StringScanner::from("ab");
         let theme = Theme::default();
 
         {
-            let cst = parser.parse_repetition(&mut scanner, &peg, &rep).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "a");
         }
         {
-            let cst = parser.parse_repetition(&mut scanner, &peg, &rep).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "");
         }
     }
 
     #[test]
     fn parse_one_or_more() {
-        let peg = Literal::from("a").into();
-        let rep = Repeat::one_or_more();
+        let peg = Peg::from(Literal::from("a")).repetition(Repeat::one_or_more());
         let parser = Parser::default();
         let mut scanner = StringScanner::from("aaaab");
         let theme = Theme::default();
 
         {
-            let cst = parser.parse_repetition(&mut scanner, &peg, &rep).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "aaaa");
         }
         {
-            let err = parser
-                .parse_repetition(&mut scanner, &peg, &rep)
-                .err()
-                .unwrap();
+            let err = parser.parse_peg(&mut scanner, &peg).err().unwrap();
             let err_expected = ParseError::new(4, Peg::Literal(Literal::from("a")));
             assert_eq!(err, err_expected);
         }
@@ -370,21 +380,17 @@ mod tests {
 
     #[test]
     fn parse_exactly() {
-        let peg = Literal::from("a").into();
-        let rep = Repeat::exactly(3);
+        let peg = Peg::from(Literal::from("a")).repetition(Repeat::exactly(3));
         let parser = Parser::default();
         let mut scanner = StringScanner::from("aaaab");
         let theme = Theme::default();
 
         {
-            let cst = parser.parse_repetition(&mut scanner, &peg, &rep).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "aaa");
         }
         {
-            let err = parser
-                .parse_repetition(&mut scanner, &peg, &rep)
-                .err()
-                .unwrap();
+            let err = parser.parse_peg(&mut scanner, &peg).err().unwrap();
             let err_expected = ParseError::new(4, Peg::Literal(Literal::from("a")));
             assert_eq!(err, err_expected);
         }
@@ -392,21 +398,17 @@ mod tests {
 
     #[test]
     fn parse_between() {
-        let peg = Literal::from("a").into();
-        let rep = Repeat::between(2, 4);
+        let peg = Peg::from(Literal::from("a")).repetition(Repeat::between(2, 4));
         let parser = Parser::default();
         let mut scanner = StringScanner::from("aaaab");
         let theme = Theme::default();
 
         {
-            let cst = parser.parse_repetition(&mut scanner, &peg, &rep).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
             assert_eq!(cst.make_string(&theme), "aaaa");
         }
         {
-            let err = parser
-                .parse_repetition(&mut scanner, &peg, &rep)
-                .err()
-                .unwrap();
+            let err = parser.parse_peg(&mut scanner, &peg).err().unwrap();
             let err_expected = ParseError::new(4, Peg::Literal(Literal::from("a")));
             assert_eq!(err, err_expected);
         }
