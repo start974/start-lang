@@ -26,7 +26,7 @@ pub trait Scanner {
     }
 
     /// Returns true if input is fully consumed.
-    fn is_eof(&self) -> bool {
+    fn is_eoi(&self) -> bool {
         self.peek().is_none()
     }
 

@@ -3,7 +3,7 @@ use location::SetSpan as _;
 
 use crate::cst::{Cst, Sequence, Token};
 use crate::error::ParseError;
-use crate::peg::{Any, Class, Literal, Peg, RefRule, Repeat};
+use crate::peg::{Any, Class, Eoi, Literal, Peg, RefRule, Repeat};
 use crate::{Mark as _, Scanner};
 use std::collections::{BTreeMap, HashMap};
 
@@ -49,7 +49,17 @@ impl Parser {
             .unwrap_or_else(|| panic!("Rule \"{name}\" not found in parser rules"))
     }
 
-    /// parse any
+    /// parse end of input
+    fn parse_eoi(&self, scanner: &mut impl Scanner, eoi: &Eoi) -> Result<(), ParseError> {
+        if scanner.is_eoi() {
+            Ok(())
+        } else {
+            let start = scanner.checkpoint();
+            Err(error_expected(scanner, start, eoi.clone().into()))
+        }
+    }
+
+    /// parse any, e.g. `.`
     fn parse_any(&self, scanner: &mut impl Scanner, any: &Any) -> Result<Token, ParseError> {
         let start = scanner.checkpoint();
         scanner
@@ -177,6 +187,7 @@ impl Parser {
     /// parse a PEG rule, e.g. `expr = 'a' / 'b'`
     fn parse_peg(&self, scanner: &mut impl Scanner, peg: &Peg) -> Result<Cst, ParseError> {
         match peg {
+            Peg::Eoi(eoi) => self.parse_eoi(scanner, eoi).map(|()| Cst::nil()),
             Peg::Any(any) => self.parse_any(scanner, any).map(Cst::from),
             Peg::Literal(lit) => self.parse_literal(scanner, lit).map(Cst::from),
             Peg::Class(class) => self.parse_class(scanner, class).map(Cst::from),
@@ -212,6 +223,25 @@ mod tests {
     use crate::scanner::StringScanner;
 
     #[test]
+    fn parse_eoi() {
+        let parser = Parser::default();
+        let mut scanner = StringScanner::from("a");
+        let peg = Peg::eoi();
+        let theme = Theme::default();
+
+        {
+            let err = parser.parse_peg(&mut scanner, &peg).err().unwrap();
+            let err_expected = ParseError::new(0, peg.clone());
+            assert_eq!(err, err_expected);
+        }
+        {
+            parser.parse_peg(&mut scanner, &Peg::any()).unwrap();
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
+            assert_eq!(cst.make_string(&theme), "");
+        }
+    }
+
+    #[test]
     fn parse_any() {
         let parser = Parser::default();
         let mut scanner = StringScanner::from("ab");
@@ -227,9 +257,7 @@ mod tests {
             assert_eq!(cst.make_string(&theme), "b");
         }
         {
-            let result = parser.parse_peg(&mut scanner, &peg);
-            let err = result.err().unwrap();
-
+            let err = parser.parse_peg(&mut scanner, &peg).err().unwrap();
             let err_expected = ParseError::new(2, peg);
             assert_eq!(err, err_expected);
         }
