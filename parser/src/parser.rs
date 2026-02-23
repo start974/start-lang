@@ -3,7 +3,7 @@ use location::SetSpan as _;
 
 use crate::cst::{Cst, Sequence, Token};
 use crate::error::ParseError;
-use crate::peg::{Class, Literal, Peg, RefRule, Repeat};
+use crate::peg::{Any, Class, Literal, Peg, RefRule, Repeat};
 use crate::{Mark as _, Scanner};
 use std::collections::{BTreeMap, HashMap};
 
@@ -49,19 +49,15 @@ impl Parser {
             .unwrap_or_else(|| panic!("Rule \"{name}\" not found in parser rules"))
     }
 
-    ///// parse whitespace
-    /*    fn parse_ws(&self, scanner: &mut impl Scanner, ws: &WhiteSpace) -> ResultParse {*/
-    /*let start = scanner.checkpoint();*/
-    /*scanner*/
-    /*.consume_if(|c| c.is_whitespace())*/
-    /*.map(|c| {*/
-    /*Cst::from(CstKind::Token {*/
-    /*content: c.into(),*/
-    /*span: scanner.span_from(start),*/
-    /*})*/
-    /*})*/
-    /*.ok_or_else(|| error_expected(scanner, start, ws.clone().into()))*/
-    /*}*/
+    /// parse any
+    fn parse_any(&self, scanner: &mut impl Scanner, any: &Any) -> Result<Token, ParseError> {
+        let start = scanner.checkpoint();
+        scanner
+            .next()
+            .map(|c| c.to_string())
+            .map(|s| Token::from(s.as_str()).with_span(scanner.span_from(start)))
+            .ok_or_else(|| error_expected(scanner, start, any.clone().into()))
+    }
 
     /// parse a literal, e.g. `'a'`
     fn parse_literal(
@@ -127,7 +123,7 @@ impl Parser {
     fn parse_seq(&self, scanner: &mut impl Scanner, pegs: &[Peg]) -> Result<Sequence, ParseError> {
         let start = scanner.checkpoint();
         pegs.iter()
-            .try_fold(Sequence::new(), |acc, peg| {
+            .try_fold(Sequence::default(), |acc, peg| {
                 self.parse_peg(scanner, peg).map(|cst| acc.append(cst))
             })
             .inspect_err(|_| scanner.rollback(start))
@@ -162,7 +158,7 @@ impl Parser {
         // parse minimal repetition
         let cst = repeat
             .iter_min()
-            .try_fold(Sequence::new(), |acc, ()| {
+            .try_fold(Sequence::default(), |acc, ()| {
                 self.parse_peg(scanner, peg).map(|cst| acc.append(cst))
             })
             .inspect_err(|_| scanner.rollback(start))?;
@@ -181,6 +177,7 @@ impl Parser {
     /// parse a PEG rule, e.g. `expr = 'a' / 'b'`
     fn parse_peg(&self, scanner: &mut impl Scanner, peg: &Peg) -> Result<Cst, ParseError> {
         match peg {
+            Peg::Any(any) => self.parse_any(scanner, any).map(Cst::from),
             Peg::Literal(lit) => self.parse_literal(scanner, lit).map(Cst::from),
             Peg::Class(class) => self.parse_class(scanner, class).map(Cst::from),
             Peg::RefRule(rule_name) => self.parse_ref_rule(scanner, rule_name),
@@ -213,6 +210,30 @@ mod tests {
 
     use super::*;
     use crate::scanner::StringScanner;
+
+    #[test]
+    fn parse_any() {
+        let parser = Parser::default();
+        let mut scanner = StringScanner::from("ab");
+        let peg = Peg::any();
+        let theme = Theme::default();
+
+        {
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
+            assert_eq!(cst.make_string(&theme), "a");
+        }
+        {
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
+            assert_eq!(cst.make_string(&theme), "b");
+        }
+        {
+            let result = parser.parse_peg(&mut scanner, &peg);
+            let err = result.err().unwrap();
+
+            let err_expected = ParseError::new(2, peg);
+            assert_eq!(err, err_expected);
+        }
+    }
 
     #[test]
     fn parse_literal() {

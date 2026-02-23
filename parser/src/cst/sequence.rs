@@ -2,19 +2,12 @@ use super::Cst;
 use location::GetSpan;
 use pp::pretty::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Sequence {
     elements: Vec<Cst>,
 }
 
 impl Sequence {
-    /// make a new sequence
-    pub fn new() -> Self {
-        Sequence {
-            elements: Vec::new(),
-        }
-    }
-
     /// sequence is empty
     pub fn is_empty(&self) -> bool {
         self.elements.is_empty()
@@ -42,7 +35,7 @@ impl FromIterator<Cst> for Sequence {
     where
         I: IntoIterator<Item = Cst>,
     {
-        iter.into_iter().fold(Sequence::new(), Sequence::append)
+        iter.into_iter().fold(Sequence::default(), Sequence::append)
     }
 }
 

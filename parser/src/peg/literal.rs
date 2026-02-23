@@ -3,7 +3,10 @@ use pp::pretty::*;
 
 #[derive(Debug, Clone)]
 pub struct Literal {
+    /// The value of the literal.
     pub value: String,
+
+    /// The span of the literal in the source code.
     span: Span,
 }
 impl Literal {

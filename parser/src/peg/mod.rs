@@ -1,8 +1,10 @@
+mod any;
 mod class;
 mod literal;
 mod ref_rule;
 mod repeat;
 
+pub use any::*;
 pub use class::*;
 pub use literal::*;
 pub use ref_rule::*;
@@ -14,6 +16,9 @@ use pp::pretty::*;
 /// Represents a grammar syntax node for PEG parsing and Pratt operators.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Peg {
+    /// Any character, e.g. `.`.
+    Any(Any),
+
     /// A literal string, e.g. 'a', '1', or "abc".
     Literal(Literal),
 
@@ -49,6 +54,12 @@ pub enum Peg {
     PositiveLookahead(Box<Peg>),
 }
 
+impl From<Any> for Peg {
+    fn from(any: Any) -> Self {
+        Peg::Any(any)
+    }
+}
+
 impl From<Literal> for Peg {
     fn from(literal: Literal) -> Self {
         Peg::Literal(literal)
@@ -68,20 +79,21 @@ impl From<RefRule> for Peg {
 }
 
 impl Peg {
-    /// is atom
-    pub fn is_atom(&self) -> bool {
-        matches!(self, Peg::Literal(_) | Peg::Class(_) | Peg::RefRule(_))
-    }
-
     /// make repetition
     pub fn repetition(self, rep: Repeat) -> Self {
         Self::Repetition(Box::new(self), rep)
+    }
+
+    /// make any
+    pub fn any() -> Self {
+        Peg::Any(Any::default())
     }
 }
 
 impl GetSpan for Peg {
     fn span(&self) -> Span {
         match self {
+            Peg::Any(any) => any.span(),
             Peg::Literal(literal) => literal.span(),
             Peg::Class(class) => class.span(),
             Peg::RefRule(ref_rule) => ref_rule.span(),
@@ -103,7 +115,7 @@ impl PrettyPrecedence for Peg {
     /// 3 choice
     fn precedence(&self) -> usize {
         match self {
-            Peg::Literal(_) | Peg::Class(_) | Peg::RefRule(_) => 0,
+            Peg::Any(_) | Peg::Literal(_) | Peg::Class(_) | Peg::RefRule(_) => 0,
             Peg::Choice(_) => 1,
             Peg::Sequence(_) => 2,
             Peg::Repetition(_, _) => 3,
@@ -116,6 +128,7 @@ impl PrettyPrecedence for Peg {
 
         let doc = match self {
             // ---------- atoms (NEVER parenthesize) ----------
+            Peg::Any(a) => a.pretty(theme),
             Peg::Literal(l) => l.pretty(theme),
             Peg::Class(c) => c.pretty(theme),
             Peg::RefRule(r) => r.pretty(theme),
@@ -178,6 +191,7 @@ mod test {
     #[test]
     fn pretty() {
         let peg = Peg::Sequence(vec![
+            Peg::any(),
             Peg::Choice(vec![
                 Peg::Literal(Literal::from("a")),
                 Peg::Class(Class::from('0'..='9')),
@@ -194,7 +208,7 @@ mod test {
         let string = peg.make_string(&Theme::default());
         assert_eq!(
             string,
-            "(\"a\" / [0-9]) expr \"b\"? ! \"c\" & (\"d\" \"e\")"
+            ". (\"a\" / [0-9]) expr \"b\"? ! \"c\" & (\"d\" \"e\")"
         );
     }
 }
