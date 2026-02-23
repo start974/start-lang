@@ -92,9 +92,17 @@ impl Repeat {
         self.max
     }
 
-    pub fn with_opt_span(mut self, span: Span) -> Self {
-        self.span = span;
-        self
+    /// iter minal times
+    pub fn iter_min(&self) -> impl Iterator<Item = ()> {
+        (0..self.min).map(|_| ())
+    }
+
+    /// iter between min and max
+    pub fn iter_max(&self) -> impl Iterator<Item = ()> {
+        match self.max {
+            None => Box::new((self.min..).map(|_| ())),
+            Some(max) => Box::new((self.min..max).map(|_| ())) as Box<dyn Iterator<Item = ()>>,
+        }
     }
 }
 impl PartialEq for Repeat {
