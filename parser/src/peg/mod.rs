@@ -2,13 +2,11 @@ mod class;
 mod literal;
 mod ref_rule;
 mod repeat;
-mod whitespace;
 
 pub use class::*;
 pub use literal::*;
 pub use ref_rule::*;
 pub use repeat::*;
-pub use whitespace::*;
 
 use location::{GetSpan, Span};
 use pp::pretty::*;
@@ -16,11 +14,6 @@ use pp::pretty::*;
 /// Represents a grammar syntax node for PEG parsing and Pratt operators.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Peg {
-    /// whitespace and comments, e.g. space, tab, newline.
-    /// This is not a token, but a special syntax that
-    /// matches any amount of whitespace.
-    WS(WhiteSpace),
-
     /// A literal string, e.g. 'a', '1', or "abc".
     Literal(Literal),
 
@@ -56,12 +49,6 @@ pub enum Peg {
     PositiveLookahead(Box<Peg>),
 }
 
-impl From<WhiteSpace> for Peg {
-    fn from(ws: WhiteSpace) -> Self {
-        Peg::WS(ws)
-    }
-}
-
 impl From<Literal> for Peg {
     fn from(literal: Literal) -> Self {
         Peg::Literal(literal)
@@ -90,7 +77,6 @@ impl Peg {
 impl GetSpan for Peg {
     fn span(&self) -> Span {
         match self {
-            Peg::WS(ws) => ws.span(),
             Peg::Literal(literal) => literal.span(),
             Peg::Class(class) => class.span(),
             Peg::RefRule(ref_rule) => ref_rule.span(),
@@ -110,7 +96,7 @@ impl PrettyPrecedence for Peg {
     /// 3 choice
     fn precedence(&self) -> usize {
         match self {
-            Peg::WS(_) | Peg::Literal(_) | Peg::Class(_) | Peg::RefRule(_) => 0,
+            Peg::Literal(_) | Peg::Class(_) | Peg::RefRule(_) => 0,
             Peg::Choice(_) => 1,
             Peg::Seq(_) => 2,
             Peg::Repetition(_, _) => 3,
@@ -123,7 +109,6 @@ impl PrettyPrecedence for Peg {
 
         let doc = match self {
             // ---------- atoms (NEVER parenthesize) ----------
-            Peg::WS(ws) => ws.pretty(theme),
             Peg::Literal(l) => l.pretty(theme),
             Peg::Class(c) => c.pretty(theme),
             Peg::RefRule(r) => r.pretty(theme),
