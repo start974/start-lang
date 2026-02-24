@@ -15,7 +15,7 @@ pub enum Cst {
     /// - Literal
     /// - Class
     /// - Any
-    Token(token::Token),
+    Token(Token),
 
     /// named cst
     /// Used for paring
@@ -26,7 +26,7 @@ pub enum Cst {
     /// used for parsing:
     /// - Sequence
     /// - Repetition
-    Sequence(sequence::Sequence),
+    Sequence(Sequence),
 
     /// Nil
     /// - Used for parsing
