@@ -22,6 +22,11 @@ pub enum Cst {
     /// - RefRule
     Named(String, Box<Cst>),
 
+    /// optional cst
+    /// Used for parsing:
+    /// - Optional
+    Optional(Option<Box<Cst>>),
+
     /// sequence cst
     /// used for parsing:
     /// - Sequence
@@ -29,7 +34,7 @@ pub enum Cst {
     Sequence(Sequence),
 
     /// Nil
-    /// - Used for parsing
+    /// Used for parsing:
     /// - NegativeLookahead
     /// - PositiveLookahead
     Nil, //TODO: add template
@@ -44,6 +49,12 @@ impl From<Token> for Cst {
 impl From<Sequence> for Cst {
     fn from(sequence: Sequence) -> Self {
         Self::Sequence(sequence)
+    }
+}
+
+impl From<Option<Cst>> for Cst {
+    fn from(opt: Option<Cst>) -> Self {
+        Self::Optional(opt.map(Box::new))
     }
 }
 
@@ -64,6 +75,7 @@ impl GetSpan for Cst {
         match self {
             Cst::Token(token) => token.span(),
             Cst::Named(_, cst) => cst.span(),
+            Cst::Optional(opt) => opt.as_ref().map(|cst| cst.span()).unwrap_or_default(),
             Cst::Sequence(sequence) => sequence.span(),
             Cst::Nil => location::Span::default(),
         }
@@ -75,6 +87,10 @@ impl Pretty for Cst {
         match self {
             Cst::Token(token) => token.pretty(theme),
             Cst::Named(_, named) => named.pretty(theme),
+            Cst::Optional(opt) => opt
+                .as_ref()
+                .map(|cst| cst.pretty(theme))
+                .unwrap_or_else(|| Doc::nil()),
             Cst::Sequence(sequence) => sequence.pretty(theme),
             Cst::Nil => Doc::nil(),
         }

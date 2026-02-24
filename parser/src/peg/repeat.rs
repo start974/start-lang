@@ -9,20 +9,11 @@ pub struct Repeat {
     /// The maximum number of repetitions (None for unlimited).
     max: Option<usize>,
 
-    /// span of operator `?`, `*`, `+`or {n, m}
+    /// span of operator `*`, `+`or {n, m}
     span: Span,
 }
 
 impl Repeat {
-    /// optional repetition, e.g. `a?`
-    pub fn optional() -> Self {
-        Repeat {
-            min: 0,
-            max: Some(1),
-            span: Span::default(),
-        }
-    }
-
     /// zero or more repetition, e.g. `a*`
     pub fn zero_or_more() -> Self {
         Repeat {
@@ -133,7 +124,6 @@ impl SetSpan for Repeat {
 impl Pretty for Repeat {
     fn pretty(&self, _theme: &Theme) -> Doc<'_> {
         match (self.min, self.max) {
-            (0, Some(1)) => Doc::text("?"),
             (0, None) => Doc::text("*"),
             (1, None) => Doc::text("+"),
             (n, Some(m)) if n == m => Doc::text("{")
@@ -159,10 +149,6 @@ mod test {
     #[test]
     fn pretty() {
         let theme = Theme::default();
-        {
-            let optional = Repeat::optional();
-            assert_eq!(optional.make_string(&theme), "?");
-        }
         {
             let zero_or_more = Repeat::zero_or_more();
             assert_eq!(zero_or_more.make_string(&theme), "*");

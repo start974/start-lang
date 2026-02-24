@@ -39,9 +39,11 @@ pub enum Peg {
     /// Choice between multiple syntaxes, e.g. `a / b / c`.
     Choice(Vec<Peg>),
 
+    /// Optional syntax, e.g. `a?`.
+    Optional(Box<Peg>),
+
     /// Repetition with a specific range.
     /// Examples:
-    /// - a? optional
     /// - a* zero or more times
     /// - a+ one or more times
     /// - `a{3}`: exactly 3 times
@@ -96,6 +98,11 @@ impl Peg {
         Peg::Eoi(Eoi::default())
     }
 
+    /// make optional
+    pub fn optional(self) -> Self {
+        Self::Optional(Box::new(self))
+    }
+
     /// make repetition
     pub fn repetition(self, rep: Repeat) -> Self {
         Self::Repetition(Box::new(self), rep)
@@ -123,6 +130,7 @@ impl GetSpan for Peg {
             Peg::Sequence(pegs) | Peg::Choice(pegs) => {
                 Span::from_iter(pegs.iter().map(|peg| peg.span()))
             }
+            Peg::Optional(peg) => peg.span(),
             Peg::Repetition(peg, repeat) => peg.span().union(repeat.span()),
             Peg::Lookahead(peg, _) => peg.span(),
         }
@@ -141,7 +149,7 @@ impl PrettyPrecedence for Peg {
             Peg::Eoi(_) | Peg::Any(_) | Peg::Literal(_) | Peg::Class(_) | Peg::RefRule(_) => 0,
             Peg::Choice(_) => 1,
             Peg::Sequence(_) => 2,
-            Peg::Repetition(_, _) => 3,
+            Peg::Repetition(_, _) | Peg::Optional(_) => 3,
             Peg::Lookahead(_, _) => 3,
         }
     }
@@ -158,6 +166,7 @@ impl PrettyPrecedence for Peg {
             Peg::RefRule(r) => r.pretty(theme),
 
             // ---------- postfix ----------
+            Peg::Optional(peg) => peg.pretty_precedence(prec, theme).append(Doc::text("?")),
             Peg::Repetition(peg, rep) => {
                 peg.pretty_precedence(prec, theme).append(rep.pretty(theme))
             }
@@ -199,7 +208,7 @@ mod test {
             Literal::from("a").with_span(Span::new(1, 1)).into(),
             Class::from('0'..='9').into(),
             RefRule::from("expr").with_span(Span::new(6, 10)).into(),
-            Peg::from(Literal::from("b")).repetition(Repeat::optional()),
+            Peg::from(Literal::from("b")).repetition(Repeat::zero_or_more()),
             Peg::negative_lookahead(Literal::from("c").into()),
             Peg::positive_lookahead(Literal::from("d").with_span(Span::new(10, 11)).into()),
         ]);
@@ -215,8 +224,9 @@ mod test {
                 Class::from('0'..='9').into(),
             ]),
             RefRule::from("expr").into(),
-            Peg::from(Literal::from("b")).repetition(Repeat::optional()),
+            Peg::from(Literal::from("b")).repetition(Repeat::zero_or_more()),
             Peg::negative_lookahead(Literal::from("c").into()),
+            Peg::from(Literal::from("d")).optional(),
             Peg::positive_lookahead(Peg::Sequence(vec![
                 Literal::from("d").with_span(Span::new(10, 11)).into(),
                 Literal::from("e").into(),
@@ -227,7 +237,7 @@ mod test {
         let string = peg.make_string(&Theme::default());
         assert_eq!(
             string,
-            ". (\"a\" / [0-9]) expr \"b\"? ! \"c\" & (\"d\" \"e\") $"
+            ". (\"a\" / [0-9]) expr \"b\"* ! \"c\" \"d\"? & (\"d\" \"e\") $"
         );
     }
 }

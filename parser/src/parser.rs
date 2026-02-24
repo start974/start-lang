@@ -1,10 +1,10 @@
 use errors::Error;
 use location::SetSpan as _;
 
-use crate::cst::{Cst, Sequence, Token};
+use crate::cst::*;
 use crate::error::ParseError;
-use crate::peg::{Any, Class, Eoi, Literal, Peg, RefRule, Repeat};
-use crate::{Mark as _, Scanner};
+use crate::peg::*;
+use crate::scanner::{Mark as _, Scanner};
 use std::collections::{BTreeMap, HashMap};
 
 type RuleGroup = BTreeMap<u8, Vec<Peg>>;
@@ -157,6 +157,11 @@ impl Parser {
         acc_error.map(Err).expect("Rule or cannot be empty")
     }
 
+    /// parse optional PEG rule, e.g. `a?`
+    fn parse_optional(&self, scanner: &mut impl Scanner, peg: &Peg) -> Option<Cst> {
+        self.parse_peg(scanner, peg).ok()
+    }
+
     /// parse repetition of a PEG rule
     fn parse_repetition(
         &self,
@@ -174,14 +179,13 @@ impl Parser {
             .inspect_err(|_| scanner.rollback(start))?;
 
         // parse maximal repetion
-        let cst = repeat
+        repeat
             .iter_max()
-            .try_fold(cst, |acc, ()| match self.parse_peg(scanner, peg) {
-                Ok(cst) => Ok(acc.append(cst)),
-                Err(_) => Err(acc),
+            .try_fold(cst, |acc, ()| match self.parse_optional(scanner, peg) {
+                Some(cst) => Ok(acc.append(cst)),
+                None => Err(acc),
             })
-            .unwrap_or_else(|cst| cst);
-        Ok(cst)
+            .or_else(|cst| Ok(cst))
     }
 
     /// parse lookead, e.g. `&a` `!b`
@@ -219,6 +223,7 @@ impl Parser {
             Peg::RefRule(rule_name) => self.parse_ref_rule(scanner, rule_name),
             Peg::Sequence(pegs) => self.parse_seq(scanner, pegs).map(Cst::from),
             Peg::Choice(pegs) => self.parse_choice(scanner, pegs),
+            Peg::Optional(peg) => Ok(self.parse_optional(scanner, peg).into()),
             Peg::Repetition(peg, repeat) => {
                 self.parse_repetition(scanner, peg, repeat).map(Cst::from)
             }
@@ -404,7 +409,7 @@ mod tests {
 
     #[test]
     fn parse_optional() {
-        let peg = Peg::from(Literal::from("a")).repetition(Repeat::optional());
+        let peg = Peg::from(Literal::from("a")).optional();
         let parser = Parser::default();
         let mut scanner = StringScanner::from("ab");
         let theme = Theme::default();
@@ -492,7 +497,7 @@ mod tests {
 
     #[test]
     fn parse_positive_lookahead() {
-        let lookead_lit : Peg = Literal::from("b").into();
+        let lookead_lit: Peg = Literal::from("b").into();
         let peg = Peg::Sequence(vec![
             Peg::any(),
             Peg::positive_lookahead(lookead_lit.clone()),
