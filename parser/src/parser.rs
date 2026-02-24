@@ -184,6 +184,31 @@ impl Parser {
         Ok(cst)
     }
 
+    /// parse lookead, e.g. `&a` `!b`
+    fn parse_lookahead(
+        &self,
+        scanner: &mut impl Scanner,
+        peg: &Peg,
+        positive: bool,
+    ) -> Result<(), ParseError> {
+        let start = scanner.checkpoint();
+        match (self.parse_peg(scanner, peg), positive) {
+            (Ok(_), true) | (Err(_), false) => {
+                scanner.rollback(start);
+                Ok(())
+            }
+            (Err(e), true) => {
+                scanner.rollback(start);
+                Err(e)
+            }
+            (Ok(_), false) => Err(error_expected(
+                scanner,
+                start,
+                Peg::negative_lookahead(peg.clone()),
+            )),
+        }
+    }
+
     /// parse a PEG rule, e.g. `expr = 'a' / 'b'`
     fn parse_peg(&self, scanner: &mut impl Scanner, peg: &Peg) -> Result<Cst, ParseError> {
         match peg {
@@ -197,7 +222,9 @@ impl Parser {
             Peg::Repetition(peg, repeat) => {
                 self.parse_repetition(scanner, peg, repeat).map(Cst::from)
             }
-            _ => unimplemented!("Not implemented yet"),
+            Peg::Lookahead(peg, positive) => self
+                .parse_lookahead(scanner, peg, *positive)
+                .map(|()| Cst::nil()),
         }
     }
 
@@ -460,6 +487,51 @@ mod tests {
             let err = parser.parse_peg(&mut scanner, &peg).err().unwrap();
             let err_expected = ParseError::new(4, Peg::Literal(Literal::from("a")));
             assert_eq!(err, err_expected);
+        }
+    }
+
+    #[test]
+    fn parse_positive_lookahead() {
+        let lookead_lit : Peg = Literal::from("b").into();
+        let peg = Peg::Sequence(vec![
+            Peg::any(),
+            Peg::positive_lookahead(lookead_lit.clone()),
+        ]);
+        let parser = Parser::default();
+        let mut scanner = StringScanner::from("abbc");
+        let theme = Theme::default();
+
+        {
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
+            assert_eq!(cst.make_string(&theme), "a");
+        }
+        {
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
+            assert_eq!(cst.make_string(&theme), "b");
+        }
+        {
+            let err = parser.parse_peg(&mut scanner, &peg).err().unwrap();
+            let err_expected = ParseError::new(3, lookead_lit.clone());
+            assert_eq!(err_expected, err);
+        }
+    }
+
+    #[test]
+    fn parse_negative_lookahead() {
+        let lookead = Peg::negative_lookahead(Literal::from("b").into());
+        let peg = Peg::Sequence(vec![Peg::any(), lookead.clone()]);
+        let parser = Parser::default();
+        let mut scanner = StringScanner::from("aabc");
+        let theme = Theme::default();
+
+        {
+            let cst = parser.parse_peg(&mut scanner, &peg).unwrap();
+            assert_eq!(cst.make_string(&theme), "a");
+        }
+        {
+            let err = parser.parse_peg(&mut scanner, &peg).err().unwrap();
+            let err_expected = ParseError::new(2, lookead.clone());
+            assert_eq!(err_expected, err);
         }
     }
 }
