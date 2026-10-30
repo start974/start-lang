@@ -1,5 +1,7 @@
 # Semantic
 
+[← Home](../Home.md)
+
 ```
 ---------------- CONSTANT
   Δ ⊢ c ⟶ V(c)

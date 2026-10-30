@@ -3,9 +3,11 @@
 
 Fonctional language with proover assistant.
 
-- Language grammar in BNF style is in [Grammar.md](./doc/Grammar.md)
-- Language typing rules is in [Typing.md](./doc/Typing.md)
-- Language semantic rules is documented [Theme.md](./doc/Semantic.md)
+Documentation is a wiki in [`doc/`](./doc/Home.md):
+
+- [Guide](./doc/Home.md#guide): getting started, language tour, command line
+- [Reference](./doc/Home.md#reference): [grammar](./doc/reference/grammar.md), [typing](./doc/reference/typing.md), [semantics](./doc/reference/semantics.md)
+- [Roadmap](./doc/roadmap/roadmap.md) and [changelog](./doc/changelog/README.md)
 
 ## Included
 - cli

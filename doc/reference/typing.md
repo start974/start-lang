@@ -1,5 +1,7 @@
 # Typing
 
+[← Home](../Home.md)
+
 ```
 ------------- Const-N
   Γ ⊢ n : N

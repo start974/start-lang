@@ -1,3 +1,25 @@
+# Development
+
+[← Home](../Home.md)
+
+## Branches
+
+One branch per pre-release or release, named `v<version>--<name>`:
+
+```
+v0.2.0-beta.1--compilation-phases
+v0.2.0-beta.2--cleanup
+v0.2.0-rc.1--release-candidate
+v0.2.1--fix-lsp-hover
+```
+
+- `<version>` is the exact version the branch delivers (see
+  [versioning](../roadmap/roadmap.md#versioning)); the `--` keeps the branch
+  distinct from the git tag `v<version>`.
+- `<name>` is short, lowercase, words joined by `-`.
+- The task list of the branch is its `TODO.md`, removed before merging into
+  `main`.
+
 ## Test
 run test with *nextest*
 ```sh
