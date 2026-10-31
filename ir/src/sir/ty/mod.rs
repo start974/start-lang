@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::sir::{Node, Variable};
-use location::{Span, Spanned};
 
 pub mod definition;
 

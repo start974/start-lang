@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::pir::{Variable, operator, ty};
-use location::{Span, Spanned};
 use pp::pretty::*;
 
 #[derive(Debug)]

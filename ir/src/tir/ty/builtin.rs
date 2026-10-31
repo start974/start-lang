@@ -1,5 +1,5 @@
 use crate::common::BuiltinType;
-use location::{Span, Spanned, SpannedSet};
+use crate::location::{Span, Spanned, SpannedSet};
 use pp::pretty::*;
 
 // ==========================================================================

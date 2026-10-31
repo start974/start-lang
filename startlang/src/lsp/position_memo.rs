@@ -1,4 +1,4 @@
-use location::Span;
+use ir::location::Span;
 use tower_lsp::lsp_types::{Position, Range};
 
 #[derive(Debug)]

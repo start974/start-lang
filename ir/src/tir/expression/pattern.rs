@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned, SpannedSet};
 use crate::tir::Identifier;
-use location::{Span, Spanned, SpannedSet};
 use pp::pretty::*;
 use std::rc::Rc;
 

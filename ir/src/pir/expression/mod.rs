@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::pir::{Constant, Type, Variable, operator};
-use location::{Span, Spanned};
 use parenthesis::Paren;
 use pp::pretty::*;
 

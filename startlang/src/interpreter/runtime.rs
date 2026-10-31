@@ -4,8 +4,8 @@ use ir::{lir, tir};
 /// commands
 #[derive(Debug, Default)]
 pub struct Runtime {
-    codegen: codegen::Codegen,
-    vm: vm::Env,
+    codegen: driver::codegen::Codegen,
+    vm: driver::vm::Env,
 }
 
 impl Runtime {
@@ -29,7 +29,7 @@ impl Runtime {
     ///
     /// # Panics
     /// same as `define`
-    pub fn eval(&mut self, expr: &tir::Expression) -> (lir::Expression, vm::Value) {
+    pub fn eval(&mut self, expr: &tir::Expression) -> (lir::Expression, driver::vm::Value) {
         let expr = self
             .codegen
             .expression(expr)

@@ -1,6 +1,6 @@
+use crate::location::{Span, Spanned, SpannedSet};
 use crate::tir::ty::Builtin;
 use crate::tir::{Type, Typed, TypedMut};
-use location::{Span, Spanned, SpannedSet};
 use num_bigint::BigUint;
 use pp::pretty::*;
 

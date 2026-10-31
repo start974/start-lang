@@ -1,9 +1,0 @@
-[package]
-name = "typing"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-ir = { path = "../ir" }
-errors = { path = "../errors" }
-location = { path = "../location" }

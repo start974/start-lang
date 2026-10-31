@@ -4,8 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-errors = { path = "../errors" }
-location = { path = "../location" }
 pp = { path = "../pp" }
 
+ariadne = { version = "0.6.0" }
 num-bigint = "0.4.6"

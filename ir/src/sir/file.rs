@@ -1,5 +1,5 @@
+use crate::location::{SourceId, Span};
 use crate::sir::{Command, DefId, DefKind, DefTable, Documentation, Variable};
-use location::{SourceId, Span};
 
 // ============================================================================
 // File
@@ -71,8 +71,8 @@ impl FromIterator<Command> for File {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::location::{Span, Spanned as _};
     use crate::sir::{CommandKind, DefKind, Node};
-    use location::{Span, Spanned as _};
 
     #[test]
     fn file_keeps_command_order() {

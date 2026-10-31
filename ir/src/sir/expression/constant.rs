@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::sir::Node;
-use location::{Span, Spanned};
 use num_bigint::BigUint;
 
 // ============================================================================

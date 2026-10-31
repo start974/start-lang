@@ -1,5 +1,5 @@
+use crate::location::{Location, SourceId, Span, Spanned};
 use crate::sir::{Documentation, Variable};
-use location::{Location, SourceId, Span, Spanned};
 use std::collections::HashMap;
 use std::fmt;
 

@@ -2,9 +2,9 @@ use super::Runtime;
 use super::flag::{DebugFlag, Flag};
 use crate::error;
 use errors::Error;
+use ir::location::{SourceId, Spanned};
 use ir::tir::Typed as _;
 use ir::{pir, tir};
-use location::{SourceId, Spanned};
 use pp::pretty::Pretty;
 
 /// documentation comment written before a keyword
@@ -34,7 +34,7 @@ pub trait Interpreter {
     fn get_offset_source(&self, offset: usize) -> usize;
 
     /// get mutable reference on typer
-    fn mut_typer(&mut self) -> &mut typing::Typer;
+    fn mut_typer(&mut self) -> &mut driver::typing::Typer;
 
     /// get runtime: codegen and vm
     fn mut_runtime(&mut self) -> &mut Runtime;
@@ -180,8 +180,8 @@ pub trait Interpreter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Option<lexer::MetaTokenStream> {
-        match lexer::lex(content, offset_source) {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Option<ir::token::MetaTokenStream> {
+        match driver::lexer::lex(content, offset_source) {
             Ok(tokens) => Some(tokens),
             Err(errs) => {
                 for err in errs {
@@ -193,10 +193,10 @@ pub trait Interpreter {
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: lexer::MetaTokenStream) -> Option<pir::Command> {
-        match parser::parse(tokens) {
-            Ok(parser::CommandOrEnd::Command(cmd)) => Some(*cmd),
-            Ok(parser::CommandOrEnd::End(_)) => None,
+    fn parse(&mut self, tokens: ir::token::MetaTokenStream) -> Option<pir::Command> {
+        match driver::parser::parse(tokens) {
+            Ok(driver::parser::CommandOrEnd::Command(cmd)) => Some(*cmd),
+            Ok(driver::parser::CommandOrEnd::End(_)) => None,
             Err(errs) => {
                 for err in errs {
                     self.fail(err);

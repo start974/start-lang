@@ -1,4 +1,4 @@
-use crate::{SourceId, Span};
+use crate::location::{SourceId, Span};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Location<'a> {
@@ -89,7 +89,7 @@ impl<'a> ariadne::Span for Location<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::SourceId;
+    use crate::location::SourceId;
 
     struct TestLocated<'a>(Location<'a>);
     impl<'a> Default for TestLocated<'a> {

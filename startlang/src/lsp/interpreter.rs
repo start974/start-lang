@@ -6,13 +6,13 @@ use crate::{
     },
     //lsp::document::SymbolInfo,
 };
+use driver::typing::Typer;
 use errors::Error;
+use ir::location::{SourceId, Spanned};
 use ir::tir;
-use location::{SourceId, Spanned};
 use pp::{MessageTheme, Pretty, Theme};
 use std::path::PathBuf;
 use tower_lsp::lsp_types::{Diagnostic, Url};
-use typing::Typer;
 
 #[derive(Debug)]
 pub struct Interpreter {

@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::pir::{Meta, Variable};
-use location::{Span, Spanned};
 use pp::pretty::*;
 
 pub mod definition;

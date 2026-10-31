@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::pir::Comment;
-use location::{Span, Spanned};
 use pp::pretty::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

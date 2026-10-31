@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::sir::{DefId, Expression, Pattern, Type};
-use location::{Span, Spanned};
 
 // ============================================================================
 // Expression Definition

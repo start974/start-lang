@@ -1,10 +1,10 @@
 [package]
 name = "pp"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-pretty = "0.12.5"
-colored = "3.0.0"
 ariadne = { version = "0.6.0", features = ["auto-color"] }
+colored = "3.0.0"
 num-bigint = "0.4.6"
+pretty = "0.12.5"

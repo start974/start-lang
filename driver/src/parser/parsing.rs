@@ -1,9 +1,9 @@
 use chumsky::input::ValueInput;
 use chumsky::prelude::*;
 use ir::pir::*;
-use lexer::token::{MetaToken, Operator, Token};
+use ir::token::{MetaToken, Operator, Token};
 
-use crate::CommandOrEnd;
+use crate::parser::CommandOrEnd;
 use ir::pir;
 
 pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, MetaToken>>;

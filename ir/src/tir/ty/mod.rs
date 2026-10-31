@@ -1,8 +1,7 @@
-use crate::tir::error;
+use crate::location::{Span, Spanned, SpannedSet};
+use crate::tir::error::Error;
 pub use alias::Alias;
 pub use builtin::Builtin;
-use errors::Error;
-use location::{Span, Spanned, SpannedSet};
 use pp::pretty::*;
 
 pub mod alias;
@@ -80,7 +79,11 @@ pub trait Typed {
             *self.ty_mut() = ty;
             Ok(self)
         } else {
-            Err(error::unexpected_type(&ty, self.ty(), ty.span()))
+            Err(Error::UnexpectedType {
+                found: Box::new(self.ty().clone()),
+                span: ty.span(),
+                expected: Box::new(ty),
+            })
         }
     }
 }

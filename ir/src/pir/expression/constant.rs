@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::pir::Meta;
-use location::{Span, Spanned};
 use num_bigint::BigUint;
 use pp::pretty::*;
 

@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::sir::{DefId, Variable, ty};
-use location::{Span, Spanned};
 
 // ============================================================================
 // Type Definition

@@ -1,5 +1,5 @@
 use ariadne::Cache;
-use location::SourceId;
+use ir::location::SourceId;
 use pp::theme::Theme;
 
 use crate::Error;
@@ -83,7 +83,7 @@ impl IntoIterator for Errors {
 mod tests {
     use super::*;
     use crate::{Error, Message};
-    use location::Span;
+    use ir::location::Span;
 
     #[test]
     fn singleton() {

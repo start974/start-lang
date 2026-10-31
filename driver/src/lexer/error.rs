@@ -1,6 +1,6 @@
-use crate::ErrorChumsky;
+use crate::lexer::ErrorChumsky;
 use errors::{Error, Message};
-use location::Span;
+use ir::location::Span;
 
 pub fn error_lexing<'src>(err: &ErrorChumsky<'src>, offset: usize) -> Error {
     Error::new(201, Message::text("Lexing error"))

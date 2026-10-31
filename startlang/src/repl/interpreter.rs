@@ -6,12 +6,12 @@ use crate::interpreter::Runtime;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use ariadne::Source;
+use driver::typing::Typer;
 use errors::Error;
+use ir::location::SourceId;
 use ir::tir;
-use location::SourceId;
 use pp::pretty::Pretty;
 use pp::theme::Theme;
-use typing::Typer;
 
 pub struct Interpreter {
     all_content: String,

@@ -1,6 +1,8 @@
-use chumsky::span::SimpleSpan;
-use ir::pir::Meta;
-use location::{Span, Spanned};
+//! Tokens: output of the lexer, input of the parser; each token keeps the
+//! comments written before it (`Meta`).
+
+use crate::location::{Span, Spanned};
+use crate::pir::Meta;
 use num_bigint::BigUint;
 use pp::pretty::*;
 
@@ -92,22 +94,16 @@ pub struct MetaTokenStream {
 }
 
 impl MetaTokenStream {
-    pub fn last_simple_span(&self) -> SimpleSpan {
-        use location::Spanned;
-        let span = if let Some(token) = self.tokens.last() {
-            token.span()
-        } else {
-            Span::new(0, 0)
-        };
-        SimpleSpan {
-            start: span.start(),
-            end: span.end(),
-            context: (),
-        }
+    /// span of the last token, empty at 0 if there is none
+    pub fn last_span(&self) -> Span {
+        self.tokens
+            .last()
+            .map_or(Span::new(0, 0), |token| token.span())
     }
 
+    /// end of the last token
     pub fn last_offset(&self) -> usize {
-        self.last_simple_span().end
+        self.last_span().end()
     }
 }
 

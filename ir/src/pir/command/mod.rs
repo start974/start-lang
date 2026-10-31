@@ -1,5 +1,5 @@
 use super::{Expression, ExpressionDefinition, TypeDefinition, Variable, operator};
-use location::{Span, Spanned};
+use crate::location::{Span, Spanned};
 use pp::pretty::*;
 
 pub mod keyword;

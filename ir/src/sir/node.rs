@@ -1,4 +1,4 @@
-use location::{Span, Spanned};
+use crate::location::{Span, Spanned};
 
 // ============================================================================
 // Node
