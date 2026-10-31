@@ -37,8 +37,14 @@ Each step below ends with the tests passing.
   - [x] one node per command (`Definition`, `TypeDefinition`, `Eval`, `TypeOf`,
         `Help`, `Set`, `Unset`), no keyword variants (`Def` / `Definition`,
         `Eval` / `$`, …);
-  - [x] documentation as text on the definition, no comments, no `Meta`;
-  - [x] `sir::File`: the list of commands.
+  - [x] documentation as text, no comments, no `Meta`;
+  - [x] a `DefId` on every expression and type definition, given by
+        `lowering` in source order (a redefinition gets a new one); uses keep
+        their name until name resolution;
+  - [x] `sir::File`: the list of commands and a `DefTable` (`DefId` → name,
+        kind, place, documentation; name → its `DefId`s in source order); the
+        place is the `SourceId` of the table, the span of the name and the
+        span of the whole definition (`location(id)`, `name_location(id)`).
 - [ ] New crate `lowering`: `pir::File` → `sir::File`, no errors (`set` options
       stay names, checked later).
 - [x] `ir::tir`: stop re-exporting `pir::Documentation` (`ir/src/tir/mod.rs`),
