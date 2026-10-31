@@ -45,8 +45,9 @@ Each step below ends with the tests passing.
         kind, place, documentation; name → its `DefId`s in source order); the
         place is the `SourceId` of the table, the span of the name and the
         span of the whole definition (`location(id)`, `name_location(id)`).
-- [ ] New crate `lowering`: `pir::File` → `sir::File`, no errors (`set` options
-      stay names, checked later).
+- [x] New crate `lowering`: `pir::File` → `sir::File`, no errors (`set` options
+      stay names, checked later); a `Lowering` keeps the `sir::File` being
+      built, so the command-by-command loop can lower one command at a time.
 - [x] `ir::tir`: stop re-exporting `pir::Documentation` (`ir/src/tir/mod.rs`),
       use the documentation of `sir`; `ir::tir` no longer uses `ir::pir`.
 - [ ] `typing`: take `sir` instead of `cst` (`expression`, `ty`, `pattern`,
