@@ -8,7 +8,7 @@ cc="*"
 glob = "0.3.3"
 
 [dependencies]
-driver = { path = "../driver" }
+pass = { path = "../pass" }
 errors = { path = "../errors" }
 ir = { path = "../ir" }
 pp = { path = "../pp" }

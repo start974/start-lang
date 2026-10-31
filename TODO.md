@@ -51,13 +51,13 @@ Each step below ends with the tests passing.
 - [x] `ir::tir`: stop re-exporting `pir::Documentation` (`ir/src/tir/mod.rs`),
       use the documentation of `sir`; `ir::tir` no longer uses `ir::pir`.
 - [x] `typing`: take `sir` instead of `cst` (`expression`, `ty`, `pattern`,
-      `definition`, `type_definition`, `help` in `driver/src/typing.rs`); `typing`
+      `definition`, `type_definition`, `help` in `pass/src/typing.rs`); `typing`
       no longer uses `ir::pir`.
 - [x] Interim: the current loop calls `lowering` between parse and type.
 
 ## 2. Lexer on the whole source
 
-- [x] `driver/src/lexer/lexing.rs`: remove the "until `.`" rule (`token_dot` +
+- [x] `pass/src/lexer/lexing.rs`: remove the "until `.`" rule (`token_dot` +
       `token_end`); the `.` becomes an ordinary operator token, the stream
       ends with `EndOfInput`.
 - [x] Recovery: on a bad character, record the error and continue; every
@@ -90,11 +90,11 @@ Each step below ends with the tests passing.
 
 ## 5. One pass after the other
 
-- [x] Crate `driver` with every pass as a module (`lexer`, `parser`,
+- [x] Crate `pass` (first named `driver`) with every pass as a module (`lexer`, `parser`,
       `lowering`, `typing`, `codegen`, `vm`; the crates merged into it) and
       the tokens in `ir::token`, `location` in `ir::location`; `pp` and
       `errors` stay crates (`ir` → `pp`, `errors` → `ir`): `tir` errors are
-      data, their diagnostics are made in `driver::typing`.
+      data, their diagnostics are made in `pass::typing`.
 - [x] No driver object and no events: each pass is a type built by its
       builder (`Lexer::builder()…build()`) with one entry point, `run`, taking
       a whole file and returning
@@ -107,7 +107,7 @@ Each step below ends with the tests passing.
       on the tokens around a lexing error, typing on the commands that
       parsed); for now only the errors of the first failing pass are shown.
 - [ ] `ir::errors`: sort errors by position (`Errors::sorted`) before printing.
-- [x] Stdlib loaded **once** (`driver::stdlib::Stdlib::load`): the state of
+- [x] Stdlib loaded **once** (`pass::stdlib::Stdlib::load`): the state of
       the typer, codegen and vm the tools start from.
 - [x] Tools:
   - [x] `startlang run`: every pass, exit code (`startlang/src/run.rs`);
@@ -142,7 +142,7 @@ Each step below ends with the tests passing.
 - [ ] `doc/design/pipeline.md`: update if the implementation differs.
 - [ ] `doc/guide/cli.md`: `--debug`.
 - [ ] `doc/contributing/development.md`: workspace layout (`ir` with `token`,
-      `pir`, `sir`, `tir`, `lir`; `driver` with every pass).
+      `pir`, `sir`, `tir`, `lir`; `pass` with every pass).
 - [ ] Section beta.1 of [`doc/changelog/v0.2.0.md`](doc/changelog/v0.2.0.md#v020-beta1--compilation-phases)
       completed, date set.
 - [ ] Roadmap: tick beta.1, *Current version* → `v0.2.0-beta.1`; crate

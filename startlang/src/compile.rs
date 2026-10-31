@@ -1,14 +1,14 @@
 //! The passes one after the other on a whole text, for the tools that run it
 //! (`run`, REPL, LSP); the formatter only lexes and parses.
 
-use driver::lexer::Lexer;
-use driver::lowering::Lowering;
-use driver::parser::Parser;
-use driver::stdlib::Stdlib;
-use driver::vm::Value;
 use errors::Errors;
 use ir::location::{SourceId, Span, Spanned};
 use ir::tir;
+use pass::lexer::Lexer;
+use pass::lowering::Lowering;
+use pass::parser::Parser;
+use pass::stdlib::Stdlib;
+use pass::vm::Value;
 
 /// lex, parse, lower, type, generate and run `text`, whose first byte is at
 /// `offset` in `source`; `state` keeps the definitions (stdlib, previous REPL

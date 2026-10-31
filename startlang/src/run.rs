@@ -3,8 +3,8 @@
 use crate::compile::compile;
 use crate::error;
 use crate::printer::Printer;
-use driver::stdlib::Stdlib;
 use ir::location::SourceId;
+use pass::stdlib::Stdlib;
 use std::path::Path;
 
 /// run the file at `path`; returns the exit code: the code of the only

@@ -4,9 +4,9 @@
 
 use super::{backend::Backend, position_memo::PositionMemo};
 use crate::compile::{Output, compile};
-use driver::stdlib::Stdlib;
 use errors::Error;
 use ir::location::{SourceId, Span, Spanned};
+use pass::stdlib::Stdlib;
 use pp::{MessageTheme, Pretty, Theme};
 use tower_lsp::lsp_types::{
     Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, Location, NumberOrString, Url,

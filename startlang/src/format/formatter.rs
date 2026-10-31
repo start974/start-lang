@@ -1,11 +1,11 @@
 use super::{Mode, diff::print_diff};
 use crate::error;
 use ariadne::Source;
-use driver::lexer::Lexer;
-use driver::parser::Parser;
 use errors::Error;
 use ir::location::SourceId;
 use ir::pir;
+use pass::lexer::Lexer;
+use pass::parser::Parser;
 use pp::pretty::Pretty as _;
 use pp::theme::Theme;
 use std::path::{Path, PathBuf};
