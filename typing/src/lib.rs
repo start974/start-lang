@@ -22,13 +22,7 @@ impl Typer {
         match constant {
             pir::Constant::Number(n) => tir::Constant::nat(n.value.clone()),
             pir::Constant::Character(c) => tir::Constant::character(c.value),
-            pir::Constant::Builtin(pir::Meta { value: builtin, .. }) => {
-                use pir::expression::constant::BuiltinT;
-                match builtin {
-                    BuiltinT::True => tir::Constant::boolean(true),
-                    BuiltinT::False => tir::Constant::boolean(false),
-                }
-            }
+            pir::Constant::Builtin(builtin) => tir::Constant::boolean(builtin.value.value()),
         }
         .with_spanned(constant)
     }
@@ -62,15 +56,7 @@ impl Typer {
     /// convert type
     pub fn ty(&mut self, ty: &pir::Type) -> Result<tir::Type> {
         match ty {
-            pir::Type::Builtin(pir::Meta { value: builtin, .. }) => {
-                use pir::ty::BuiltinT;
-                let builtin = match builtin {
-                    BuiltinT::Nat => tir::ty::Builtin::nat(),
-                    BuiltinT::Bool => tir::ty::Builtin::bool(),
-                    BuiltinT::Char => tir::ty::Builtin::char(),
-                };
-                Ok(tir::Type::Builtin(builtin))
-            }
+            pir::Type::Builtin(builtin) => Ok(tir::Type::Builtin(builtin.value.into())),
             pir::Type::Variable(ty_var) => {
                 let span = ty_var.span();
                 let id = self.id_builder.get(ty_var.name());

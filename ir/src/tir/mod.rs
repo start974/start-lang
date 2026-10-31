@@ -9,7 +9,7 @@ pub mod expression;
 pub mod identifier;
 pub mod ty;
 
-pub use crate::sir::Documentation;
+pub use crate::common::Documentation;
 pub use env::Env;
 pub use env::Help;
 pub use expression::Expression;

@@ -16,21 +16,8 @@ pub type Character = Meta<char>;
 // ============================================================================
 // Builtin
 // ============================================================================
-#[derive(Debug, Clone)]
-pub enum BuiltinT {
-    True,
-    False,
-}
-
-impl Pretty for BuiltinT {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        match self {
-            BuiltinT::True => theme.expr_var(&"__Constant_true__"),
-            BuiltinT::False => theme.expr_var(&"__Constant_false__"),
-        }
-    }
-}
-
+/// payload of a builtin constant token, shared with the other IRs
+pub use crate::common::BuiltinConstant as BuiltinT;
 pub type Builtin = Meta<BuiltinT>;
 
 // ============================================================================

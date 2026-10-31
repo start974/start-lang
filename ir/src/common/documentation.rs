@@ -1,5 +1,7 @@
 use pp::pretty::*;
 
+/// documentation of a definition, as text (the lines of its `(** … *)`
+/// comment)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Documentation {
     /// documentation lines

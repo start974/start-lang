@@ -1,43 +1,21 @@
+use crate::common::BuiltinType;
 use location::{Span, Spanned, SpannedSet};
 use pp::pretty::*;
-
-// ==========================================================================
-// Builtin Kind
-// ==========================================================================
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Kind {
-    /// kind of natural numbers
-    Nat,
-    /// kind of booleans
-    Bool,
-    /// kind of characters
-    Char,
-}
-
-impl Pretty for Kind {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        match self {
-            Kind::Nat => theme.ty_var(&"ℕ"),
-            Kind::Bool => theme.ty_var(&"𝔹"),
-            Kind::Char => theme.ty_var(&"Char"),
-        }
-    }
-}
 
 // ==========================================================================
 // Builtin Ty
 // ==========================================================================
 #[derive(Debug, Clone)]
 pub struct Builtin {
-    /// kind of builtin type
-    kind: Kind,
+    /// which builtin type
+    kind: BuiltinType,
     /// span of builtin type
     span: Span,
 }
 
 impl Builtin {
     /// Create a new builtin type
-    fn new(kind: Kind) -> Self {
+    fn new(kind: BuiltinType) -> Self {
         Builtin {
             kind,
             span: Span::default(),
@@ -46,17 +24,28 @@ impl Builtin {
 
     /// make a nat builtin type
     pub fn nat() -> Self {
-        Builtin::new(Kind::Nat)
+        Builtin::new(BuiltinType::Nat)
     }
 
     /// make a char builtin type
     pub fn char() -> Self {
-        Builtin::new(Kind::Char)
+        Builtin::new(BuiltinType::Char)
     }
 
     /// make a bool builtin type
     pub fn bool() -> Self {
-        Builtin::new(Kind::Bool)
+        Builtin::new(BuiltinType::Bool)
+    }
+
+    /// get which builtin type
+    pub fn kind(&self) -> BuiltinType {
+        self.kind
+    }
+}
+
+impl From<BuiltinType> for Builtin {
+    fn from(kind: BuiltinType) -> Self {
+        Builtin::new(kind)
     }
 }
 
@@ -70,7 +59,7 @@ impl Eq for Builtin {}
 
 impl Pretty for Builtin {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        self.kind.pretty(theme)
+        theme.ty_var(&self.kind.symbol())
     }
 }
 
