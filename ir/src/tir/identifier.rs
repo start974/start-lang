@@ -34,7 +34,7 @@ impl std::fmt::Display for Identifier {
 // Identifier Builder
 // ==========================================================================
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct IdentifierBuilder {
     table: HashMap<String, Vec<Rc<Identifier>>>,
 }

@@ -50,6 +50,8 @@ impl From<Error> for errors::Errors {
 // Codegen
 // ============================================================================
 
+/// generates the files one after the other: the globals of the previous
+/// files (stdlib, REPL inputs) are kept
 #[derive(Debug, Default)]
 pub struct Codegen {
     /// global of every generated definition
@@ -57,6 +59,25 @@ pub struct Codegen {
 }
 
 impl Codegen {
+    pub fn builder() -> CodegenBuilder {
+        CodegenBuilder
+    }
+
+    /// code of a typed file: a global per definition, an item per `Eval`
+    pub fn run(&mut self, file: &tir::File) -> Result<lir::File, errors::Errors> {
+        let mut items = Vec::new();
+        for cmd in file.commands() {
+            match &cmd.kind {
+                tir::CommandKind::ExpressionDefinition(def) => {
+                    items.push(lir::Item::Global(self.definition(def)?));
+                }
+                tir::CommandKind::Eval(expr) => items.push(lir::Item::Eval(self.expression(expr)?)),
+                tir::CommandKind::TypeOf(_) | tir::CommandKind::Help(_) => {}
+            }
+        }
+        Ok(items.into_iter().collect())
+    }
+
     /// run-time type: aliases resolved
     pub fn ty(ty: &tir::Type) -> lir::Type {
         match ty {
@@ -101,6 +122,16 @@ impl Codegen {
                 })
             }
         }
+    }
+}
+
+/// arguments of a `Codegen` (none yet)
+#[derive(Debug, Default, Clone, Copy)]
+pub struct CodegenBuilder;
+
+impl CodegenBuilder {
+    pub fn build(self) -> Codegen {
+        Codegen::default()
     }
 }
 

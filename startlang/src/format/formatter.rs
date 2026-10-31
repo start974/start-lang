@@ -1,11 +1,11 @@
 use super::{Mode, diff::print_diff};
 use crate::error;
 use ariadne::Source;
-use driver::parser::CommandOrEnd;
+use driver::lexer::Lexer;
+use driver::parser::Parser;
 use errors::Error;
 use ir::location::SourceId;
 use ir::pir;
-use ir::token::MetaTokenStream;
 use pp::pretty::Pretty as _;
 use pp::theme::Theme;
 use std::path::{Path, PathBuf};
@@ -47,65 +47,20 @@ impl Formatter {
         self.err_code = if self.err_code == 0 { error.code() } else { 1 };
     }
 
-    /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Option<ir::token::MetaTokenStream> {
-        match driver::lexer::lex(content, offset_source) {
-            Ok(tokens) => Some(tokens),
-            Err(errs) => {
-                for err in errs {
-                    self.fail(err);
-                }
-                None
-            }
-        }
-    }
-
-    /// parse command with lexer tokens
-    fn parse(&mut self, tokens: MetaTokenStream) -> Option<CommandOrEnd> {
-        match driver::parser::parse(tokens) {
-            Ok(cmd) => Some(cmd),
-            Err(errs) => {
-                for err in errs {
-                    self.fail(err);
-                }
-                None
-            }
-        }
-    }
-
-    /// run the interpreter
+    /// lex and parse the whole content
     fn parse_content(&mut self) -> Option<pir::File> {
-        let mut offset = 0;
-        let content_copy = self.content.clone();
-        let mut pir_file = pir::File::default();
-
-        loop {
-            let content = &content_copy[offset..];
-            if content.is_empty() {
-                break;
-            }
-            match self.lex(content, offset) {
-                None => break,
-                Some(tokens) => {
-                    let offset_end = tokens.last_offset();
-                    match self.parse(tokens) {
-                        None => {
-                            break;
-                        }
-                        Some(CommandOrEnd::Command(cmd)) => pir_file.add_command(*cmd),
-                        Some(CommandOrEnd::End(end)) => {
-                            pir_file.set_end(end);
-                            break;
-                        }
-                    }
-                    offset = offset_end;
+        let parsed = Lexer::builder()
+            .build()
+            .run(&self.content)
+            .and_then(|tokens| Parser::builder().build().run(tokens));
+        match parsed {
+            Ok(file) => Some(file),
+            Err(errs) => {
+                for err in errs {
+                    self.fail(err);
                 }
+                None
             }
-        }
-        if self.err_code == 0 {
-            Some(pir_file)
-        } else {
-            None
         }
     }
 

@@ -3,7 +3,6 @@ use chumsky::prelude::*;
 use ir::pir::*;
 use ir::token::{MetaToken, Operator, Token};
 
-use crate::parser::CommandOrEnd;
 use ir::pir;
 
 /// parser state of chumsky: errors are `Rich` errors on tokens
@@ -446,15 +445,38 @@ where
 }
 
 // ===========================================================================
-// End of input
+// File
 // ===========================================================================
 
-/// parse with lexer tokens
-pub fn parser<'tokens, I>() -> impl Parser<'tokens, I, CommandOrEnd, Extra<'tokens>>
+/// parse a whole file; a broken command is skipped up to the next `.` (its
+/// error is recorded) and parsing goes on with the next command
+/// ```ebfn
+/// file := command* END_OF_INPUT
+///```
+pub fn file<'tokens, I>() -> impl Parser<'tokens, I, pir::File, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    let command = command().map(Box::new).map(CommandOrEnd::Command);
-    let eoi = end_of_input().map(CommandOrEnd::End);
-    choice((command, eoi))
+    let dot = operator(Operator::Dot, pir::operator::DotT()).ignored();
+    // a command is only tried before the end of input, so the recovery always
+    // skips something
+    let command = end_of_input()
+        .not()
+        .ignore_then(command().map(Some).recover_with(skip_until(
+            any().ignored(),
+            dot.or(end_of_input().ignored().rewind()),
+            || None,
+        )));
+    command
+        .repeated()
+        .collect::<Vec<_>>()
+        .then(end_of_input())
+        .map(|(commands, end)| {
+            let mut file = pir::File::default();
+            for command in commands.into_iter().flatten() {
+                file.add_command(command);
+            }
+            file.set_end(end);
+            file
+        })
 }

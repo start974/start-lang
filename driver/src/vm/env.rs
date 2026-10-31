@@ -1,13 +1,34 @@
 use crate::vm::Value;
-use ir::lir::{Expression, Global, GlobalId};
+use errors::{Error, Errors, Message};
+use ir::lir::{Expression, File, Global, GlobalId, Item};
 
-/// values of the globals, indexed by `GlobalId`
+/// runs the files one after the other: the values of the globals of the
+/// previous files (stdlib, REPL inputs) are kept, indexed by `GlobalId`
 #[derive(Debug, Default)]
-pub struct Env {
+pub struct Vm {
     globals: Vec<Option<Value>>,
 }
 
-impl Env {
+impl Vm {
+    pub fn builder() -> VmBuilder {
+        VmBuilder
+    }
+
+    /// run every item of `file`: the value of each `Eval`, in order
+    pub fn run(&mut self, file: &File) -> Result<Vec<Value>, Errors> {
+        let mut values = Vec::new();
+        for item in file.items() {
+            match item {
+                Item::Global(global) => {
+                    self.define(global)
+                        .ok_or_else(|| undefined(&global.symbol))?;
+                }
+                Item::Eval(expr) => values.push(self.eval(expr).ok_or_else(|| undefined("eval"))?),
+            }
+        }
+        Ok(values)
+    }
+
     /// value of a global, `None` if it was never defined
     pub fn get(&self, id: GlobalId) -> Option<&Value> {
         self.globals.get(id.index()).and_then(Option::as_ref)
@@ -34,6 +55,23 @@ impl Env {
     }
 }
 
+/// internal error: `codegen` made a read of a global never computed
+fn undefined(context: &str) -> Errors {
+    Error::new(902, Message::text("Internal error."))
+        .with_text(Message::text(format!("vm: undefined global in {context}.")))
+        .into()
+}
+
+/// arguments of a `Vm` (none yet)
+#[derive(Debug, Default, Clone, Copy)]
+pub struct VmBuilder;
+
+impl VmBuilder {
+    pub fn build(self) -> Vm {
+        Vm::default()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -50,7 +88,7 @@ mod tests {
 
     #[test]
     fn define_and_eval_globals() {
-        let mut vm = Env::default();
+        let mut vm = Vm::default();
         let a = global(
             0,
             Type::Nat,
@@ -72,7 +110,7 @@ mod tests {
 
     #[test]
     fn undefined_global() {
-        let mut vm = Env::default();
+        let mut vm = Vm::default();
         let b = global(1, Type::Bool, Expression::Global(GlobalId::new(0)));
         assert_eq!(vm.define(&b), None);
         assert_eq!(vm.eval(&Expression::Global(GlobalId::new(5))), None);

@@ -5,6 +5,17 @@ use ir::location::Spanned as _;
 use ir::tir;
 use ir::tir::env::IdentifierKind;
 
+/// option of `Set` / `Unset` that does not exist
+pub fn unknown_option(option: &ir::sir::Variable) -> Error {
+    Error::new(103, Message::text("Option unknown."))
+        .with_span(option.span())
+        .with_text(
+            Message::text("Option ")
+                .append(Message::quoted(option.name()).important())
+                .with_text(" is unknown."),
+        )
+}
+
 /// diagnostic of an error found while building `tir`
 pub fn diagnostic(err: tir::error::Error) -> Error {
     let span = err.span();

@@ -13,46 +13,28 @@ use ir::{pir, sir};
 // Lowering
 // ============================================================================
 
-/// lowers the commands of one source into a `sir::File`; the state is the
-/// file being built (its commands and its `DefTable`), kept between calls so
-/// the commands can be lowered one at a time
+/// lowers a `pir::File` into a `sir::File`
 #[derive(Debug, Default)]
 pub struct Lowering {
+    /// file being built: its commands and its `DefTable`
     file: sir::File,
 }
 
 impl Lowering {
-    /// start lowering the commands of `source`
-    pub fn new(source: SourceId) -> Self {
-        Self {
-            file: sir::File::new(source),
-        }
-    }
-
-    /// file built so far
-    pub fn file(&self) -> &sir::File {
-        &self.file
-    }
-
-    /// definitions lowered so far
-    pub fn defs(&self) -> &sir::DefTable {
-        self.file.defs()
-    }
-
-    /// stop lowering and get the file
-    pub fn finish(self) -> sir::File {
-        self.file
+    pub fn builder() -> LoweringBuilder {
+        LoweringBuilder::default()
     }
 
     /// lower every command of `file`
-    pub fn lower_file(&mut self, file: &pir::File) {
+    pub fn run(mut self, file: &pir::File) -> sir::File {
         for cmd in file.commands() {
             self.command(cmd);
         }
+        self.file
     }
 
-    /// lower one command, add it to the file with its definitions, and get it
-    pub fn command(&mut self, cmd: &pir::Command) -> &sir::Command {
+    /// lower one command and add it to the file, with its definitions
+    fn command(&mut self, cmd: &pir::Command) {
         let kind = match &cmd.kind {
             pir::CommandKind::ExpressionDefinition { keyword, def } => {
                 let def = self.expression_definition(def, documentation(keyword));
@@ -69,10 +51,6 @@ impl Lowering {
             pir::CommandKind::UnSet { var, .. } => sir::CommandKind::UnSet(variable(var)),
         };
         self.file.add_command(sir::Command::new(kind, cmd.span()));
-        self.file
-            .commands()
-            .last()
-            .expect("a command was just added")
     }
 
     fn expression_definition(
@@ -110,11 +88,24 @@ impl Lowering {
     }
 }
 
-/// lower a whole file at once
-pub fn file(file: &pir::File, source: SourceId) -> sir::File {
-    let mut lowering = Lowering::new(source);
-    lowering.lower_file(file);
-    lowering.finish()
+/// arguments of a `Lowering`
+#[derive(Debug, Default)]
+pub struct LoweringBuilder {
+    source: SourceId,
+}
+
+impl LoweringBuilder {
+    /// source of the file: the place of its definitions
+    pub fn source(mut self, source: SourceId) -> Self {
+        self.source = source;
+        self
+    }
+
+    pub fn build(self) -> Lowering {
+        Lowering {
+            file: sir::File::new(self.source),
+        }
+    }
 }
 
 // ============================================================================
@@ -180,22 +171,18 @@ mod tests {
     /// parse `src` one command at a time, as the current loop does, and lower
     /// every command into one file
     fn lower(src: &str) -> sir::File {
-        let mut lowering = Lowering::new(SourceId::Repl);
-        let mut offset = 0;
-        while !src[offset..].trim().is_empty() {
-            let tokens = crate::lexer::lex(&src[offset..], offset)
-                .unwrap_or_else(|_| panic!("lexing error in {src}"));
-            let end = tokens.last_offset();
-            match crate::parser::parse(tokens).unwrap_or_else(|_| panic!("parsing error in {src}"))
-            {
-                crate::parser::CommandOrEnd::Command(cmd) => {
-                    lowering.command(&cmd);
-                }
-                crate::parser::CommandOrEnd::End(_) => break,
-            }
-            offset = end;
-        }
-        lowering.finish()
+        let tokens = crate::lexer::Lexer::builder()
+            .build()
+            .run(src)
+            .unwrap_or_else(|_| panic!("lexing error in {src}"));
+        let file = crate::parser::Parser::builder()
+            .build()
+            .run(tokens)
+            .unwrap_or_else(|_| panic!("parsing error in {src}"));
+        Lowering::builder()
+            .source(SourceId::Repl)
+            .build()
+            .run(&file)
     }
 
     /// the only command of `src`
@@ -346,37 +333,5 @@ mod tests {
         assert_eq!(ids.len(), 2);
         assert_ne!(ids[0], ids[1]);
         assert_eq!(file.commands().len(), 3);
-    }
-
-    #[test]
-    fn whole_file() {
-        let mut pir_file = pir::File::default();
-        let tokens = crate::lexer::lex("Def a := 1.", 0).unwrap_or_else(|_| panic!("lexing error"));
-        let Ok(crate::parser::CommandOrEnd::Command(cmd)) = crate::parser::parse(tokens) else {
-            panic!("no command")
-        };
-        pir_file.add_command(*cmd);
-
-        let source = SourceId::Repl;
-        let file = file(&pir_file, source.clone());
-        assert_eq!(file.source(), &source);
-        assert_eq!(file.commands().len(), 1);
-        assert_eq!(file.defs().len(), 1);
-    }
-
-    #[test]
-    fn state_kept_between_commands() {
-        let mut lowering = Lowering::default();
-        for src in ["Def a := 1.", "Eval a.", "Def a := a."] {
-            let tokens = crate::lexer::lex(src, 0).unwrap_or_else(|_| panic!("lexing error"));
-            let Ok(crate::parser::CommandOrEnd::Command(cmd)) = crate::parser::parse(tokens) else {
-                panic!("no command")
-            };
-            let lowered = lowering.command(&cmd);
-            assert_eq!(lowered.span(), cmd.span());
-        }
-        assert_eq!(lowering.file().commands().len(), 3);
-        assert_eq!(lowering.defs().all("a").len(), 2);
-        assert_eq!(lowering.finish().source(), &SourceId::Unknown);
     }
 }

@@ -6,10 +6,12 @@
 //! a symbol for debugging.
 
 pub mod expression;
+pub mod file;
 pub mod global;
 pub mod ty;
 
 pub use expression::Expression;
 pub use expression::constant::{Constant, Nat};
+pub use file::{File, Item};
 pub use global::{Global, GlobalId};
 pub use ty::Type;
