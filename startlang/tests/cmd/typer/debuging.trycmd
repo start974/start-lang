@@ -2,25 +2,7 @@
 
 ```
 $ startlang run debuging.st
-Definition long_number__0 : N1 :=
-  333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_331
-Definition a__0 : ℕ :=
-  3
-Definition n__0 : ℕ :=
-  3
-Definition n__1 : ℕ :=
-  a__0
-Definition c__0
-    : LongType_NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN :=
-  long_number__0
-long_number__0
 333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_331
-Definition b__0 : 𝔹 :=
-  true__0
-Definition c__1 : Char :=
-  '//'
-Definition t__0 : 𝔹 :=
-  true
 𝔹
 
 ```

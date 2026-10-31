@@ -25,7 +25,7 @@ pub enum IdentifierKind {
 // ==========================================================================
 /// information about identifier
 /// with store documentation, location of definition and location of references
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IdentifierInfo {
     /// identifier
     pub id: Rc<Identifier>,
@@ -92,7 +92,7 @@ impl Spanned for Help {
 // ==========================================================================
 // Identifier table
 // ==========================================================================
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Env {
     /// map of identifiers
     table: HashMap<Rc<Identifier>, IdentifierInfo>,

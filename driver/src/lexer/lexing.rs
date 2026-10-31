@@ -289,39 +289,43 @@ pub fn operator<'src>() -> impl Parser<'src, &'src str, token::Operator, Err<Err
         just('$').to(token::Operator::Eval),
         just('(').to(token::Operator::LParen),
         just(')').to(token::Operator::RParen),
+        just('.').to(token::Operator::Dot),
     ))
 }
 
 // ===========================================================================
 // Lexer
 // ===========================================================================
-/// make a lexing with offset to token until "." (end of a command)
-/// return offset rest to lexing
+/// lex a whole source, whose first byte is at `offset`, up to `EndOfInput`;
+/// on a bad character, the error is recorded and lexing goes on after it
+/// ```ebnf
+/// tokens := meta(TOKEN)* meta(END_OF_INPUT)
+/// ```
 pub fn lexer<'src>(
     offset: usize,
 ) -> impl Parser<'src, &'src str, Vec<token::MetaToken>, Err<ErrorChumsky<'src>>> {
     use token::Token;
 
-    let token = choice((
-        operator().map(Token::Operator),
-        identifier().map(Token::Identifier),
-        number().map(Token::Number),
-        character().map(Token::Character),
-    ))
-    .with_meta(offset);
+    let end_of_input = || end().to(Token::EndOfInput).with_meta(offset);
 
-    let token_dot = just('.')
-        .to(Token::Operator(token::Operator::Dot))
+    // a token is only tried before the last comments and spaces, so the
+    // recovery never reads inside them
+    let token = end_of_input().not().ignore_then(
+        choice((
+            operator().map(Token::Operator),
+            identifier().map(Token::Identifier),
+            number().map(Token::Number),
+            character().map(Token::Character),
+        ))
         .with_meta(offset)
-        .lazy();
-
-    let token_end = end().to(Token::EndOfInput).with_meta(offset);
+        .recover_with(skip_then_retry_until(any().ignored(), end())),
+    );
 
     token
         .repeated()
         .collect::<Vec<_>>()
-        .then(choice((token_dot, token_end)))
-        .map(move |(mut tokens, end)| {
+        .then(end_of_input())
+        .map(|(mut tokens, end)| {
             tokens.push(end);
             tokens
         })

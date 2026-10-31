@@ -78,11 +78,6 @@ impl PositionMemo {
         }
     }
 
-    /// get content
-    pub fn content(&self) -> &str {
-        &self.content
-    }
-
     /// get range
     pub fn range(&mut self, span: &Span) -> Range {
         let start = self.position(span.start());

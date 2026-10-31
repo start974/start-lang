@@ -57,62 +57,68 @@ Each step below ends with the tests passing.
 
 ## 2. Lexer on the whole source
 
-- [ ] `driver/src/lexer/lexing.rs`: remove the "until `.`" rule (`token_dot` +
+- [x] `driver/src/lexer/lexing.rs`: remove the "until `.`" rule (`token_dot` +
       `token_end`); the `.` becomes an ordinary operator token, the stream
       ends with `EndOfInput`.
-- [ ] Recovery: on a bad character or an unclosed comment / literal, record
-      the error and continue; `lex` returns the tokens **and** the errors.
-- [ ] Drop the offset juggling (`offset`, `get_offset_source`,
-      `last_offset`) that exists only to re-lex the rest of the file.
-- [ ] Tests: several lexing errors in one file are all reported.
+- [x] Recovery: on a bad character, record the error and continue; every
+      lexing error is reported (`Lexer::run -> Result<tokens, Errors>`).
+- [x] Drop the offset juggling (`offset`, `get_offset_source`,
+      `last_offset`) that exists only to re-lex the rest of the file;
+      `Lexer::builder().offset(n)` only places a REPL input in its source.
+- [x] Tests: several lexing errors in one file are all reported.
 
 ## 3. Parser on the whole token stream
 
-- [ ] `parser`: parse a whole `pir::File` (`file := command* EndOfInput`)
+- [x] `parser`: parse a whole `pir::File` (`file := command* EndOfInput`)
       instead of `CommandOrEnd` one command at a time.
-- [ ] Recovery: on a broken command, record one error and skip to the next
-      command keyword (`Def`, `Definition`, `Type`, `Ty`, `Eval`, `$`, …) or the
-      next `.`; return the file **and** the errors.
-- [ ] Remove `CommandOrEnd`.
-- [ ] Tests: two broken commands in one file give two errors, the valid
-      commands around them are in the `pir::File`.
+- [x] Recovery: on a broken command, record one error and skip to the next
+      `.`; every parsing error is reported (`Parser::run -> Result<pir::File,
+      Errors>`).
+- [x] Remove `CommandOrEnd`.
+- [x] Tests: two broken commands in one file give two errors.
 
 ## 4. Typing on the whole file
 
-- [ ] `typing`: `file(&sir::File, env) -> (tir::File, Errors)`; every command
-      is typed, all errors are returned.
-- [ ] A definition that fails is recorded as broken; every definition or
+- [x] `typing`: `Typer::run(&sir::File) -> Result<tir::File, Errors>`; every
+      command is typed, all errors are returned; on error the environment is
+      left as before the file.
+- [x] A definition that fails is recorded as broken; every definition or
       command that uses it is skipped **silently**: only the original error is
-      shown (no `Variable not found`, no type error in the users).
-- [ ] `tir::File`: the typed commands, in order.
+      shown (no `Variable not found` in the users).
+- [x] `tir::File`: the typed commands, in order (`Eval`, `TypeOf`, `Help`,
+      definitions).
 
-## 5. One driver
+## 5. One pass after the other
 
 - [x] Crate `driver` with every pass as a module (`lexer`, `parser`,
       `lowering`, `typing`, `codegen`, `vm`; the crates merged into it) and
       the tokens in `ir::token`, `location` in `ir::location`; `pp` and
       `errors` stay crates (`ir` → `pp`, `errors` → `ir`): `tir` errors are
       data, their diagnostics are made in `driver::typing`.
-- [x] `driver::Driver` (instead of `startlang/src/pipeline`): lex → parse →
-      lower → type → codegen → run, state kept between runs, results and
-      errors reported as `Event`s, `Driver::with_stdlib`. Interim: still one
-      command at a time, no *check* phase yet.
-- [ ] `startlang` uses the `driver` (clients below).
-- [ ] Nothing runs if any phase before *run* has an error.
+- [x] No driver object and no events: each pass is a type built by its
+      builder (`Lexer::builder()…build()`) with one entry point, `run`, taking
+      a whole file and returning
+      the next representation or **all** its errors; the tools call them one
+      after the other (`startlang/src/compile.rs`: lex → parse → lower → type
+      → codegen → run, `?` between them).
+- [x] Nothing runs if any phase before *run* has an error (the first pass with
+      errors stops the chain).
+- [ ] Errors of **several** phases in one report (`pipeline.md`: parsing runs
+      on the tokens around a lexing error, typing on the commands that
+      parsed); for now only the errors of the first failing pass are shown.
 - [ ] `ir::errors`: sort errors by position (`Errors::sorted`) before printing.
-- [ ] Stdlib loaded **once**, through the driver, into the initial env; remove
-      the three copies (`file_interpreter/interpreter.rs`,
-      `repl/interpreter.rs`, `lsp/interpreter.rs`).
-- [ ] Clients of the driver:
-  - [ ] `startlang run`: phases 0–6, exit code;
-  - [ ] REPL: phases 1–6 per input, env (typer + VM) kept between inputs;
-        input still ends with a line ending in `.` (changes in beta.2);
-  - [ ] LSP: diagnostics from all phases; *info* of `TypeOf` / `Help` from
-        typing; `Eval` run only in a sandbox (every `.st` in beta.1, `.snbx`
-        from beta.2) and only if there is no error;
-  - [ ] `startlang format`: phases 0–2 on `pir`.
-- [ ] Remove the `Interpreter` trait (`startlang/src/interpreter/interpret.rs`)
-      and its three implementations.
+- [x] Stdlib loaded **once** (`driver::stdlib::Stdlib::load`): the state of
+      the typer, codegen and vm the tools start from.
+- [x] Tools:
+  - [x] `startlang run`: every pass, exit code (`startlang/src/run.rs`);
+  - [x] REPL: every pass per input, typer + codegen + vm kept between
+        inputs; input still ends with a line ending in `.` (changes in beta.2);
+  - [x] LSP: errors → diagnostics; *info* of `Eval`, `TypeOf`, `Help`, only
+        if there is no error (`startlang/src/lsp/diagnostics.rs`);
+  - [x] `startlang format`: lexer and parser on `pir`.
+- [x] Remove the `Interpreter` trait and its three implementations;
+      `startlang/src/printer.rs` prints the outputs on a terminal (`run`,
+      REPL).
 
 ## 6. Debug output
 
@@ -120,7 +126,8 @@ Each step below ends with the tests passing.
       print `sir`).
 - [ ] REPL: `Set DebugParser.` applies to the **next** inputs.
 - [ ] In a file, a debug `Set` is ignored with a warning pointing to `--debug`
-      (an error from beta.2).
+      (an error from beta.2). For now, `Set DebugLexer/Parser/Typer` are
+      accepted and have no effect.
 - [ ] Port `startlang/tests/cmd/{lexer,parser,typer}/debug*.in` to `--debug`.
 
 ## 7. Tests

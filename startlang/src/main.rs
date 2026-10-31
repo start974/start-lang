@@ -2,12 +2,13 @@ use clap::{ArgGroup, Parser, Subcommand};
 use std::path::PathBuf;
 use std::process::exit;
 
+mod compile;
 mod error;
-mod file_interpreter;
 mod format;
-mod interpreter;
 mod lsp;
+mod printer;
 mod repl;
+mod run;
 
 #[derive(Parser)]
 #[command(version)]
@@ -58,7 +59,7 @@ async fn main() {
             repl::run();
             0
         }
-        Commands::Run { path } => file_interpreter::run(&path),
+        Commands::Run { path } => run::run(&path),
         Commands::Format {
             path,
             print,

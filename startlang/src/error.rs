@@ -1,6 +1,4 @@
 use errors::{Error, Message};
-use ir::location::Spanned as _;
-use ir::sir::Variable;
 use std::path::Path;
 
 pub fn read_file(path: &Path) -> Error {
@@ -19,14 +17,4 @@ pub fn write_file(path: &Path) -> Error {
             .append(Message::quoted(path.to_string_lossy()).important())
             .with_text("."),
     )
-}
-
-pub fn unknown_option(option: &Variable) -> Error {
-    Error::new(103, Message::text("Option unknown."))
-        .with_span(option.span())
-        .with_text(
-            Message::text("Option ")
-                .append(Message::quoted(option.name()).important())
-                .with_text(" is unknown."),
-        )
 }

@@ -4,8 +4,9 @@ use std::path::PathBuf;
 // FileId
 // ==========================================================================
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
 pub enum SourceId {
+    #[default]
     Unknown,
     Repl,
     File(PathBuf),

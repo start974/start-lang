@@ -9,8 +9,6 @@ Eval a.
 
 
 stdout = """
-       a : ℕ
-3
 Exiting REPL...
 """
 
@@ -21,5 +19,12 @@ stderr = """
  1 │ Def a := 3. Eval not_exits.
    │                  ────┬────  
    │                      ╰────── Expression variable not_exits not found.
+───╯
+[301] Error: Variable not found.
+   ╭─[ REPL:2:6 ]
+   │
+ 2 │ Eval a.
+   │      ┬  
+   │      ╰── Expression variable a not found.
 ───╯
 """

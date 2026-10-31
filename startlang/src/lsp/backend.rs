@@ -1,5 +1,4 @@
-use super::interpreter::Interpreter;
-use crate::interpreter::Interpreter as _;
+use super::diagnostics::diagnostics;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer};
 
@@ -33,13 +32,9 @@ impl Backend {
             .await;
 
         let uri = params.uri.clone();
-        let diags = tokio::task::spawn_blocking(move || {
-            let mut interpreter = Interpreter::new(&uri, params.text);
-            interpreter.run();
-            interpreter.diagnostics().to_vec()
-        })
-        .await
-        .expect("the interpreter task panicked");
+        let diags = tokio::task::spawn_blocking(move || diagnostics(&uri, params.text))
+            .await
+            .expect("the interpreter task panicked");
 
         self.client
             .publish_diagnostics(params.uri, diags, Some(params.version))
