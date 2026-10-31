@@ -1,7 +1,6 @@
 use errors::{Errors, ResultErrors as _};
-use ir::pir::{self, AsCharacter as _, AsIdentifier as _, AsNumber as _};
-use ir::tir;
 use ir::tir::{Typed, env::Env};
+use ir::{pir, tir};
 use location::{Spanned as _, SpannedSet as _};
 
 #[derive(Debug, Default)]
@@ -21,10 +20,10 @@ impl Typer {
     /// convert constant
     fn constant(&self, constant: &pir::Constant) -> tir::Constant {
         match constant {
-            pir::Constant::Number(n) => tir::Constant::nat(n.as_number().clone()),
-            pir::Constant::Character(c) => tir::Constant::character(c.as_character()),
+            pir::Constant::Number(n) => tir::Constant::nat(n.value.clone()),
+            pir::Constant::Character(c) => tir::Constant::character(c.value),
             pir::Constant::Builtin(pir::Meta { value: builtin, .. }) => {
-                use pir::constant::BuiltinT;
+                use pir::expression::constant::BuiltinT;
                 match builtin {
                     BuiltinT::True => tir::Constant::boolean(true),
                     BuiltinT::False => tir::Constant::boolean(false),
@@ -34,53 +33,30 @@ impl Typer {
         .with_spanned(constant)
     }
 
-    /// convert expression0
-    fn expression0(
-        &mut self,
-        expression: &pir::expression::Expression0,
-    ) -> Result<tir::Expression> {
-        use pir::expression::Expression0;
+    /// convert expression
+    pub fn expression(&mut self, expression: &pir::Expression) -> Result<tir::Expression> {
         match expression {
-            Expression0::Constant(c) => {
+            pir::Expression::Constant(c) => {
                 let c_ty = self.constant(c);
                 Ok(tir::Expression::Constant(c_ty))
             }
-            Expression0::Variable(var) => {
+            pir::Expression::Variable(var) => {
                 let span = var.span();
                 let id = self.id_builder.get(var.name());
                 let var = self.env.get_expr_var(&id, span).map_err(Errors::from)?;
                 Ok(tir::Expression::Variable(var))
             }
-            Expression0::Paren(expr) => self.expression(expr.inner()),
-        }
-    }
-
-    /// convert expression1
-    fn expression1(
-        &mut self,
-        expression: &pir::expression::Expression1,
-    ) -> Result<tir::Expression> {
-        use pir::expression::Expression1;
-        match expression {
-            Expression1::TypedExpression { expr, ty, .. } => {
+            pir::Expression::Paren(expr) => self.expression(expr.inner()),
+            pir::Expression::Typed { expr, ty, .. } => {
                 let (expr, ty) = {
-                    let expr_res = self.expression0(expr);
+                    let expr_res = self.expression(expr);
                     let ty_res = self.ty(ty);
                     expr_res.combine(ty_res)?
                 };
                 expr.restrict_ty(ty).map_err(Errors::from)
             }
-            Expression1::Expression0(expr) => self.expression0(expr),
         }
-    }
-
-    /// convert expression1
-    pub fn expression(
-        &mut self,
-        expression: &pir::expression::Expression,
-    ) -> Result<tir::Expression> {
-        self.expression1(expression)
-            .map(|expr| expr.with_spanned(expression))
+        .map(|expr| expr.with_spanned(expression))
     }
 
     /// convert type
@@ -123,7 +99,13 @@ impl Typer {
         definition: &pir::ExpressionDefinition,
     ) -> Result<tir::ExpressionDefinition> {
         self.expression(&definition.body)
-            .combine(definition.typed_by().map(|ty| self.ty(ty)).transpose())
+            .combine(
+                definition
+                    .typed_by
+                    .as_ref()
+                    .map(|typed_by| self.ty(&typed_by.ty))
+                    .transpose(),
+            )
             .and_then(|(body, ty_opt)| {
                 match &ty_opt {
                     Some(ty) => self.pattern(&definition.pattern, ty),
@@ -173,7 +155,7 @@ impl Typer {
     }
 
     /// convert help variable
-    pub fn help(&mut self, var: &pir::help::Variable) -> Result<tir::Help> {
+    pub fn help(&mut self, var: &pir::Variable) -> Result<tir::Help> {
         let id = self.id_builder.get(var.name());
         self.env.get_help(&id, var.span()).map_err(Errors::from)
     }

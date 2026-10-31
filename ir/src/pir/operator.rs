@@ -32,7 +32,7 @@ impl Pretty for ColonT {
 // ============================================================================
 #[derive(Debug, Clone)]
 pub struct LParenT();
-//pub type LParen = Meta<LParenT>;
+pub type LParen = Meta<LParenT>;
 
 impl Pretty for LParenT {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
@@ -45,7 +45,7 @@ impl Pretty for LParenT {
 // ============================================================================
 #[derive(Debug, Clone)]
 pub struct RParenT();
-//pub type RParen = Meta<RParenT>;
+pub type RParen = Meta<RParenT>;
 
 impl Pretty for RParenT {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {

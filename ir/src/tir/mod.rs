@@ -5,7 +5,7 @@ mod identifier;
 mod pattern;
 mod ty;
 
-pub use crate::pir::Documentation;
+pub use crate::sir::Documentation;
 pub use env::Help;
 pub use expression::*;
 pub use identifier::*;

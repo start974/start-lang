@@ -41,7 +41,7 @@ Each step below ends with the tests passing.
   - [x] `sir::File`: the list of commands.
 - [ ] New crate `lowering`: `pir::File` → `sir::File`, no errors (`set` options
       stay names, checked later).
-- [ ] `ir::tir`: stop re-exporting `pir::Documentation` (`ir/src/tir/mod.rs`),
+- [x] `ir::tir`: stop re-exporting `pir::Documentation` (`ir/src/tir/mod.rs`),
       use the documentation of `sir`; `ir::tir` no longer uses `ir::pir`.
 - [ ] `typing`: take `sir` instead of `cst` (`expression`, `ty`, `pattern`,
       `definition`, `type_definition`, `help` in `typing/src/lib.rs`); `typing`

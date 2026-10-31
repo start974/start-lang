@@ -1,7 +1,5 @@
 use pp::pretty::*;
 
-use crate::pir::documentation::Documentation;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Comment {
     content: Vec<String>,
@@ -20,10 +18,10 @@ impl Comment {
         self.is_doc
     }
 
-    /// comment to documentation
-    pub fn to_doc(&self) -> Option<Documentation> {
+    /// lines of a documentation comment, `None` for an ordinary comment
+    pub fn doc_lines(&self) -> Option<&[String]> {
         if self.is_doc {
-            Some(Documentation::from(self.content.clone()))
+            Some(&self.content)
         } else {
             None
         }

@@ -1,5 +1,4 @@
-use crate::pir::{AsCharacter, AsIdentifier, AsNumber};
-use crate::pir::{Comment, Documentation};
+use crate::pir::Comment;
 use location::{Span, Spanned};
 use pp::pretty::*;
 
@@ -61,11 +60,11 @@ impl<T> Meta<T> {
             .any(|item| matches!(item, CommentOrLines::Comment(_)))
     }
 
-    /// get doctumentation if exist
-    pub fn get_doc(&self) -> Option<Documentation> {
+    /// get the lines of the documentation comment just before, if any
+    pub fn doc_lines(&self) -> Option<&[String]> {
         self.before.last().and_then(|col| {
             if let CommentOrLines::Comment(c) = col {
-                c.to_doc()
+                c.doc_lines()
             } else {
                 None
             }
@@ -111,6 +110,20 @@ impl<T> Meta<T> {
     where
         T: Pretty,
     {
+        self.pretty_value_with_end_line(theme, end_line, self.value.pretty(theme))
+    }
+
+    /// pretty the comments before, then `value` as the document of the value
+    pub fn pretty_with<'a>(&'a self, theme: &Theme, value: Doc<'a>) -> Doc<'a> {
+        self.pretty_value_with_end_line(theme, true, value)
+    }
+
+    fn pretty_value_with_end_line<'a>(
+        &'a self,
+        theme: &Theme,
+        end_line: bool,
+        value: Doc<'a>,
+    ) -> Doc<'a> {
         self.pretty_meta(theme)
             .append(match self.before.last() {
                 Some(CommentOrLines::Comment(comment)) => {
@@ -124,10 +137,11 @@ impl<T> Meta<T> {
                 }
                 _ => Doc::nil(),
             })
-            .append(self.value.pretty(theme))
+            .append(value)
     }
 }
 
+/// used by the parser errors to print the expected tokens
 impl<T> std::fmt::Display for Meta<T>
 where
     T: std::fmt::Display,
@@ -149,32 +163,5 @@ where
 {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         self.pretty_with_end_line(theme, true)
-    }
-}
-
-impl<T> AsIdentifier for Meta<T>
-where
-    T: AsIdentifier,
-{
-    fn name(&self) -> &str {
-        self.value.name()
-    }
-}
-
-impl<T> AsNumber for Meta<T>
-where
-    T: AsNumber,
-{
-    fn as_number(&self) -> &num_bigint::BigUint {
-        self.value.as_number()
-    }
-}
-
-impl<T> AsCharacter for Meta<T>
-where
-    T: AsCharacter,
-{
-    fn as_character(&self) -> char {
-        self.value.as_character()
     }
 }

@@ -1,10 +1,10 @@
-use crate::pir::{operator, ty};
+use crate::pir::{Variable, operator, ty};
 use location::{Span, Spanned};
 use pp::pretty::*;
 
 #[derive(Debug)]
 pub struct TypeDefinition {
-    pub name: ty::Variable,
+    pub name: Variable,
     pub eq_def: operator::EqDef,
     pub ty: ty::Type,
 }
@@ -15,7 +15,7 @@ impl Pretty for TypeDefinition {
             .append(self.ty.pretty(theme).group())
             .nest(2);
         Doc::nil()
-            .append(self.name.pretty(theme))
+            .append(self.name.pretty_with(theme, theme.ty_var(&self.name.value)))
             .append(Doc::space())
             .append(self.eq_def.pretty(theme))
             .append(doc_ty)
