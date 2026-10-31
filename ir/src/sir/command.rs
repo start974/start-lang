@@ -1,4 +1,4 @@
-use super::{Expression, ExpressionDefinition, TypeDefinition, Variable};
+use crate::sir::{Expression, ExpressionDefinition, TypeDefinition, Variable};
 use location::{Span, Spanned};
 
 // ============================================================================

@@ -17,13 +17,6 @@ impl<T> Node<T> {
     }
 }
 
-impl Node<String> {
-    /// get name of an identifier
-    pub fn name(&self) -> &str {
-        &self.value
-    }
-}
-
 impl<T> Spanned for Node<T> {
     fn span(&self) -> Span {
         self.span
@@ -35,9 +28,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn node_span_and_name() {
-        let node = Node::new("x".to_string(), Span::new(2, 3));
-        assert_eq!(node.name(), "x");
+    fn node_keeps_value_and_span() {
+        let node = Node::new('x', Span::new(2, 3));
+        assert_eq!(node.value, 'x');
         assert_eq!(node.span(), Span::new(2, 3));
     }
 }
