@@ -15,6 +15,7 @@ location = { path = "../location" }
 parser = { path = "../parser" }
 pp = { path = "../pp" }
 typing = { path = "../typing" }
+codegen = { path = "../codegen" }
 vm = { path = "../vm" }
 
 clap = { version = "4.5.54", features = ["derive"] }

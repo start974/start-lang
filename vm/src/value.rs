@@ -1,30 +1,15 @@
-use ir::tir;
-use ir::tir::{Constant, NConst};
+use ir::lir;
 use pp::pretty::*;
 
 // =========================================================================
 // Value
 // =========================================================================
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Value {
-    Nat(NConst),
+    Nat(lir::Nat),
     Bool(bool),
     Char(char),
-}
-
-impl Value {
-    pub fn nat(n: NConst) -> Self {
-        Value::Nat(n)
-    }
-
-    pub fn bool(b: bool) -> Self {
-        Value::Bool(b)
-    }
-
-    pub fn char(c: char) -> Self {
-        Value::Char(c)
-    }
 }
 
 impl Pretty for Value {
@@ -37,13 +22,12 @@ impl Pretty for Value {
     }
 }
 
-impl From<&Constant> for Value {
-    fn from(c: &Constant) -> Self {
-        use tir::ConstantKind;
-        match c.kind() {
-            ConstantKind::Nat(n) => Self::nat(n.clone()),
-            ConstantKind::Bool(b) => Self::bool(*b),
-            ConstantKind::Char(c) => Self::char(*c),
+impl From<&lir::Constant> for Value {
+    fn from(c: &lir::Constant) -> Self {
+        match c {
+            lir::Constant::Nat(n) => Self::Nat(n.clone()),
+            lir::Constant::Bool(b) => Self::Bool(*b),
+            lir::Constant::Char(c) => Self::Char(*c),
         }
     }
 }
