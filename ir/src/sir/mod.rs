@@ -8,7 +8,6 @@
 //! resolution.
 
 pub mod command;
-pub mod documentation;
 pub mod expression;
 pub mod file;
 pub mod identifier;
@@ -16,9 +15,9 @@ pub mod node;
 pub mod ty;
 pub mod variable;
 
+pub use crate::common::Documentation;
 pub use command::Command;
 pub use command::CommandKind;
-pub use documentation::Documentation;
 pub use expression::Expression;
 pub use expression::ExpressionKind;
 pub use expression::constant::Constant;

@@ -6,6 +6,7 @@
 //!
 //! See `doc/design/pipeline.md`.
 
+mod common;
 pub mod pir;
 pub mod sir;
 pub mod tir;

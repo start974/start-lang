@@ -6,12 +6,7 @@ pub mod definition;
 // ============================================================================
 // Builtin
 // ============================================================================
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum BuiltinT {
-    Nat,
-    Bool,
-    Char,
-}
+pub use crate::common::BuiltinType as BuiltinT;
 pub type Builtin = Node<BuiltinT>;
 
 // ============================================================================

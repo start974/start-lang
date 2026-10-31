@@ -8,23 +8,9 @@ pub mod definition;
 // Builtin
 // ============================================================================
 
-#[derive(Debug, Clone)]
-pub enum BuiltinT {
-    Nat,
-    Bool,
-    Char,
-}
+/// payload of a builtin type token, shared with the other IRs
+pub use crate::common::BuiltinType as BuiltinT;
 pub type Builtin = Meta<BuiltinT>;
-
-impl Pretty for BuiltinT {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        match self {
-            BuiltinT::Nat => theme.ty_var(&"__Type_Nat__"),
-            BuiltinT::Bool => theme.ty_var(&"__Type_Bool__"),
-            BuiltinT::Char => theme.ty_var(&"__Type_Char__"),
-        }
-    }
-}
 
 // ============================================================================
 // Type

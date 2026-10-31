@@ -15,11 +15,7 @@ pub type Character = Node<char>;
 // ============================================================================
 // Builtin
 // ============================================================================
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum BuiltinT {
-    True,
-    False,
-}
+pub use crate::common::BuiltinConstant as BuiltinT;
 
 pub type Builtin = Node<BuiltinT>;
 
