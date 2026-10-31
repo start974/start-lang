@@ -1,4 +1,4 @@
-use super::{Expression, Pattern, Type, operator};
+use crate::pir::{Expression, Pattern, Type, operator};
 use location::{Span, Spanned};
 use pp::pretty::*;
 
@@ -9,13 +9,6 @@ use pp::pretty::*;
 pub struct TypedBy {
     pub colon: operator::Colon,
     pub ty: Type,
-}
-
-impl TypedBy {
-    /// get type
-    pub fn get_type(&self) -> &Type {
-        &self.ty
-    }
 }
 
 impl Pretty for TypedBy {
@@ -36,16 +29,6 @@ pub struct ExpressionDefinition {
     pub typed_by: Option<TypedBy>,
     pub eq_def: operator::EqDef,
     pub body: Expression,
-}
-
-impl ExpressionDefinition {
-    /// get optal type of definition
-    pub fn typed_by(&self) -> Option<&Type> {
-        match self.typed_by {
-            Some(ref typed_by) => Some(typed_by.get_type()),
-            None => None,
-        }
-    }
 }
 
 impl Spanned for ExpressionDefinition {

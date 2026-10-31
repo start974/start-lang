@@ -1,11 +1,17 @@
 use super::flag::{DebugFlag, Flag};
 use crate::error;
 use errors::Error;
-use ir::pir::AsIdentifier as _;
 use ir::tir::Typed as _;
 use ir::{pir, tir};
 use location::{SourceId, Spanned};
 use pp::pretty::Pretty;
+
+/// documentation comment written before a keyword
+fn documentation<T>(keyword: &pir::Meta<T>) -> Option<tir::Documentation> {
+    keyword
+        .doc_lines()
+        .map(|lines| tir::Documentation::from(lines.to_vec()))
+}
 
 pub trait Interpreter {
     /// get content
@@ -72,7 +78,7 @@ pub trait Interpreter {
     fn run_expr_definition(
         &mut self,
         pir_def: pir::ExpressionDefinition,
-        doc: Option<pir::Documentation>,
+        doc: Option<tir::Documentation>,
     ) {
         self.mut_typer()
             .definition(&pir_def, doc)
@@ -132,7 +138,7 @@ pub trait Interpreter {
             })
     }
 
-    fn run_help(&mut self, var: pir::help::Variable) {
+    fn run_help(&mut self, var: pir::Variable) {
         match self.mut_typer().help(&var) {
             Ok(help) => self.print(&help),
             Err(errs) => {
@@ -144,7 +150,7 @@ pub trait Interpreter {
     }
 
     /// run command set and unset
-    fn run_set(&mut self, b: bool, var: pir::expression::Variable) {
+    fn run_set(&mut self, b: bool, var: pir::Variable) {
         match var.name() {
             "DebugLexer" => self.set_flag(b, Flag::Debug(DebugFlag::Lexer)),
             "DebugParser" => self.set_flag(b, Flag::Debug(DebugFlag::Parser)),
@@ -157,10 +163,12 @@ pub trait Interpreter {
     fn run_command(&mut self, cmd: pir::Command) {
         match cmd.kind {
             pir::CommandKind::ExpressionDefinition { keyword, def } => {
-                self.run_expr_definition(*def, keyword.get_doc())
+                let doc = documentation(&keyword);
+                self.run_expr_definition(*def, doc)
             }
             pir::CommandKind::TypeDefinition { keyword, def } => {
-                self.run_type_definition(def, keyword.get_doc())
+                let doc = documentation(&keyword);
+                self.run_type_definition(def, doc)
             }
             pir::CommandKind::Eval { expr, .. } => self.run_eval(expr),
             pir::CommandKind::TypeOf { expr, .. } => self.run_typeof(expr),

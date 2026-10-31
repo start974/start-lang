@@ -37,11 +37,9 @@ pub fn pattern<'tokens, I>() -> impl Parser<'tokens, I, pir::Pattern, ErrorChums
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    let variable = select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
-            meta.clone().map(|_| pir::pattern::VariableT::from(s.clone()))
-    }
-    .labelled("pattern variable")
-    .map(pir::Pattern::from);
+    let variable = variable()
+        .labelled("pattern variable")
+        .map(pir::Pattern::from);
 
     variable.labelled("pattern")
 }
@@ -60,9 +58,9 @@ pub fn constant<'tokens, I>() -> impl Parser<'tokens, I, pir::Constant, ErrorChu
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::constant::{BuiltinT, CharacterT, Constant, NumberT};
+    use pir::expression::constant::{BuiltinT, Constant};
     let number = select! {ref meta @ Meta{ value: Token::Number(ref n), ..} =>
-            meta.clone().map(|_| NumberT::from(n.clone()))
+            meta.clone().map(|_| n.clone())
     }
     .map(Constant::from);
 
@@ -75,7 +73,7 @@ where
     .map(Constant::from);
 
     let character = select! {ref meta @ Meta{ value: Token::Character(ref c), ..} =>
-        meta.clone().map(|_| CharacterT::from(*c))
+        meta.clone().map(|_| *c)
     }
     .map(Constant::from);
 
@@ -86,14 +84,12 @@ where
 /// ```ebfn
 /// variable := IDENTIFIER
 ///```
-pub fn variable<'tokens, I>()
--> impl Parser<'tokens, I, pir::expression::Variable, ErrorChumsky<'tokens>>
+pub fn variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::expression::VariableT;
     select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
-            meta.clone().map(|_| VariableT::from(s.clone()))
+            meta.clone().map(|_| s.clone())
     }
 }
 
@@ -106,23 +102,23 @@ where
 ///```
 fn expression0<'tokens, I>(
     expr: impl Parser<'tokens, I, pir::Expression, ErrorChumsky<'tokens>>,
-) -> impl Parser<'tokens, I, pir::expression::Expression0, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, pir::Expression, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::expression::Expression0;
-    use pir::parenthesis::Parenthesed;
+    use pir::Expression;
+    use pir::expression::parenthesis::Paren;
 
-    let constant = constant().map(Expression0::Constant);
-    let variable = variable().map(Expression0::Variable);
+    let constant = constant().map(Expression::Constant);
+    let variable = variable().map(Expression::Variable);
     let parens = {
         let l_paren = operator(Operator::LParen, pir::operator::LParenT()).labelled("(");
         let r_paren = operator(Operator::RParen, pir::operator::RParenT()).labelled(")");
         l_paren
             .then(expr.map(Box::new))
             .then(r_paren)
-            .map(|((l_paren, expr), r_paren)| Parenthesed::new(l_paren, expr, r_paren))
-            .map(Expression0::Paren)
+            .map(|((l_paren, expr), r_paren)| Paren::new(l_paren, expr, r_paren))
+            .map(Expression::Paren)
     };
 
     choice((constant, variable, parens))
@@ -135,22 +131,22 @@ where
 /// | expr@0
 ///```
 fn expression1<'tokens, I>(
-    expr0: impl Parser<'tokens, I, pir::expression::Expression0, ErrorChumsky<'tokens>> + Clone,
-) -> impl Parser<'tokens, I, pir::expression::Expression1, ErrorChumsky<'tokens>>
+    expr0: impl Parser<'tokens, I, pir::Expression, ErrorChumsky<'tokens>> + Clone,
+) -> impl Parser<'tokens, I, pir::Expression, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::expression::Expression1;
-
     let colon = operator(Operator::Colon, pir::operator::ColonT()).labelled(":");
     let type_restriction = (expr0.clone())
         .then(colon)
         .then(ty())
-        .map(|((expr, colon), ty)| Expression1::TypedExpression { expr, colon, ty });
+        .map(|((expr, colon), ty)| pir::Expression::Typed {
+            expr: Box::new(expr),
+            colon,
+            ty,
+        });
 
-    let expr0_in1 = expr0.map(Expression1::Expression0);
-
-    choice((type_restriction, expr0_in1))
+    choice((type_restriction, expr0))
 }
 /// parse expression
 /// ```ebfn
@@ -183,7 +179,7 @@ pub fn expression_definition<'tokens, I>()
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::expression_definition::{ExpressionDefinition, TypedBy};
+    use pir::expression::definition::{ExpressionDefinition, TypedBy};
 
     let typed_by = {
         let colon = operator(Operator::Colon, pir::operator::ColonT()).labelled(":");
@@ -211,14 +207,11 @@ where
 /// ```ebfn
 /// type_variable := IDENTIFIER
 /// ```
-pub fn ty_variable<'tokens, I>() -> impl Parser<'tokens, I, pir::ty::Variable, ErrorChumsky<'tokens>>
+pub fn ty_variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
-            meta.clone().map(|_| pir::ty::VariableT::from(s.clone()))
-    }
-    .labelled("type variable")
+    variable().labelled("type variable")
 }
 
 /// parse type builtin
@@ -277,27 +270,22 @@ where
 /// ```ebfn
 /// help_variable := IDENTIFIER
 /// ```
-pub fn help_variable<'tokens, I>()
--> impl Parser<'tokens, I, pir::help::Variable, ErrorChumsky<'tokens>>
+pub fn help_variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::help::VariableT;
-    select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
-            meta.clone().map(|_| VariableT::from(s.clone()))
-    }
-    .labelled("help variable")
+    variable().labelled("help variable")
 }
 // ===========================================================================
 // Command
 // ===========================================================================
 
 fn keyword_definition<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::DefinitionKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::DefinitionKeyword, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::command::DefinitionKeywordT;
+    use pir::command::keyword::DefinitionKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Def" =>
             meta.clone().map(|_| DefinitionKeywordT::Def),
@@ -307,11 +295,11 @@ where
 }
 
 fn keyword_eval<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::EvalKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::EvalKeyword, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::command::EvalKeywordT;
+    use pir::command::keyword::EvalKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Eval" =>
             meta.clone().map(|_| EvalKeywordT::Eval),
@@ -321,11 +309,11 @@ where
 }
 
 fn keyword_type_of<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::TypeOfKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::TypeOfKeyword, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::command::TypeOfKeywordT;
+    use pir::command::keyword::TypeOfKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "TypeOf" =>
             meta.clone().map(|_| TypeOfKeywordT::TypeOf),
@@ -335,11 +323,11 @@ where
 }
 
 fn keyword_help<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::HelpKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::HelpKeyword, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::command::HelpKeywordT;
+    use pir::command::keyword::HelpKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Help" =>
             meta.clone().map(|_| HelpKeywordT::Help),
@@ -349,11 +337,11 @@ where
 }
 
 fn keyword_type<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::TypeKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::TypeKeyword, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::command::TypeKeywordT;
+    use pir::command::keyword::TypeKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Type" =>
             meta.clone().map(|_| TypeKeywordT::Type),
@@ -363,11 +351,11 @@ where
 }
 
 fn keyword_set<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::SetKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::SetKeyword, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::command::SetKeywordT;
+    use pir::command::keyword::SetKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Set" =>
                 meta.clone().map(|_| SetKeywordT()),
@@ -375,11 +363,11 @@ where
 }
 
 fn keyword_unset<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::UnsetKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::UnsetKeyword, ErrorChumsky<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
-    use pir::command::UnsetKeywordT;
+    use pir::command::keyword::UnsetKeywordT;
     select! {
         ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Unset" =>
                 meta.clone().map(|_| UnsetKeywordT()),

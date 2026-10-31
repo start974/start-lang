@@ -1,6 +1,5 @@
 use errors::{Error, Message};
-use ir::pir::AsIdentifier as _;
-use ir::pir::expression::Variable;
+use ir::pir::Variable;
 use location::Spanned as _;
 use std::path::Path;
 

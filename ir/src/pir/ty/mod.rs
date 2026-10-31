@@ -1,35 +1,11 @@
-use crate::pir::{AsIdentifier, Meta};
+use crate::pir::{Meta, Variable};
 use location::{Span, Spanned};
 use pp::pretty::*;
 
-// ============================================================================
-// Variable
-// ============================================================================
-#[derive(Debug, Clone)]
-pub struct VariableT(String);
-pub type Variable = Meta<VariableT>;
-
-impl From<String> for VariableT {
-    fn from(name: String) -> Self {
-        Self(name)
-    }
-}
-
-impl AsIdentifier for VariableT {
-    /// get name of variable
-    fn name(&self) -> &str {
-        &self.0
-    }
-}
-
-impl Pretty for VariableT {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        theme.ty_var(&self.0)
-    }
-}
+pub mod definition;
 
 // ============================================================================
-// Variable
+// Builtin
 // ============================================================================
 
 #[derive(Debug, Clone)]
@@ -62,7 +38,7 @@ pub enum Type {
 impl Pretty for Type {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Type::Variable(var) => var.pretty(theme),
+            Type::Variable(var) => var.pretty_with(theme, theme.ty_var(&var.value)),
             Type::Builtin(builtin) => builtin.pretty(theme),
         }
     }

@@ -1,44 +1,42 @@
-use crate::pir::Meta;
+use crate::pir::operator::{LParen, RParen};
 use location::{Span, Spanned};
 use pp::pretty::*;
 
 // ============================================================================
-// parenthesized
+// Parenthesized
 // ============================================================================
 #[derive(Debug, Clone)]
-pub struct Parenthesed<Left, Val, Right> {
-    l_paren: Meta<Left>,
-    inner: Val,
-    r_paren: Meta<Right>,
+pub struct Paren<T> {
+    l_paren: LParen,
+    inner: T,
+    r_paren: RParen,
 }
 
-impl<Left, Val, Right> Parenthesed<Left, Val, Right> {
-    /// Create a new parenthesed value
-    pub fn new(l_paren: Meta<Left>, val: Val, r_paren: Meta<Right>) -> Self {
+impl<T> Paren<T> {
+    /// Create a new parenthesized value
+    pub fn new(l_paren: LParen, inner: T, r_paren: RParen) -> Self {
         Self {
             l_paren,
-            inner: val,
+            inner,
             r_paren,
         }
     }
 
     /// Get the value inside the parentheses
-    pub fn inner(&self) -> &Val {
+    pub fn inner(&self) -> &T {
         &self.inner
     }
 }
 
-impl<Left, Val, Right> Spanned for Parenthesed<Left, Val, Right> {
+impl<T> Spanned for Paren<T> {
     fn span(&self) -> Span {
         self.l_paren.span().union(self.r_paren.span())
     }
 }
 
-impl<Left, Val, Right> PrettyPrecedence for Parenthesed<Left, Val, Right>
+impl<T> PrettyPrecedence for Paren<T>
 where
-    Left: Pretty,
-    Val: PrettyPrecedence,
-    Right: Pretty,
+    T: PrettyPrecedence,
 {
     fn precedence(&self) -> u8 {
         self.inner.precedence()
