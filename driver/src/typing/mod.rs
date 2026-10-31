@@ -1,7 +1,10 @@
 use errors::{Errors, ResultErrors as _};
+
+mod error;
+
+use ir::location::{Spanned as _, SpannedSet as _};
 use ir::tir::{Typed, env::Env};
 use ir::{pir, tir};
-use location::{Spanned as _, SpannedSet as _};
 
 #[derive(Debug, Default)]
 pub struct Typer {
@@ -10,6 +13,11 @@ pub struct Typer {
 }
 
 type Result<T, E = Errors> = std::result::Result<T, E>;
+
+/// diagnostics of an error of `tir`
+fn error(err: ir::tir::error::Error) -> Errors {
+    Errors::from(error::diagnostic(err))
+}
 
 impl Typer {
     /// get environment
@@ -37,7 +45,7 @@ impl Typer {
             pir::Expression::Variable(var) => {
                 let span = var.span();
                 let id = self.id_builder.get(var.name());
-                let var = self.env.get_expr_var(&id, span).map_err(Errors::from)?;
+                let var = self.env.get_expr_var(&id, span).map_err(error)?;
                 Ok(tir::Expression::Variable(var))
             }
             pir::Expression::Paren(expr) => self.expression(expr.inner()),
@@ -47,7 +55,7 @@ impl Typer {
                     let ty_res = self.ty(ty);
                     expr_res.combine(ty_res)?
                 };
-                expr.restrict_ty(ty).map_err(Errors::from)
+                expr.restrict_ty(ty).map_err(error)
             }
         }
         .map(|expr| expr.with_spanned(expression))
@@ -60,7 +68,7 @@ impl Typer {
             pir::Type::Variable(ty_var) => {
                 let span = ty_var.span();
                 let id = self.id_builder.get(ty_var.name());
-                let alias = self.env.get_alias_ty(&id, span).map_err(Errors::from)?;
+                let alias = self.env.get_alias_ty(&id, span).map_err(error)?;
                 Ok(tir::Type::Alias(alias))
             }
         }
@@ -101,7 +109,7 @@ impl Typer {
             })
             .and_then(|(pattern, ty_opt, body)| {
                 if let Some(ty) = ty_opt {
-                    body.restrict_ty(ty).map_err(Errors::from)
+                    body.restrict_ty(ty).map_err(error)
                 } else {
                     Ok(body)
                 }
@@ -143,6 +151,6 @@ impl Typer {
     /// convert help variable
     pub fn help(&mut self, var: &pir::Variable) -> Result<tir::Help> {
         let id = self.id_builder.get(var.name());
-        self.env.get_help(&id, var.span()).map_err(Errors::from)
+        self.env.get_help(&id, var.span()).map_err(error)
     }
 }

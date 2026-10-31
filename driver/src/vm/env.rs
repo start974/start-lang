@@ -1,4 +1,4 @@
-use crate::Value;
+use crate::vm::Value;
 use ir::lir::{Expression, Global, GlobalId};
 
 /// values of the globals, indexed by `GlobalId`

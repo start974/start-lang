@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::sir::Variable;
-use location::{Span, Spanned};
 
 // ============================================================================
 // Pattern

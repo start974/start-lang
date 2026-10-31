@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned, SpannedSet};
 use crate::tir::{Identifier, Type, Typed};
-use location::{Span, Spanned, SpannedSet};
 use pp::pretty::*;
 
 // ==========================================================================

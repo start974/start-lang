@@ -4,13 +4,13 @@ use crate::interpreter::{
     flag::{DebugFlag, Flag},
 };
 use ariadne::Source;
+use driver::typing::Typer;
 use errors::Error;
+use ir::location::SourceId;
 use ir::tir;
-use location::SourceId;
 use pp::{pretty::Pretty, theme::Theme};
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
-use typing::Typer;
 
 pub struct Interpreter {
     source_id: SourceId,

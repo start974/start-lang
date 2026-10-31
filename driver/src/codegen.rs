@@ -30,6 +30,22 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
+/// diagnostic of an internal error: `typing` accepted the program, so this is
+/// a bug of the compiler
+impl From<Error> for errors::Error {
+    fn from(err: Error) -> Self {
+        errors::Error::new(901, errors::Message::text("Internal error."))
+            .with_text(errors::Message::text(err.to_string()))
+    }
+}
+
+/// so that `?` reports it from a pass that returns `Errors`
+impl From<Error> for errors::Errors {
+    fn from(err: Error) -> Self {
+        errors::Error::from(err).into()
+    }
+}
+
 // ============================================================================
 // Codegen
 // ============================================================================
@@ -91,8 +107,8 @@ impl Codegen {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ir::location::Span;
     use ir::tir::{Env, IdentifierBuilder, PatternVar};
-    use location::Span;
 
     /// `a := 3` then `b := a`, through the typing environment
     #[test]
@@ -160,5 +176,15 @@ mod tests {
         );
         let alias = tir::Type::Alias(env.get_alias_ty(&t, Span::default()).unwrap());
         assert_eq!(Codegen::ty(&alias), lir::Type::Char);
+    }
+
+    #[test]
+    fn internal_error_diagnostic() {
+        let mut ids = IdentifierBuilder::default();
+        let err = Error::UnknownIdentifier((*ids.build("a")).clone());
+        let diagnostic = errors::Error::from(err.clone());
+        assert_eq!(diagnostic.code(), 901);
+        let errors = errors::Errors::from(err);
+        assert_eq!(errors.code(), 901);
     }
 }

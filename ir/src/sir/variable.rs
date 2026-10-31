@@ -17,7 +17,7 @@ impl Node<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use location::{Span, Spanned};
+    use crate::location::{Span, Spanned};
 
     #[test]
     fn variable_name_and_span() {

@@ -1,6 +1,6 @@
-use crate::ErrorChumsky;
+use crate::parser::ErrorChumsky;
 use errors::{Error, Message};
-use location::Span;
+use ir::location::Span;
 
 pub fn error_parsing(err: &ErrorChumsky<'_>) -> Error {
     use chumsky::error::RichPattern;

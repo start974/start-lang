@@ -1,10 +1,10 @@
-use crate::ErrorChumsky;
-use crate::token;
+use crate::lexer::ErrorChumsky;
 use chumsky::extra::Err;
 use chumsky::prelude::*;
 use chumsky::text::{newline, whitespace};
+use ir::location::Span;
 use ir::pir::{Comment, Meta, meta::CommentOrLines};
-use location::Span;
+use ir::token;
 use num_bigint::BigUint;
 use std::rc::Rc;
 

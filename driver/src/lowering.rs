@@ -6,8 +6,8 @@
 //!   of the file, with its documentation and its place;
 //! - `Set` / `Unset` options stay names, checked later.
 
+use ir::location::{SourceId, Spanned};
 use ir::{pir, sir};
-use location::{SourceId, Spanned};
 
 // ============================================================================
 // Lowering
@@ -175,7 +175,7 @@ fn pattern(pattern: &pir::Pattern) -> sir::Pattern {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use location::Span;
+    use ir::location::Span;
 
     /// parse `src` one command at a time, as the current loop does, and lower
     /// every command into one file
@@ -183,14 +183,15 @@ mod tests {
         let mut lowering = Lowering::new(SourceId::Repl);
         let mut offset = 0;
         while !src[offset..].trim().is_empty() {
-            let tokens = lexer::lex(&src[offset..], offset)
+            let tokens = crate::lexer::lex(&src[offset..], offset)
                 .unwrap_or_else(|_| panic!("lexing error in {src}"));
             let end = tokens.last_offset();
-            match parser::parse(tokens).unwrap_or_else(|_| panic!("parsing error in {src}")) {
-                parser::CommandOrEnd::Command(cmd) => {
+            match crate::parser::parse(tokens).unwrap_or_else(|_| panic!("parsing error in {src}"))
+            {
+                crate::parser::CommandOrEnd::Command(cmd) => {
                     lowering.command(&cmd);
                 }
-                parser::CommandOrEnd::End(_) => break,
+                crate::parser::CommandOrEnd::End(_) => break,
             }
             offset = end;
         }
@@ -350,8 +351,8 @@ mod tests {
     #[test]
     fn whole_file() {
         let mut pir_file = pir::File::default();
-        let tokens = lexer::lex("Def a := 1.", 0).unwrap_or_else(|_| panic!("lexing error"));
-        let Ok(parser::CommandOrEnd::Command(cmd)) = parser::parse(tokens) else {
+        let tokens = crate::lexer::lex("Def a := 1.", 0).unwrap_or_else(|_| panic!("lexing error"));
+        let Ok(crate::parser::CommandOrEnd::Command(cmd)) = crate::parser::parse(tokens) else {
             panic!("no command")
         };
         pir_file.add_command(*cmd);
@@ -367,8 +368,8 @@ mod tests {
     fn state_kept_between_commands() {
         let mut lowering = Lowering::default();
         for src in ["Def a := 1.", "Eval a.", "Def a := a."] {
-            let tokens = lexer::lex(src, 0).unwrap_or_else(|_| panic!("lexing error"));
-            let Ok(parser::CommandOrEnd::Command(cmd)) = parser::parse(tokens) else {
+            let tokens = crate::lexer::lex(src, 0).unwrap_or_else(|_| panic!("lexing error"));
+            let Ok(crate::parser::CommandOrEnd::Command(cmd)) = crate::parser::parse(tokens) else {
                 panic!("no command")
             };
             let lowered = lowering.command(&cmd);

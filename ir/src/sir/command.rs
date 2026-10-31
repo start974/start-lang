@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::sir::{Expression, ExpressionDefinition, TypeDefinition, Variable};
-use location::{Span, Spanned};
 
 // ============================================================================
 // Command Kind

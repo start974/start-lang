@@ -51,13 +51,13 @@ Each step below ends with the tests passing.
 - [x] `ir::tir`: stop re-exporting `pir::Documentation` (`ir/src/tir/mod.rs`),
       use the documentation of `sir`; `ir::tir` no longer uses `ir::pir`.
 - [ ] `typing`: take `sir` instead of `cst` (`expression`, `ty`, `pattern`,
-      `definition`, `type_definition`, `help` in `typing/src/lib.rs`); `typing`
+      `definition`, `type_definition`, `help` in `driver/src/typing.rs`); `typing`
       no longer uses `ir::pir`.
 - [ ] Interim: the current loop calls `lowering` between parse and type.
 
 ## 2. Lexer on the whole source
 
-- [ ] `lexer/src/lexing.rs`: remove the "until `.`" rule (`token_dot` +
+- [ ] `driver/src/lexer/lexing.rs`: remove the "until `.`" rule (`token_dot` +
       `token_end`); the `.` becomes an ordinary operator token, the stream
       ends with `EndOfInput`.
 - [ ] Recovery: on a bad character or an unclosed comment / literal, record
@@ -88,10 +88,18 @@ Each step below ends with the tests passing.
 
 ## 5. One driver
 
-- [ ] `startlang/src/pipeline`: load → lex → parse → lower → check → type →
-      run, with each phase's errors collected.
+- [x] Crate `driver` with every pass as a module (`lexer`, `parser`,
+      `lowering`, `typing`, `codegen`, `vm`; the crates merged into it) and
+      the tokens in `ir::token`, `location` in `ir::location`; `pp` and
+      `errors` stay crates (`ir` → `pp`, `errors` → `ir`): `tir` errors are
+      data, their diagnostics are made in `driver::typing`.
+- [x] `driver::Driver` (instead of `startlang/src/pipeline`): lex → parse →
+      lower → type → codegen → run, state kept between runs, results and
+      errors reported as `Event`s, `Driver::with_stdlib`. Interim: still one
+      command at a time, `typing` on `pir`, no *check* phase yet.
+- [ ] `startlang` uses the `driver` (clients below).
 - [ ] Nothing runs if any phase before *run* has an error.
-- [ ] `errors`: sort errors by position (`Errors::sorted`) before printing.
+- [ ] `ir::errors`: sort errors by position (`Errors::sorted`) before printing.
 - [ ] Stdlib loaded **once**, through the driver, into the initial env; remove
       the three copies (`file_interpreter/interpreter.rs`,
       `repl/interpreter.rs`, `lsp/interpreter.rs`).
@@ -126,8 +134,8 @@ Each step below ends with the tests passing.
 
 - [ ] `doc/design/pipeline.md`: update if the implementation differs.
 - [ ] `doc/guide/cli.md`: `--debug`.
-- [ ] `doc/contributing/development.md`: workspace layout (`ir` with `pir`,
-      `sir`, `tir`; `lowering`).
+- [ ] `doc/contributing/development.md`: workspace layout (`ir` with `token`,
+      `pir`, `sir`, `tir`, `lir`; `driver` with every pass).
 - [ ] Section beta.1 of [`doc/changelog/v0.2.0.md`](doc/changelog/v0.2.0.md#v020-beta1--compilation-phases)
       completed, date set.
 - [ ] Roadmap: tick beta.1, *Current version* → `v0.2.0-beta.1`; crate

@@ -1,10 +1,10 @@
-mod location;
+mod located;
 mod source_id;
 mod span;
 
-pub use location::Located;
-pub use location::LocatedSet;
-pub use location::Location;
+pub use located::Located;
+pub use located::LocatedSet;
+pub use located::Location;
 pub use source_id::SourceId;
 pub use span::Span;
 pub use span::Spanned;

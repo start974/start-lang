@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::sir::{Constant, Type, Variable};
-use location::{Span, Spanned};
 
 pub mod constant;
 pub mod definition;

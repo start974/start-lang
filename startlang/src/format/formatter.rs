@@ -1,11 +1,11 @@
 use super::{Mode, diff::print_diff};
 use crate::error;
 use ariadne::Source;
+use driver::parser::CommandOrEnd;
 use errors::Error;
+use ir::location::SourceId;
 use ir::pir;
-use lexer::MetaTokenStream;
-use location::SourceId;
-use parser::CommandOrEnd;
+use ir::token::MetaTokenStream;
 use pp::pretty::Pretty as _;
 use pp::theme::Theme;
 use std::path::{Path, PathBuf};
@@ -48,8 +48,8 @@ impl Formatter {
     }
 
     /// lexing content
-    fn lex(&mut self, content: &str, offset_source: usize) -> Option<lexer::MetaTokenStream> {
-        match lexer::lex(content, offset_source) {
+    fn lex(&mut self, content: &str, offset_source: usize) -> Option<ir::token::MetaTokenStream> {
+        match driver::lexer::lex(content, offset_source) {
             Ok(tokens) => Some(tokens),
             Err(errs) => {
                 errs.into_iter().for_each(|err| {
@@ -62,7 +62,7 @@ impl Formatter {
 
     /// parse command with lexer tokens
     fn parse(&mut self, tokens: MetaTokenStream) -> Option<CommandOrEnd> {
-        match parser::parse(tokens) {
+        match driver::parser::parse(tokens) {
             Ok(cmd) => Some(cmd),
             Err(errs) => {
                 for err in errs {

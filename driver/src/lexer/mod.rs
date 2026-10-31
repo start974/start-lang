@@ -1,10 +1,8 @@
 use errors::Errors;
 pub mod error;
 pub mod lexing;
-pub mod token;
 
-pub use token::MetaToken;
-pub use token::MetaTokenStream;
+use ir::token::MetaTokenStream;
 
 pub use lexing::lexer;
 

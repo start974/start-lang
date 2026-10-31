@@ -1,9 +1,8 @@
-use crate::tir::error;
+use crate::location::{Span, Spanned};
+use crate::tir::error::Error;
 use crate::tir::expression::Variable;
 use crate::tir::ty::Alias;
 use crate::tir::{Documentation, Identifier, Type};
-use errors::Error;
-use location::{Span, Spanned};
 use pp::pretty::*;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -136,11 +135,11 @@ impl Env {
                 info.span_refs.push(span);
                 Ok(Variable::new(id.clone(), info.ty.clone(), span))
             }
-            _ => Err(error::variable_not_found(
-                id.clone(),
-                IdentifierKind::Expr,
+            _ => Err(Error::VariableNotFound {
+                identifier: id.clone(),
+                kind: IdentifierKind::Expr,
                 span,
-            )),
+            }),
         }
     }
 
@@ -151,11 +150,11 @@ impl Env {
                 info.span_refs.push(span);
                 Ok(Alias::new(id.clone(), info.ty.clone(), span))
             }
-            _ => Err(error::variable_not_found(
-                id.clone(),
-                IdentifierKind::Type,
+            _ => Err(Error::VariableNotFound {
+                identifier: id.clone(),
+                kind: IdentifierKind::Type,
                 span,
-            )),
+            }),
         }
     }
 
@@ -168,11 +167,11 @@ impl Env {
                 kind: info.kind,
                 doc: info.doc.clone(),
             }),
-            None => Err(error::variable_not_found(
-                id.clone(),
-                IdentifierKind::Unknown,
+            None => Err(Error::VariableNotFound {
+                identifier: id.clone(),
+                kind: IdentifierKind::Unknown,
                 span,
-            )),
+            }),
         }
     }
 

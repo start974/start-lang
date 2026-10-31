@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned, SpannedSet};
 use crate::tir::{Constant, Type, Typed, TypedMut};
-use location::{Span, Spanned, SpannedSet};
 use pp::pretty::*;
 pub use variable::Variable;
 

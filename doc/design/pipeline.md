@@ -38,8 +38,13 @@ Source ─► 1. lex ─► tokens ─► 2. parse ─► pir ─► 3. lower �
 ### Representations
 
 Every representation is named `<letter>ir`, the letter saying the stage, and
-is a module of the single crate **`ir`**: `ir::pir`, `ir::sir`, `ir::tir` (later
-`ir::kir`, `ir::lir`). A client imports the modules it needs
+is a module of the single crate **`ir`**: `ir::token`, `ir::pir`, `ir::sir`,
+`ir::tir`, `ir::lir` (later `ir::kir`); what several of them share is in the
+private module `ir::common`, re-exported by each. `ir` also holds
+`ir::location` (sources, spans). Pretty printing (`pp`) and diagnostics
+(`errors`) are separate crates: `ir` reports its errors as data
+(`tir::error::Error`) and the passes turn them into diagnostics, so `ir` does
+not depend on `errors`. A client imports the modules it needs
 (`use ir::{pir, tir};`) and writes `pir::Expression`, `tir::Type`. The trees
 `pir`, `sir` and `tir` have the **same module layout** (`command`,
 `definition`, `expression`, `ty`, `pattern`, `constant`, …) and the **same type
@@ -48,16 +53,18 @@ node at three stages, found at the same path in each module.
 
 | Name | Stands for | Is | Built by | Contains | Used by |
 |------|------------|----|----------|----------|---------|
-| — | tokens | tokens | `lexer` | tokens, comments attached to them | parser |
+| `token` | tokens | tokens | `lexer` | tokens, comments attached to them | parser |
 | `pir` | *parse IR* | CST, concrete syntax tree (renamed from `cst`) | `parser` | everything written: keywords as spelled (`Def` / `Definition`), parentheses, comments, documentation, operators | formatter, LSP (positions, comments) |
 | `sir` | *surface IR* | AST, untyped (new) | `lowering` (new) | the structure only: one node per construct, spans, documentation as text; aliases of a keyword merged, parentheses and comments dropped | name resolution (v0.3), checks, typing |
 | `kir` | *kernel IR* | `sir` without the dynamic grammar (v0.5) | `expand` (v0.5) | every notation of a `.synt` (operators `+`, `==`, `let*`, user notations) replaced by its definition (`a + b` → `add a b`); spans kept to point to the source | typing, proofs (v0.6), obligations (v0.7) |
 | `tir` | *typed IR* | typed AST (name kept) | `typing` | every expression has its type, every variable points to its unique definition (`a__0`) | VM, LSP hover, `lir` lowering |
 | `lir` | *low IR* | backend IR (v0.2.0-beta.4) | `codegen` | backend-independent code ([backend](./backend.md)) | Cranelift |
 
-Naming rule: a representation is a module `ir::<letter>ir`; a crate going
-from one to the next is named after the action (`lexer`, `parser`,
-`lowering`, `expand`, `typing`, `codegen`).
+Naming rule: a representation is a module `ir::<letter>ir`; a pass going
+from one to the next is a module of the crate **`driver`**, named after the
+action (`driver::lexer`, `driver::parser`, `driver::lowering`,
+`driver::expand`, `driver::typing`, `driver::codegen`, and `driver::vm` until
+Cranelift).
 
 `sir` keeps the notations as the user wrote them, for the LSP (hover, go to
 the notation) and for messages; `kir` has no trace of the dynamic grammar, so
@@ -66,9 +73,9 @@ are no notations: typing runs directly on `sir` and `kir` does not exist yet.
 
 ### Phases
 
-| # | Phase | Input → output | Errors | Crate |
+| # | Phase | Input → output | Errors | Module of `driver` |
 |---|-------|----------------|--------|-------|
-| 0 | Load | path / REPL input → `Source` (id, content; `FileKind` in v0.2.0-beta.2) | unreadable file, unknown extension | `location` |
+| 0 | Load | path / REPL input → `Source` (id, content; `FileKind` in v0.2.0-beta.2) | unreadable file, unknown extension | `ir::location` |
 | 1 | Lex | `Source` → all tokens, up to `EndOfInput` | bad characters, unclosed comments / literals; lexing continues after an error | `lexer` |
 | 2 | Parse | tokens → `pir::File` (every command) | syntax errors, one per broken command; resynchronizes on the next command start | `parser` |
 | 3 | Lower | `pir::File` → `sir::File` | none: every valid CST has an AST | `lowering` |
@@ -89,8 +96,8 @@ parsing and expanded after (`sir` → `kir`), and typing runs on `kir`.
 - **Nothing runs if any error was found** before phase 6: no `eval` output
   from a file that does not type-check (already the case today for the VM).
 - **Errors are sorted by position** before printing, whatever the phase.
-- **One driver** (a `pipeline` module in `startlang`, the compiler crate of
-  v0.2.0-beta.5 later) runs the phases; the file runner, the REPL and the LSP are
+- **One driver** (`driver::Driver`, in the crate that holds every pass) runs
+  the phases; the file runner, the REPL and the LSP are
   its clients and only differ by the last step:
 
 | Client | Phases | Last step |

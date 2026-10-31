@@ -1,36 +1,31 @@
+//! Errors found while building `tir`, as data: the diagnostics (code,
+//! message) are made by `driver::typing`, so `ir` does not depend on
+//! `errors`.
+
+use crate::location::{Span, Spanned};
 use crate::tir::env::IdentifierKind;
 use crate::tir::{Identifier, Type};
-use errors::{Error, Message};
-use location::Span;
 
-pub fn variable_not_found(identifier: Identifier, kind: IdentifierKind, span: Span) -> Error {
-    Error::new(301, Message::text("Variable not found."))
-        .with_span(span)
-        .with_text({
-            match kind {
-                IdentifierKind::Type => Message::text("Type variable "),
-                IdentifierKind::Expr => Message::text("Expression variable "),
-                IdentifierKind::Unknown => Message::text("Variable "),
-            }
-            .append(Message::text(identifier.name()).important())
-            .with_text(" not found.")
-        })
+#[derive(Debug, Clone)]
+pub enum Error {
+    /// no definition of this kind for `identifier`
+    VariableNotFound {
+        identifier: Identifier,
+        kind: IdentifierKind,
+        span: Span,
+    },
+    /// the type `found` was restricted to the incompatible type `expected`
+    UnexpectedType {
+        expected: Box<Type>,
+        found: Box<Type>,
+        span: Span,
+    },
 }
 
-pub fn unexpected_type(expected: &Type, found: &Type, span: Span) -> Error {
-    let found = Message::of_pretty(found).important();
-    Error::new(302, Message::text("Type mismatch."))
-        .with_span(span)
-        .with_text(
-            Message::text("Found type ")
-                .append(found.clone())
-                .with_text("."),
-        )
-        .with_note(
-            Message::text("Expected : ")
-                .append(Message::of_pretty(expected).important())
-                .with_line()
-                .with_text("Found    : ")
-                .append(found),
-        )
+impl Spanned for Error {
+    fn span(&self) -> Span {
+        match self {
+            Error::VariableNotFound { span, .. } | Error::UnexpectedType { span, .. } => *span,
+        }
+    }
 }

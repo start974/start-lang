@@ -1,5 +1,5 @@
+use crate::location::{Span, Spanned};
 use crate::pir::operator::{LParen, RParen};
-use location::{Span, Spanned};
 use pp::pretty::*;
 
 // ============================================================================

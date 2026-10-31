@@ -1,6 +1,6 @@
 use crate::message::Message;
 use ariadne::{Cache, Config, IndexType, Label, ReportKind};
-use location::{Location, Report, SourceId, Span, Spanned, SpannedSet};
+use ir::location::{Location, Report, SourceId, Span, Spanned, SpannedSet};
 use pp::theme::Theme;
 
 #[derive(Debug)]

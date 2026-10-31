@@ -1,8 +1,12 @@
 [package]
-name = "vm"
+name = "driver"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+errors = { path = "../errors" }
 ir = { path = "../ir" }
 pp = { path = "../pp" }
+
+chumsky = "0.12.0"
+num-bigint = "0.4.6"
