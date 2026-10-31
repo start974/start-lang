@@ -50,10 +50,10 @@ Each step below ends with the tests passing.
       built, so the command-by-command loop can lower one command at a time.
 - [x] `ir::tir`: stop re-exporting `pir::Documentation` (`ir/src/tir/mod.rs`),
       use the documentation of `sir`; `ir::tir` no longer uses `ir::pir`.
-- [ ] `typing`: take `sir` instead of `cst` (`expression`, `ty`, `pattern`,
+- [x] `typing`: take `sir` instead of `cst` (`expression`, `ty`, `pattern`,
       `definition`, `type_definition`, `help` in `driver/src/typing.rs`); `typing`
       no longer uses `ir::pir`.
-- [ ] Interim: the current loop calls `lowering` between parse and type.
+- [x] Interim: the current loop calls `lowering` between parse and type.
 
 ## 2. Lexer on the whole source
 
@@ -96,7 +96,7 @@ Each step below ends with the tests passing.
 - [x] `driver::Driver` (instead of `startlang/src/pipeline`): lex → parse →
       lower → type → codegen → run, state kept between runs, results and
       errors reported as `Event`s, `Driver::with_stdlib`. Interim: still one
-      command at a time, `typing` on `pir`, no *check* phase yet.
+      command at a time, no *check* phase yet.
 - [ ] `startlang` uses the `driver` (clients below).
 - [ ] Nothing runs if any phase before *run* has an error.
 - [ ] `ir::errors`: sort errors by position (`Errors::sorted`) before printing.

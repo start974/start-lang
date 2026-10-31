@@ -6,6 +6,7 @@ use crate::{
     },
     //lsp::document::SymbolInfo,
 };
+use driver::lowering::Lowering;
 use driver::typing::Typer;
 use errors::Error;
 use ir::location::{SourceId, Spanned};
@@ -18,6 +19,7 @@ use tower_lsp::lsp_types::{Diagnostic, Url};
 pub struct Interpreter {
     source_id: SourceId,
     err_code: i32,
+    lowering: Lowering,
     pub typer: Typer,
     pub runtime: Runtime,
     debug_lexer: bool,
@@ -32,6 +34,7 @@ impl Interpreter {
         let mut interpreter = Interpreter::stdlib();
         interpreter.run();
         interpreter.source_id = SourceId::Url(url.to_string());
+        interpreter.lowering = Lowering::new(interpreter.source_id.clone());
         interpreter.position_memo = PositionMemo::new(content);
         interpreter
     }
@@ -42,6 +45,7 @@ impl Interpreter {
             source_id: SourceId::File(PathBuf::from("stdlib.st")),
             position_memo: PositionMemo::new(include_str!("../../../assets/stdlib.st").to_string()),
             err_code: 0,
+            lowering: Lowering::new(SourceId::File(PathBuf::from("stdlib.st"))),
             typer: Typer::default(),
             runtime: Runtime::default(),
             debug_lexer: false,
@@ -111,6 +115,10 @@ impl interpreter::Interpreter for Interpreter {
 
     fn get_offset_source(&self, offset: usize) -> usize {
         offset
+    }
+
+    fn mut_lowering(&mut self) -> &mut Lowering {
+        &mut self.lowering
     }
 
     fn mut_typer(&mut self) -> &mut Typer {

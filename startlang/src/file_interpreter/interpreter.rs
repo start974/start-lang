@@ -4,6 +4,7 @@ use crate::interpreter::{
     flag::{DebugFlag, Flag},
 };
 use ariadne::Source;
+use driver::lowering::Lowering;
 use driver::typing::Typer;
 use errors::Error;
 use ir::location::SourceId;
@@ -16,6 +17,7 @@ pub struct Interpreter {
     source_id: SourceId,
     content: String,
     err_code: i32,
+    lowering: Lowering,
     pub typer: Typer,
     pub runtime: Runtime,
     debug_lexer: bool,
@@ -29,6 +31,7 @@ impl Interpreter {
         let mut interpreter = Interpreter::stdlib();
         interpreter.run();
         interpreter.source_id = SourceId::File(path.to_path_buf());
+        interpreter.lowering = Lowering::new(interpreter.source_id.clone());
         match read_to_string(path) {
             Ok(content) => {
                 interpreter.content = content;
@@ -44,6 +47,7 @@ impl Interpreter {
             source_id: SourceId::File(PathBuf::from("stdlib.st")),
             content: include_str!("../../../assets/stdlib.st").to_string(),
             err_code: 0,
+            lowering: Lowering::new(SourceId::File(PathBuf::from("stdlib.st"))),
             typer: Typer::default(),
             runtime: Runtime::default(),
             debug_lexer: false,
@@ -77,6 +81,10 @@ impl interpreter::Interpreter for Interpreter {
 
     fn get_offset_source(&self, offset: usize) -> usize {
         offset
+    }
+
+    fn mut_lowering(&mut self) -> &mut Lowering {
+        &mut self.lowering
     }
 
     fn mut_typer(&mut self) -> &mut Typer {

@@ -6,6 +6,7 @@ use crate::interpreter::Runtime;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use ariadne::Source;
+use driver::lowering::Lowering;
 use driver::typing::Typer;
 use errors::Error;
 use ir::location::SourceId;
@@ -17,6 +18,7 @@ pub struct Interpreter {
     all_content: String,
     content: String,
     err_code: i32,
+    lowering: Lowering,
     typer: Typer,
     runtime: Runtime,
     debug_lexer: bool,
@@ -35,6 +37,7 @@ impl Default for Interpreter {
             all_content: String::new(),
             content: String::new(),
             err_code: 0,
+            lowering: Lowering::new(SourceId::Repl),
             typer,
             runtime,
             debug_lexer: false,
@@ -76,6 +79,10 @@ impl interpreter::Interpreter for Interpreter {
 
     fn get_offset_source(&self, offset: usize) -> usize {
         self.all_content.len() - self.content.len() + offset
+    }
+
+    fn mut_lowering(&mut self) -> &mut Lowering {
+        &mut self.lowering
     }
 
     fn mut_typer(&mut self) -> &mut Typer {

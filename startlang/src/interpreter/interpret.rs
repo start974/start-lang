@@ -1,18 +1,12 @@
 use super::Runtime;
 use super::flag::{DebugFlag, Flag};
 use crate::error;
+use driver::lowering::Lowering;
 use errors::Error;
 use ir::location::{SourceId, Spanned};
 use ir::tir::Typed as _;
-use ir::{pir, tir};
+use ir::{pir, sir, tir};
 use pp::pretty::Pretty;
-
-/// documentation comment written before a keyword
-fn documentation<T>(keyword: &pir::Meta<T>) -> Option<tir::Documentation> {
-    keyword
-        .doc_lines()
-        .map(|lines| tir::Documentation::from(lines.to_vec()))
-}
 
 pub trait Interpreter {
     /// get content
@@ -32,6 +26,9 @@ pub trait Interpreter {
 
     /// get a lexer with offset
     fn get_offset_source(&self, offset: usize) -> usize;
+
+    /// get mutable reference on the lowering of the current source
+    fn mut_lowering(&mut self) -> &mut Lowering;
 
     /// get mutable reference on typer
     fn mut_typer(&mut self) -> &mut driver::typing::Typer;
@@ -78,11 +75,11 @@ pub trait Interpreter {
     /// run command expr definition
     fn run_expr_definition(
         &mut self,
-        pir_def: pir::ExpressionDefinition,
+        def: sir::ExpressionDefinition,
         doc: Option<tir::Documentation>,
     ) {
         self.mut_typer()
-            .definition(&pir_def, doc)
+            .definition(&def, doc.as_ref())
             .map(|def| {
                 self.print_summay(&def);
                 self.debug(DebugFlag::Typer, &def);
@@ -98,8 +95,8 @@ pub trait Interpreter {
     }
 
     /// run command type definition
-    fn run_type_definition(&mut self, def: pir::TypeDefinition, doc: Option<tir::Documentation>) {
-        if let Err(errs) = self.mut_typer().type_definition(&def, doc) {
+    fn run_type_definition(&mut self, def: sir::TypeDefinition, doc: Option<tir::Documentation>) {
+        if let Err(errs) = self.mut_typer().type_definition(&def, doc.as_ref()) {
             for err in errs {
                 self.fail(err);
             }
@@ -107,7 +104,7 @@ pub trait Interpreter {
     }
 
     /// run command eval
-    fn run_eval(&mut self, expr: pir::Expression) {
+    fn run_eval(&mut self, expr: sir::Expression) {
         self.mut_typer()
             .expression(&expr)
             .map(|expr| {
@@ -125,7 +122,7 @@ pub trait Interpreter {
     }
 
     /// run type of expression
-    fn run_typeof(&mut self, expr: pir::Expression) {
+    fn run_typeof(&mut self, expr: sir::Expression) {
         self.mut_typer()
             .expression(&expr)
             .map(|expr| {
@@ -139,7 +136,7 @@ pub trait Interpreter {
             })
     }
 
-    fn run_help(&mut self, var: pir::Variable) {
+    fn run_help(&mut self, var: sir::Variable) {
         match self.mut_typer().help(&var) {
             Ok(help) => self.print(&help),
             Err(errs) => {
@@ -151,7 +148,7 @@ pub trait Interpreter {
     }
 
     /// run command set and unset
-    fn run_set(&mut self, b: bool, var: pir::Variable) {
+    fn run_set(&mut self, b: bool, var: sir::Variable) {
         match var.name() {
             "DebugLexer" => self.set_flag(b, Flag::Debug(DebugFlag::Lexer)),
             "DebugParser" => self.set_flag(b, Flag::Debug(DebugFlag::Parser)),
@@ -160,22 +157,25 @@ pub trait Interpreter {
         }
     }
 
-    /// run command
+    /// run command: lower it, then type and run it
     fn run_command(&mut self, cmd: pir::Command) {
+        let lowering = self.mut_lowering();
+        let cmd = lowering.command(&cmd).clone();
+        let defs = lowering.defs();
         match cmd.kind {
-            pir::CommandKind::ExpressionDefinition { keyword, def } => {
-                let doc = documentation(&keyword);
+            sir::CommandKind::ExpressionDefinition(def) => {
+                let doc = defs.doc(def.id).cloned();
                 self.run_expr_definition(*def, doc)
             }
-            pir::CommandKind::TypeDefinition { keyword, def } => {
-                let doc = documentation(&keyword);
+            sir::CommandKind::TypeDefinition(def) => {
+                let doc = defs.doc(def.id).cloned();
                 self.run_type_definition(def, doc)
             }
-            pir::CommandKind::Eval { expr, .. } => self.run_eval(expr),
-            pir::CommandKind::TypeOf { expr, .. } => self.run_typeof(expr),
-            pir::CommandKind::Help { var, .. } => self.run_help(var),
-            pir::CommandKind::Set { var, .. } => self.run_set(true, var),
-            pir::CommandKind::UnSet { var, .. } => self.run_set(false, var),
+            sir::CommandKind::Eval(expr) => self.run_eval(expr),
+            sir::CommandKind::TypeOf(expr) => self.run_typeof(expr),
+            sir::CommandKind::Help(var) => self.run_help(var),
+            sir::CommandKind::Set(var) => self.run_set(true, var),
+            sir::CommandKind::UnSet(var) => self.run_set(false, var),
         }
     }
 
