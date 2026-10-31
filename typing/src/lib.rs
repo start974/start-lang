@@ -1,6 +1,6 @@
-use cst::{self, AsCharacter as _, AsIdentifier as _, AsNumber as _};
 use errors::{Errors, ResultErrors as _};
 use location::{Spanned as _, SpannedSet as _};
+use pir::{self, AsCharacter as _, AsIdentifier as _, AsNumber as _};
 use tir::{Typed, env::Env};
 
 #[derive(Debug, Default)]
@@ -18,12 +18,12 @@ impl Typer {
     }
 
     /// convert constant
-    fn constant(&self, constant: &cst::Constant) -> tir::Constant {
+    fn constant(&self, constant: &pir::Constant) -> tir::Constant {
         match constant {
-            cst::Constant::Number(n) => tir::Constant::nat(n.as_number().clone()),
-            cst::Constant::Character(c) => tir::Constant::character(c.as_character()),
-            cst::Constant::Builtin(cst::Meta { value: builtin, .. }) => {
-                use cst::constant::BuiltinT;
+            pir::Constant::Number(n) => tir::Constant::nat(n.as_number().clone()),
+            pir::Constant::Character(c) => tir::Constant::character(c.as_character()),
+            pir::Constant::Builtin(pir::Meta { value: builtin, .. }) => {
+                use pir::constant::BuiltinT;
                 match builtin {
                     BuiltinT::True => tir::Constant::boolean(true),
                     BuiltinT::False => tir::Constant::boolean(false),
@@ -36,9 +36,9 @@ impl Typer {
     /// convert expression0
     fn expression0(
         &mut self,
-        expression: &cst::expression::Expression0,
+        expression: &pir::expression::Expression0,
     ) -> Result<tir::Expression> {
-        use cst::expression::Expression0;
+        use pir::expression::Expression0;
         match expression {
             Expression0::Constant(c) => {
                 let c_ty = self.constant(c);
@@ -57,9 +57,9 @@ impl Typer {
     /// convert expression1
     fn expression1(
         &mut self,
-        expression: &cst::expression::Expression1,
+        expression: &pir::expression::Expression1,
     ) -> Result<tir::Expression> {
-        use cst::expression::Expression1;
+        use pir::expression::Expression1;
         match expression {
             Expression1::TypedExpression { expr, ty, .. } => {
                 let (expr, ty) = {
@@ -76,17 +76,17 @@ impl Typer {
     /// convert expression1
     pub fn expression(
         &mut self,
-        expression: &cst::expression::Expression,
+        expression: &pir::expression::Expression,
     ) -> Result<tir::Expression> {
         self.expression1(expression)
             .map(|expr| expr.with_spanned(expression))
     }
 
     /// convert type
-    pub fn ty(&mut self, ty: &cst::Type) -> Result<tir::Type> {
+    pub fn ty(&mut self, ty: &pir::Type) -> Result<tir::Type> {
         match ty {
-            cst::Type::Builtin(cst::Meta { value: builtin, .. }) => {
-                use cst::ty::BuiltinT;
+            pir::Type::Builtin(pir::Meta { value: builtin, .. }) => {
+                use pir::ty::BuiltinT;
                 let builtin = match builtin {
                     BuiltinT::Nat => tir::TypeBuiltin::nat(),
                     BuiltinT::Bool => tir::TypeBuiltin::bool(),
@@ -94,7 +94,7 @@ impl Typer {
                 };
                 Ok(tir::Type::Builtin(builtin))
             }
-            cst::Type::Variable(ty_var) => {
+            pir::Type::Variable(ty_var) => {
                 let span = ty_var.span();
                 let id = self.id_builder.get(ty_var.name());
                 let alias = self.env.get_alias_ty(&id, span).map_err(Errors::from)?;
@@ -104,8 +104,8 @@ impl Typer {
         .map(|ty_f| ty_f.with_spanned(ty))
     }
 
-    fn pattern(&mut self, pattern: &cst::Pattern, ty: &tir::Type) -> Result<tir::Pattern> {
-        use cst::Pattern;
+    fn pattern(&mut self, pattern: &pir::Pattern, ty: &tir::Type) -> Result<tir::Pattern> {
+        use pir::Pattern;
         match pattern {
             Pattern::Variable(var) => {
                 let id = self.id_builder.build(var.name());
@@ -119,7 +119,7 @@ impl Typer {
     /// type expression definition
     fn expression_definition(
         &mut self,
-        definition: &cst::ExpressionDefinition,
+        definition: &pir::ExpressionDefinition,
     ) -> Result<tir::ExpressionDefinition> {
         self.expression(&definition.body)
             .combine(definition.typed_by().map(|ty| self.ty(ty)).transpose())
@@ -143,7 +143,7 @@ impl Typer {
     /// convert definition
     pub fn definition(
         &mut self,
-        definition: &cst::ExpressionDefinition,
+        definition: &pir::ExpressionDefinition,
         doc_opt: Option<tir::Documentation>,
     ) -> Result<tir::ExpressionDefinition> {
         let expr_def = self.expression_definition(definition)?;
@@ -158,7 +158,7 @@ impl Typer {
     /// add type definition
     pub fn type_definition(
         &mut self,
-        definition: &cst::TypeDefinition,
+        definition: &pir::TypeDefinition,
         doc: Option<tir::Documentation>,
     ) -> Result<()> {
         let id = self.id_builder.build(definition.name.name());
@@ -172,7 +172,7 @@ impl Typer {
     }
 
     /// convert help variable
-    pub fn help(&mut self, var: &cst::help::Variable) -> Result<tir::Help> {
+    pub fn help(&mut self, var: &pir::help::Variable) -> Result<tir::Help> {
         let id = self.id_builder.get(var.name());
         self.env.get_help(&id, var.span()).map_err(Errors::from)
     }

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-cst = {path = "../cst"}
+pir = { path = "../pir" }
 errors = {path = "../errors"}
 lexer = {path = "../lexer"}
 location = {path = "../location"}
