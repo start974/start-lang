@@ -11,8 +11,8 @@
 //! the outputs for the user. Clients (CLI, REPL, LSP) only print events.
 //!
 //! Interim (v0.2.0-beta.1): the source is still lexed and parsed one command
-//! at a time, and `typing` still reads `pir`; `lowering` already runs, and
-//! the documentation of the definitions comes from its `DefTable`.
+//! at a time. After `lowering`, only `sir` is used: `typing` reads it and the
+//! documentation of the definitions comes from its `DefTable`.
 
 mod error;
 mod event;
@@ -137,19 +137,14 @@ impl Driver {
         on: &mut impl FnMut(Event<'_>),
     ) -> Result<(), Errors> {
         // lower
-        let lowered = self.lowering.command(cmd);
-        on(Event::Lowered(lowered));
-        let def_id = match &lowered.kind {
-            sir::CommandKind::ExpressionDefinition(def) => Some(def.id),
-            sir::CommandKind::TypeDefinition(def) => Some(def.id),
-            _ => None,
-        };
-        let doc = def_id.and_then(|id| self.lowering.defs().doc(id).cloned());
+        let lowered = self.lowering.command(cmd).clone();
+        on(Event::Lowered(&lowered));
+        let defs = self.lowering.defs();
 
         // type, then generate and run
-        match &cmd.kind {
-            pir::CommandKind::ExpressionDefinition { def, .. } => {
-                let def = self.typer.definition(def, doc)?;
+        match &lowered.kind {
+            sir::CommandKind::ExpressionDefinition(def) => {
+                let def = self.typer.definition(def, defs.doc(def.id))?;
                 on(Event::TypedDefinition(&def));
                 if !failed {
                     let global = self.codegen.definition(&def)?;
@@ -160,10 +155,10 @@ impl Driver {
                 }
                 on(Event::Output(Output::Defined(def)));
             }
-            pir::CommandKind::TypeDefinition { def, .. } => {
-                self.typer.type_definition(def, doc)?;
+            sir::CommandKind::TypeDefinition(def) => {
+                self.typer.type_definition(def, defs.doc(def.id))?;
             }
-            pir::CommandKind::Eval { expr, .. } => {
+            sir::CommandKind::Eval(expr) => {
                 let expr = self.typer.expression(expr)?;
                 on(Event::TypedExpression(&expr));
                 if !failed {
@@ -173,21 +168,21 @@ impl Driver {
                     on(Event::Output(Output::Value(value, expr.span())));
                 }
             }
-            pir::CommandKind::TypeOf { expr, .. } => {
+            sir::CommandKind::TypeOf(expr) => {
                 let expr = self.typer.expression(expr)?;
                 on(Event::TypedExpression(&expr));
                 on(Event::Output(Output::Type(tir::Typed::ty(&expr).clone())));
             }
-            pir::CommandKind::Help { var, .. } => {
+            sir::CommandKind::Help(var) => {
                 let help = self.typer.help(var)?;
                 on(Event::Output(Output::Help(help)));
             }
-            pir::CommandKind::Set { var, .. } => on(Event::Output(Output::Option {
-                name: sir::Variable::new(var.value.clone(), var.span()),
+            sir::CommandKind::Set(var) => on(Event::Output(Output::Option {
+                name: var.clone(),
                 on: true,
             })),
-            pir::CommandKind::UnSet { var, .. } => on(Event::Output(Output::Option {
-                name: sir::Variable::new(var.value.clone(), var.span()),
+            sir::CommandKind::UnSet(var) => on(Event::Output(Output::Option {
+                name: var.clone(),
                 on: false,
             })),
         }

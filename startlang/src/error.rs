@@ -1,6 +1,6 @@
 use errors::{Error, Message};
 use ir::location::Spanned as _;
-use ir::pir::Variable;
+use ir::sir::Variable;
 use std::path::Path;
 
 pub fn read_file(path: &Path) -> Error {
