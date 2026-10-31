@@ -1,8 +1,8 @@
 use super::flag::{DebugFlag, Flag};
 use crate::error;
-use cst::AsIdentifier as _;
 use errors::Error;
 use location::{SourceId, Spanned};
+use pir::AsIdentifier as _;
 use pp::pretty::Pretty;
 use tir::Typed as _;
 
@@ -70,11 +70,11 @@ pub trait Interpreter {
     /// run command expr definition
     fn run_expr_definition(
         &mut self,
-        cst_def: cst::ExpressionDefinition,
-        doc: Option<cst::Documentation>,
+        pir_def: pir::ExpressionDefinition,
+        doc: Option<pir::Documentation>,
     ) {
         self.mut_typer()
-            .definition(&cst_def, doc)
+            .definition(&pir_def, doc)
             .map(|def| {
                 self.print_summay(&def);
                 self.debug(DebugFlag::Typer, &def);
@@ -90,7 +90,7 @@ pub trait Interpreter {
     }
 
     /// run command type definition
-    fn run_type_definition(&mut self, def: cst::TypeDefinition, doc: Option<tir::Documentation>) {
+    fn run_type_definition(&mut self, def: pir::TypeDefinition, doc: Option<tir::Documentation>) {
         if let Err(errs) = self.mut_typer().type_definition(&def, doc) {
             for err in errs {
                 self.fail(err);
@@ -99,7 +99,7 @@ pub trait Interpreter {
     }
 
     /// run command eval
-    fn run_eval(&mut self, expr: cst::Expression) {
+    fn run_eval(&mut self, expr: pir::Expression) {
         self.mut_typer()
             .expression(&expr)
             .map(|expr| {
@@ -117,7 +117,7 @@ pub trait Interpreter {
     }
 
     /// run type of expression
-    fn run_typeof(&mut self, expr: cst::Expression) {
+    fn run_typeof(&mut self, expr: pir::Expression) {
         self.mut_typer()
             .expression(&expr)
             .map(|expr| {
@@ -131,7 +131,7 @@ pub trait Interpreter {
             })
     }
 
-    fn run_help(&mut self, var: cst::help::Variable) {
+    fn run_help(&mut self, var: pir::help::Variable) {
         match self.mut_typer().help(&var) {
             Ok(help) => self.print(&help),
             Err(errs) => {
@@ -143,7 +143,7 @@ pub trait Interpreter {
     }
 
     /// run command set and unset
-    fn run_set(&mut self, b: bool, var: cst::expression::Variable) {
+    fn run_set(&mut self, b: bool, var: pir::expression::Variable) {
         match var.name() {
             "DebugLexer" => self.set_flag(b, Flag::Debug(DebugFlag::Lexer)),
             "DebugParser" => self.set_flag(b, Flag::Debug(DebugFlag::Parser)),
@@ -153,19 +153,19 @@ pub trait Interpreter {
     }
 
     /// run command
-    fn run_command(&mut self, cmd: cst::Command) {
+    fn run_command(&mut self, cmd: pir::Command) {
         match cmd.kind {
-            cst::CommandKind::ExpressionDefinition { keyword, def } => {
+            pir::CommandKind::ExpressionDefinition { keyword, def } => {
                 self.run_expr_definition(*def, keyword.get_doc())
             }
-            cst::CommandKind::TypeDefinition { keyword, def } => {
+            pir::CommandKind::TypeDefinition { keyword, def } => {
                 self.run_type_definition(def, keyword.get_doc())
             }
-            cst::CommandKind::Eval { expr, .. } => self.run_eval(expr),
-            cst::CommandKind::TypeOf { expr, .. } => self.run_typeof(expr),
-            cst::CommandKind::Help { var, .. } => self.run_help(var),
-            cst::CommandKind::Set { var, .. } => self.run_set(true, var),
-            cst::CommandKind::UnSet { var, .. } => self.run_set(false, var),
+            pir::CommandKind::Eval { expr, .. } => self.run_eval(expr),
+            pir::CommandKind::TypeOf { expr, .. } => self.run_typeof(expr),
+            pir::CommandKind::Help { var, .. } => self.run_help(var),
+            pir::CommandKind::Set { var, .. } => self.run_set(true, var),
+            pir::CommandKind::UnSet { var, .. } => self.run_set(false, var),
         }
     }
 
@@ -183,7 +183,7 @@ pub trait Interpreter {
     }
 
     /// parse command with lexer tokens
-    fn parse(&mut self, tokens: lexer::MetaTokenStream) -> Option<cst::Command> {
+    fn parse(&mut self, tokens: lexer::MetaTokenStream) -> Option<pir::Command> {
         match parser::parse(tokens) {
             Ok(parser::CommandOrEnd::Command(cmd)) => Some(*cmd),
             Ok(parser::CommandOrEnd::End(_)) => None,

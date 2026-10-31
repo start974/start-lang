@@ -73,10 +73,10 @@ impl Formatter {
     }
 
     /// run the interpreter
-    fn parse_content(&mut self) -> Option<cst::File> {
+    fn parse_content(&mut self) -> Option<pir::File> {
         let mut offset = 0;
         let content_copy = self.content.clone();
-        let mut cst_file = cst::File::default();
+        let mut pir_file = pir::File::default();
 
         loop {
             let content = &content_copy[offset..];
@@ -91,9 +91,9 @@ impl Formatter {
                         None => {
                             break;
                         }
-                        Some(CommandOrEnd::Command(cmd)) => cst_file.add_command(*cmd),
+                        Some(CommandOrEnd::Command(cmd)) => pir_file.add_command(*cmd),
                         Some(CommandOrEnd::End(end)) => {
-                            cst_file.set_end(end);
+                            pir_file.set_end(end);
                             break;
                         }
                     }
@@ -102,7 +102,7 @@ impl Formatter {
             }
         }
         if self.err_code == 0 {
-            Some(cst_file)
+            Some(pir_file)
         } else {
             None
         }
@@ -113,10 +113,10 @@ impl Formatter {
         if self.err_code != 0 {
             return;
         }
-        let Some(cst_file) = self.parse_content() else {
+        let Some(pir_file) = self.parse_content() else {
             return;
         };
-        let formatted = cst_file.make_string(&Theme::default());
+        let formatted = pir_file.make_string(&Theme::default());
 
         match mode {
             Mode::Overwrite if std::fs::write(&self.path, &formatted).is_err() => {

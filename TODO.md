@@ -24,7 +24,7 @@ Each step below ends with the tests passing.
 
 ## 1. Names of the middle-end (no behaviour change)
 
-- [ ] Rename the crate `cst` → `pir` (*parse IR*): `Cargo.toml` of the workspace,
+- [x] Rename the crate `cst` → `pir` (*parse IR*): `Cargo.toml` of the workspace,
       `lexer`, `parser`, `startlang`; `use cst::` → `use pir::`.
 - [ ] New crate `sir` (*surface IR*, untyped AST), same module layout as `pir`
       and `tir` (`command`, `definition`, `expression`, `ty`, `pattern`,

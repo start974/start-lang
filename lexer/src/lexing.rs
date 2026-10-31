@@ -3,9 +3,9 @@ use crate::token;
 use chumsky::extra::Err;
 use chumsky::prelude::*;
 use chumsky::text::{newline, whitespace};
-use cst::{Comment, Meta, meta::CommentOrLines};
 use location::Span;
 use num_bigint::BigUint;
+use pir::{Comment, Meta, meta::CommentOrLines};
 use std::rc::Rc;
 
 // ===========================================================================
