@@ -1,3 +1,4 @@
+use super::Runtime;
 use super::flag::{DebugFlag, Flag};
 use crate::error;
 use errors::Error;
@@ -35,8 +36,8 @@ pub trait Interpreter {
     /// get mutable reference on typer
     fn mut_typer(&mut self) -> &mut typing::Typer;
 
-    /// get vm
-    fn mut_vm(&mut self) -> &mut vm::Env;
+    /// get runtime: codegen and vm
+    fn mut_runtime(&mut self) -> &mut Runtime;
 
     /// set debug parser
     fn set_flag(&mut self, b: bool, flag: Flag);
@@ -86,7 +87,7 @@ pub trait Interpreter {
                 self.print_summay(&def);
                 self.debug(DebugFlag::Typer, &def);
                 if self.get_error_code() == 0 {
-                    self.mut_vm().add_definition(&def)
+                    self.mut_runtime().define(&def);
                 }
             })
             .unwrap_or_else(|errs| {
@@ -112,7 +113,7 @@ pub trait Interpreter {
             .map(|expr| {
                 self.debug(DebugFlag::Typer, &expr);
                 if self.get_error_code() == 0 {
-                    let value = self.mut_vm().eval(&expr).unwrap();
+                    let (_, value) = self.mut_runtime().eval(&expr);
                     self.print(&(value, expr.span()));
                 }
             })

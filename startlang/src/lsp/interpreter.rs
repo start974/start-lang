@@ -1,7 +1,7 @@
 use super::{backend::Backend, position_memo::PositionMemo};
 use crate::{
     interpreter::{
-        self, Interpreter as _,
+        self, Interpreter as _, Runtime,
         flag::{DebugFlag, Flag},
     },
     //lsp::document::SymbolInfo,
@@ -19,7 +19,7 @@ pub struct Interpreter {
     source_id: SourceId,
     err_code: i32,
     pub typer: Typer,
-    pub vm: vm::Env,
+    pub runtime: Runtime,
     debug_lexer: bool,
     debug_parser: bool,
     debug_typer: bool,
@@ -43,7 +43,7 @@ impl Interpreter {
             position_memo: PositionMemo::new(include_str!("../../../assets/stdlib.st").to_string()),
             err_code: 0,
             typer: Typer::default(),
-            vm: vm::Env::default(),
+            runtime: Runtime::default(),
             debug_lexer: false,
             debug_parser: false,
             debug_typer: false,
@@ -117,8 +117,8 @@ impl interpreter::Interpreter for Interpreter {
         &mut self.typer
     }
 
-    fn mut_vm(&mut self) -> &mut vm::Env {
-        &mut self.vm
+    fn mut_runtime(&mut self) -> &mut Runtime {
+        &mut self.runtime
     }
 
     fn set_flag(&mut self, b: bool, flag: Flag) {

@@ -2,6 +2,7 @@ use super::summary::SummaryDefinition;
 use crate::file_interpreter;
 use crate::interpreter;
 use crate::interpreter::Interpreter as _;
+use crate::interpreter::Runtime;
 use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use ariadne::Source;
@@ -11,14 +12,13 @@ use location::SourceId;
 use pp::pretty::Pretty;
 use pp::theme::Theme;
 use typing::Typer;
-use vm::Env;
 
 pub struct Interpreter {
     all_content: String,
     content: String,
     err_code: i32,
     typer: Typer,
-    vm: Env,
+    runtime: Runtime,
     debug_lexer: bool,
     debug_parser: bool,
     debug_typer: bool,
@@ -30,13 +30,13 @@ impl Default for Interpreter {
         let mut std_lib_interpreter = file_interpreter::Interpreter::stdlib();
         std_lib_interpreter.run();
         let typer = std_lib_interpreter.typer;
-        let vm = std_lib_interpreter.vm;
+        let runtime = std_lib_interpreter.runtime;
         Interpreter {
             all_content: String::new(),
             content: String::new(),
             err_code: 0,
             typer,
-            vm,
+            runtime,
             debug_lexer: false,
             debug_parser: false,
             debug_typer: false,
@@ -82,8 +82,8 @@ impl interpreter::Interpreter for Interpreter {
         &mut self.typer
     }
 
-    fn mut_vm(&mut self) -> &mut Env {
-        &mut self.vm
+    fn mut_runtime(&mut self) -> &mut Runtime {
+        &mut self.runtime
     }
 
     fn set_flag(&mut self, b: bool, flag: Flag) {

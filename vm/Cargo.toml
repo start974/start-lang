@@ -6,4 +6,3 @@ edition = "2024"
 [dependencies]
 ir = { path = "../ir" }
 pp = { path = "../pp" }
-bigdecimal = "0.4.10"
