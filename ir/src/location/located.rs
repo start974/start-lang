@@ -46,8 +46,8 @@ impl<'a> Location<'a> {
     }
 
     /// get span
-    pub fn span(&self) -> &Span {
-        &self.span
+    pub fn span(&self) -> Span {
+        self.span
     }
 }
 
@@ -67,7 +67,7 @@ pub trait LocatedSet<'a>: Sized {
     }
 }
 
-impl<'a> ariadne::Span for Location<'a> {
+impl ariadne::Span for Location<'_> {
     type SourceId = SourceId;
 
     fn start(&self) -> usize {
@@ -92,7 +92,7 @@ mod tests {
     use crate::location::SourceId;
 
     struct TestLocated<'a>(Location<'a>);
-    impl<'a> Default for TestLocated<'a> {
+    impl Default for TestLocated<'_> {
         fn default() -> Self {
             Self(Location::unknown())
         }
@@ -117,7 +117,7 @@ mod tests {
         let loc1 = Location::new(&source_id, Span::new(0, 5));
         let loc2 = Location::new(&source_id, Span::new(3, 10));
         let loc3 = Location::new(&source_id2, Span::new(0, 5));
-        assert_eq!(loc1.union(loc2).unwrap().span(), &Span::new(0, 10));
+        assert_eq!(loc1.union(loc2).unwrap().span(), Span::new(0, 10));
         assert!(loc1.union(loc3).is_none());
     }
 
@@ -126,7 +126,7 @@ mod tests {
         let source_id = SourceId::File(std::path::PathBuf::from("test.st"));
         let loc = Location::new(&source_id, Span::new(5, 15));
         let offset_loc = loc.with_offset(10);
-        assert_eq!(offset_loc.span(), &Span::new(15, 25));
+        assert_eq!(offset_loc.span(), Span::new(15, 25));
     }
 
     #[test]

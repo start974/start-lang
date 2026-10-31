@@ -8,7 +8,7 @@ pub struct PositionMemo {
 }
 
 impl PositionMemo {
-    /// make a new bufferis
+    /// make a new position memo
     pub fn new(content: String) -> Self {
         Self {
             content,
@@ -17,7 +17,7 @@ impl PositionMemo {
     }
 
     /// get position with binary search
-    fn get(&mut self, offset: usize) -> Position {
+    fn get(&self, offset: usize) -> Position {
         let line = self
             .lines_offset
             .binary_search_by(|&start| start.cmp(&offset))
@@ -30,7 +30,7 @@ impl PositionMemo {
         }
     }
 
-    /// compute position wich is after the last line computed
+    /// compute a position which is after the last line computed
     fn compute(&mut self, offset: usize) -> Position {
         debug_assert!(
             offset <= self.content.len(),
@@ -38,7 +38,10 @@ impl PositionMemo {
             self.content.len()
         );
 
-        let last_offset = self.lines_offset.last().cloned().unwrap();
+        let last_offset = *self
+            .lines_offset
+            .last()
+            .expect("the first line starts at 0");
         let mut line = self.lines_offset.len() - 1;
         let mut col = 0;
         for (k, chr) in (last_offset..).zip(self.content[last_offset..].chars()) {
@@ -61,16 +64,17 @@ impl PositionMemo {
     }
 
     pub fn position(&mut self, offset: usize) -> Position {
-        let last_offset = self.lines_offset.last().unwrap();
-        if &offset == last_offset {
-            Position {
+        let last_offset = *self
+            .lines_offset
+            .last()
+            .expect("the first line starts at 0");
+        match offset.cmp(&last_offset) {
+            std::cmp::Ordering::Equal => Position {
                 line: (self.lines_offset.len() - 1) as u32,
                 character: 0,
-            }
-        } else if &offset < last_offset {
-            self.get(offset)
-        } else {
-            self.compute(offset)
+            },
+            std::cmp::Ordering::Less => self.get(offset),
+            std::cmp::Ordering::Greater => self.compute(offset),
         }
     }
 

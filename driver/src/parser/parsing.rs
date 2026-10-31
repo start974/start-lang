@@ -6,7 +6,8 @@ use ir::token::{MetaToken, Operator, Token};
 use crate::parser::CommandOrEnd;
 use ir::pir;
 
-pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, MetaToken>>;
+/// parser state of chumsky: errors are `Rich` errors on tokens
+pub type Extra<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, MetaToken>>;
 
 // ===========================================================================
 // Operator
@@ -14,7 +15,7 @@ pub type ErrorChumsky<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, MetaTok
 pub fn operator<'tokens, I, Op>(
     op: Operator,
     res: Op,
-) -> impl Parser<'tokens, I, Meta<Op>, ErrorChumsky<'tokens>>
+) -> impl Parser<'tokens, I, Meta<Op>, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
     Op: Clone,
@@ -33,7 +34,7 @@ where
 /// pattern :=
 /// | IDENTIFIER
 ///```
-pub fn pattern<'tokens, I>() -> impl Parser<'tokens, I, pir::Pattern, ErrorChumsky<'tokens>>
+pub fn pattern<'tokens, I>() -> impl Parser<'tokens, I, pir::Pattern, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -54,7 +55,7 @@ where
 /// | NUMBER
 /// | CHARACTER
 ///```
-pub fn constant<'tokens, I>() -> impl Parser<'tokens, I, pir::Constant, ErrorChumsky<'tokens>>
+pub fn constant<'tokens, I>() -> impl Parser<'tokens, I, pir::Constant, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -84,7 +85,7 @@ where
 /// ```ebfn
 /// variable := IDENTIFIER
 ///```
-pub fn variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, ErrorChumsky<'tokens>>
+pub fn variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -101,8 +102,8 @@ where
 /// | "(" expression ")"
 ///```
 fn expression0<'tokens, I>(
-    expr: impl Parser<'tokens, I, pir::Expression, ErrorChumsky<'tokens>>,
-) -> impl Parser<'tokens, I, pir::Expression, ErrorChumsky<'tokens>>
+    expr: impl Parser<'tokens, I, pir::Expression, Extra<'tokens>>,
+) -> impl Parser<'tokens, I, pir::Expression, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -131,8 +132,8 @@ where
 /// | expr@0
 ///```
 fn expression1<'tokens, I>(
-    expr0: impl Parser<'tokens, I, pir::Expression, ErrorChumsky<'tokens>> + Clone,
-) -> impl Parser<'tokens, I, pir::Expression, ErrorChumsky<'tokens>>
+    expr0: impl Parser<'tokens, I, pir::Expression, Extra<'tokens>> + Clone,
+) -> impl Parser<'tokens, I, pir::Expression, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -159,7 +160,7 @@ where
 /// | expr@0 colon ty
 /// | expr@0
 ///```
-pub fn expression<'tokens, I>() -> impl Parser<'tokens, I, pir::Expression, ErrorChumsky<'tokens>>
+pub fn expression<'tokens, I>() -> impl Parser<'tokens, I, pir::Expression, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -175,7 +176,7 @@ where
 /// expr_definition := pattern (colon type)? EQ_DEF expression
 ///```
 pub fn expression_definition<'tokens, I>()
--> impl Parser<'tokens, I, pir::ExpressionDefinition, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::ExpressionDefinition, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -207,7 +208,7 @@ where
 /// ```ebfn
 /// type_variable := IDENTIFIER
 /// ```
-pub fn ty_variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, ErrorChumsky<'tokens>>
+pub fn ty_variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -215,7 +216,7 @@ where
 }
 
 /// parse type builtin
-pub fn ty_builtin<'tokens, I>() -> impl Parser<'tokens, I, pir::ty::Builtin, ErrorChumsky<'tokens>>
+pub fn ty_builtin<'tokens, I>() -> impl Parser<'tokens, I, pir::ty::Builtin, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -237,7 +238,7 @@ where
 /// type :=
 /// | type_variable
 /// ```
-pub fn ty<'tokens, I>() -> impl Parser<'tokens, I, pir::Type, ErrorChumsky<'tokens>>
+pub fn ty<'tokens, I>() -> impl Parser<'tokens, I, pir::Type, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -251,8 +252,7 @@ where
 /// ```ebfn
 /// type_definition := type_variable EQ_DEF type
 /// ```
-pub fn type_definition<'tokens, I>()
--> impl Parser<'tokens, I, pir::TypeDefinition, ErrorChumsky<'tokens>>
+pub fn type_definition<'tokens, I>() -> impl Parser<'tokens, I, pir::TypeDefinition, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -270,7 +270,7 @@ where
 /// ```ebfn
 /// help_variable := IDENTIFIER
 /// ```
-pub fn help_variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, ErrorChumsky<'tokens>>
+pub fn help_variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -281,7 +281,7 @@ where
 // ===========================================================================
 
 fn keyword_definition<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::DefinitionKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::DefinitionKeyword, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -295,7 +295,7 @@ where
 }
 
 fn keyword_eval<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::EvalKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::EvalKeyword, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -309,7 +309,7 @@ where
 }
 
 fn keyword_type_of<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::TypeOfKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::TypeOfKeyword, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -323,7 +323,7 @@ where
 }
 
 fn keyword_help<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::HelpKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::HelpKeyword, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -337,7 +337,7 @@ where
 }
 
 fn keyword_type<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::TypeKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::TypeKeyword, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -351,7 +351,7 @@ where
 }
 
 fn keyword_set<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::SetKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::SetKeyword, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -363,7 +363,7 @@ where
 }
 
 fn keyword_unset<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::UnsetKeyword, ErrorChumsky<'tokens>>
+-> impl Parser<'tokens, I, pir::command::keyword::UnsetKeyword, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -383,7 +383,7 @@ where
 /// | keyword_set variable
 /// | keyword_unset variable
 ///```
-pub fn command_kind<'tokens, I>() -> impl Parser<'tokens, I, pir::CommandKind, ErrorChumsky<'tokens>>
+pub fn command_kind<'tokens, I>() -> impl Parser<'tokens, I, pir::CommandKind, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -418,7 +418,7 @@ where
 /// ```ebfn
 /// command := command_kind "."
 ///```
-pub fn command<'tokens, I>() -> impl Parser<'tokens, I, pir::Command, ErrorChumsky<'tokens>>
+pub fn command<'tokens, I>() -> impl Parser<'tokens, I, pir::Command, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -434,7 +434,7 @@ where
 // ===========================================================================
 
 /// parse end of input
-pub fn end_of_input<'tokens, I>() -> impl Parser<'tokens, I, pir::EndOfFile, ErrorChumsky<'tokens>>
+pub fn end_of_input<'tokens, I>() -> impl Parser<'tokens, I, pir::EndOfFile, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {
@@ -450,7 +450,7 @@ where
 // ===========================================================================
 
 /// parse with lexer tokens
-pub fn parser<'tokens, I>() -> impl Parser<'tokens, I, CommandOrEnd, ErrorChumsky<'tokens>>
+pub fn parser<'tokens, I>() -> impl Parser<'tokens, I, CommandOrEnd, Extra<'tokens>>
 where
     I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
 {

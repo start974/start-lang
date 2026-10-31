@@ -2,7 +2,6 @@
 #![allow(dead_code)]
 
 use assert_cmd::cargo::cargo_bin_cmd;
-use core::panic;
 use fs_extra::dir::CopyOptions;
 use std::fmt::Debug;
 use std::fs;
@@ -119,9 +118,10 @@ impl TestContext {
             // first line is the content length header
             let mut clh = String::new();
             self.stdout.read_line(&mut clh).await.unwrap();
-            if !clh.starts_with("Content-Length") {
-                panic!("missing content length header");
-            }
+            assert!(
+                clh.starts_with("Content-Length"),
+                "missing content length header"
+            );
             let length = clh
                 .trim_start_matches("Content-Length: ")
                 .trim()
@@ -175,9 +175,10 @@ impl TestContext {
             // first line is the content length header
             let mut clh = String::new();
             self.stdout.read_line(&mut clh).await.unwrap();
-            if !clh.starts_with("Content-Length") {
-                panic!("missing content length header");
-            }
+            assert!(
+                clh.starts_with("Content-Length"),
+                "missing content length header"
+            );
             let length = clh
                 .trim_start_matches("Content-Length: ")
                 .trim()

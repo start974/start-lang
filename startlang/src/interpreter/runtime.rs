@@ -29,7 +29,7 @@ impl Runtime {
     ///
     /// # Panics
     /// same as `define`
-    pub fn eval(&mut self, expr: &tir::Expression) -> (lir::Expression, driver::vm::Value) {
+    pub fn eval(&self, expr: &tir::Expression) -> (lir::Expression, driver::vm::Value) {
         let expr = self
             .codegen
             .expression(expr)

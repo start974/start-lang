@@ -12,7 +12,7 @@ fn finish(rl: &mut Editor<(), FileHistory>) {
     }
 }
 
-/// make promp string
+/// make prompt string
 fn prompt_string(line_num: usize, many_line: bool) -> String {
     let sep = if many_line { "∥" } else { "⎮" };
     format!("{line_num:>4} {sep} ")
@@ -20,7 +20,7 @@ fn prompt_string(line_num: usize, many_line: bool) -> String {
 
 /// run repl
 pub fn run() {
-    let mut rl = DefaultEditor::new().unwrap();
+    let mut rl = DefaultEditor::new().expect("cannot start the line editor");
     let _ = rl.load_history(HISTORY_FILE);
     let mut interpreter = interpreter::Interpreter::default();
     let mut line_num = 1;
@@ -32,11 +32,11 @@ pub fn run() {
             Ok(line) => {
                 lines.push_str(&line);
                 lines.push('\n');
-                rl.add_history_entry(&line).unwrap();
-                if line.ends_with(".") {
+                let _ = rl.add_history_entry(&line);
+                if line.ends_with('.') {
                     interpreter.add_content(&lines);
                     interpreter.run();
-                    lines = String::new();
+                    lines.clear();
                     many_line = false;
                 } else {
                     many_line = true;

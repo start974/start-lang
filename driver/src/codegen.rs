@@ -124,10 +124,10 @@ mod tests {
             tir::Expression::Constant(tir::Constant::nat(3u8.into())),
         );
         let global_a = codegen.definition(&def_a).unwrap();
-        env.add_expr_def(a.clone(), nat.clone(), Span::default());
+        env.add_expr_def(a.clone(), nat, Span::default());
 
         let b = ids.build("b");
-        let use_a = env.get_expr_var(&a, Span::default()).unwrap();
+        let use_a = env.expr_var(&a, Span::default()).unwrap();
         let def_b = tir::ExpressionDefinition::new(
             tir::Pattern::Variable(PatternVar::from(b)),
             tir::Expression::Variable(use_a),
@@ -155,7 +155,7 @@ mod tests {
             tir::Type::Builtin(tir::ty::Builtin::bool()),
             Span::default(),
         );
-        let use_a = tir::Expression::Variable(env.get_expr_var(&a, Span::default()).unwrap());
+        let use_a = tir::Expression::Variable(env.expr_var(&a, Span::default()).unwrap());
 
         let codegen = Codegen::default();
         assert_eq!(
@@ -174,7 +174,7 @@ mod tests {
             tir::Type::Builtin(tir::ty::Builtin::char()),
             Span::default(),
         );
-        let alias = tir::Type::Alias(env.get_alias_ty(&t, Span::default()).unwrap());
+        let alias = tir::Type::Alias(env.type_alias(&t, Span::default()).unwrap());
         assert_eq!(Codegen::ty(&alias), lir::Type::Char);
     }
 

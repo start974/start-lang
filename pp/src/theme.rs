@@ -50,8 +50,8 @@ impl Default for Theme {
 }
 
 impl Theme {
-    /// create a default theme
-    pub fn default_theme() -> Self {
+    /// theme with colors, for a terminal; `Theme::default()` has none
+    pub fn colored() -> Self {
         Self {
             width: 80,
             keyword: ColorInfo::default().fg_color(Color::Magenta),
@@ -160,7 +160,7 @@ mod test {
     use crate::Pretty;
 
     #[test]
-    fn default_theme() {
+    fn colored_theme() {
         let theme = Theme::default();
         assert_eq!(theme.width, 80);
         assert_eq!(theme.keyword, ColorInfo::default());

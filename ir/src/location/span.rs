@@ -8,22 +8,22 @@ impl Span {
     }
 
     /// start position
-    pub fn start(&self) -> usize {
+    pub fn start(self) -> usize {
         self.0
     }
 
     /// end position
-    pub fn end(&self) -> usize {
+    pub fn end(self) -> usize {
         self.1
     }
 
     /// add offset to span
-    pub fn with_offset(&self, offset: usize) -> Span {
+    pub fn with_offset(self, offset: usize) -> Span {
         Span(self.start() + offset, self.end() + offset)
     }
 
     /// union of spans
-    pub fn union(&self, other: Span) -> Span {
+    pub fn union(self, other: Span) -> Span {
         Span(
             std::cmp::min(self.start(), other.start()),
             std::cmp::max(self.end(), other.end()),
@@ -49,12 +49,6 @@ pub trait SpannedSet: Sized {
     /// with item spanned
     fn with_spanned(self, x: &impl Spanned) -> Self {
         self.with_span(x.span())
-    }
-}
-
-impl<T> Spanned for (T, Span) {
-    fn span(&self) -> Span {
-        self.1
     }
 }
 

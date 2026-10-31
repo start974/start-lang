@@ -51,7 +51,7 @@ mod tests {
             "This is line 2.".to_string(),
         ]);
         let expected = "This is line 1.\nThis is line 2.\n";
-        assert_eq!(format!("{}", doc), expected);
+        assert_eq!(format!("{doc}"), expected);
     }
 
     #[test]

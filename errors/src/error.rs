@@ -85,7 +85,9 @@ impl Error {
 
     /// print error on stderr
     pub fn eprint(&self, id_source: &SourceId, theme: &Theme, cache: &mut impl Cache<SourceId>) {
-        self.report(id_source, theme).eprint(cache).unwrap();
+        self.report(id_source, theme)
+            .eprint(cache)
+            .expect("cannot write the error on stderr");
     }
 }
 
@@ -134,8 +136,7 @@ mod tests {
             .with_span(Span::new(10, 20))
             .with_text(Message::text("Detailed error description."));
         let report = error.report(&SourceId::Unknown, &theme);
-        let dbg_str = format!("{:?}", report);
-        eprintln!("{}", dbg_str);
+        let dbg_str = format!("{report:?}");
         assert!(dbg_str.contains("Another error"));
         assert!(dbg_str.contains("1002"));
     }

@@ -18,7 +18,8 @@ pub trait Pretty: Sized {
     /// get colored string
     fn make_string(&self, theme: &Theme) -> String {
         let mut buffer = String::new();
-        self.fmt(theme, &mut buffer).unwrap();
+        self.fmt(theme, &mut buffer)
+            .expect("writing to a String cannot fail");
         buffer
     }
 }
@@ -53,14 +54,5 @@ where
 
     fn pretty_precedence(&self, min_prec: u8, theme: &Theme) -> Doc<'_> {
         self.as_ref().pretty_precedence(min_prec, theme)
-    }
-}
-
-impl<T, U> Pretty for (T, U)
-where
-    T: Pretty,
-{
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        self.0.pretty(theme)
     }
 }

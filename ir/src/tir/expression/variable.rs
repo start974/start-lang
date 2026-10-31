@@ -1,5 +1,5 @@
 use crate::location::{Span, Spanned, SpannedSet};
-use crate::tir::{Identifier, Type, Typed};
+use crate::tir::{Identifier, Type, Typed, TypedMut};
 use pp::pretty::*;
 
 // ==========================================================================
@@ -31,14 +31,9 @@ impl Variable {
     }
 }
 
-mod sealed_mut_ty {
-    use crate::tir::TypedMut;
-
-    use super::*;
-    impl TypedMut for Variable {
-        fn ty_mut(&mut self) -> &mut Type {
-            &mut self.ty
-        }
+impl TypedMut for Variable {
+    fn ty_mut(&mut self) -> &mut Type {
+        &mut self.ty
     }
 }
 

@@ -17,13 +17,14 @@ impl Message {
         Self(Vec::new())
     }
 
+    /// add a part, merged with the last one if they have the same kind
     fn add_kind(&mut self, kind: MessageKind) {
-        match (&kind, self.0.last_mut()) {
-            (MessageKind::Normal(text), Some(MessageKind::Normal(last))) => last.push_str(text),
-            (MessageKind::Important(text), Some(MessageKind::Important(last))) => {
-                last.push_str(text)
+        match (kind, self.0.last_mut()) {
+            (MessageKind::Normal(text), Some(MessageKind::Normal(last)))
+            | (MessageKind::Important(text), Some(MessageKind::Important(last))) => {
+                last.push_str(&text);
             }
-            (_, _) => self.0.push(kind.clone()),
+            (kind, _) => self.0.push(kind),
         }
     }
 
@@ -45,10 +46,9 @@ impl Message {
 
     /// append optional document
     pub fn append_opt(self, doc: Option<Self>) -> Self {
-        if let Some(d) = doc {
-            self.append(d)
-        } else {
-            self
+        match doc {
+            Some(doc) => self.append(doc),
+            None => self,
         }
     }
 
@@ -59,7 +59,7 @@ impl Message {
     {
         let mut add_sep = false;
         let mut doc = Self::nil();
-        for cur_doc in docs.into_iter() {
+        for cur_doc in docs {
             if add_sep {
                 doc = doc.append(sep.clone());
             } else {
@@ -106,37 +106,39 @@ impl Message {
         Self::text(p.make_string(&Theme::default()))
     }
 
-    // with pretty
+    /// with pretty
     pub fn with_pretty(self, p: &impl Pretty) -> Self {
         self.append(Self::of_pretty(p))
     }
 
-    // make a doc normal
-    pub fn normal(mut self) -> Self {
-        self.0 = self
-            .0
-            .iter()
-            .map(|kind| match kind {
-                MessageKind::Normal(text) => MessageKind::Normal(text.clone()),
-                MessageKind::Important(text) => MessageKind::Normal(text.clone()),
-                MessageKind::NewLine => MessageKind::NewLine,
-            })
-            .collect();
-        self
+    /// make every part normal
+    pub fn normal(self) -> Self {
+        Self(
+            self.0
+                .into_iter()
+                .map(|kind| match kind {
+                    MessageKind::Normal(text) | MessageKind::Important(text) => {
+                        MessageKind::Normal(text)
+                    }
+                    MessageKind::NewLine => MessageKind::NewLine,
+                })
+                .collect(),
+        )
     }
 
-    /// important message part
-    pub fn important(mut self) -> Self {
-        self.0 = self
-            .0
-            .iter()
-            .map(|kind| match kind {
-                MessageKind::Normal(text) => MessageKind::Important(text.clone()),
-                MessageKind::Important(text) => MessageKind::Important(text.clone()),
-                MessageKind::NewLine => MessageKind::NewLine,
-            })
-            .collect();
-        self
+    /// make every part important
+    pub fn important(self) -> Self {
+        Self(
+            self.0
+                .into_iter()
+                .map(|kind| match kind {
+                    MessageKind::Normal(text) | MessageKind::Important(text) => {
+                        MessageKind::Important(text)
+                    }
+                    MessageKind::NewLine => MessageKind::NewLine,
+                })
+                .collect(),
+        )
     }
 
     pub fn pretty(&self, theme: &MessageTheme) -> Doc<'_> {
@@ -162,9 +164,15 @@ impl Message {
     }
 }
 
+impl Default for Message {
+    fn default() -> Self {
+        Self::nil()
+    }
+}
+
 impl From<Option<Message>> for Message {
     fn from(opt: Option<Message>) -> Self {
-        if let Some(m) = opt { m } else { Message::nil() }
+        opt.unwrap_or_default()
     }
 }
 
