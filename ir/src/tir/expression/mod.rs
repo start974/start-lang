@@ -1,13 +1,12 @@
-use crate::tir::ty::{Type, Typed, TypedMut};
+use crate::tir::{Constant, Type, Typed, TypedMut};
 use location::{Span, Spanned, SpannedSet};
 use pp::pretty::*;
+pub use variable::Variable;
 
-mod constant;
-mod definition;
-
-pub use crate::tir::env::Variable as ExpressionVariable;
-pub use constant::{Constant, ConstantKind, NConst};
-pub use definition::Definition as ExpressionDefinition;
+pub mod constant;
+pub mod definition;
+pub mod pattern;
+pub mod variable;
 
 // ==========================================================================
 // Expression
@@ -15,7 +14,7 @@ pub use definition::Definition as ExpressionDefinition;
 
 pub enum Expression {
     Constant(Constant),
-    Variable(ExpressionVariable),
+    Variable(Variable),
 }
 
 mod sealed_mut_ty {

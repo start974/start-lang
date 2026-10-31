@@ -1,4 +1,5 @@
-use super::super::ty::{Type, TypeBuiltin, Typed, TypedMut};
+use crate::tir::ty::Builtin;
+use crate::tir::{Type, Typed, TypedMut};
 use location::{Span, Spanned, SpannedSet};
 use num_bigint::BigUint;
 use pp::pretty::*;
@@ -30,17 +31,17 @@ impl Constant {
     }
     /// create natural number constant
     pub fn nat(v: NConst) -> Self {
-        Self::new(ConstantKind::Nat(v), Type::Builtin(TypeBuiltin::nat()))
+        Self::new(ConstantKind::Nat(v), Type::Builtin(Builtin::nat()))
     }
 
     /// create boolean constant
     pub fn boolean(b: bool) -> Self {
-        Self::new(ConstantKind::Bool(b), Type::Builtin(TypeBuiltin::bool()))
+        Self::new(ConstantKind::Bool(b), Type::Builtin(Builtin::bool()))
     }
 
     /// create a character constant
     pub fn character(c: char) -> Self {
-        Self::new(ConstantKind::Char(c), Type::Builtin(TypeBuiltin::char()))
+        Self::new(ConstantKind::Char(c), Type::Builtin(Builtin::char()))
     }
 
     /// get kind of the constant

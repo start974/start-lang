@@ -1,21 +1,19 @@
-use super::super::Pattern;
-use super::super::ty::{Type, Typed};
-use super::Expression;
+use crate::tir::{Expression, Pattern, Type, Typed};
 use location::{Span, Spanned};
 use pp::pretty::*;
 
 // ==========================================================================
 // Expression Definition
 // ==========================================================================
-pub struct Definition {
-    /// name of definition
+pub struct ExpressionDefinition {
+    /// defined pattern
     pattern: Pattern,
 
     /// body of definition
     body: Expression,
 }
 
-impl Definition {
+impl ExpressionDefinition {
     /// Create a new expression definition
     pub fn new(pattern: Pattern, body: Expression) -> Self {
         Self { pattern, body }
@@ -32,21 +30,13 @@ impl Definition {
     }
 }
 
-/*pub mod sealed_mut_ty {*/
-/*use super::*;*/
-/*impl TypedMut for Definition {*/
-/*fn ty_mut(&mut self) -> &mut Type {*/
-/*self.body.ty_mut()*/
-/*}*/
-/*}*/
-/*}*/
-impl Typed for Definition {
+impl Typed for ExpressionDefinition {
     fn ty(&self) -> &Type {
         self.body.ty()
     }
 }
 
-impl Pretty for Definition {
+impl Pretty for ExpressionDefinition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::nil()
             .append(theme.keyword(&"Definition"))
@@ -68,7 +58,7 @@ impl Pretty for Definition {
     }
 }
 
-impl Spanned for Definition {
+impl Spanned for ExpressionDefinition {
     fn span(&self) -> Span {
         self.pattern.span().union(self.body.span())
     }

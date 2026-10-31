@@ -1,102 +1,13 @@
 use crate::tir::error;
-use crate::tir::{Documentation, Identifier, Type, Typed};
+use crate::tir::expression::Variable;
+use crate::tir::ty::Alias;
+use crate::tir::{Documentation, Identifier, Type};
 use errors::Error;
-use location::{Span, Spanned, SpannedSet};
+use location::{Span, Spanned};
 use pp::pretty::*;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-// ==========================================================================
-// Variable
-// ==========================================================================
-
-pub struct Variable {
-    /// identifier of the variable
-    identifier: Identifier,
-    /// type of the variable
-    ty: Type,
-    /// span of varable
-    span: Span,
-}
-
-impl Variable {
-    /// get the identifier of the variable
-    pub fn identifier(&self) -> &Identifier {
-        &self.identifier
-    }
-}
-
-mod sealed_mut_ty {
-    use crate::tir::TypedMut;
-
-    use super::*;
-    impl TypedMut for Variable {
-        fn ty_mut(&mut self) -> &mut Type {
-            &mut self.ty
-        }
-    }
-}
-
-impl Typed for Variable {
-    fn ty(&self) -> &Type {
-        &self.ty
-    }
-}
-
-impl Spanned for Variable {
-    fn span(&self) -> Span {
-        self.span
-    }
-}
-
-impl SpannedSet for Variable {
-    fn set_span(&mut self, span: Span) {
-        self.span = span;
-    }
-}
-
-impl Pretty for Variable {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        theme.expr_var(&self.identifier)
-    }
-}
-
-// ==========================================================================
-// alias Ty
-// ==========================================================================
-#[derive(Debug, Clone)]
-pub struct Alias {
-    /// name of alias
-    name: Identifier,
-    /// type of alias
-    ty: Box<Type>,
-    /// span of alias
-    span: Span,
-}
-
-impl Typed for Alias {
-    fn ty(&self) -> &Type {
-        &self.ty
-    }
-}
-
-impl Pretty for Alias {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        theme.ty_var(&self.name.name())
-    }
-}
-
-impl Spanned for Alias {
-    fn span(&self) -> Span {
-        self.span
-    }
-}
-
-impl SpannedSet for Alias {
-    fn set_span(&mut self, span: Span) {
-        self.span = span;
-    }
-}
 // ==========================================================================
 // Identifier Kind
 // ==========================================================================
@@ -178,6 +89,7 @@ impl Spanned for Help {
         self.span
     }
 }
+
 // ==========================================================================
 // Identifier table
 // ==========================================================================
@@ -222,11 +134,7 @@ impl Env {
         match self.table.get_mut(id) {
             Some(info) if info.kind == IdentifierKind::Expr => {
                 info.span_refs.push(span);
-                Ok(Variable {
-                    identifier: id.clone(),
-                    ty: info.ty.clone(),
-                    span,
-                })
+                Ok(Variable::new(id.clone(), info.ty.clone(), span))
             }
             _ => Err(error::variable_not_found(
                 id.clone(),
@@ -241,11 +149,7 @@ impl Env {
         match self.table.get_mut(id) {
             Some(info) if info.kind == IdentifierKind::Type => {
                 info.span_refs.push(span);
-                Ok(Alias {
-                    name: id.clone(),
-                    ty: Box::new(info.ty.clone()),
-                    span,
-                })
+                Ok(Alias::new(id.clone(), info.ty.clone(), span))
             }
             _ => Err(error::variable_not_found(
                 id.clone(),
@@ -272,7 +176,7 @@ impl Env {
         }
     }
 
-    /// iternate over all identifiers
+    /// iterate over all identifiers
     pub fn iter(&self) -> impl Iterator<Item = &IdentifierInfo> {
         self.table.values()
     }

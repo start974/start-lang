@@ -1,17 +1,17 @@
+use crate::tir::error;
+pub use alias::Alias;
+pub use builtin::Builtin;
 use errors::Error;
-use location::{Spanned, SpannedSet};
+use location::{Span, Spanned, SpannedSet};
 use pp::pretty::*;
 
-mod builtin;
-
-pub use crate::tir::env::Alias as TypeAlias;
-use crate::tir::error;
-pub use builtin::Builtin as TypeBuiltin;
+pub mod alias;
+pub mod builtin;
 
 #[derive(Debug, Clone)]
 pub enum Type {
-    Builtin(TypeBuiltin),
-    Alias(TypeAlias),
+    Builtin(Builtin),
+    Alias(Alias),
 }
 
 impl Type {
@@ -31,7 +31,7 @@ impl Pretty for Type {
 }
 
 impl Spanned for Type {
-    fn span(&self) -> location::Span {
+    fn span(&self) -> Span {
         match self {
             Type::Builtin(builtin) => builtin.span(),
             Type::Alias(alias) => alias.span(),
@@ -40,7 +40,7 @@ impl Spanned for Type {
 }
 
 impl SpannedSet for Type {
-    fn set_span(&mut self, span: location::Span) {
+    fn set_span(&mut self, span: Span) {
         match self {
             Type::Builtin(builtin) => builtin.set_span(span),
             Type::Alias(alias) => alias.set_span(span),
