@@ -1,4 +1,5 @@
 use clap::{ArgGroup, Parser, Subcommand};
+use std::path::PathBuf;
 use std::process::exit;
 
 mod error;
@@ -19,8 +20,8 @@ struct Cli {
 enum Commands {
     /// run repl
     Repl,
-    /// interpet a file
-    Run { path: String },
+    /// interpret a file
+    Run { path: PathBuf },
 
     #[command(group(
         ArgGroup::new("mode")
@@ -29,7 +30,7 @@ enum Commands {
     ))]
     /// format a file
     Format {
-        path: String,
+        path: PathBuf,
 
         #[arg(long)]
         /// print formatted file
@@ -57,17 +58,13 @@ async fn main() {
             repl::run();
             0
         }
-        Commands::Run { path } => {
-            let path = std::path::PathBuf::from(path);
-            file_interpreter::run(&path)
-        }
+        Commands::Run { path } => file_interpreter::run(&path),
         Commands::Format {
             path,
             print,
             diff,
             overwrite,
         } => {
-            let path = std::path::PathBuf::from(path);
             let mode = if print {
                 format::Mode::Print
             } else if diff {

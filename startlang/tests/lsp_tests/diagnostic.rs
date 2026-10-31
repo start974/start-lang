@@ -2,8 +2,8 @@ use tower_lsp::lsp_types::*;
 
 use super::TestContext;
 
-fn test_error(diag: PublishDiagnosticsParams, uri: Url) {
-    assert_eq!(diag.uri, uri);
+fn test_error(diag: PublishDiagnosticsParams, uri: &Url) {
+    assert_eq!(&diag.uri, uri);
 
     let mut ds = diag.diagnostics.into_iter();
     let d = ds.next().unwrap();
@@ -59,7 +59,7 @@ async fn did_open() {
     let uri = ctx.doc_uri("main.st");
 
     let dp = ctx.recv::<PublishDiagnosticsParams>().await;
-    test_error(dp, uri);
+    test_error(dp, &uri);
 }
 
 #[tokio::test]
@@ -81,9 +81,9 @@ async fn did_change() {
     let uri = ctx.doc_uri("main.st");
 
     let dp = ctx.recv::<PublishDiagnosticsParams>().await;
-    test_error(dp, uri.clone());
+    test_error(dp, &uri);
     let dp = ctx.recv::<PublishDiagnosticsParams>().await;
-    test_error(dp, uri);
+    test_error(dp, &uri);
 }
 
 #[tokio::test]

@@ -29,7 +29,7 @@ impl Typer {
     }
 
     /// convert constant
-    fn constant(&self, constant: &sir::Constant) -> tir::Constant {
+    fn constant(constant: &sir::Constant) -> tir::Constant {
         match constant {
             sir::Constant::Number(n) => tir::Constant::nat(n.value.clone()),
             sir::Constant::Character(c) => tir::Constant::character(c.value),
@@ -41,10 +41,10 @@ impl Typer {
     /// convert expression
     pub fn expression(&mut self, expression: &sir::Expression) -> Result<tir::Expression> {
         match &expression.kind {
-            sir::ExpressionKind::Constant(c) => Ok(tir::Expression::Constant(self.constant(c))),
+            sir::ExpressionKind::Constant(c) => Ok(tir::Expression::Constant(Self::constant(c))),
             sir::ExpressionKind::Variable(var) => {
                 let id = self.id_builder.get(var.name());
-                let var = self.env.get_expr_var(&id, var.span()).map_err(error)?;
+                let var = self.env.expr_var(&id, var.span()).map_err(error)?;
                 Ok(tir::Expression::Variable(var))
             }
             sir::ExpressionKind::Typed { expr, ty } => {
@@ -65,7 +65,7 @@ impl Typer {
             sir::Type::Builtin(builtin) => Ok(tir::Type::Builtin(builtin.value.into())),
             sir::Type::Variable(ty_var) => {
                 let id = self.id_builder.get(ty_var.name());
-                let alias = self.env.get_alias_ty(&id, ty_var.span()).map_err(error)?;
+                let alias = self.env.type_alias(&id, ty_var.span()).map_err(error)?;
                 Ok(tir::Type::Alias(alias))
             }
         }
@@ -124,7 +124,7 @@ impl Typer {
     /// convert help variable
     pub fn help(&mut self, var: &sir::Variable) -> Result<tir::Help> {
         let id = self.id_builder.get(var.name());
-        self.env.get_help(&id, var.span()).map_err(error)
+        self.env.help(&id, var.span()).map_err(error)
     }
 }
 

@@ -14,4 +14,3 @@ pub use span::SpannedSet;
 // Report
 // ==========================================================================
 pub type Report<'id, 'a> = ariadne::Report<'a, Location<'id>>;
-//pub type ReportBuilder<'a> = ariadne::ReportBuilder<'a, Location>;

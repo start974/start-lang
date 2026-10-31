@@ -1,10 +1,7 @@
 use super::{backend::Backend, position_memo::PositionMemo};
-use crate::{
-    interpreter::{
-        self, Interpreter as _, Runtime,
-        flag::{DebugFlag, Flag},
-    },
-    //lsp::document::SymbolInfo,
+use crate::interpreter::{
+    self, Interpreter as _, Runtime,
+    flag::{DebugFlag, Flag},
 };
 use driver::lowering::Lowering;
 use driver::typing::Typer;
@@ -30,7 +27,7 @@ pub struct Interpreter {
 }
 
 impl Interpreter {
-    pub fn new(url: Url, content: String) -> Self {
+    pub fn new(url: &Url, content: String) -> Self {
         let mut interpreter = Interpreter::stdlib();
         interpreter.run();
         interpreter.source_id = SourceId::Url(url.to_string());
@@ -39,7 +36,7 @@ impl Interpreter {
         interpreter
     }
 
-    /// stdlib environement
+    /// stdlib environment
     pub fn stdlib() -> Self {
         Interpreter {
             source_id: SourceId::File(PathBuf::from("stdlib.st")),
@@ -105,7 +102,7 @@ impl interpreter::Interpreter for Interpreter {
         self.err_code = code;
     }
 
-    fn get_error_code(&self) -> i32 {
+    fn error_code(&self) -> i32 {
         self.err_code
     }
 
@@ -113,7 +110,7 @@ impl interpreter::Interpreter for Interpreter {
         true
     }
 
-    fn get_offset_source(&self, offset: usize) -> usize {
+    fn offset_source(&self, offset: usize) -> usize {
         offset
     }
 
@@ -168,7 +165,7 @@ impl interpreter::Interpreter for Interpreter {
         self.diagnostics.push(diag);
     }
 
-    fn print_summay(&self, _: &tir::ExpressionDefinition) {}
+    fn print_summary(&self, _: &tir::ExpressionDefinition) {}
 
     fn eprint(&mut self, err: &Error) {
         use tower_lsp::lsp_types::*;
@@ -178,17 +175,16 @@ impl interpreter::Interpreter for Interpreter {
         let range = self.position_memo.range(&span);
         let message = err
             .text()
-            .map(|msg| msg.make_string(&theme))
-            .unwrap_or_else(|| err.header().make_string(&theme));
+            .unwrap_or_else(|| err.header())
+            .make_string(&theme);
 
         let related_information = err
             .note()
             .map(|msg| {
-                let uri = if let SourceId::Url(uri) = self.source_id.clone() {
-                    uri.parse().unwrap()
-                } else {
-                    unreachable!("source id is not url")
+                let SourceId::Url(uri) = &self.source_id else {
+                    unreachable!("the source of the LSP is an url")
                 };
+                let uri = uri.parse().expect("the source url comes from the client");
                 DiagnosticRelatedInformation {
                     location: Location { uri, range },
                     message: msg.make_string(&theme),

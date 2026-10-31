@@ -43,7 +43,7 @@ impl Default for Interpreter {
             debug_lexer: false,
             debug_parser: false,
             debug_typer: false,
-            theme: Theme::default_theme(),
+            theme: Theme::colored(),
         }
     }
 }
@@ -69,7 +69,7 @@ impl interpreter::Interpreter for Interpreter {
         self.err_code = code;
     }
 
-    fn get_error_code(&self) -> i32 {
+    fn error_code(&self) -> i32 {
         self.err_code
     }
 
@@ -77,7 +77,7 @@ impl interpreter::Interpreter for Interpreter {
         self.err_code == 0
     }
 
-    fn get_offset_source(&self, offset: usize) -> usize {
+    fn offset_source(&self, offset: usize) -> usize {
         self.all_content.len() - self.content.len() + offset
     }
 
@@ -116,7 +116,7 @@ impl interpreter::Interpreter for Interpreter {
         println!("{}", doc.make_string(&self.theme));
     }
 
-    fn print_summay(&self, def: &tir::ExpressionDefinition) {
+    fn print_summary(&self, def: &tir::ExpressionDefinition) {
         let summary = SummaryDefinition::from(def);
         println!("       {}", summary.make_string(&self.theme));
     }

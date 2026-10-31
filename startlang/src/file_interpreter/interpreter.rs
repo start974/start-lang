@@ -41,7 +41,7 @@ impl Interpreter {
         interpreter
     }
 
-    /// stdlib environement
+    /// stdlib environment
     pub fn stdlib() -> Self {
         Interpreter {
             source_id: SourceId::File(PathBuf::from("stdlib.st")),
@@ -53,7 +53,7 @@ impl Interpreter {
             debug_lexer: false,
             debug_parser: false,
             debug_typer: false,
-            theme: Theme::default_theme(),
+            theme: Theme::colored(),
         }
     }
 }
@@ -71,7 +71,7 @@ impl interpreter::Interpreter for Interpreter {
         self.err_code = code;
     }
 
-    fn get_error_code(&self) -> i32 {
+    fn error_code(&self) -> i32 {
         self.err_code
     }
 
@@ -79,7 +79,7 @@ impl interpreter::Interpreter for Interpreter {
         true
     }
 
-    fn get_offset_source(&self, offset: usize) -> usize {
+    fn offset_source(&self, offset: usize) -> usize {
         offset
     }
 
@@ -111,7 +111,7 @@ impl interpreter::Interpreter for Interpreter {
         }
     }
 
-    fn print_summay(&self, _: &tir::ExpressionDefinition) {}
+    fn print_summary(&self, _: &tir::ExpressionDefinition) {}
 
     fn eprint(&mut self, error: &Error) {
         let mut cache = (self.source_id.clone(), Source::from(&self.content));

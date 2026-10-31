@@ -24,14 +24,14 @@ impl Formatter {
             path: path.to_path_buf(),
             content: String::new(),
             err_code: 0,
-            theme: Theme::default_theme(),
+            theme: Theme::colored(),
         };
         match std::fs::read_to_string(path) {
             Ok(content) => {
                 formatter.content = content;
             }
             Err(_) => formatter.fail(error::read_file(path)),
-        };
+        }
         formatter
     }
 
@@ -52,9 +52,9 @@ impl Formatter {
         match driver::lexer::lex(content, offset_source) {
             Ok(tokens) => Some(tokens),
             Err(errs) => {
-                errs.into_iter().for_each(|err| {
+                for err in errs {
                     self.fail(err);
-                });
+                }
                 None
             }
         }
@@ -98,7 +98,7 @@ impl Formatter {
                             break;
                         }
                     }
-                    offset = offset_end
+                    offset = offset_end;
                 }
             }
         }
@@ -110,7 +110,7 @@ impl Formatter {
     }
 
     /// run formatter with mode
-    pub fn run(&mut self, mode: &Mode) {
+    pub fn run(&mut self, mode: Mode) {
         if self.err_code != 0 {
             return;
         }

@@ -9,5 +9,5 @@ pub use interpreter::Interpreter;
 pub fn run(path: &Path) -> i32 {
     let mut interpreter = interpreter::Interpreter::new(path);
     interpreter.run();
-    interpreter.get_error_code()
+    interpreter.error_code()
 }

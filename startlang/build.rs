@@ -1,8 +1,9 @@
 use glob::glob;
+use std::fmt::Write as _;
 use std::{collections::HashMap, env, fs, path::Path};
 
 fn build_cli_tests() {
-    let out_dir = env::var("OUT_DIR").unwrap();
+    let out_dir = env::var("OUT_DIR").expect("cargo sets OUT_DIR");
     let dest_path = format!("{out_dir}/generated_cli_tests.rs");
 
     let mut modules: HashMap<String, Vec<(String, String)>> = HashMap::new();
@@ -12,7 +13,7 @@ fn build_cli_tests() {
     // Collecte des fichiers
     let files = patterns
         .iter()
-        .flat_map(|pattern| glob(pattern).unwrap())
+        .flat_map(|pattern| glob(pattern).expect("valid glob pattern"))
         .filter_map(Result::ok)
         .collect::<Vec<_>>();
 
@@ -22,15 +23,14 @@ fn build_cli_tests() {
             .and_then(|p| p.file_name())
             .unwrap_or_else(|| Path::new("root").as_os_str())
             .to_string_lossy()
-            .replace("-", "_");
+            .replace('-', "_");
 
         // Nom unique du test
         let test_name = path
             .file_stem()
-            .unwrap()
+            .expect("a test file has a name")
             .to_string_lossy()
-            .replace(".", "_")
-            .replace("-", "_");
+            .replace(['.', '-'], "_");
 
         let path_str = path.to_string_lossy().into_owned();
 
@@ -46,9 +46,10 @@ fn build_cli_tests() {
     output.push_str("// AUTO-GENERATED FILE - DO NOT EDIT\n");
 
     for (module, tests) in modules {
-        output.push_str(&format!("mod {module} {{\n"));
+        writeln!(output, "mod {module} {{").expect("writing to a String cannot fail");
         for (test_name, path) in tests {
-            output.push_str(&format!(
+            write!(
+                output,
                 r#"
     #[test]
     fn {test_name}() {{
@@ -57,12 +58,13 @@ fn build_cli_tests() {
             .run();
     }}
 "#
-            ));
+            )
+            .expect("writing to a String cannot fail");
         }
         output.push_str("}\n");
     }
 
-    fs::write(dest_path, output).unwrap();
+    fs::write(dest_path, output).expect("cannot write the generated tests");
 }
 
 fn main() {

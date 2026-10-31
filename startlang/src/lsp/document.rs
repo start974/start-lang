@@ -32,7 +32,7 @@ pub struct SymbolInfo {
     pub doc: Option<MarkedString>,
     /// kind of identifier
     pub kind: IdentifierKind,
-    /// type of indentifier
+    /// type of identifier
     pub ty: String,
     /// definition location
     pub def_range: Range,
@@ -81,7 +81,7 @@ impl Document {
         );
     }
 
-    fn get_symbol_at_position(&self, position: &Position) -> Option<&SymbolRange> {
+    fn symbol_at(&self, position: &Position) -> Option<&SymbolRange> {
         let spans = self.range_table.get(&position.line)?;
         let idx = match spans.binary_search_by(|range| range.start.cmp(&position.character)) {
             Ok(i) => i,            // start == position.charater
@@ -97,8 +97,8 @@ impl Document {
     }
 
     /// get hover information on position
-    pub fn get_hover(&self, position: &Position) -> Option<Hover> {
-        let range = self.get_symbol_at_position(position)?;
+    pub fn hover(&self, position: &Position) -> Option<Hover> {
+        let range = self.symbol_at(position)?;
         let symbol_info = self.symbols.get(&range.symbol)?;
         let ty_string = {
             let op = match symbol_info.kind {
@@ -177,7 +177,7 @@ mod tests {
         };
         doc.add_symbol(symbol_info);
 
-        let hover = doc.get_hover(&Position {
+        let hover = doc.hover(&Position {
             line: 0,
             character: 2,
         });

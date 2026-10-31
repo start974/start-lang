@@ -112,7 +112,6 @@ mod tests {
         let colored_str = ci.colorize(s);
         assert_eq!(colored_str.input, s);
         assert_eq!(colored_str.fgcolor, Some(Color::Green));
-        dbg!("Styles: {:?}", colored_str.style);
         assert!(colored_str.style.contains(Styles::Italic));
         assert!(colored_str.style.contains(Styles::Dimmed));
         assert!(colored_str.style.contains(Styles::Blink));

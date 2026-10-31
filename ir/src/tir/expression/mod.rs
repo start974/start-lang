@@ -17,14 +17,11 @@ pub enum Expression {
     Variable(Variable),
 }
 
-mod sealed_mut_ty {
-    use super::*;
-    impl TypedMut for Expression {
-        fn ty_mut(&mut self) -> &mut Type {
-            match self {
-                Expression::Constant(c) => c.ty_mut(),
-                Expression::Variable(v) => v.ty_mut(),
-            }
+impl TypedMut for Expression {
+    fn ty_mut(&mut self) -> &mut Type {
+        match self {
+            Expression::Constant(c) => c.ty_mut(),
+            Expression::Variable(v) => v.ty_mut(),
         }
     }
 }

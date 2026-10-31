@@ -96,9 +96,7 @@ pub struct MetaTokenStream {
 impl MetaTokenStream {
     /// span of the last token, empty at 0 if there is none
     pub fn last_span(&self) -> Span {
-        self.tokens
-            .last()
-            .map_or(Span::new(0, 0), |token| token.span())
+        self.tokens.last().map_or_else(Span::default, Spanned::span)
     }
 
     /// end of the last token
@@ -125,27 +123,16 @@ impl From<Vec<MetaToken>> for MetaTokenStream {
 impl Pretty for MetaTokenStream {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::intersperse(self.tokens.iter().map(|t| t.pretty(theme)), Doc::hardline()).group()
-        //.append({
-        //let span = self.span();
-        //let start = span.start().to_string();
-        //let end = span.end().to_string();
-        //Doc::text("[")
-        //.append(Doc::text(start))
-        //.append(Doc::text(", "))
-        //.append(Doc::text(end))
-        //.append(Doc::text("]"))
-        //})
     }
 }
 
+/// span from the first to the last token; a stream always ends with
+/// `EndOfInput`, so it is never empty
 impl Spanned for MetaTokenStream {
     fn span(&self) -> Span {
-        if let Some(first) = self.tokens.first()
-            && let Some(last) = self.tokens.last()
-        {
-            first.span().union(last.span())
-        } else {
-            unreachable!("stram has no tokens")
+        match (self.tokens.first(), self.tokens.last()) {
+            (Some(first), Some(last)) => first.span().union(last.span()),
+            _ => unreachable!("a token stream is never empty"),
         }
     }
 }

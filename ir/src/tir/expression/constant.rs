@@ -72,12 +72,9 @@ impl Pretty for Constant {
     }
 }
 
-pub mod sealed_ty_mut {
-    use super::*;
-    impl TypedMut for Constant {
-        fn ty_mut(&mut self) -> &mut Type {
-            &mut self.ty
-        }
+impl TypedMut for Constant {
+    fn ty_mut(&mut self) -> &mut Type {
+        &mut self.ty
     }
 }
 

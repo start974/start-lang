@@ -33,7 +33,7 @@ pub struct IdentifierInfo {
     pub doc: Option<Documentation>,
     /// kind of identifier
     pub kind: IdentifierKind,
-    /// type of indentifier
+    /// type of identifier
     pub ty: Type,
     /// definition span
     pub span_def: Span,
@@ -63,7 +63,7 @@ impl Pretty for Help {
                 .append(self.ty.pretty(theme).group()),
             IdentifierKind::Type => match &self.ty {
                 Type::Builtin(_) => theme.comment(&"(builtin)"),
-                ty => Doc::nil()
+                ty @ Type::Alias(_) => Doc::nil()
                     .append(theme.operator(&":="))
                     .append(Doc::softline())
                     .append(ty.pretty(theme).group()),
@@ -128,8 +128,8 @@ impl Env {
         }
     }
 
-    /// get variable by identifier
-    pub fn get_expr_var(&mut self, id: &Identifier, span: Span) -> Result<Variable, Error> {
+    /// use of the expression variable `id` at `span`
+    pub fn expr_var(&mut self, id: &Identifier, span: Span) -> Result<Variable, Error> {
         match self.table.get_mut(id) {
             Some(info) if info.kind == IdentifierKind::Expr => {
                 info.span_refs.push(span);
@@ -143,8 +143,8 @@ impl Env {
         }
     }
 
-    /// get type alias
-    pub fn get_alias_ty(&mut self, id: &Identifier, span: Span) -> Result<Alias, Error> {
+    /// use of the type alias `id` at `span`
+    pub fn type_alias(&mut self, id: &Identifier, span: Span) -> Result<Alias, Error> {
         match self.table.get_mut(id) {
             Some(info) if info.kind == IdentifierKind::Type => {
                 info.span_refs.push(span);
@@ -158,7 +158,8 @@ impl Env {
         }
     }
 
-    pub fn get_help(&mut self, id: &Identifier, span: Span) -> Result<Help, Error> {
+    /// answer of `Help` on `id`
+    pub fn help(&mut self, id: &Identifier, span: Span) -> Result<Help, Error> {
         match self.table.get(id) {
             Some(info) => Ok(Help {
                 id: info.id.clone(),

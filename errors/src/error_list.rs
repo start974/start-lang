@@ -4,6 +4,7 @@ use pp::theme::Theme;
 
 use crate::Error;
 
+#[derive(Debug)]
 pub struct Errors {
     source_id: SourceId,
     errs: Vec<Error>,
@@ -34,17 +35,22 @@ impl Errors {
         }
     }
 
-    /// lenght of errors
-    pub fn lenght(&self) -> usize {
+    /// number of errors
+    pub fn len(&self) -> usize {
         self.errs.len()
     }
 
-    /// get code
+    /// no error
+    pub fn is_empty(&self) -> bool {
+        self.errs.is_empty()
+    }
+
+    /// exit code: the code of the only error, `1` for several, `0` for none
     pub fn code(&self) -> i32 {
-        if self.errs.len() > 1 {
-            1
-        } else {
-            self.errs.first().map(|e| e.code()).unwrap_or(0)
+        match self.errs.as_slice() {
+            [] => 0,
+            [err] => err.code(),
+            _ => 1,
         }
     }
 }
@@ -91,7 +97,7 @@ mod tests {
         let errs = Errors::from(err);
 
         assert_eq!(errs.code(), 1001);
-        assert_eq!(errs.lenght(), 1);
+        assert_eq!(errs.len(), 1);
     }
 
     #[test]
@@ -100,7 +106,7 @@ mod tests {
         let err2 = Error::new(1002, Message::text("Header2")).with_span(Span::new(2, 3));
         let errs = Errors::from(err1).append(err2);
         assert_eq!(errs.code(), 1);
-        assert_eq!(errs.lenght(), 2);
+        assert_eq!(errs.len(), 2);
     }
 
     #[test]
@@ -112,7 +118,7 @@ mod tests {
         let combined = errs1.combine(errs2);
 
         assert_eq!(combined.code(), 1);
-        assert_eq!(combined.lenght(), 2);
+        assert_eq!(combined.len(), 2);
     }
 
     #[test]
@@ -131,7 +137,7 @@ mod tests {
         let errs: Errors = vec![err1, err2].into_iter().collect();
 
         assert_eq!(errs.code(), 1);
-        assert_eq!(errs.lenght(), 2);
+        assert_eq!(errs.len(), 2);
 
         let mut iter = errs.into_iter();
         assert_eq!(iter.next().unwrap().code(), 1001);

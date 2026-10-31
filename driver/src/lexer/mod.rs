@@ -8,7 +8,7 @@ pub use lexing::lexer;
 
 pub type ErrorChumsky<'src> = chumsky::error::Rich<'src, char>;
 
-/// apply lexer on [source_id] with [offset] on [content]
+/// lex `content`, whose first byte is at `offset` in its source
 pub fn lex(content: &str, offset: usize) -> Result<MetaTokenStream, Errors> {
     use chumsky::Parser as _;
     lexer(offset)

@@ -87,7 +87,7 @@ impl<T> Meta<T> {
     pub fn pretty_meta(&self, theme: &Theme) -> Doc<'_> {
         let mut last_is_comment = false;
         let mut doc = Doc::nil();
-        for val in self.before.iter() {
+        for val in &self.before {
             if last_is_comment {
                 doc = doc.append(Doc::hardline());
             }

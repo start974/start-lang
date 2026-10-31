@@ -9,7 +9,7 @@ use num_bigint::BigUint;
 use std::rc::Rc;
 
 // ===========================================================================
-// Commment
+// Comment
 // ===========================================================================
 /// lex comment
 /// ```ebnf
@@ -75,9 +75,9 @@ impl<'src, T, P> WithMeta<'src, T> for P where
 
 /// lex identifier defined in
 /// [Unicode Standard Annex #31](https://www.unicode.org/reports/tr31/) named `<IDENT>` in ebnf
-/// follwing by quotes
+/// followed by quotes
 /// ```ebnf
-/// INDENTIFIER := <IDENT> "'"*
+/// IDENTIFIER := <IDENT> "'"*
 /// ```
 pub fn identifier<'src>() -> impl Parser<'src, &'src str, String, Err<ErrorChumsky<'src>>> {
     text::unicode::ident()
@@ -130,13 +130,14 @@ fn number_f<'src>(
         .clone()
         .then(
             underscores
-                .ignore_then(digit.clone())
+                .ignore_then(digit)
                 .repeated()
                 .collect::<String>(),
         )
         .map(move |(digit1, digits2)| {
             let number_str = format!("{digit1}{digits2}");
-            BigUint::parse_bytes(number_str.as_bytes(), radix).expect("Failed to parse number")
+            BigUint::parse_bytes(number_str.as_bytes(), radix)
+                .expect("the digits were checked by the lexer")
         })
 }
 

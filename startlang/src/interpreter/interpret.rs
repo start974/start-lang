@@ -3,10 +3,28 @@ use super::flag::{DebugFlag, Flag};
 use crate::error;
 use driver::lowering::Lowering;
 use errors::Error;
-use ir::location::{SourceId, Spanned};
+use ir::location::{SourceId, Span, Spanned};
 use ir::tir::Typed as _;
 use ir::{pir, sir, tir};
 use pp::pretty::Pretty;
+
+/// value of an `Eval`, printed at the span of its expression
+struct ValueAt {
+    value: driver::vm::Value,
+    span: Span,
+}
+
+impl Pretty for ValueAt {
+    fn pretty(&self, theme: &pp::Theme) -> pp::Doc<'_> {
+        self.value.pretty(theme)
+    }
+}
+
+impl Spanned for ValueAt {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
 
 pub trait Interpreter {
     /// get content
@@ -19,13 +37,13 @@ pub trait Interpreter {
     fn set_error_code(&mut self, code: i32);
 
     /// get error code
-    fn get_error_code(&self) -> i32;
+    fn error_code(&self) -> i32;
 
     /// continue parsing
     fn continue_parsing(&self) -> bool;
 
     /// get a lexer with offset
-    fn get_offset_source(&self, offset: usize) -> usize;
+    fn offset_source(&self, offset: usize) -> usize;
 
     /// get mutable reference on the lowering of the current source
     fn mut_lowering(&mut self) -> &mut Lowering;
@@ -47,8 +65,8 @@ pub trait Interpreter {
     where
         Doc: Pretty + Spanned;
 
-    /// active printing of summarry definition
-    fn print_summay(&self, def: &tir::ExpressionDefinition);
+    /// print the summary of a definition (REPL only)
+    fn print_summary(&self, def: &tir::ExpressionDefinition);
 
     /// pretty debug
     fn debug<Doc>(&mut self, flag: DebugFlag, doc: &Doc)
@@ -65,7 +83,7 @@ pub trait Interpreter {
     /// fail with error
     fn fail(&mut self, error: Error) {
         self.eprint(&error);
-        self.set_error_code(if self.get_error_code() == 0 {
+        self.set_error_code(if self.error_code() == 0 {
             error.code()
         } else {
             1
@@ -81,9 +99,9 @@ pub trait Interpreter {
         self.mut_typer()
             .definition(&def, doc.as_ref())
             .map(|def| {
-                self.print_summay(&def);
+                self.print_summary(&def);
                 self.debug(DebugFlag::Typer, &def);
-                if self.get_error_code() == 0 {
+                if self.error_code() == 0 {
                     self.mut_runtime().define(&def);
                 }
             })
@@ -109,9 +127,12 @@ pub trait Interpreter {
             .expression(&expr)
             .map(|expr| {
                 self.debug(DebugFlag::Typer, &expr);
-                if self.get_error_code() == 0 {
+                if self.error_code() == 0 {
                     let (_, value) = self.mut_runtime().eval(&expr);
-                    self.print(&(value, expr.span()));
+                    self.print(&ValueAt {
+                        value,
+                        span: expr.span(),
+                    });
                 }
             })
             .unwrap_or_else(|errs| {
@@ -208,7 +229,7 @@ pub trait Interpreter {
 
     /// run the interpreter
     fn run(&mut self) {
-        if self.get_error_code() != 0 {
+        if self.error_code() != 0 {
             return;
         }
 
@@ -220,7 +241,7 @@ pub trait Interpreter {
             if content.is_empty() {
                 break;
             }
-            let offset_source = self.get_offset_source(offset);
+            let offset_source = self.offset_source(offset);
             match self.lex(content, offset_source) {
                 None => break,
                 Some(tokens) => {

@@ -13,6 +13,6 @@ pub enum Mode {
 /// run formatter on file
 pub fn run(path: &Path, mode: Mode) -> i32 {
     let mut formatter = formatter::Formatter::new(path);
-    formatter.run(&mode);
+    formatter.run(mode);
     formatter.err_code
 }

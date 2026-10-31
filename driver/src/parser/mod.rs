@@ -13,6 +13,7 @@ pub enum CommandOrEnd {
 }
 
 pub type ErrorChumsky<'tokens> = chumsky::error::Rich<'tokens, MetaToken>;
+
 /// parse tokens
 pub fn parse(tokens: MetaTokenStream) -> Result<CommandOrEnd, Errors> {
     use chumsky::prelude::*;
@@ -24,14 +25,7 @@ pub fn parse(tokens: MetaTokenStream) -> Result<CommandOrEnd, Errors> {
         .into_iter()
         .map(|token| {
             let span = token.span();
-            (
-                token.clone(),
-                SimpleSpan {
-                    start: span.start(),
-                    end: span.end(),
-                    context: (),
-                },
-            )
+            (token, SimpleSpan::from(span.start()..span.end()))
         })
         .collect::<Vec<_>>();
     let input = tokens_spanned.map(eoi, |(t, s)| (t, s));
