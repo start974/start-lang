@@ -1,5 +1,5 @@
 //! Errors found while building `tir`, as data: the diagnostics (code,
-//! message) are made by `driver::typing`, so `ir` does not depend on
+//! message) are made by `pass::typing`, so `ir` does not depend on
 //! `errors`.
 
 use crate::location::{Span, Spanned};

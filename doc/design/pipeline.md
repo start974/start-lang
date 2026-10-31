@@ -61,10 +61,13 @@ node at three stages, found at the same path in each module.
 | `lir` | *low IR* | backend IR (v0.2.0-beta.4) | `codegen` | backend-independent code ([backend](./backend.md)) | Cranelift |
 
 Naming rule: a representation is a module `ir::<letter>ir`; a pass going
-from one to the next is a module of the crate **`driver`**, named after the
-action (`driver::lexer`, `driver::parser`, `driver::lowering`,
-`driver::expand`, `driver::typing`, `driver::codegen`, and `driver::vm` until
-Cranelift).
+from one to the next is a module of the crate **`pass`**, named after the
+action (`pass::lexer`, `pass::parser`, `pass::lowering`, `pass::expand`,
+`pass::typing`, `pass::codegen`, and `pass::vm` until Cranelift). Each pass is
+a type built by its builder, with one entry point `run` that takes a whole
+file and returns the next representation or all its errors
+(`Lexer::builder().build().run(text)`); the typer, the codegen and the vm keep
+their state between files (stdlib, REPL inputs).
 
 `sir` keeps the notations as the user wrote them, for the LSP (hover, go to
 the notation) and for messages; `kir` has no trace of the dynamic grammar, so
@@ -73,7 +76,7 @@ are no notations: typing runs directly on `sir` and `kir` does not exist yet.
 
 ### Phases
 
-| # | Phase | Input → output | Errors | Module of `driver` |
+| # | Phase | Input → output | Errors | Module of `pass` |
 |---|-------|----------------|--------|-------|
 | 0 | Load | path / REPL input → `Source` (id, content; `FileKind` in v0.2.0-beta.2) | unreadable file, unknown extension | `ir::location` |
 | 1 | Lex | `Source` → all tokens, up to `EndOfInput` | bad characters, unclosed comments / literals; lexing continues after an error | `lexer` |
@@ -96,9 +99,9 @@ parsing and expanded after (`sir` → `kir`), and typing runs on `kir`.
 - **Nothing runs if any error was found** before phase 6: no `eval` output
   from a file that does not type-check (already the case today for the VM).
 - **Errors are sorted by position** before printing, whatever the phase.
-- **One driver** (`driver::Driver`, in the crate that holds every pass) runs
-  the phases; the file runner, the REPL and the LSP are
-  its clients and only differ by the last step:
+- **No driver**: a tool calls the passes one after the other
+  (`startlang/src/compile.rs`); the file runner, the REPL and the LSP share
+  that chain and only differ by the last step:
 
 | Client | Phases | Last step |
 |--------|--------|-----------|
@@ -107,12 +110,13 @@ parsing and expanded after (`sir` → `kir`), and typing runs on `kir`.
 | LSP | 0–6 | errors → diagnostics, `tir` → hover; *info* diagnostics: `TypeOf` / `Help` from typing, `Eval` by running, only in a sandbox (every `.st` in beta.1, `.snbx` from beta.2) and only if there is no error |
 | `startlang format` | 0–2 | prints the `pir::File` (the formatter never sees `sir`) |
 
-- The stdlib is loaded **once**, through the same phases, into the initial env.
+- The stdlib is loaded **once**, through the same phases, into the initial env
+  (`pass::stdlib::Stdlib::load`).
 
 ### Debug output
 
 Phases are no longer interleaved, so a command inside a file cannot change
-how that same file is lexed. Debug output becomes an option of the driver:
+how that same file is lexed. Debug output becomes an option of the tools:
 
 - CLI: `startlang run --debug lexer,parser,typer file`.
 - REPL: `set debug_parser` still exists and applies to the **next** inputs.

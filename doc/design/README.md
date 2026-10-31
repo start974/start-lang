@@ -7,7 +7,7 @@ says *when* each part is delivered; these files say *what* it is.
 
 | File | Topic |
 |------|-------|
-| [pipeline.md](./pipeline.md) | Compilation phases: lex, parse, check, type, run on the whole source; one driver |
+| [pipeline.md](./pipeline.md) | Compilation phases: lex, parse, check, type, run on the whole source; one pass after the other |
 | [file-kinds.md](./file-kinds.md) | Extensions, `FileKind`, sandbox, import table between kinds |
 | [syntax.md](./syntax.md) | Commands, keywords, delimiters, definitions, recursion |
 | [memory.md](./memory.md) | Value types, affine types and `const` (no GC) |

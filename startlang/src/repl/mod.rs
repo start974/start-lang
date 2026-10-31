@@ -5,8 +5,8 @@ pub mod summary;
 
 use crate::compile::compile;
 use crate::printer::Printer;
-use driver::stdlib::Stdlib;
 use ir::location::SourceId;
+use pass::stdlib::Stdlib;
 use rustyline::{DefaultEditor, Editor, error::ReadlineError, history::FileHistory};
 
 const HISTORY_FILE: &str = ".start-history.txt";
