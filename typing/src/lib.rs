@@ -65,9 +65,9 @@ impl Typer {
             pir::Type::Builtin(pir::Meta { value: builtin, .. }) => {
                 use pir::ty::BuiltinT;
                 let builtin = match builtin {
-                    BuiltinT::Nat => tir::TypeBuiltin::nat(),
-                    BuiltinT::Bool => tir::TypeBuiltin::bool(),
-                    BuiltinT::Char => tir::TypeBuiltin::char(),
+                    BuiltinT::Nat => tir::ty::Builtin::nat(),
+                    BuiltinT::Bool => tir::ty::Builtin::bool(),
+                    BuiltinT::Char => tir::ty::Builtin::char(),
                 };
                 Ok(tir::Type::Builtin(builtin))
             }
