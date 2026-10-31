@@ -37,11 +37,14 @@ Source ─► 1. lex ─► tokens ─► 2. parse ─► pir ─► 3. lower �
 
 ### Representations
 
-Every representation is named `<letter>ir`, the letter saying the stage. The
-trees `pir`, `sir` and `tir` have the **same module layout** (`command`,
+Every representation is named `<letter>ir`, the letter saying the stage, and
+is a module of the single crate **`ir`**: `ir::pir`, `ir::sir`, `ir::tir` (later
+`ir::kir`, `ir::lir`). A client imports the modules it needs
+(`use ir::{pir, tir};`) and writes `pir::Expression`, `tir::Type`. The trees
+`pir`, `sir` and `tir` have the **same module layout** (`command`,
 `definition`, `expression`, `ty`, `pattern`, `constant`, …) and the **same type
 names**: `pir::Expression`, `sir::Expression`, `tir::Expression` are the same
-node at three stages, found at the same path in each crate.
+node at three stages, found at the same path in each module.
 
 | Name | Stands for | Is | Built by | Contains | Used by |
 |------|------------|----|----------|----------|---------|
@@ -52,8 +55,8 @@ node at three stages, found at the same path in each crate.
 | `tir` | *typed IR* | typed AST (name kept) | `typing` | every expression has its type, every variable points to its unique definition (`a__0`) | VM, LSP hover, `lir` lowering |
 | `lir` | *low IR* | backend IR (v0.2.0-beta.4) | `codegen` | backend-independent code ([backend](./backend.md)) | Cranelift |
 
-Naming rule: a crate holding a representation is named `<letter>ir`; a crate
-going from one to the next is named after the action (`lexer`, `parser`,
+Naming rule: a representation is a module `ir::<letter>ir`; a crate going
+from one to the next is named after the action (`lexer`, `parser`,
 `lowering`, `expand`, `typing`, `codegen`).
 
 `sir` keeps the notations as the user wrote them, for the LSP (hover, go to

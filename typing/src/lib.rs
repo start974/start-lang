@@ -1,7 +1,8 @@
 use errors::{Errors, ResultErrors as _};
+use ir::pir::{self, AsCharacter as _, AsIdentifier as _, AsNumber as _};
+use ir::tir;
+use ir::tir::{Typed, env::Env};
 use location::{Spanned as _, SpannedSet as _};
-use pir::{self, AsCharacter as _, AsIdentifier as _, AsNumber as _};
-use tir::{Typed, env::Env};
 
 #[derive(Debug, Default)]
 pub struct Typer {

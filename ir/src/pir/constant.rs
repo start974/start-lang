@@ -1,0 +1,124 @@
+use super::{AsCharacter, AsNumber};
+use crate::pir::Meta;
+use location::{Span, Spanned};
+use num_bigint::BigUint;
+use pp::pretty::*;
+
+// ============================================================================
+// Number
+// ============================================================================
+#[derive(Debug, Clone)]
+pub struct NumberT(BigUint);
+pub type Number = Meta<NumberT>;
+
+impl From<BigUint> for NumberT {
+    fn from(value: BigUint) -> Self {
+        Self(value)
+    }
+}
+
+impl AsNumber for NumberT {
+    fn as_number(&self) -> &BigUint {
+        &self.0
+    }
+}
+
+impl Pretty for NumberT {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        theme.number(&self.0)
+    }
+}
+
+// ============================================================================
+// Character
+// ============================================================================
+#[derive(Debug, Clone)]
+pub struct CharacterT(char);
+pub type Character = Meta<CharacterT>;
+
+impl From<char> for CharacterT {
+    fn from(value: char) -> Self {
+        Self(value)
+    }
+}
+
+impl AsCharacter for CharacterT {
+    fn as_character(&self) -> char {
+        self.0
+    }
+}
+
+impl Pretty for CharacterT {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        theme.character(self.0)
+    }
+}
+
+// ============================================================================
+// Builtin
+// ============================================================================
+#[derive(Debug, Clone)]
+pub enum BuiltinT {
+    True,
+    False,
+}
+
+impl Pretty for BuiltinT {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        match self {
+            BuiltinT::True => theme.expr_var(&"__Constant_true__"),
+            BuiltinT::False => theme.expr_var(&"__Constant_false__"),
+        }
+    }
+}
+
+pub type Builtin = Meta<BuiltinT>;
+
+// ============================================================================
+// Constant
+// ============================================================================
+
+#[derive(Debug, Clone)]
+pub enum Constant {
+    Builtin(Builtin),
+    Number(Number),
+    Character(Character),
+}
+
+impl From<Builtin> for Constant {
+    fn from(value: Builtin) -> Self {
+        Constant::Builtin(value)
+    }
+}
+
+impl From<Number> for Constant {
+    fn from(value: Number) -> Self {
+        Constant::Number(value)
+    }
+}
+
+impl From<Character> for Constant {
+    fn from(value: Character) -> Self {
+        Constant::Character(value)
+    }
+}
+
+impl Spanned for Constant {
+    fn span(&self) -> Span {
+        match self {
+            Constant::Number(n) => n.span(),
+            Constant::Character(c) => c.span(),
+            Constant::Builtin(b) => b.span(),
+        }
+    }
+}
+
+impl Pretty for Constant {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        match self {
+            Constant::Number(n) => n.pretty(theme),
+            Constant::Character(c) => c.pretty(theme),
+            Constant::Builtin(b) => b.pretty(theme),
+        }
+    }
+}

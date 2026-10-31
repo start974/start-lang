@@ -1,7 +1,7 @@
 use errors::{Error, Message};
+use ir::pir::AsIdentifier as _;
+use ir::pir::expression::Variable;
 use location::Spanned as _;
-use pir::AsIdentifier as _;
-use pir::expression::Variable;
 use std::path::Path;
 
 pub fn read_file(path: &Path) -> Error {

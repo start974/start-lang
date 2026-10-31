@@ -1,0 +1,44 @@
+use crate::sir::Node;
+use location::{Span, Spanned};
+use num_bigint::BigUint;
+
+// ============================================================================
+// Number
+// ============================================================================
+pub type Number = Node<BigUint>;
+
+// ============================================================================
+// Character
+// ============================================================================
+pub type Character = Node<char>;
+
+// ============================================================================
+// Builtin
+// ============================================================================
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BuiltinT {
+    True,
+    False,
+}
+
+pub type Builtin = Node<BuiltinT>;
+
+// ============================================================================
+// Constant
+// ============================================================================
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Constant {
+    Builtin(Builtin),
+    Number(Number),
+    Character(Character),
+}
+
+impl Spanned for Constant {
+    fn span(&self) -> Span {
+        match self {
+            Constant::Number(n) => n.span(),
+            Constant::Character(c) => c.span(),
+            Constant::Builtin(b) => b.span(),
+        }
+    }
+}
