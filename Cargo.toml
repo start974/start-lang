@@ -1,3 +1,3 @@
 [workspace]
 resolver = "3"
-members = [ "errors", "lexer", "location", "parser", "pir", "pp", "startlang", "tir", "typing", "vm"]
+members = [ "errors", "lexer", "location", "parser", "pir", "pp", "sir", "startlang", "tir", "typing", "vm"]

@@ -26,15 +26,16 @@ Each step below ends with the tests passing.
 
 - [x] Rename the crate `cst` → `pir` (*parse IR*): `Cargo.toml` of the workspace,
       `lexer`, `parser`, `startlang`; `use cst::` → `use pir::`.
-- [ ] New crate `sir` (*surface IR*, untyped AST), same module layout as `pir`
+- [x] New crate `sir` (*surface IR*, untyped AST), same module layout as `pir`
       and `tir` (`command`, `definition`, `expression`, `ty`, `pattern`,
       `constant`, …), same type names, a `Span` on every node:
-  - [ ] one `Expression` enum (no `Expression0` / `Expression1`), no parentheses;
-  - [ ] one node per command (`Definition`, `TypeDefinition`, `Eval`, `TypeOf`,
+  - [x] one `Expression` (a span + one `ExpressionKind` enum, no `Expression0` /
+        `Expression1`), no parentheses;
+  - [x] one node per command (`Definition`, `TypeDefinition`, `Eval`, `TypeOf`,
         `Help`, `Set`, `Unset`), no keyword variants (`Def` / `Definition`,
         `Eval` / `$`, …);
-  - [ ] documentation as text on the definition, no comments, no `Meta`;
-  - [ ] `sir::File`: the list of commands.
+  - [x] documentation as text on the definition, no comments, no `Meta`;
+  - [x] `sir::File`: the list of commands.
 - [ ] New crate `lowering`: `pir::File` → `sir::File`, no errors (`set` options
       stay names, checked later).
 - [ ] `tir`: stop re-exporting `cst::Documentation` (`tir/src/lib.rs:8`), use the
