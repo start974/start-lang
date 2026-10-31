@@ -1,4 +1,4 @@
-use super::{Documentation, Expression, Pattern, Type};
+use crate::sir::{Documentation, Expression, Pattern, Type};
 use location::{Span, Spanned};
 
 // ============================================================================
@@ -21,8 +21,7 @@ impl Spanned for ExpressionDefinition {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sir::expression::ExpressionKind;
-    use crate::sir::{Constant, Node};
+    use crate::sir::{Constant, ExpressionKind, Node};
     use num_bigint::BigUint;
 
     #[test]

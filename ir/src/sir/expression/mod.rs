@@ -1,5 +1,9 @@
-use super::{Constant, Type, Variable};
+use crate::sir::{Constant, Type, Variable};
 use location::{Span, Spanned};
+
+pub mod constant;
+pub mod definition;
+pub mod pattern;
 
 // ============================================================================
 // Expression
@@ -13,7 +17,7 @@ pub enum ExpressionKind {
     Constant(Constant),
 
     /// expression restricted to a type: `e : ty`
-    TypedExpression { expr: Box<Expression>, ty: Type },
+    Typed { expr: Box<Expression>, ty: Type },
 }
 
 /// expression, with the span of the source it comes from
@@ -49,7 +53,7 @@ mod tests {
         let inner = Expression::new(ExpressionKind::Variable(var.clone()), Span::new(1, 2));
         let ty = Type::Builtin(ty::Builtin::new(ty::BuiltinT::Nat, Span::new(5, 8)));
         let expr = Expression::new(
-            ExpressionKind::TypedExpression {
+            ExpressionKind::Typed {
                 expr: Box::new(inner),
                 ty,
             },
