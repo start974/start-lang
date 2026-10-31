@@ -1,10 +1,11 @@
 use super::flag::{DebugFlag, Flag};
 use crate::error;
 use errors::Error;
+use ir::pir::AsIdentifier as _;
+use ir::tir::Typed as _;
+use ir::{pir, tir};
 use location::{SourceId, Spanned};
-use pir::AsIdentifier as _;
 use pp::pretty::Pretty;
-use tir::Typed as _;
 
 pub trait Interpreter {
     /// get content

@@ -7,6 +7,7 @@ use crate::{
     //lsp::document::SymbolInfo,
 };
 use errors::Error;
+use ir::tir;
 use location::{SourceId, Spanned};
 use pp::{MessageTheme, Pretty, Theme};
 use std::path::PathBuf;

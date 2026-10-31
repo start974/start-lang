@@ -1,0 +1,11 @@
+[package]
+name = "ir"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+errors = { path = "../errors" }
+location = { path = "../location" }
+pp = { path = "../pp" }
+
+num-bigint = "0.4.6"

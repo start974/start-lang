@@ -1,4 +1,4 @@
-use tir::{Expression, ExpressionDefinition, Identifier, Pattern};
+use ir::tir::{Expression, ExpressionDefinition, Identifier, Pattern};
 
 use super::value::Value;
 use std::collections::HashMap;

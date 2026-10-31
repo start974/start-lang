@@ -1,6 +1,6 @@
 use errors::Errors;
+use ir::pir::{Command, EndOfFile};
 use lexer::{MetaToken, MetaTokenStream};
-use pir::{Command, EndOfFile};
 
 mod error;
 mod parsing;

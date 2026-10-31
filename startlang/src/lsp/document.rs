@@ -1,8 +1,9 @@
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
-use tir::Identifier;
-use tir::env::IdentifierKind;
+use ir::tir::Identifier;
+use ir::tir::env::IdentifierKind;
 use tower_lsp::lsp_types::{Hover, HoverContents, MarkedString, Position, Range};
+use ir::tir;
 
 // ===========================================================================
 // Symbol

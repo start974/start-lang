@@ -16,7 +16,7 @@ Source ─► lex ─► tokens ─► parse ─► pir ─► lower ─► sir 
 - [ ] A file with a lexing error, a parsing error and a typing error reports the
       three errors, in source order, and runs nothing.
 - [ ] The lexer is called once per file.
-- [ ] `typing` and `tir` no longer depend on `pir`.
+- [ ] `typing` and `ir::tir` no longer use `ir::pir`.
 
 ---
 
@@ -26,7 +26,10 @@ Each step below ends with the tests passing.
 
 - [x] Rename the crate `cst` → `pir` (*parse IR*): `Cargo.toml` of the workspace,
       `lexer`, `parser`, `startlang`; `use cst::` → `use pir::`.
-- [x] New crate `sir` (*surface IR*, untyped AST), same module layout as `pir`
+- [x] One crate `ir` for every representation: modules `ir::pir`, `ir::sir`,
+      `ir::tir` (the crates `pir` and `tir` merged into it); clients write
+      `use ir::{pir, tir};`.
+- [x] New module `ir::sir` (*surface IR*, untyped AST), same module layout as `pir`
       and `tir` (`command`, `definition`, `expression`, `ty`, `pattern`,
       `constant`, …), same type names, a `Span` on every node:
   - [x] one `Expression` (a span + one `ExpressionKind` enum, no `Expression0` /
@@ -38,10 +41,11 @@ Each step below ends with the tests passing.
   - [x] `sir::File`: the list of commands.
 - [ ] New crate `lowering`: `pir::File` → `sir::File`, no errors (`set` options
       stay names, checked later).
-- [ ] `tir`: stop re-exporting `cst::Documentation` (`tir/src/lib.rs:8`), use the
-      documentation of `sir`; remove the `cst` dependency of `tir/Cargo.toml`.
+- [ ] `ir::tir`: stop re-exporting `pir::Documentation` (`ir/src/tir/mod.rs`),
+      use the documentation of `sir`; `ir::tir` no longer uses `ir::pir`.
 - [ ] `typing`: take `sir` instead of `cst` (`expression`, `ty`, `pattern`,
-      `definition`, `type_definition`, `help` in `typing/src/lib.rs`).
+      `definition`, `type_definition`, `help` in `typing/src/lib.rs`); `typing`
+      no longer uses `ir::pir`.
 - [ ] Interim: the current loop calls `lowering` between parse and type.
 
 ## 2. Lexer on the whole source
@@ -115,8 +119,8 @@ Each step below ends with the tests passing.
 
 - [ ] `doc/design/pipeline.md`: update if the implementation differs.
 - [ ] `doc/guide/cli.md`: `--debug`.
-- [ ] `doc/contributing/development.md`: workspace layout (`pir`, `sir`,
-      `lowering`, `tir`).
+- [ ] `doc/contributing/development.md`: workspace layout (`ir` with `pir`,
+      `sir`, `tir`; `lowering`).
 - [ ] Section beta.1 of [`doc/changelog/v0.2.0.md`](doc/changelog/v0.2.0.md#v020-beta1--compilation-phases)
       completed, date set.
 - [ ] Roadmap: tick beta.1, *Current version* → `v0.2.0-beta.1`; crate

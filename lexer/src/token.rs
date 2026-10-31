@@ -1,7 +1,7 @@
 use chumsky::span::SimpleSpan;
+use ir::pir::Meta;
 use location::{Span, Spanned};
 use num_bigint::BigUint;
-use pir::Meta;
 use pp::pretty::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

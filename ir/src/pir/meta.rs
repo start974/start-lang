@@ -1,0 +1,180 @@
+use crate::pir::{AsCharacter, AsIdentifier, AsNumber};
+use crate::pir::{Comment, Documentation};
+use location::{Span, Spanned};
+use pp::pretty::*;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CommentOrLines {
+    Comment(Comment),
+    Lines,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Meta<T> {
+    before: Vec<CommentOrLines>,
+    pub value: T,
+    span: Span,
+}
+
+impl<T> Meta<T> {
+    pub fn new(value: T, span: Span) -> Self {
+        Self {
+            before: Vec::new(),
+            value,
+            span,
+        }
+    }
+
+    /// add comment before
+    pub fn add_comment(&mut self, comment: Comment) {
+        if self.before.len() == 1 && matches!(self.before.last(), Some(CommentOrLines::Lines)) {
+            let _ = self.before.pop();
+        }
+        self.before.push(CommentOrLines::Comment(comment));
+    }
+
+    /// add lines before
+    pub fn add_lines(&mut self) {
+        if !matches!(self.before.last(), Some(CommentOrLines::Lines)) {
+            self.before.push(CommentOrLines::Lines);
+        }
+    }
+    /// with comments or lines items before
+    pub fn with_items(mut self, before: &[CommentOrLines]) -> Self {
+        for item in before {
+            match item {
+                CommentOrLines::Comment(comment) => {
+                    self.add_comment(comment.clone());
+                }
+                CommentOrLines::Lines => {
+                    self.add_lines();
+                }
+            }
+        }
+        self
+    }
+
+    /// has comment
+    pub fn has_comment(&self) -> bool {
+        self.before
+            .iter()
+            .any(|item| matches!(item, CommentOrLines::Comment(_)))
+    }
+
+    /// get doctumentation if exist
+    pub fn get_doc(&self) -> Option<Documentation> {
+        self.before.last().and_then(|col| {
+            if let CommentOrLines::Comment(c) = col {
+                c.to_doc()
+            } else {
+                None
+            }
+        })
+    }
+
+    /// map value
+    pub fn map<U, F>(self, f: F) -> Meta<U>
+    where
+        F: FnOnce(T) -> U,
+    {
+        Meta {
+            value: f(self.value),
+            before: self.before,
+            span: self.span,
+        }
+    }
+
+    /// just pretty meta
+    pub fn pretty_meta(&self, theme: &Theme) -> Doc<'_> {
+        let mut last_is_comment = false;
+        let mut doc = Doc::nil();
+        for val in self.before.iter() {
+            if last_is_comment {
+                doc = doc.append(Doc::hardline());
+            }
+            match val {
+                CommentOrLines::Comment(comment) => {
+                    doc = doc.append(comment.pretty(theme));
+                    last_is_comment = true;
+                }
+                CommentOrLines::Lines => {
+                    doc = doc.append(Doc::hardline());
+                    last_is_comment = false;
+                }
+            }
+        }
+        doc
+    }
+
+    /// pretty without line after comment
+    pub fn pretty_with_end_line(&self, theme: &Theme, end_line: bool) -> Doc<'_>
+    where
+        T: Pretty,
+    {
+        self.pretty_meta(theme)
+            .append(match self.before.last() {
+                Some(CommentOrLines::Comment(comment)) => {
+                    if comment.is_doc() {
+                        Doc::hardline()
+                    } else if end_line {
+                        Doc::line()
+                    } else {
+                        Doc::line_()
+                    }
+                }
+                _ => Doc::nil(),
+            })
+            .append(self.value.pretty(theme))
+    }
+}
+
+impl<T> std::fmt::Display for Meta<T>
+where
+    T: std::fmt::Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.value)
+    }
+}
+
+impl<T> Spanned for Meta<T> {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
+impl<T> Pretty for Meta<T>
+where
+    T: Pretty,
+{
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        self.pretty_with_end_line(theme, true)
+    }
+}
+
+impl<T> AsIdentifier for Meta<T>
+where
+    T: AsIdentifier,
+{
+    fn name(&self) -> &str {
+        self.value.name()
+    }
+}
+
+impl<T> AsNumber for Meta<T>
+where
+    T: AsNumber,
+{
+    fn as_number(&self) -> &num_bigint::BigUint {
+        self.value.as_number()
+    }
+}
+
+impl<T> AsCharacter for Meta<T>
+where
+    T: AsCharacter,
+{
+    fn as_character(&self) -> char {
+        self.value.as_character()
+    }
+}

@@ -5,6 +5,7 @@ use crate::interpreter::{
 };
 use ariadne::Source;
 use errors::Error;
+use ir::tir;
 use location::SourceId;
 use pp::{pretty::Pretty, theme::Theme};
 use std::fs::read_to_string;

@@ -2,6 +2,7 @@ use super::{Mode, diff::print_diff};
 use crate::error;
 use ariadne::Source;
 use errors::Error;
+use ir::pir;
 use lexer::MetaTokenStream;
 use location::SourceId;
 use parser::CommandOrEnd;

@@ -6,6 +6,7 @@ use crate::interpreter::flag::DebugFlag;
 use crate::interpreter::flag::Flag;
 use ariadne::Source;
 use errors::Error;
+use ir::tir;
 use location::SourceId;
 use pp::pretty::Pretty;
 use pp::theme::Theme;

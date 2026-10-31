@@ -1,5 +1,6 @@
+use ir::tir;
+use ir::tir::{Constant, NConst};
 use pp::pretty::*;
-use tir::{Constant, NConst};
 
 // =========================================================================
 // Value
