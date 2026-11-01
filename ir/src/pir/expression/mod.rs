@@ -1,5 +1,6 @@
 use crate::location::{Span, Spanned};
 use crate::pir::{Constant, Type, Variable, operator};
+use crate::token::Token;
 use parenthesis::Paren;
 use pp::pretty::*;
 
@@ -28,7 +29,7 @@ pub enum Expression {
     /// expression restricted to a type: `e : ty`
     Typed {
         expr: Box<Expression>,
-        colon: operator::Colon,
+        colon: Token<operator::Colon>,
         ty: Type,
     },
 }

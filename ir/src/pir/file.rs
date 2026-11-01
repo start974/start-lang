@@ -1,5 +1,5 @@
 use super::Command;
-use crate::pir::Meta;
+use crate::token::Token;
 use pp::pretty::*;
 
 // ============================================================================
@@ -7,11 +7,9 @@ use pp::pretty::*;
 // ============================================================================
 
 #[derive(Debug, Default)]
-pub struct EndOfFileT();
+pub struct EndOfInput;
 
-pub type EndOfFile = Meta<EndOfFileT>;
-
-impl Pretty for EndOfFileT {
+impl Pretty for EndOfInput {
     fn pretty(&self, _: &Theme) -> Doc<'_> {
         Doc::nil()
     }
@@ -20,33 +18,18 @@ impl Pretty for EndOfFileT {
 // ============================================================================
 // File
 // ============================================================================
+/// commands of a file, and the comments before its end; empty by default
 #[derive(Debug, Default)]
 pub struct File {
-    commands: Vec<Command>,
-    end: Option<EndOfFile>,
-}
-
-impl File {
-    /// get commands
-    pub fn commands(&self) -> &[Command] {
-        &self.commands
-    }
-
-    /// add command to file
-    pub fn add_command(&mut self, command: Command) {
-        self.commands.push(command);
-    }
-
-    /// set end of file
-    pub fn set_end(&mut self, end: EndOfFile) {
-        self.end = Some(end);
-    }
+    pub commands: Vec<Command>,
+    /// `None` when the file could not be parsed up to its end
+    pub end: Option<Token<EndOfInput>>,
 }
 
 impl Pretty for File {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         Doc::intersperse(
-            self.commands().iter().map(|cmd| cmd.pretty(theme)),
+            self.commands.iter().map(|cmd| cmd.pretty(theme)),
             Doc::line(),
         )
         .append(match &self.end {

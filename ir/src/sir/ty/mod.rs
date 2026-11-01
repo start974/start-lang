@@ -6,8 +6,8 @@ pub mod definition;
 // ============================================================================
 // Builtin
 // ============================================================================
-pub use crate::common::BuiltinType as BuiltinT;
-pub type Builtin = Node<BuiltinT>;
+pub use crate::common::BuiltinType;
+pub type Builtin = Node<BuiltinType>;
 
 // ============================================================================
 // Type

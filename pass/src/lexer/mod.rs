@@ -4,7 +4,7 @@ pub mod error;
 pub mod lexing;
 
 use crate::Partial;
-use ir::token::MetaTokenStream;
+use ir::token::TokenStream;
 
 pub use lexing::lexer;
 
@@ -23,10 +23,10 @@ impl Lexer {
     }
 
     /// lex the whole text: the tokens it could read, and every lexing error
-    pub fn run(&self, text: &str) -> Partial<MetaTokenStream> {
+    pub fn run(&self, text: &str) -> Partial<TokenStream> {
         use chumsky::Parser as _;
         let (tokens, errs) = lexer(self.offset).parse(text).into_output_errors();
-        Partial::ok(MetaTokenStream::from(tokens.unwrap_or_default()))
+        Partial::ok(TokenStream::from(tokens.unwrap_or_default()))
             .with_errors(errs.iter().map(|err| error::error_lexing(err, self.offset)))
     }
 }
@@ -56,10 +56,10 @@ impl LexerBuilder {
 mod tests {
     use super::*;
     use ir::location::Spanned as _;
-    use ir::token::{Operator, Token};
+    use ir::token::{Operator, TokenKind};
     use pp::MessageTheme;
 
-    fn tokens(text: &str) -> Vec<Token> {
+    fn tokens(text: &str) -> Vec<TokenKind> {
         Lexer::builder()
             .build()
             .run(text)
@@ -74,9 +74,9 @@ mod tests {
     fn whole_source_up_to_end_of_input() {
         let tokens = tokens("Eval 1.\nEval 2.  (* end *)\n");
         assert_eq!(tokens.len(), 7);
-        assert_eq!(tokens[2], Token::Operator(Operator::Dot));
-        assert_eq!(tokens[5], Token::Operator(Operator::Dot));
-        assert_eq!(tokens[6], Token::EndOfInput);
+        assert_eq!(tokens[2], TokenKind::Operator(Operator::Dot));
+        assert_eq!(tokens[5], TokenKind::Operator(Operator::Dot));
+        assert_eq!(tokens[6], TokenKind::EndOfInput);
     }
 
     #[test]
@@ -105,6 +105,6 @@ mod tests {
         // the tokens around the errors are kept
         let tokens: Vec<_> = lexed.value.into_iter().map(|token| token.value).collect();
         assert_eq!(tokens.len(), 9);
-        assert_eq!(tokens.last(), Some(&Token::EndOfInput));
+        assert_eq!(tokens.last(), Some(&TokenKind::EndOfInput));
     }
 }

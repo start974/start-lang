@@ -1,5 +1,6 @@
 use crate::location::{Span, Spanned};
-use crate::pir::{Meta, Variable};
+use crate::pir::Variable;
+use crate::token::Token;
 use pp::pretty::*;
 
 pub mod definition;
@@ -9,15 +10,14 @@ pub mod definition;
 // ============================================================================
 
 /// payload of a builtin type token, shared with the other IRs
-pub use crate::common::BuiltinType as BuiltinT;
-pub type Builtin = Meta<BuiltinT>;
+pub use crate::common::BuiltinType;
 
 // ============================================================================
 // Type
 // ============================================================================
 #[derive(Debug, Clone)]
 pub enum Type {
-    Builtin(Builtin),
+    Builtin(Token<BuiltinType>),
     Variable(Variable),
 }
 

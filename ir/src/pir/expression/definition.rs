@@ -1,5 +1,6 @@
 use crate::location::{Span, Spanned};
 use crate::pir::{Expression, Pattern, Type, operator};
+use crate::token::Token;
 use pp::pretty::*;
 
 // ============================================================================
@@ -7,7 +8,7 @@ use pp::pretty::*;
 // ============================================================================
 #[derive(Debug)]
 pub struct TypedBy {
-    pub colon: operator::Colon,
+    pub colon: Token<operator::Colon>,
     pub ty: Type,
 }
 
@@ -27,7 +28,7 @@ impl Pretty for TypedBy {
 pub struct ExpressionDefinition {
     pub pattern: Pattern,
     pub typed_by: Option<TypedBy>,
-    pub eq_def: operator::EqDef,
+    pub eq_def: Token<operator::EqDef>,
     pub body: Expression,
 }
 

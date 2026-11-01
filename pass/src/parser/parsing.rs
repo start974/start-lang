@@ -1,12 +1,11 @@
 use chumsky::input::ValueInput;
 use chumsky::prelude::*;
-use ir::pir::*;
-use ir::token::{MetaToken, Operator, Token};
+use ir::token::{Operator, Token, TokenKind};
 
 use ir::pir;
 
 /// parser state of chumsky: errors are `Rich` errors on tokens
-pub type Extra<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, MetaToken>>;
+pub type Extra<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, Token<TokenKind>>>;
 
 // ===========================================================================
 // Operator
@@ -14,13 +13,13 @@ pub type Extra<'a> = chumsky::extra::Err<chumsky::error::Rich<'a, MetaToken>>;
 pub fn operator<'tokens, I, Op>(
     op: Operator,
     res: Op,
-) -> impl Parser<'tokens, I, Meta<Op>, Extra<'tokens>>
+) -> impl Parser<'tokens, I, Token<Op>, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
     Op: Clone,
 {
-    select! {ref meta @ Meta{ value: Token::Operator(ref token_op), ..} if token_op == &op =>
-            meta.clone().map(|_| res.clone())
+    select! {ref token @ Token{ value: TokenKind::Operator(ref token_op), ..} if token_op == &op =>
+            token.with_value(res.clone())
     }
 }
 
@@ -35,7 +34,7 @@ where
 ///```
 pub fn pattern<'tokens, I>() -> impl Parser<'tokens, I, pir::Pattern, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
     let variable = variable()
         .labelled("pattern variable")
@@ -56,24 +55,24 @@ where
 ///```
 pub fn constant<'tokens, I>() -> impl Parser<'tokens, I, pir::Constant, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    use pir::expression::constant::{BuiltinT, Constant};
-    let number = select! {ref meta @ Meta{ value: Token::Number(ref n), ..} =>
-            meta.clone().map(|_| n.clone())
+    use pir::expression::constant::{BuiltinConstant, Constant};
+    let number = select! {ref token @ Token{ value: TokenKind::Number(ref n), ..} =>
+            token.with_value(n.clone())
     }
     .map(Constant::from);
 
     let builtin = select! {
-        ref meta @ Meta{ value: Token::Identifier(ref b), ..} if b == "__Constant_true__" =>
-            meta.clone().map(|_| BuiltinT::True),
-        ref meta @ Meta{ value: Token::Identifier(ref b), ..} if b == "__Constant_false__" =>
-            meta.clone().map(|_| BuiltinT::False)
+        ref token @ Token{ value: TokenKind::Identifier(ref b), ..} if b == "__Constant_true__" =>
+            token.with_value(BuiltinConstant::True),
+        ref token @ Token{ value: TokenKind::Identifier(ref b), ..} if b == "__Constant_false__" =>
+            token.with_value(BuiltinConstant::False)
     }
     .map(Constant::from);
 
-    let character = select! {ref meta @ Meta{ value: Token::Character(ref c), ..} =>
-        meta.clone().map(|_| *c)
+    let character = select! {ref token @ Token{ value: TokenKind::Character(ref c), ..} =>
+        token.with_value(*c)
     }
     .map(Constant::from);
 
@@ -86,10 +85,10 @@ where
 ///```
 pub fn variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    select! {ref meta @ Meta{ value: Token::Identifier(ref s), ..} =>
-            meta.clone().map(|_| s.clone())
+    select! {ref token @ Token{ value: TokenKind::Identifier(ref s), ..} =>
+            token.with_value(s.clone())
     }
 }
 
@@ -104,7 +103,7 @@ fn expression0<'tokens, I>(
     expr: impl Parser<'tokens, I, pir::Expression, Extra<'tokens>>,
 ) -> impl Parser<'tokens, I, pir::Expression, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
     use pir::Expression;
     use pir::expression::parenthesis::Paren;
@@ -112,12 +111,16 @@ where
     let constant = constant().map(Expression::Constant);
     let variable = variable().map(Expression::Variable);
     let parens = {
-        let l_paren = operator(Operator::LParen, pir::operator::LParenT()).labelled("(");
-        let r_paren = operator(Operator::RParen, pir::operator::RParenT()).labelled(")");
+        let l_paren = operator(Operator::LParen, pir::operator::LParen).labelled("(");
+        let r_paren = operator(Operator::RParen, pir::operator::RParen).labelled(")");
         l_paren
             .then(expr.map(Box::new))
             .then(r_paren)
-            .map(|((l_paren, expr), r_paren)| Paren::new(l_paren, expr, r_paren))
+            .map(|((l_paren, inner), r_paren)| Paren {
+                l_paren,
+                inner,
+                r_paren,
+            })
             .map(Expression::Paren)
     };
 
@@ -134,9 +137,9 @@ fn expression1<'tokens, I>(
     expr0: impl Parser<'tokens, I, pir::Expression, Extra<'tokens>> + Clone,
 ) -> impl Parser<'tokens, I, pir::Expression, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    let colon = operator(Operator::Colon, pir::operator::ColonT()).labelled(":");
+    let colon = operator(Operator::Colon, pir::operator::Colon).labelled(":");
     let type_restriction = (expr0.clone())
         .then(colon)
         .then(ty())
@@ -161,7 +164,7 @@ where
 ///```
 pub fn expression<'tokens, I>() -> impl Parser<'tokens, I, pir::Expression, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
     recursive(move |expr| {
         let expr0 = expression0(expr.clone()).boxed();
@@ -177,15 +180,15 @@ where
 pub fn expression_definition<'tokens, I>()
 -> impl Parser<'tokens, I, pir::ExpressionDefinition, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
     use pir::expression::definition::{ExpressionDefinition, TypedBy};
 
     let typed_by = {
-        let colon = operator(Operator::Colon, pir::operator::ColonT()).labelled(":");
+        let colon = operator(Operator::Colon, pir::operator::Colon).labelled(":");
         colon.then(ty()).map(|(colon, ty)| TypedBy { colon, ty })
     };
-    let eq_def = operator(Operator::EqDef, pir::operator::EqDefT()).labelled(":=");
+    let eq_def = operator(Operator::EqDef, pir::operator::EqDef).labelled(":=");
     pattern()
         .then(typed_by.or_not())
         .then(eq_def)
@@ -209,25 +212,26 @@ where
 /// ```
 pub fn ty_variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
     variable().labelled("type variable")
 }
 
 /// parse type builtin
-pub fn ty_builtin<'tokens, I>() -> impl Parser<'tokens, I, pir::ty::Builtin, Extra<'tokens>>
+pub fn ty_builtin<'tokens, I>()
+-> impl Parser<'tokens, I, Token<pir::ty::BuiltinType>, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
     select! {
-        ref meta @ Meta{ value: Token::Identifier(ref s), ..} if s == "__Type_Nat__" =>
-            meta.clone().map(|_| pir::ty::BuiltinT::Nat),
+        ref token @ Token{ value: TokenKind::Identifier(ref s), ..} if s == "__Type_Nat__" =>
+            token.with_value(pir::ty::BuiltinType::Nat),
 
-        ref meta @ Meta{ value: Token::Identifier(ref s), ..} if s == "__Type_Bool__" =>
-            meta.clone().map(|_| pir::ty::BuiltinT::Bool),
+        ref token @ Token{ value: TokenKind::Identifier(ref s), ..} if s == "__Type_Bool__" =>
+            token.with_value(pir::ty::BuiltinType::Bool),
 
-        ref meta @ Meta{ value: Token::Identifier(ref s), ..} if s == "__Type_Char__" =>
-            meta.clone().map(|_| pir::ty::BuiltinT::Char),
+        ref token @ Token{ value: TokenKind::Identifier(ref s), ..} if s == "__Type_Char__" =>
+            token.with_value(pir::ty::BuiltinType::Char),
     }
     .labelled("builtin variable")
 }
@@ -239,7 +243,7 @@ where
 /// ```
 pub fn ty<'tokens, I>() -> impl Parser<'tokens, I, pir::Type, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
     let builtin = ty_builtin().map(pir::Type::Builtin);
     let var = ty_variable().map(pir::Type::Variable);
@@ -253,9 +257,9 @@ where
 /// ```
 pub fn type_definition<'tokens, I>() -> impl Parser<'tokens, I, pir::TypeDefinition, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    let eq_def = operator(Operator::EqDef, pir::operator::EqDefT()).labelled(":=");
+    let eq_def = operator(Operator::EqDef, pir::operator::EqDef).labelled(":=");
     ty_variable()
         .then(eq_def)
         .then(ty())
@@ -271,7 +275,7 @@ where
 /// ```
 pub fn help_variable<'tokens, I>() -> impl Parser<'tokens, I, pir::Variable, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
     variable().labelled("help variable")
 }
@@ -280,96 +284,96 @@ where
 // ===========================================================================
 
 fn keyword_definition<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::DefinitionKeyword, Extra<'tokens>>
+-> impl Parser<'tokens, I, Token<pir::command::keyword::DefinitionKeyword>, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    use pir::command::keyword::DefinitionKeywordT;
+    use pir::command::keyword::DefinitionKeyword;
     select! {
-        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Def" =>
-            meta.clone().map(|_| DefinitionKeywordT::Def),
-        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Definition" =>
-            meta.clone().map(|_| DefinitionKeywordT::Definition),
+        ref token @ Token{value: TokenKind::Identifier(ref id), ..} if id == "Def" =>
+            token.with_value(DefinitionKeyword::Def),
+        ref token @ Token{value: TokenKind::Identifier(ref id), ..} if id == "Definition" =>
+            token.with_value(DefinitionKeyword::Definition),
     }
 }
 
 fn keyword_eval<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::EvalKeyword, Extra<'tokens>>
+-> impl Parser<'tokens, I, Token<pir::command::keyword::EvalKeyword>, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    use pir::command::keyword::EvalKeywordT;
+    use pir::command::keyword::EvalKeyword;
     select! {
-        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Eval" =>
-            meta.clone().map(|_| EvalKeywordT::Eval),
-        ref meta @ Meta{value: Token::Operator(Operator::Eval), ..} =>
-            meta.clone().map(|_| EvalKeywordT::EvalOp)
+        ref token @ Token{value: TokenKind::Identifier(ref id), ..} if id == "Eval" =>
+            token.with_value(EvalKeyword::Eval),
+        ref token @ Token{value: TokenKind::Operator(Operator::Eval), ..} =>
+            token.with_value(EvalKeyword::EvalOp)
     }
 }
 
 fn keyword_type_of<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::TypeOfKeyword, Extra<'tokens>>
+-> impl Parser<'tokens, I, Token<pir::command::keyword::TypeOfKeyword>, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    use pir::command::keyword::TypeOfKeywordT;
+    use pir::command::keyword::TypeOfKeyword;
     select! {
-        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "TypeOf" =>
-            meta.clone().map(|_| TypeOfKeywordT::TypeOf),
-        ref meta @ Meta{value: Token::Operator(Operator::TypeOf), ..} =>
-            meta.clone().map(|_| TypeOfKeywordT::TypeOfOp),
+        ref token @ Token{value: TokenKind::Identifier(ref id), ..} if id == "TypeOf" =>
+            token.with_value(TypeOfKeyword::TypeOf),
+        ref token @ Token{value: TokenKind::Operator(Operator::TypeOf), ..} =>
+            token.with_value(TypeOfKeyword::TypeOfOp),
     }
 }
 
 fn keyword_help<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::HelpKeyword, Extra<'tokens>>
+-> impl Parser<'tokens, I, Token<pir::command::keyword::HelpKeyword>, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    use pir::command::keyword::HelpKeywordT;
+    use pir::command::keyword::HelpKeyword;
     select! {
-        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Help" =>
-            meta.clone().map(|_| HelpKeywordT::Help),
-        ref meta @ Meta{value: Token::Operator(Operator::Help), ..} =>
-            meta.clone().map(|_| HelpKeywordT::HelpOp),
+        ref token @ Token{value: TokenKind::Identifier(ref id), ..} if id == "Help" =>
+            token.with_value(HelpKeyword::Help),
+        ref token @ Token{value: TokenKind::Operator(Operator::Help), ..} =>
+            token.with_value(HelpKeyword::HelpOp),
     }
 }
 
 fn keyword_type<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::TypeKeyword, Extra<'tokens>>
+-> impl Parser<'tokens, I, Token<pir::command::keyword::TypeKeyword>, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    use pir::command::keyword::TypeKeywordT;
+    use pir::command::keyword::TypeKeyword;
     select! {
-        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Type" =>
-            meta.clone().map(|_| TypeKeywordT::Type),
-        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Ty" =>
-            meta.clone().map(|_| TypeKeywordT::Ty),
+        ref token @ Token{value: TokenKind::Identifier(ref id), ..} if id == "Type" =>
+            token.with_value(TypeKeyword::Type),
+        ref token @ Token{value: TokenKind::Identifier(ref id), ..} if id == "Ty" =>
+            token.with_value(TypeKeyword::Ty),
     }
 }
 
 fn keyword_set<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::SetKeyword, Extra<'tokens>>
+-> impl Parser<'tokens, I, Token<pir::command::keyword::SetKeyword>, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    use pir::command::keyword::SetKeywordT;
+    use pir::command::keyword::SetKeyword;
     select! {
-        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Set" =>
-                meta.clone().map(|_| SetKeywordT()),
+        ref token @ Token{value: TokenKind::Identifier(ref id), ..} if id == "Set" =>
+                token.with_value(SetKeyword),
     }
 }
 
 fn keyword_unset<'tokens, I>()
--> impl Parser<'tokens, I, pir::command::keyword::UnsetKeyword, Extra<'tokens>>
+-> impl Parser<'tokens, I, Token<pir::command::keyword::UnsetKeyword>, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    use pir::command::keyword::UnsetKeywordT;
+    use pir::command::keyword::UnsetKeyword;
     select! {
-        ref meta @ Meta{value: Token::Identifier(ref id), ..} if id == "Unset" =>
-                meta.clone().map(|_| UnsetKeywordT()),
+        ref token @ Token{value: TokenKind::Identifier(ref id), ..} if id == "Unset" =>
+                token.with_value(UnsetKeyword),
     }
 }
 /// parse command
@@ -384,7 +388,7 @@ where
 ///```
 pub fn command_kind<'tokens, I>() -> impl Parser<'tokens, I, pir::CommandKind, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
     use pir::command::CommandKind;
 
@@ -419,9 +423,9 @@ where
 ///```
 pub fn command<'tokens, I>() -> impl Parser<'tokens, I, pir::Command, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    let dot = operator(Operator::Dot, pir::operator::DotT()).labelled(".");
+    let dot = operator(Operator::Dot, pir::operator::Dot).labelled(".");
     command_kind()
         .then(dot)
         .map(|(kind, dot)| pir::Command { kind, dot })
@@ -433,13 +437,14 @@ where
 // ===========================================================================
 
 /// parse end of input
-pub fn end_of_input<'tokens, I>() -> impl Parser<'tokens, I, pir::EndOfFile, Extra<'tokens>>
+pub fn end_of_input<'tokens, I>()
+-> impl Parser<'tokens, I, Token<pir::file::EndOfInput>, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    use pir::file::EndOfFileT;
-    select! {meta @ Meta{ value: Token::EndOfInput, ..} =>
-        meta.map(|_| EndOfFileT())
+    use pir::file::EndOfInput;
+    select! {token @ Token{ value: TokenKind::EndOfInput, ..} =>
+        token.with_value(EndOfInput)
     }
     .labelled("")
 }
@@ -455,9 +460,9 @@ where
 ///```
 pub fn file<'tokens, I>() -> impl Parser<'tokens, I, pir::File, Extra<'tokens>>
 where
-    I: ValueInput<'tokens, Token = MetaToken, Span = SimpleSpan>,
+    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
 {
-    let dot = operator(Operator::Dot, pir::operator::DotT()).ignored();
+    let dot = operator(Operator::Dot, pir::operator::Dot).ignored();
     // a command is only tried before the end of input, so the recovery always
     // skips something
     let command = end_of_input()
@@ -471,12 +476,8 @@ where
         .repeated()
         .collect::<Vec<_>>()
         .then(end_of_input())
-        .map(|(commands, end)| {
-            let mut file = pir::File::default();
-            for command in commands.into_iter().flatten() {
-                file.add_command(command);
-            }
-            file.set_end(end);
-            file
+        .map(|(commands, end)| pir::File {
+            commands: commands.into_iter().flatten().collect(),
+            end: Some(end),
         })
 }

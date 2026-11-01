@@ -1,5 +1,6 @@
 use super::{Expression, ExpressionDefinition, TypeDefinition, Variable, operator};
 use crate::location::{Span, Spanned};
+use crate::token::Token;
 use pp::pretty::*;
 
 pub mod keyword;
@@ -13,31 +14,31 @@ use keyword::*;
 #[derive(Debug)]
 pub enum CommandKind {
     ExpressionDefinition {
-        keyword: DefinitionKeyword,
+        keyword: Token<DefinitionKeyword>,
         def: Box<ExpressionDefinition>,
     },
     TypeDefinition {
-        keyword: TypeKeyword,
+        keyword: Token<TypeKeyword>,
         def: TypeDefinition,
     },
     Eval {
-        keyword: EvalKeyword,
+        keyword: Token<EvalKeyword>,
         expr: Expression,
     },
     TypeOf {
-        keyword: TypeOfKeyword,
+        keyword: Token<TypeOfKeyword>,
         expr: Expression,
     },
     Help {
-        keyword: HelpKeyword,
+        keyword: Token<HelpKeyword>,
         var: Variable,
     },
     Set {
-        keyword: SetKeyword,
+        keyword: Token<SetKeyword>,
         var: Variable,
     },
     UnSet {
-        keyword: UnsetKeyword,
+        keyword: Token<UnsetKeyword>,
         var: Variable,
     },
 }
@@ -100,7 +101,7 @@ impl Spanned for CommandKind {
 #[derive(Debug)]
 pub struct Command {
     pub kind: CommandKind,
-    pub dot: operator::Dot,
+    pub dot: Token<operator::Dot>,
 }
 
 impl Pretty for Command {

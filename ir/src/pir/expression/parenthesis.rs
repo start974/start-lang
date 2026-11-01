@@ -1,5 +1,6 @@
 use crate::location::{Span, Spanned};
 use crate::pir::operator::{LParen, RParen};
+use crate::token::Token;
 use pp::pretty::*;
 
 // ============================================================================
@@ -7,25 +8,9 @@ use pp::pretty::*;
 // ============================================================================
 #[derive(Debug, Clone)]
 pub struct Paren<T> {
-    l_paren: LParen,
-    inner: T,
-    r_paren: RParen,
-}
-
-impl<T> Paren<T> {
-    /// Create a new parenthesized value
-    pub fn new(l_paren: LParen, inner: T, r_paren: RParen) -> Self {
-        Self {
-            l_paren,
-            inner,
-            r_paren,
-        }
-    }
-
-    /// Get the value inside the parentheses
-    pub fn inner(&self) -> &T {
-        &self.inner
-    }
+    pub l_paren: Token<LParen>,
+    pub inner: T,
+    pub r_paren: Token<RParen>,
 }
 
 impl<T> Spanned for Paren<T> {
@@ -52,9 +37,9 @@ where
                 .append(self.r_paren.pretty(theme))
         } else {
             Doc::nil()
-                .append(self.l_paren.pretty_meta(theme))
+                .append(self.l_paren.pretty_leading(theme))
                 .append(doc_val)
-                .append(self.r_paren.pretty_meta(theme))
+                .append(self.r_paren.pretty_leading(theme))
         }
     }
 }
