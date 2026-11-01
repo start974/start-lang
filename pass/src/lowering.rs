@@ -6,6 +6,7 @@
 //!   of the file, with its documentation and its place;
 //! - `Set` / `Unset` options stay names, checked later.
 
+use crate::Partial;
 use ir::location::{SourceId, Spanned};
 use ir::{pir, sir};
 
@@ -25,12 +26,13 @@ impl Lowering {
         LoweringBuilder::default()
     }
 
-    /// lower every command of `file`
-    pub fn run(mut self, file: &pir::File) -> sir::File {
+    /// lower every command of `file`; never an error: every valid CST has an
+    /// AST
+    pub fn run(mut self, file: &pir::File) -> Partial<sir::File> {
         for cmd in file.commands() {
             self.command(cmd);
         }
-        self.file
+        Partial::ok(self.file)
     }
 
     /// lower one command and add it to the file, with its definitions
@@ -174,15 +176,18 @@ mod tests {
         let tokens = crate::lexer::Lexer::builder()
             .build()
             .run(src)
+            .into_result()
             .unwrap_or_else(|_| panic!("lexing error in {src}"));
         let file = crate::parser::Parser::builder()
             .build()
             .run(tokens)
+            .into_result()
             .unwrap_or_else(|_| panic!("parsing error in {src}"));
         Lowering::builder()
             .source(SourceId::Repl)
             .build()
             .run(&file)
+            .value
     }
 
     /// the only command of `src`

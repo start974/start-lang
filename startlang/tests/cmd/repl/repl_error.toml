@@ -19,6 +19,8 @@ stderr = """
  1 │ Def a := 3. Eval not_exits.
    │                  ────┬────  
    │                      ╰────── Expression variable not_exits not found.
+   │ 
+   │ Note: Recovery: the command is left out.
 ───╯
 [301] Error: Variable not found.
    ╭─[ REPL:2:6 ]
@@ -26,5 +28,7 @@ stderr = """
  2 │ Eval a.
    │      ┬  
    │      ╰── Expression variable a not found.
+   │ 
+   │ Note: Recovery: the command is left out.
 ───╯
 """

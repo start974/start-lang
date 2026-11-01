@@ -89,6 +89,7 @@ impl Pretty for Token {
 
 pub type MetaToken = Meta<Token>;
 
+#[derive(Default)]
 pub struct MetaTokenStream {
     tokens: Vec<MetaToken>,
 }
@@ -126,13 +127,12 @@ impl Pretty for MetaTokenStream {
     }
 }
 
-/// span from the first to the last token; a stream always ends with
-/// `EndOfInput`, so it is never empty
+/// span from the first to the last token, empty at 0 if there is none
 impl Spanned for MetaTokenStream {
     fn span(&self) -> Span {
         match (self.tokens.first(), self.tokens.last()) {
             (Some(first), Some(last)) => first.span().union(last.span()),
-            _ => unreachable!("a token stream is never empty"),
+            _ => Span::default(),
         }
     }
 }

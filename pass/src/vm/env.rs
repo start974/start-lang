@@ -1,5 +1,6 @@
-use crate::vm::Value;
-use errors::{Error, Errors, Message};
+use crate::Partial;
+use crate::vm::{Value, error};
+use errors::Message;
 use ir::lir::{Expression, File, Global, GlobalId, Item};
 
 /// runs the files one after the other: the values of the globals of the
@@ -14,19 +15,26 @@ impl Vm {
         VmBuilder
     }
 
-    /// run every item of `file`: the value of each `Eval`, in order
-    pub fn run(&mut self, file: &File) -> Result<Vec<Value>, Errors> {
+    /// run every item of `file`: the value of each `Eval` it could compute,
+    /// in order, and every (internal) error
+    pub fn run(&mut self, file: &File) -> Partial<Vec<Value>> {
         let mut values = Vec::new();
+        let mut errors = Vec::new();
         for item in file.items() {
             match item {
                 Item::Global(global) => {
-                    self.define(global)
-                        .ok_or_else(|| undefined(&global.symbol))?;
+                    if self.define(global).is_none() {
+                        errors.push(error::undefined(&global.symbol));
+                    }
                 }
-                Item::Eval(expr) => values.push(self.eval(expr).ok_or_else(|| undefined("eval"))?),
+                Item::Eval(expr) => match self.eval(expr) {
+                    Some(value) => values.push(value),
+                    None => errors.push(error::undefined("eval")),
+                },
             }
         }
-        Ok(values)
+        let recovery = || Message::text("the value is not computed.");
+        Partial::ok(values).with_errors(errors.into_iter().map(|err| err.with_recovery(recovery())))
     }
 
     /// value of a global, `None` if it was never defined
@@ -53,13 +61,6 @@ impl Vm {
         self.globals[index] = Some(value);
         self.globals[index].as_ref()
     }
-}
-
-/// internal error: `codegen` made a read of a global never computed
-fn undefined(context: &str) -> Errors {
-    Error::new(902, Message::text("Internal error."))
-        .with_text(Message::text(format!("vm: undefined global in {context}.")))
-        .into()
 }
 
 /// arguments of a `Vm` (none yet)

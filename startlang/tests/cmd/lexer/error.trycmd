@@ -10,6 +10,8 @@ $ startlang run char_unclosed1.st
  1 │ Eval '1.
    │        ┬  
    │        ╰── Lexer expected "'", found ".".
+   │ 
+   │ Note: Recovery: the character is skipped.
 ───╯
 
 ```
@@ -23,6 +25,8 @@ $ startlang run char_unclosed2.st
  1 │ Eval 1'.
    │         ┬  
    │         ╰── Lexer expected "'", found "/n".
+   │ 
+   │ Note: Recovery: the character is skipped.
 ───╯
 
 ```

@@ -4,47 +4,13 @@
 //! The state is kept between calls, so the REPL can generate one command at a
 //! time.
 
+use crate::Partial;
+use errors::{Error, Message};
 use ir::tir::Typed as _;
 use ir::{lir, tir};
 use std::collections::HashMap;
-use std::fmt;
 
-// ============================================================================
-// Error
-// ============================================================================
-
-/// internal error: `typing` accepted a program that cannot be generated
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Error {
-    /// variable whose definition was never generated
-    UnknownIdentifier(tir::Identifier),
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Error::UnknownIdentifier(id) => write!(f, "codegen: unknown identifier `{id}`"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-
-/// diagnostic of an internal error: `typing` accepted the program, so this is
-/// a bug of the compiler
-impl From<Error> for errors::Error {
-    fn from(err: Error) -> Self {
-        errors::Error::new(901, errors::Message::text("Internal error."))
-            .with_text(errors::Message::text(err.to_string()))
-    }
-}
-
-/// so that `?` reports it from a pass that returns `Errors`
-impl From<Error> for errors::Errors {
-    fn from(err: Error) -> Self {
-        errors::Error::from(err).into()
-    }
-}
+mod error;
 
 // ============================================================================
 // Codegen
@@ -63,19 +29,27 @@ impl Codegen {
         CodegenBuilder
     }
 
-    /// code of a typed file: a global per definition, an item per `Eval`
-    pub fn run(&mut self, file: &tir::File) -> Result<lir::File, errors::Errors> {
+    /// code of a typed file: a global per definition, an item per `Eval`;
+    /// the items it could generate, and every (internal) error
+    pub fn run(&mut self, file: &tir::File) -> Partial<lir::File> {
         let mut items = Vec::new();
+        let mut errors = Vec::new();
         for cmd in file.commands() {
-            match &cmd.kind {
+            let item = match &cmd.kind {
                 tir::CommandKind::ExpressionDefinition(def) => {
-                    items.push(lir::Item::Global(self.definition(def)?));
+                    self.definition(def).map(lir::Item::Global)
                 }
-                tir::CommandKind::Eval(expr) => items.push(lir::Item::Eval(self.expression(expr)?)),
-                tir::CommandKind::TypeOf(_) | tir::CommandKind::Help(_) => {}
+                tir::CommandKind::Eval(expr) => self.expression(expr).map(lir::Item::Eval),
+                tir::CommandKind::TypeOf(_) | tir::CommandKind::Help(_) => continue,
+            };
+            match item {
+                Ok(item) => items.push(item),
+                Err(err) => {
+                    errors.push(err.with_recovery(Message::text("the command is left out.")));
+                }
             }
         }
-        Ok(items.into_iter().collect())
+        Partial::ok(items.into_iter().collect()).with_errors(errors)
     }
 
     /// run-time type: aliases resolved
@@ -103,7 +77,7 @@ impl Codegen {
                 .globals
                 .get(var.identifier())
                 .map(|id| lir::Expression::Global(*id))
-                .ok_or_else(|| Error::UnknownIdentifier(var.identifier().clone())),
+                .ok_or_else(|| error::unknown_identifier(var)),
         }
     }
 
@@ -190,8 +164,8 @@ mod tests {
 
         let codegen = Codegen::default();
         assert_eq!(
-            codegen.expression(&use_a),
-            Err(Error::UnknownIdentifier((*a).clone()))
+            codegen.expression(&use_a).map_err(|err| err.code()),
+            Err(901)
         );
     }
 
@@ -207,15 +181,5 @@ mod tests {
         );
         let alias = tir::Type::Alias(env.type_alias(&t, Span::default()).unwrap());
         assert_eq!(Codegen::ty(&alias), lir::Type::Char);
-    }
-
-    #[test]
-    fn internal_error_diagnostic() {
-        let mut ids = IdentifierBuilder::default();
-        let err = Error::UnknownIdentifier((*ids.build("a")).clone());
-        let diagnostic = errors::Error::from(err.clone());
-        assert_eq!(diagnostic.code(), 901);
-        let errors = errors::Errors::from(err);
-        assert_eq!(errors.code(), 901);
     }
 }

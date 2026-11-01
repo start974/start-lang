@@ -38,6 +38,8 @@ $ startlang run error.st
  1 │ ? Not_exists.
    │   ─────┬────  
    │        ╰────── Variable Not_exists not found.
+   │ 
+   │ Note: Recovery: the command is left out.
 ───╯
 
 ```

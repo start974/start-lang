@@ -1,7 +1,8 @@
 //! `sir` → `tir`: every expression gets its type, every variable its unique
 //! identifier (`a__0`).
 
-use errors::{Errors, ResultErrors as _};
+use crate::Partial;
+use errors::{Errors, Message, ResultErrors as _};
 
 mod error;
 
@@ -36,31 +37,29 @@ impl Typer {
         &self.env
     }
 
-    /// type every command of `file`; on error, every error is reported and
-    /// the environment is left as it was before the file
-    pub fn run(&mut self, file: &sir::File) -> Result<tir::File> {
+    /// type every command of `file`: the commands that typed, and every
+    /// error; on error, the environment is left as it was before the file
+    pub fn run(&mut self, file: &sir::File) -> Partial<tir::File> {
         let before = self.clone();
         self.broken.clear();
-        let mut failed = false;
-        let mut errors = Vec::new();
-        let mut commands = Vec::new();
-        for cmd in file.commands() {
-            match self.command(cmd, file.defs()) {
-                Ok(Some(kind)) => commands.push(tir::Command::new(kind, cmd.span())),
-                Ok(None) => {}
-                Err(errs) => {
-                    failed = true;
-                    self.mark_broken(cmd);
-                    errors.extend(errs);
-                }
-            }
-        }
-        if failed {
+        let typed: Partial<Vec<_>> =
+            file.commands()
+                .iter()
+                .map(|cmd| match self.command(cmd, file.defs()) {
+                    Ok(kind) => Partial::ok(kind.map(|kind| tir::Command::new(kind, cmd.span()))),
+                    Err(errs) => {
+                        self.mark_broken(cmd);
+                        Partial::ok(None).with_errors(errs.into_iter().map(|err| {
+                            err.with_recovery(Message::text("the command is left out."))
+                        }))
+                    }
+                })
+                .collect();
+        // a failed command always comes with an error: the silent ones follow a broken one
+        if !typed.is_ok() {
             *self = before;
-            Err(errors.into_iter().collect())
-        } else {
-            Ok(commands.into_iter().collect())
         }
+        typed.map(|commands| commands.into_iter().flatten().collect())
     }
 
     /// type one command; `None` for a command that leaves nothing to run
@@ -246,18 +245,25 @@ mod tests {
         let tokens = Lexer::builder()
             .build()
             .run(src)
+            .into_result()
             .unwrap_or_else(|_| panic!("lex {src}"));
         let pir = Parser::builder()
             .build()
             .run(tokens)
+            .into_result()
             .unwrap_or_else(|_| panic!("parse {src}"));
-        Lowering::builder().source(SourceId::Repl).build().run(&pir)
+        Lowering::builder()
+            .source(SourceId::Repl)
+            .build()
+            .run(&pir)
+            .value
     }
 
     /// type `src` with `typer`: the type of each command, or the error codes
     fn type_with(typer: &mut Typer, src: &str) -> std::result::Result<Vec<String>, Vec<i32>> {
         typer
             .run(&sir(src))
+            .into_result()
             .map(|file| {
                 file.commands()
                     .iter()
@@ -354,6 +360,23 @@ mod tests {
         assert_eq!(
             info.doc.as_ref().map(|doc| doc.lines().to_vec()),
             Some(vec!["the answer".to_string()])
+        );
+    }
+
+    #[test]
+    fn typed_commands_kept_with_errors() {
+        let typed = Typer::builder()
+            .build()
+            .run(&sir("Eval 1.\nEval x.\nTypeOf 'c'."));
+        assert_eq!(typed.errors.len(), 1);
+        assert_eq!(typed.value.commands().len(), 2);
+        let recovery = (&typed.errors)
+            .into_iter()
+            .next()
+            .and_then(|err| err.recovery());
+        assert_eq!(
+            recovery.map(|msg| msg.make_string(&pp::MessageTheme::default())),
+            Some("the command is left out.".to_string())
         );
     }
 }
