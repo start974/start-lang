@@ -1,11 +1,12 @@
 use crate::location::{Span, Spanned};
 use crate::pir::{Variable, operator, ty};
+use crate::token::Token;
 use pp::pretty::*;
 
 #[derive(Debug)]
 pub struct TypeDefinition {
     pub name: Variable,
-    pub eq_def: operator::EqDef,
+    pub eq_def: Token<operator::EqDef>,
     pub ty: ty::Type,
 }
 

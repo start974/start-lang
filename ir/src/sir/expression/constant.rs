@@ -15,9 +15,9 @@ pub type Character = Node<char>;
 // ============================================================================
 // Builtin
 // ============================================================================
-pub use crate::common::BuiltinConstant as BuiltinT;
+pub use crate::common::BuiltinConstant;
 
-pub type Builtin = Node<BuiltinT>;
+pub type Builtin = Node<BuiltinConstant>;
 
 // ============================================================================
 // Constant

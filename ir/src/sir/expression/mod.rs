@@ -51,7 +51,7 @@ mod tests {
         // the variable keeps its own span
         let var = Variable::new("a".to_string(), Span::new(1, 2));
         let inner = Expression::new(ExpressionKind::Variable(var.clone()), Span::new(1, 2));
-        let ty = Type::Builtin(ty::Builtin::new(ty::BuiltinT::Nat, Span::new(5, 8)));
+        let ty = Type::Builtin(ty::Builtin::new(ty::BuiltinType::Nat, Span::new(5, 8)));
         let expr = Expression::new(
             ExpressionKind::Typed {
                 expr: Box::new(inner),

@@ -26,7 +26,7 @@ pub fn error_parsing(err: &ErrorChumsky<'_>) -> Error {
                 .with_text("."),
         )
         .with_note(Message::from(
-            err.found().map(|meta| meta.value.clone()).map(|found| {
+            err.found().map(|token| token.value.clone()).map(|found| {
                 Message::text("Expected : ")
                     .append(Message::intersperse(expected, Message::text(", ")))
                     .with_line()

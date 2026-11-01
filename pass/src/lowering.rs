@@ -8,6 +8,7 @@
 
 use crate::Partial;
 use ir::location::{SourceId, Spanned};
+use ir::token::{Token, Trivia};
 use ir::{pir, sir};
 
 // ============================================================================
@@ -29,9 +30,7 @@ impl Lowering {
     /// lower every command of `file`; never an error: every valid CST has an
     /// AST
     pub fn run(mut self, file: &pir::File) -> Partial<sir::File> {
-        for cmd in file.commands() {
-            self.command(cmd);
-        }
+        file.commands.iter().for_each(|cmd| self.command(cmd));
         Partial::ok(self.file)
     }
 
@@ -39,18 +38,20 @@ impl Lowering {
     fn command(&mut self, cmd: &pir::Command) {
         let kind = match &cmd.kind {
             pir::CommandKind::ExpressionDefinition { keyword, def } => {
-                let def = self.expression_definition(def, documentation(keyword));
+                let def = self.expression_definition(def, Self::documentation(keyword));
                 sir::CommandKind::ExpressionDefinition(Box::new(def))
             }
             pir::CommandKind::TypeDefinition { keyword, def } => {
-                let def = self.type_definition(def, documentation(keyword));
+                let def = self.type_definition(def, Self::documentation(keyword));
                 sir::CommandKind::TypeDefinition(def)
             }
-            pir::CommandKind::Eval { expr, .. } => sir::CommandKind::Eval(expression(expr)),
-            pir::CommandKind::TypeOf { expr, .. } => sir::CommandKind::TypeOf(expression(expr)),
-            pir::CommandKind::Help { var, .. } => sir::CommandKind::Help(variable(var)),
-            pir::CommandKind::Set { var, .. } => sir::CommandKind::Set(variable(var)),
-            pir::CommandKind::UnSet { var, .. } => sir::CommandKind::UnSet(variable(var)),
+            pir::CommandKind::Eval { expr, .. } => sir::CommandKind::Eval(Self::expression(expr)),
+            pir::CommandKind::TypeOf { expr, .. } => {
+                sir::CommandKind::TypeOf(Self::expression(expr))
+            }
+            pir::CommandKind::Help { var, .. } => sir::CommandKind::Help(Self::variable(var)),
+            pir::CommandKind::Set { var, .. } => sir::CommandKind::Set(Self::variable(var)),
+            pir::CommandKind::UnSet { var, .. } => sir::CommandKind::UnSet(Self::variable(var)),
         };
         self.file.add_command(sir::Command::new(kind, cmd.span()));
     }
@@ -60,7 +61,7 @@ impl Lowering {
         def: &pir::ExpressionDefinition,
         doc: Option<sir::Documentation>,
     ) -> sir::ExpressionDefinition {
-        let pattern = pattern(&def.pattern);
+        let pattern = Self::pattern(&def.pattern);
         let sir::Pattern::Variable(var) = &pattern;
         let id = self
             .file
@@ -68,8 +69,8 @@ impl Lowering {
         sir::ExpressionDefinition {
             id,
             pattern,
-            ty: def.typed_by.as_ref().map(|typed_by| ty(&typed_by.ty)),
-            body: expression(&def.body),
+            ty: def.typed_by.as_ref().map(|typed_by| Self::ty(&typed_by.ty)),
+            body: Self::expression(&def.body),
         }
     }
 
@@ -78,14 +79,70 @@ impl Lowering {
         def: &pir::TypeDefinition,
         doc: Option<sir::Documentation>,
     ) -> sir::TypeDefinition {
-        let name = variable(&def.name);
+        let name = Self::variable(&def.name);
         let id = self
             .file
             .define(name.clone(), sir::DefKind::Type, def.span(), doc);
         sir::TypeDefinition {
             id,
             name,
-            ty: ty(&def.ty),
+            ty: Self::ty(&def.ty),
+        }
+    }
+
+    // nodes without state
+
+    /// documentation comment written just before a keyword
+    fn documentation<T>(keyword: &Token<T>) -> Option<sir::Documentation> {
+        match keyword.leading.last() {
+            Some(Trivia::DocComment(doc_comment)) => {
+                Some(sir::Documentation::from(doc_comment.0.clone()))
+            }
+            _ => None,
+        }
+    }
+
+    /// value and span of a token, without its comments
+    fn node<T: Clone>(token: &Token<T>) -> sir::Node<T> {
+        sir::Node::new(token.value.clone(), token.span())
+    }
+
+    fn variable(var: &pir::Variable) -> sir::Variable {
+        Self::node(var)
+    }
+
+    fn constant(constant: &pir::Constant) -> sir::Constant {
+        match constant {
+            pir::Constant::Builtin(b) => sir::Constant::Builtin(Self::node(b)),
+            pir::Constant::Number(n) => sir::Constant::Number(Self::node(n)),
+            pir::Constant::Character(c) => sir::Constant::Character(Self::node(c)),
+        }
+    }
+
+    fn ty(ty: &pir::Type) -> sir::Type {
+        match ty {
+            pir::Type::Builtin(b) => sir::Type::Builtin(Self::node(b)),
+            pir::Type::Variable(var) => sir::Type::Variable(Self::variable(var)),
+        }
+    }
+
+    fn expression(expr: &pir::Expression) -> sir::Expression {
+        let kind = match expr {
+            pir::Expression::Variable(var) => sir::ExpressionKind::Variable(Self::variable(var)),
+            pir::Expression::Constant(c) => sir::ExpressionKind::Constant(Self::constant(c)),
+            // the parentheses only widen the span
+            pir::Expression::Paren(paren) => Self::expression(&paren.inner).kind,
+            pir::Expression::Typed { expr, ty: t, .. } => sir::ExpressionKind::Typed {
+                expr: Box::new(Self::expression(expr)),
+                ty: Self::ty(t),
+            },
+        };
+        sir::Expression::new(kind, expr.span())
+    }
+
+    fn pattern(pattern: &pir::Pattern) -> sir::Pattern {
+        match pattern {
+            pir::Pattern::Variable(var) => sir::Pattern::Variable(Self::variable(var)),
         }
     }
 }
@@ -107,61 +164,6 @@ impl LoweringBuilder {
         Lowering {
             file: sir::File::new(self.source),
         }
-    }
-}
-
-// ============================================================================
-// Nodes without state
-// ============================================================================
-
-/// documentation comment written just before a keyword
-fn documentation<T>(keyword: &pir::Meta<T>) -> Option<sir::Documentation> {
-    keyword
-        .doc_lines()
-        .map(|lines| sir::Documentation::from(lines.to_vec()))
-}
-
-/// value and span of a token, without its comments
-fn node<T: Clone>(meta: &pir::Meta<T>) -> sir::Node<T> {
-    sir::Node::new(meta.value.clone(), meta.span())
-}
-
-fn variable(var: &pir::Variable) -> sir::Variable {
-    node(var)
-}
-
-fn constant(constant: &pir::Constant) -> sir::Constant {
-    match constant {
-        pir::Constant::Builtin(b) => sir::Constant::Builtin(node(b)),
-        pir::Constant::Number(n) => sir::Constant::Number(node(n)),
-        pir::Constant::Character(c) => sir::Constant::Character(node(c)),
-    }
-}
-
-fn ty(ty: &pir::Type) -> sir::Type {
-    match ty {
-        pir::Type::Builtin(b) => sir::Type::Builtin(node(b)),
-        pir::Type::Variable(var) => sir::Type::Variable(variable(var)),
-    }
-}
-
-fn expression(expr: &pir::Expression) -> sir::Expression {
-    let kind = match expr {
-        pir::Expression::Variable(var) => sir::ExpressionKind::Variable(variable(var)),
-        pir::Expression::Constant(c) => sir::ExpressionKind::Constant(constant(c)),
-        // the parentheses only widen the span
-        pir::Expression::Paren(paren) => expression(paren.inner()).kind,
-        pir::Expression::Typed { expr, ty: t, .. } => sir::ExpressionKind::Typed {
-            expr: Box::new(expression(expr)),
-            ty: ty(t),
-        },
-    };
-    sir::Expression::new(kind, expr.span())
-}
-
-fn pattern(pattern: &pir::Pattern) -> sir::Pattern {
-    match pattern {
-        pir::Pattern::Variable(var) => sir::Pattern::Variable(variable(var)),
     }
 }
 
@@ -244,7 +246,7 @@ mod tests {
         assert_eq!(
             builtin.kind,
             sir::ExpressionKind::Constant(sir::Constant::Builtin(sir::Node::new(
-                sir::expression::constant::BuiltinT::True,
+                sir::expression::constant::BuiltinConstant::True,
                 Span::new(5, 22)
             )))
         );
@@ -325,7 +327,7 @@ mod tests {
         assert_eq!(def.name, var("T", 5));
         assert_eq!(
             def.ty,
-            sir::Type::Builtin(sir::Node::new(sir::ty::BuiltinT::Nat, Span::new(10, 22)))
+            sir::Type::Builtin(sir::Node::new(sir::ty::BuiltinType::Nat, Span::new(10, 22)))
         );
         assert_eq!(file.defs().get(def.id).kind, sir::DefKind::Type);
         assert_eq!(file.defs().doc(def.id), None);

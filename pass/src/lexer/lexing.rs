@@ -3,19 +3,20 @@ use chumsky::extra::Err;
 use chumsky::prelude::*;
 use chumsky::text::{newline, whitespace};
 use ir::location::Span;
-use ir::pir::{Comment, Meta, meta::CommentOrLines};
 use ir::token;
+use ir::token::{Comment, DocComment, Token, TokenKind, Trivia};
 use num_bigint::BigUint;
 use std::rc::Rc;
 
 // ===========================================================================
 // Comment
 // ===========================================================================
-/// lex comment
+/// lex comment or documentation comment
 /// ```ebnf
 /// COMMENT := "(*" <ANY>* "*)"
+/// DOCUMENTATION := "(**" <ANY>* "*)"
 /// ```
-pub fn comment<'src>() -> impl Parser<'src, &'src str, Comment, Err<ErrorChumsky<'src>>> {
+pub fn comment<'src>() -> impl Parser<'src, &'src str, Trivia, Err<ErrorChumsky<'src>>> {
     let start = just("(*")
         .ignore_then(just("*").or_not())
         .map(|opt| opt.is_some());
@@ -28,27 +29,29 @@ pub fn comment<'src>() -> impl Parser<'src, &'src str, Comment, Err<ErrorChumsky
                 .collect::<String>(),
         )
         .then_ignore(just("*)"))
-        .map(|(is_doc, str)| Comment::from(str).with_is_doc(is_doc))
+        .map(|(is_doc, text)| {
+            if is_doc {
+                DocComment::from(text.as_str()).into()
+            } else {
+                Comment::from(text.as_str()).into()
+            }
+        })
         .labelled("comment")
 }
 
 // ===========================================================================
-// Meta
+// Token
 // ===========================================================================
-pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, Err<ErrorChumsky<'src>>> + Sized {
-    /// meta(rule) = (LINE{2,} | WS* COMMENT)* WS* rule
-    fn with_meta(
+pub trait WithTrivia<'src, T>: Parser<'src, &'src str, T, Err<ErrorChumsky<'src>>> + Sized {
+    /// trivia(rule) = (LINE{2,} | WS* COMMENT)* WS* rule
+    fn with_trivia(
         self,
         offset: usize,
-    ) -> impl Parser<'src, &'src str, Meta<T>, Err<ErrorChumsky<'src>>> {
-        let lines = newline().repeated().at_least(2).to(CommentOrLines::Lines);
-        let comment = whitespace()
-            .ignore_then(comment())
-            .map(CommentOrLines::Comment);
+    ) -> impl Parser<'src, &'src str, Token<T>, Err<ErrorChumsky<'src>>> {
+        let lines = newline().repeated().at_least(2).to(Trivia::BlankLines);
+        let comment = whitespace().ignore_then(comment());
 
-        let meta_items = (lines.or(comment))
-            .repeated()
-            .collect::<Vec<CommentOrLines>>();
+        let trivia = (lines.or(comment)).repeated().collect::<Vec<Trivia>>();
 
         // Ajoute la location à la rule
         let rule_loc = self.map_with(move |value, e| {
@@ -57,14 +60,14 @@ pub trait WithMeta<'src, T>: Parser<'src, &'src str, T, Err<ErrorChumsky<'src>>>
         });
 
         // Consomme les derniers espaces/lignes avant le rule
-        meta_items
+        trivia
             .then_ignore(whitespace())
             .then(rule_loc)
-            .map(move |(comments, (value, loc))| Meta::new(value, loc).with_items(&comments))
+            .map(move |(items, (value, span))| Token::builder(value, span).items(items).build())
     }
 }
 
-impl<'src, T, P> WithMeta<'src, T> for P where
+impl<'src, T, P> WithTrivia<'src, T> for P where
     P: Parser<'src, &'src str, T, Err<ErrorChumsky<'src>>> + Sized
 {
 }
@@ -299,25 +302,23 @@ pub fn operator<'src>() -> impl Parser<'src, &'src str, token::Operator, Err<Err
 /// lex a whole source, whose first byte is at `offset`, up to `EndOfInput`;
 /// on a bad character, the error is recorded and lexing goes on after it
 /// ```ebnf
-/// tokens := meta(TOKEN)* meta(END_OF_INPUT)
+/// tokens := trivia(TOKEN)* trivia(END_OF_INPUT)
 /// ```
 pub fn lexer<'src>(
     offset: usize,
-) -> impl Parser<'src, &'src str, Vec<token::MetaToken>, Err<ErrorChumsky<'src>>> {
-    use token::Token;
-
-    let end_of_input = || end().to(Token::EndOfInput).with_meta(offset);
+) -> impl Parser<'src, &'src str, Vec<Token<TokenKind>>, Err<ErrorChumsky<'src>>> {
+    let end_of_input = || end().to(TokenKind::EndOfInput).with_trivia(offset);
 
     // a token is only tried before the last comments and spaces, so the
     // recovery never reads inside them
     let token = end_of_input().not().ignore_then(
         choice((
-            operator().map(Token::Operator),
-            identifier().map(Token::Identifier),
-            number().map(Token::Number),
-            character().map(Token::Character),
+            operator().map(TokenKind::Operator),
+            identifier().map(TokenKind::Identifier),
+            number().map(TokenKind::Number),
+            character().map(TokenKind::Character),
         ))
-        .with_meta(offset)
+        .with_trivia(offset)
         .recover_with(skip_then_retry_until(any().ignored(), end())),
     );
 

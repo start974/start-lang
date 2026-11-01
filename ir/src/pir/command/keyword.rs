@@ -1,21 +1,19 @@
-use crate::pir::Meta;
 use pp::pretty::*;
 
 // ============================================================================
 // Definition Keyword
 // ============================================================================
 #[derive(Debug)]
-pub enum DefinitionKeywordT {
+pub enum DefinitionKeyword {
     Def,
     Definition,
 }
-pub type DefinitionKeyword = Meta<DefinitionKeywordT>;
 
-impl Pretty for DefinitionKeywordT {
+impl Pretty for DefinitionKeyword {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            DefinitionKeywordT::Def => theme.keyword(&"Def"),
-            DefinitionKeywordT::Definition => theme.keyword(&"Definition"),
+            DefinitionKeyword::Def => theme.keyword(&"Def"),
+            DefinitionKeyword::Definition => theme.keyword(&"Definition"),
         }
     }
 }
@@ -24,17 +22,16 @@ impl Pretty for DefinitionKeywordT {
 // Type Keyword
 // ============================================================================
 #[derive(Debug)]
-pub enum TypeKeywordT {
+pub enum TypeKeyword {
     Type,
     Ty,
 }
-pub type TypeKeyword = Meta<TypeKeywordT>;
 
-impl Pretty for TypeKeywordT {
+impl Pretty for TypeKeyword {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            TypeKeywordT::Type => theme.keyword(&"Type"),
-            TypeKeywordT::Ty => theme.keyword(&"Ty"),
+            TypeKeyword::Type => theme.keyword(&"Type"),
+            TypeKeyword::Ty => theme.keyword(&"Ty"),
         }
     }
 }
@@ -43,17 +40,16 @@ impl Pretty for TypeKeywordT {
 // Eval Keyword
 // ============================================================================
 #[derive(Debug)]
-pub enum EvalKeywordT {
+pub enum EvalKeyword {
     Eval,
     EvalOp,
 }
-pub type EvalKeyword = Meta<EvalKeywordT>;
 
-impl Pretty for EvalKeywordT {
+impl Pretty for EvalKeyword {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            EvalKeywordT::Eval => theme.keyword(&"Eval"),
-            EvalKeywordT::EvalOp => theme.operator(&"$"),
+            EvalKeyword::Eval => theme.keyword(&"Eval"),
+            EvalKeyword::EvalOp => theme.operator(&"$"),
         }
     }
 }
@@ -62,17 +58,16 @@ impl Pretty for EvalKeywordT {
 // TypeOf Keyword
 // ============================================================================
 #[derive(Debug)]
-pub enum TypeOfKeywordT {
+pub enum TypeOfKeyword {
     TypeOf,
     TypeOfOp,
 }
-pub type TypeOfKeyword = Meta<TypeOfKeywordT>;
 
-impl Pretty for TypeOfKeywordT {
+impl Pretty for TypeOfKeyword {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            TypeOfKeywordT::TypeOf => theme.keyword(&"TypeOf"),
-            TypeOfKeywordT::TypeOfOp => theme.operator(&"?:"),
+            TypeOfKeyword::TypeOf => theme.keyword(&"TypeOf"),
+            TypeOfKeyword::TypeOfOp => theme.operator(&"?:"),
         }
     }
 }
@@ -81,17 +76,16 @@ impl Pretty for TypeOfKeywordT {
 // Help Keyword
 // ============================================================================
 #[derive(Debug)]
-pub enum HelpKeywordT {
+pub enum HelpKeyword {
     Help,
     HelpOp,
 }
-pub type HelpKeyword = Meta<HelpKeywordT>;
 
-impl Pretty for HelpKeywordT {
+impl Pretty for HelpKeyword {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            HelpKeywordT::Help => theme.keyword(&"Help"),
-            HelpKeywordT::HelpOp => theme.operator(&"?"),
+            HelpKeyword::Help => theme.keyword(&"Help"),
+            HelpKeyword::HelpOp => theme.operator(&"?"),
         }
     }
 }
@@ -100,10 +94,9 @@ impl Pretty for HelpKeywordT {
 // Set Keyword
 // ============================================================================
 #[derive(Debug)]
-pub struct SetKeywordT();
-pub type SetKeyword = Meta<SetKeywordT>;
+pub struct SetKeyword;
 
-impl Pretty for SetKeywordT {
+impl Pretty for SetKeyword {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         theme.keyword(&"Set")
     }
@@ -113,10 +106,9 @@ impl Pretty for SetKeywordT {
 // Unset Keyword
 // ============================================================================
 #[derive(Debug)]
-pub struct UnsetKeywordT();
-pub type UnsetKeyword = Meta<UnsetKeywordT>;
+pub struct UnsetKeyword;
 
-impl Pretty for UnsetKeywordT {
+impl Pretty for UnsetKeyword {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         theme.keyword(&"Unset")
     }

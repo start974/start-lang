@@ -6,11 +6,11 @@ mod parsing;
 use crate::Partial;
 use ir::location::Spanned;
 use ir::pir;
-use ir::token::{MetaToken, MetaTokenStream};
+use ir::token::{Token, TokenKind, TokenStream};
 
 pub use parsing::file;
 
-pub type ErrorChumsky<'tokens> = chumsky::error::Rich<'tokens, MetaToken>;
+pub type ErrorChumsky<'tokens> = chumsky::error::Rich<'tokens, Token<TokenKind>>;
 
 /// parser of a token stream
 #[derive(Debug, Default, Clone, Copy)]
@@ -23,7 +23,7 @@ impl Parser {
 
     /// parse the whole token stream: the commands it could read, and every
     /// parsing error
-    pub fn run(&self, tokens: MetaTokenStream) -> Partial<pir::File> {
+    pub fn run(&self, tokens: TokenStream) -> Partial<pir::File> {
         use chumsky::prelude::*;
 
         let last = tokens.last_span();
@@ -71,14 +71,14 @@ mod tests {
     fn whole_file() {
         let parsed = parse("Def a := 1.\nEval a.\n$ (a : ℕ).");
         assert!(parsed.is_ok());
-        assert_eq!(parsed.value.commands().len(), 3);
+        assert_eq!(parsed.value.commands.len(), 3);
     }
 
     #[test]
     fn empty_file() {
         let parsed = parse("  (* nothing *)  ");
         assert!(parsed.is_ok());
-        assert!(parsed.value.commands().is_empty());
+        assert!(parsed.value.commands.is_empty());
     }
 
     #[test]
@@ -87,7 +87,7 @@ mod tests {
         // keeps the three valid commands
         let parsed = parse("Eval 1.\nd.\nEval 2.\nDef := 2.\nEval 3.");
         assert_eq!(parsed.errors.len(), 2);
-        assert_eq!(parsed.value.commands().len(), 3);
+        assert_eq!(parsed.value.commands.len(), 3);
         for err in &parsed.errors {
             let recovery = err
                 .recovery()
@@ -103,6 +103,6 @@ mod tests {
     fn broken_command_up_to_the_end() {
         let parsed = parse("Eval 1.\nEval (2");
         assert_eq!(parsed.errors.len(), 1);
-        assert_eq!(parsed.value.commands().len(), 1);
+        assert_eq!(parsed.value.commands.len(), 1);
     }
 }
