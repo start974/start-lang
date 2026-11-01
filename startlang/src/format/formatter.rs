@@ -52,7 +52,8 @@ impl Formatter {
         let parsed = Lexer::builder()
             .build()
             .run(&self.content)
-            .and_then(|tokens| Parser::builder().build().run(tokens));
+            .into_result()
+            .and_then(|tokens| Parser::builder().build().run(tokens).into_result());
         match parsed {
             Ok(file) => Some(file),
             Err(errs) => {

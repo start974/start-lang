@@ -31,15 +31,25 @@ impl Stdlib {
         let mut codegen = Codegen::builder().build();
         let mut vm = Vm::builder().build();
 
-        let tokens = Lexer::builder().build().run(SOURCE).expect("stdlib lexing");
+        let tokens = Lexer::builder()
+            .build()
+            .run(SOURCE)
+            .into_result()
+            .expect("stdlib lexing");
         let pir = Parser::builder()
             .build()
             .run(tokens)
+            .into_result()
             .expect("stdlib parsing");
-        let sir = Lowering::builder().source(source).build().run(&pir);
-        let tir = typer.run(&sir).expect("stdlib typing");
-        let lir = codegen.run(&tir).expect("stdlib codegen");
-        vm.run(&lir).expect("stdlib run");
+        let sir = Lowering::builder()
+            .source(source)
+            .build()
+            .run(&pir)
+            .into_result()
+            .expect("stdlib lowering");
+        let tir = typer.run(&sir).into_result().expect("stdlib typing");
+        let lir = codegen.run(&tir).into_result().expect("stdlib codegen");
+        vm.run(&lir).into_result().expect("stdlib run");
 
         Self { typer, codegen, vm }
     }

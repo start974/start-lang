@@ -65,8 +65,9 @@ from one to the next is a module of the crate **`pass`**, named after the
 action (`pass::lexer`, `pass::parser`, `pass::lowering`, `pass::expand`,
 `pass::typing`, `pass::codegen`, and `pass::vm` until Cranelift). Each pass is
 a type built by its builder, with one entry point `run` that takes a whole
-file and returns the next representation or all its errors
-(`Lexer::builder().build().run(text)`); the typer, the codegen and the vm keep
+file and returns a `Partial`: the next representation, as far as it could be
+built, and all its errors (`Lexer::builder().build().run(text)`); a tool goes
+to the next pass only if there is no error; the typer, the codegen and the vm keep
 their state between files (stdlib, REPL inputs).
 
 `sir` keeps the notations as the user wrote them, for the LSP (hover, go to

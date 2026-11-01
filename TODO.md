@@ -61,7 +61,7 @@ Each step below ends with the tests passing.
       `token_end`); the `.` becomes an ordinary operator token, the stream
       ends with `EndOfInput`.
 - [x] Recovery: on a bad character, record the error and continue; every
-      lexing error is reported (`Lexer::run -> Result<tokens, Errors>`).
+      lexing error is reported (`Lexer::run -> Partial<tokens>`).
 - [x] Drop the offset juggling (`offset`, `get_offset_source`,
       `last_offset`) that exists only to re-lex the rest of the file;
       `Lexer::builder().offset(n)` only places a REPL input in its source.
@@ -72,14 +72,13 @@ Each step below ends with the tests passing.
 - [x] `parser`: parse a whole `pir::File` (`file := command* EndOfInput`)
       instead of `CommandOrEnd` one command at a time.
 - [x] Recovery: on a broken command, record one error and skip to the next
-      `.`; every parsing error is reported (`Parser::run -> Result<pir::File,
-      Errors>`).
+      `.`; every parsing error is reported (`Parser::run -> Partial<pir::File>`).
 - [x] Remove `CommandOrEnd`.
 - [x] Tests: two broken commands in one file give two errors.
 
 ## 4. Typing on the whole file
 
-- [x] `typing`: `Typer::run(&sir::File) -> Result<tir::File, Errors>`; every
+- [x] `typing`: `Typer::run(&sir::File) -> Partial<tir::File>`; every
       command is typed, all errors are returned; on error the environment is
       left as before the file.
 - [x] A definition that fails is recorded as broken; every definition or
@@ -97,15 +96,18 @@ Each step below ends with the tests passing.
       data, their diagnostics are made in `pass::typing`.
 - [x] No driver object and no events: each pass is a type built by its
       builder (`Lexer::builder()…build()`) with one entry point, `run`, taking
-      a whole file and returning
-      the next representation or **all** its errors; the tools call them one
-      after the other (`startlang/src/compile.rs`: lex → parse → lower → type
-      → codegen → run, `?` between them).
+      a whole file and returning a `pass::Partial`: what it could build and
+      **all** its errors; each error says how the pass corrected it to go on
+      (`Error::with_recovery`: character skipped, command skipped up to the
+      next `.`, command left out); the tools call the passes one after the other
+      (`startlang/src/compile.rs`) and go to the next pass only if there is no
+      error (`Partial::into_result()?`).
 - [x] Nothing runs if any phase before *run* has an error (the first pass with
       errors stops the chain).
 - [ ] Errors of **several** phases in one report (`pipeline.md`: parsing runs
       on the tokens around a lexing error, typing on the commands that
-      parsed); for now only the errors of the first failing pass are shown.
+      parsed); each pass already returns its partial result, but the tools
+      stop at the first failing pass.
 - [ ] `ir::errors`: sort errors by position (`Errors::sorted`) before printing.
 - [x] Stdlib loaded **once** (`pass::stdlib::Stdlib::load`): the state of
       the typer, codegen and vm the tools start from.
@@ -119,6 +121,9 @@ Each step below ends with the tests passing.
 - [x] Remove the `Interpreter` trait and its three implementations;
       `startlang/src/printer.rs` prints the outputs on a terminal (`run`,
       REPL).
+
+- [ ] Errors also advise how to fix them (a `help` next to `recovery` in
+      `errors::Error`, ariadne `with_help`).
 
 ## 6. Debug output
 

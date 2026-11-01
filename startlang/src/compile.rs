@@ -12,19 +12,28 @@ use pass::vm::Value;
 
 /// lex, parse, lower, type, generate and run `text`, whose first byte is at
 /// `offset` in `source`; `state` keeps the definitions (stdlib, previous REPL
-/// inputs). The first pass with errors stops the others: nothing runs.
+/// inputs). A pass reports every error it finds, but the next pass only runs
+/// if there is none: nothing runs after an error.
 pub fn compile(
     state: &mut Stdlib,
     source: SourceId,
     text: &str,
     offset: usize,
 ) -> Result<Compiled, Errors> {
-    let tokens = Lexer::builder().offset(offset).build().run(text)?;
-    let pir = Parser::builder().build().run(tokens)?;
-    let sir = Lowering::builder().source(source).build().run(&pir);
-    let tir = state.typer.run(&sir)?;
-    let lir = state.codegen.run(&tir)?;
-    let values = state.vm.run(&lir)?;
+    let tokens = Lexer::builder()
+        .offset(offset)
+        .build()
+        .run(text)
+        .into_result()?;
+    let pir = Parser::builder().build().run(tokens).into_result()?;
+    let sir = Lowering::builder()
+        .source(source)
+        .build()
+        .run(&pir)
+        .into_result()?;
+    let tir = state.typer.run(&sir).into_result()?;
+    let lir = state.codegen.run(&tir).into_result()?;
+    let values = state.vm.run(&lir).into_result()?;
     Ok(Compiled { tir, values })
 }
 

@@ -3,7 +3,7 @@
 pub mod error;
 pub mod lexing;
 
-use errors::Errors;
+use crate::Partial;
 use ir::token::MetaTokenStream;
 
 pub use lexing::lexer;
@@ -22,17 +22,12 @@ impl Lexer {
         LexerBuilder::default()
     }
 
-    /// lex the whole text; every lexing error is reported
-    pub fn run(&self, text: &str) -> Result<MetaTokenStream, Errors> {
+    /// lex the whole text: the tokens it could read, and every lexing error
+    pub fn run(&self, text: &str) -> Partial<MetaTokenStream> {
         use chumsky::Parser as _;
         let (tokens, errs) = lexer(self.offset).parse(text).into_output_errors();
-        match tokens {
-            Some(tokens) if errs.is_empty() => Ok(MetaTokenStream::from(tokens)),
-            _ => Err(errs
-                .iter()
-                .map(|err| error::error_lexing(err, self.offset))
-                .collect()),
-        }
+        Partial::ok(MetaTokenStream::from(tokens.unwrap_or_default()))
+            .with_errors(errs.iter().map(|err| error::error_lexing(err, self.offset)))
     }
 }
 
@@ -62,11 +57,13 @@ mod tests {
     use super::*;
     use ir::location::Spanned as _;
     use ir::token::{Operator, Token};
+    use pp::MessageTheme;
 
     fn tokens(text: &str) -> Vec<Token> {
         Lexer::builder()
             .build()
             .run(text)
+            .into_result()
             .unwrap_or_else(|_| panic!("lexing error in {text}"))
             .into_iter()
             .map(|token| token.value)
@@ -88,6 +85,7 @@ mod tests {
             .offset(10)
             .build()
             .run("Eval 1.")
+            .into_result()
             .ok()
             .unwrap();
         assert_eq!(tokens.into_iter().next().unwrap().span().start(), 10);
@@ -95,11 +93,18 @@ mod tests {
 
     #[test]
     fn every_lexing_error_is_reported() {
-        let errs = Lexer::builder()
-            .build()
-            .run("Eval 1 # 2.\nEval 3 ~ 4.")
-            .err()
-            .unwrap();
-        assert_eq!(errs.len(), 2);
+        let lexed = Lexer::builder().build().run("Eval 1 # 2.\nEval 3 ~ 4.");
+        assert_eq!(lexed.errors.len(), 2);
+        // each error says how it was corrected
+        for err in &lexed.errors {
+            let recovery = err
+                .recovery()
+                .map(|msg| msg.make_string(&MessageTheme::default()));
+            assert_eq!(recovery.as_deref(), Some("the character is skipped."));
+        }
+        // the tokens around the errors are kept
+        let tokens: Vec<_> = lexed.value.into_iter().map(|token| token.value).collect();
+        assert_eq!(tokens.len(), 9);
+        assert_eq!(tokens.last(), Some(&Token::EndOfInput));
     }
 }

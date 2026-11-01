@@ -10,6 +10,8 @@ $ startlang run def_expr_type_not_found.st
  1 │ Def a : Not_defined := 4.
    │         ─────┬─────  
    │              ╰─────── Type variable Not_defined not found.
+   │ 
+   │ Note: Recovery: the command is left out.
 ───╯
 
 ```
@@ -25,6 +27,8 @@ $ startlang run var_not_found.st
  1 │ Eval not_defined.
    │      ─────┬─────  
    │           ╰─────── Expression variable not_defined not found.
+   │ 
+   │ Note: Recovery: the command is left out.
 ───╯
 
 ```
@@ -39,6 +43,8 @@ $ startlang run def_type_not_found.st
  1 │ Type T := Not_definied.
    │           ──────┬─────  
    │                 ╰─────── Type variable Not_definied not found.
+   │ 
+   │ Note: Recovery: the command is left out.
 ───╯
 
 ```
@@ -57,6 +63,7 @@ $ startlang run type_mismatch.st
    │ 
    │ Note: Expected : ℕ
    │       Found    : 𝔹
+   │       Recovery: the command is left out.
 ───╯
 [302] Error: Type mismatch.
    ╭─[ type_mismatch.st:7:20 ]
@@ -67,6 +74,7 @@ $ startlang run type_mismatch.st
    │ 
    │ Note: Expected : Bool
    │       Found    : ℕ
+   │       Recovery: the command is left out.
 ───╯
 
 ```
@@ -83,6 +91,7 @@ $ startlang run many_error_def.st
    │ 
    │ Note: Expected : Bool
    │       Found    : ℕ
+   │       Recovery: the command is left out.
 ───╯
 [301] Error: Variable not found.
    ╭─[ many_error_def.st:1:40 ]
@@ -90,6 +99,8 @@ $ startlang run many_error_def.st
  1 │ Def a : Type_not_exist := (1 : Bool) : Type_not_exist_also.
    │                                        ─────────┬─────────  
    │                                                 ╰─────────── Type variable Type_not_exist_also not found.
+   │ 
+   │ Note: Recovery: the command is left out.
 ───╯
 [301] Error: Variable not found.
    ╭─[ many_error_def.st:1:9 ]
@@ -97,6 +108,8 @@ $ startlang run many_error_def.st
  1 │ Def a : Type_not_exist := (1 : Bool) : Type_not_exist_also.
    │         ───────┬──────  
    │                ╰──────── Type variable Type_not_exist not found.
+   │ 
+   │ Note: Recovery: the command is left out.
 ───╯
 
 ```
