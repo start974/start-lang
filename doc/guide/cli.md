@@ -40,4 +40,4 @@ Errors print a code, the source excerpt and labels:
 ## Debugging
 
 The `Set` / `Unset` debug commands are removed; the debug output comes back
-as a command line option, `startlang run --debug lexer,parser,typer <file>`.
+as a command line option, `startlang run --debug lexer,parser,lowering,typer,codegen <file>`.

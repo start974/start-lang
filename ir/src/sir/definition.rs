@@ -18,6 +18,24 @@ impl fmt::Display for DefId {
 }
 
 // ============================================================================
+// Identifier
+// ============================================================================
+
+/// a definition: its name, and the `DefId` given by the lowering (shown
+/// `a@3`)
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Identifier {
+    pub name: String,
+    pub id: DefId,
+}
+
+impl fmt::Display for Identifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}@{}", self.name, self.id.0)
+    }
+}
+
+// ============================================================================
 // File Identifier
 // ============================================================================
 

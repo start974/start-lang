@@ -57,7 +57,7 @@ node at three stages, found at the same path in each module.
 | `pir` | *parse IR* | CST, concrete syntax tree (renamed from `cst`) | `parser` | everything written: keywords as spelled (`Def` / `Definition`), parentheses, comments, documentation, operators | formatter, LSP (positions, comments) |
 | `sir` | *surface IR* | AST, untyped (new) | `lowering` (new) | the structure only: one node per construct, spans, documentation as text; aliases of a keyword merged, parentheses and comments dropped | name resolution (v0.3), checks, typing |
 | `kir` | *kernel IR* | `sir` without the dynamic grammar (v0.5) | `expand` (v0.5) | every notation of a `.synt` (operators `+`, `==`, `let*`, user notations) replaced by its definition (`a + b` → `add a b`); spans kept to point to the source | typing, proofs (v0.6), obligations (v0.7) |
-| `tir` | *typed IR* | typed AST (name kept) | `typing` | every expression has its type, every variable points to its unique definition (`a__0`) | VM, LSP hover, `lir` lowering |
+| `tir` | *typed IR* | typed AST (name kept) | `typing` | every expression has its type, every variable points to its unique definition (`a@0`) | VM, LSP hover, `lir` lowering |
 | `lir` | *low IR* | backend IR (v0.2.0-beta.4) | `codegen` | backend-independent code ([backend](./backend.md)) | Cranelift |
 
 Naming rule: a representation is a module `ir::<letter>ir`; a pass going
@@ -120,7 +120,7 @@ parsing and expanded after (`sir` → `kir`), and typing runs on `kir`.
 Phases are no longer interleaved, so a command inside a file cannot change
 how that same file is lexed. Debug output becomes an option of the tools:
 
-- CLI: `startlang run --debug lexer,parser,typer file`.
+- CLI: `startlang run --debug lexer,parser,lowering,typer,codegen file`.
 - REPL: `set debug_parser` still exists and applies to the **next** inputs.
 - In a file, `set` / `unset` of a debug flag is an error (v0.2.0-beta.2, with the
   lowercase keywords).

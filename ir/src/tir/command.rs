@@ -27,6 +27,24 @@ pub struct Command {
     pub span: Span,
 }
 
+/// the command, as `sir` prints it (debug output)
+impl Pretty for Command {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        let (keyword, doc) = match &self.kind {
+            CommandKind::ExpressionDefinition(def) => ("Definition", def.pretty(theme)),
+            CommandKind::Eval(expr) => ("Eval", expr.pretty(theme)),
+            CommandKind::TypeOf(expr) => ("TypeOf", expr.pretty(theme)),
+            CommandKind::Help(help) => ("Help", theme.expr_var(&help.def.id)),
+        };
+        theme
+            .keyword(&keyword)
+            .append(Doc::space())
+            .append(doc)
+            .append(theme.operator(&"."))
+            .group()
+    }
+}
+
 impl Spanned for Command {
     fn span(&self) -> Span {
         self.span

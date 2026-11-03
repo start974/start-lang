@@ -22,7 +22,13 @@ enum Commands {
     /// run repl
     Repl,
     /// interpret a file
-    Run { path: PathBuf },
+    Run {
+        path: PathBuf,
+
+        #[arg(long, value_delimiter = ',')]
+        /// print the IR built by these phases
+        debug: Vec<run::Debug>,
+    },
 
     #[command(group(
         ArgGroup::new("mode")
@@ -59,7 +65,7 @@ async fn main() {
             repl::run();
             0
         }
-        Commands::Run { path } => run::run(&path),
+        Commands::Run { path, debug } => run::run(&path, &debug),
         Commands::Format {
             path,
             print,

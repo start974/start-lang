@@ -1,7 +1,20 @@
 # Use debuging option
 
 ```
-$ startlang run debuging.st
+$ startlang run --debug typer debuging.st
+Definition long_number@8 : N1 :=
+  333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_331.
+Definition a@9 : ℕ := 3.
+Definition n@10 : ℕ := 3.
+Definition n@11 : ℕ := a@9.
+Definition c@13
+    : LongType_NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN :=
+  long_number@8.
+Eval long_number@8.
+Definition b@14 : 𝔹 := true@4.
+Definition c@15 : Char := '//'.
+Definition t@16 : 𝔹 := true.
+TypeOf b@14.
 333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_333_331
 𝔹
 

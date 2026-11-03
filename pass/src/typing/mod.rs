@@ -1,5 +1,5 @@
 //! `sir` → `tir`: every expression gets its type, every variable its unique
-//! identifier (`a__0`).
+//! identifier (`a@0`).
 
 use crate::{Checked, CheckedResult, Partial};
 use errors::{Errors, Message, ResultErrors as _};
@@ -20,13 +20,36 @@ pub struct Typer {
     /// every definition typed; a use of a definition missing here is a use of
     /// one whose typing failed
     defs: HashMap<sir::DefId, tir::DefInfo>,
+    /// print the `tir`; set again by `Stdlib::debug` once the stdlib is loaded
+    pub(crate) debug: bool,
+}
+
+/// arguments of a `Typer`
+#[derive(Debug, Default, Clone, Copy)]
+pub struct TyperBuilder {
+    debug: bool,
+}
+
+impl TyperBuilder {
+    /// print the `tir`
+    pub fn debug(mut self, debug: bool) -> Self {
+        self.debug = debug;
+        self
+    }
+
+    pub fn build(self) -> Typer {
+        Typer {
+            debug: self.debug,
+            ..Typer::default()
+        }
+    }
 }
 
 type Result<T, E = Errors> = std::result::Result<T, E>;
 
 impl Typer {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn builder() -> TyperBuilder {
+        TyperBuilder::default()
     }
 
     /// every definition typed, in no order
@@ -56,7 +79,7 @@ impl Typer {
             .map(|commands| tir::File {
                 commands: commands.into_iter().flatten().collect(),
             })
-            .check()
+            .check_debug(self.debug)
     }
 
     /// type one command; `None` for a command that leaves nothing to run
@@ -83,9 +106,9 @@ impl Typer {
 
     /// the definition a use refers to; none, silently, for a definition whose
     /// typing failed (already reported): the lowering resolved every name
-    fn def(&self, var: &sir::Node<sir::DefId>) -> Result<&tir::DefInfo> {
+    fn def(&self, var: &sir::Node<sir::Identifier>) -> Result<&tir::DefInfo> {
         self.defs
-            .get(&var.value)
+            .get(&var.value.id)
             .ok_or_else(|| std::iter::empty().collect())
     }
 
@@ -184,7 +207,7 @@ impl Typer {
             None => body,
         };
         let sir::Pattern::Variable(var) = &def.pattern;
-        let id = self.bind(var.value, body.ty.clone(), defs);
+        let id = self.bind(var.value.id, body.ty.clone(), defs);
         Ok(tir::ExpressionDefinition {
             pattern: tir::Pattern::Variable(tir::Node {
                 value: id,

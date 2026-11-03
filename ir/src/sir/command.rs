@@ -1,5 +1,6 @@
 use crate::location::{Span, Spanned};
-use crate::sir::{DefId, Expression, ExpressionDefinition, Node, TypeDefinition};
+use crate::sir::{Expression, ExpressionDefinition, Identifier, Node, TypeDefinition};
+use pp::pretty::*;
 
 // ============================================================================
 // Command Kind
@@ -12,7 +13,7 @@ pub enum CommandKind {
     Eval(Expression),
     TypeOf(Expression),
     /// the definition asked for
-    Help(Node<DefId>),
+    Help(Node<Identifier>),
 }
 
 // ============================================================================
@@ -25,6 +26,24 @@ pub enum CommandKind {
 pub struct Command {
     pub kind: CommandKind,
     pub span: Span,
+}
+
+impl Pretty for Command {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        let (keyword, doc) = match &self.kind {
+            CommandKind::ExpressionDefinition(def) => ("Definition", def.pretty(theme)),
+            CommandKind::TypeDefinition(def) => ("Type", def.pretty(theme)),
+            CommandKind::Eval(expr) => ("Eval", expr.pretty(theme)),
+            CommandKind::TypeOf(expr) => ("TypeOf", expr.pretty(theme)),
+            CommandKind::Help(var) => ("Help", theme.expr_var(&var.value)),
+        };
+        theme
+            .keyword(&keyword)
+            .append(Doc::space())
+            .append(doc)
+            .append(theme.operator(&"."))
+            .group()
+    }
 }
 
 impl Spanned for Command {

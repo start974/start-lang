@@ -15,6 +15,8 @@ pub type ErrorChumsky<'src> = chumsky::error::Rich<'src, char>;
 pub struct Lexer {
     /// position of the first byte of the text in its source
     offset: usize,
+    /// print the tokens
+    debug: bool,
 }
 
 impl Lexer {
@@ -28,7 +30,7 @@ impl Lexer {
         let (tokens, errs) = lexer(self.offset).parse(text).into_output_errors();
         Partial::ok(TokenStream::from(tokens.unwrap_or_default()))
             .with_errors(errs.iter().map(|err| error::error_lexing(err, self.offset)))
-            .check()
+            .check_debug(self.debug)
     }
 }
 
@@ -36,6 +38,7 @@ impl Lexer {
 #[derive(Debug, Default, Clone, Copy)]
 pub struct LexerBuilder {
     offset: usize,
+    debug: bool,
 }
 
 impl LexerBuilder {
@@ -46,9 +49,16 @@ impl LexerBuilder {
         self
     }
 
+    /// print the tokens
+    pub fn debug(mut self, debug: bool) -> Self {
+        self.debug = debug;
+        self
+    }
+
     pub fn build(self) -> Lexer {
         Lexer {
             offset: self.offset,
+            debug: self.debug,
         }
     }
 }
