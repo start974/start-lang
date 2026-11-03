@@ -9,7 +9,7 @@ $ startlang format lexer.st
    │        ┬  
    │        ╰── Lexer expected "'", found ".".
    │ 
-   │ Note: Recovery: the character is skipped.
+   │ Note: (the character is skipped)
 ───╯
 
 ```
@@ -26,7 +26,8 @@ $ startlang format parser.st
    │ 
    │ Note: Expected : ":", ":="
    │       Found    : "end of input".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -43,7 +44,7 @@ $ startlang format --print lexer.st
    │        ┬  
    │        ╰── Lexer expected "'", found ".".
    │ 
-   │ Note: Recovery: the character is skipped.
+   │ Note: (the character is skipped)
 ───╯
 
 ```
@@ -60,7 +61,8 @@ $ startlang format --print parser.st
    │ 
    │ Note: Expected : ":", ":="
    │       Found    : "end of input".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -76,7 +78,7 @@ $ startlang format --diff lexer.st
    │        ┬  
    │        ╰── Lexer expected "'", found ".".
    │ 
-   │ Note: Recovery: the character is skipped.
+   │ Note: (the character is skipped)
 ───╯
 
 ```
@@ -93,7 +95,8 @@ $ startlang format --diff parser.st
    │ 
    │ Note: Expected : ":", ":="
    │       Found    : "end of input".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```

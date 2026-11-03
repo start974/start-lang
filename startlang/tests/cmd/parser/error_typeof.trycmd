@@ -12,7 +12,8 @@ $ startlang run no_space.st
    │ 
    │ Note: Expected : "command"
    │       Found    : "TypeOf1".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -29,7 +30,8 @@ $ startlang run just_keyword.st
    │ 
    │ Note: Expected : "expression"
    │       Found    : ".".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 [202] Error: Parsing error
    ╭─[ just_keyword.st:2:3 ]
@@ -40,7 +42,8 @@ $ startlang run just_keyword.st
    │ 
    │ Note: Expected : "expression"
    │       Found    : ".".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```

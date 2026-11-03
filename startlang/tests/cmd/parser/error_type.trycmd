@@ -12,7 +12,8 @@ $ startlang run not_end.st
    │ 
    │ Note: Expected : ":="
    │       Found    : "end of input".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -28,7 +29,8 @@ $ startlang run no_eq_def.st
    │ 
    │ Note: Expected : ":="
    │       Found    : "Nat".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -45,7 +47,8 @@ $ startlang run no_space.st
    │ 
    │ Note: Expected : "command"
    │       Found    : "TypeN".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -63,7 +66,8 @@ $ startlang run wrong_name.st
    │ 
    │ Note: Expected : "type variable"
    │       Found    : "1".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -80,7 +84,8 @@ $ startlang run just_keyword.st
    │ 
    │ Note: Expected : "type variable"
    │       Found    : ".".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 [202] Error: Parsing error
    ╭─[ just_keyword.st:2:3 ]
@@ -91,7 +96,8 @@ $ startlang run just_keyword.st
    │ 
    │ Note: Expected : "type variable"
    │       Found    : ".".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```

@@ -100,7 +100,7 @@ mod tests {
             let recovery = err
                 .recovery()
                 .map(|msg| msg.make_string(&MessageTheme::default()));
-            assert_eq!(recovery.as_deref(), Some("the character is skipped."));
+            assert_eq!(recovery.as_deref(), Some("the character is skipped"));
         }
         // the tokens around the errors are kept
         let tokens: Vec<_> = lexed.value.into_iter().map(|token| token.value).collect();

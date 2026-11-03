@@ -20,7 +20,7 @@ impl Vm {
     pub fn run(&mut self, file: &Checked<File>) -> CheckedResult<Vec<Value>> {
         let not_computed = |err: errors::Error| {
             Partial::ok(None)
-                .with_error(err.with_recovery(Message::text("the value is not computed.")))
+                .with_error(err.with_recovery(Message::text("the value is not computed")))
         };
         let values: Partial<Vec<_>> = file
             .items

@@ -20,7 +20,7 @@ stderr = """
    │                  ────┬────  
    │                      ╰────── Expression variable not_exits not found.
    │ 
-   │ Note: Recovery: the command is left out.
+   │ Note: (the command is left out)
 ───╯
 [301] Error: Variable not found.
    ╭─[ REPL:2:6 ]
@@ -29,6 +29,6 @@ stderr = """
    │      ┬  
    │      ╰── Expression variable a not found.
    │ 
-   │ Note: Recovery: the command is left out.
+   │ Note: (the command is left out)
 ───╯
 """

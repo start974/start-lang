@@ -55,7 +55,7 @@ impl Lowerer {
                 Ok(cmd) => Partial::ok(Some(cmd)),
                 Err(errs) => Partial::ok(None).with_errors(
                     errs.into_iter()
-                        .map(|err| err.with_recovery(Message::text("the command is left out."))),
+                        .map(|err| err.with_recovery(Message::text("the command is left out"))),
                 ),
             })
             .collect();

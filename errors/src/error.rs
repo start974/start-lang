@@ -93,12 +93,15 @@ impl Error {
             report_builder.add_label(label)
         }
         // one note, so that ariadne does not number them
-        let recovery = self
-            .recovery
-            .as_ref()
-            .map(|recovery| Message::text("Recovery: ").append(recovery.clone()));
+        let recovery = self.recovery.as_ref().map(|recovery| {
+            Message::text("(")
+                .append(recovery.clone())
+                .with_text(")")
+        });
         let note = match (&self.note, recovery) {
-            (Some(note), Some(recovery)) => Some(note.clone().with_line().append(recovery)),
+            (Some(note), Some(recovery)) => {
+                Some(note.clone().with_line().with_line().append(recovery))
+            }
             (note, recovery) => note.clone().or(recovery),
         };
         if let Some(note) = note {

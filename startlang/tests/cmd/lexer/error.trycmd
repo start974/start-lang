@@ -11,7 +11,7 @@ $ startlang run char_unclosed1.st
    │        ┬  
    │        ╰── Lexer expected "'", found ".".
    │ 
-   │ Note: Recovery: the character is skipped.
+   │ Note: (the character is skipped)
 ───╯
 
 ```
@@ -26,7 +26,7 @@ $ startlang run char_unclosed2.st
    │         ┬  
    │         ╰── Lexer expected "'", found "/n".
    │ 
-   │ Note: Recovery: the character is skipped.
+   │ Note: (the character is skipped)
 ───╯
 
 ```

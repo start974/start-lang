@@ -44,7 +44,7 @@ impl Codegen {
             .map(|item| match item {
                 Ok(item) => Partial::ok(Some(item)),
                 Err(err) => Partial::ok(None)
-                    .with_error(err.with_recovery(Message::text("the command is left out."))),
+                    .with_error(err.with_recovery(Message::text("the command is left out"))),
             })
             .collect();
         items
