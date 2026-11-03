@@ -18,7 +18,7 @@ startlang run demo.snbx    # runs a sandbox
 startlang test             # unit, integration and doc tests
 startlang format [path]    # formats the project or a path
 startlang doc              # generates the API documentation
-startlang repl             # REPL (terminal UI)
+startlang tui              # interactive session (terminal UI)
 startlang lsp
 ```
 
@@ -26,7 +26,7 @@ startlang lsp
 
 The entry point is declared with the `main` keyword in a `.scod`.
 
-- First version (v0.2.0-beta.2): `main` takes no argument and returns an integer
+- First version (v0.2.0-beta.3): `main` takes no argument and returns an integer
   used as the exit code (`main : i32 := 0`).
 - v0.4.0-beta.4 (functions, with `string` and arrays from v0.4.0-beta.3): `main` receives
   the arguments as an array (its size gives the count),
@@ -66,8 +66,21 @@ Documentation is part of the tooling and evolves at every version:
 
 ## REPL
 
-To rethink as a real terminal interface (TUI), in which proofs can also be
-done.
+`startlang tui` (v0.2.0-beta.2) replaces the REPL: a full-screen terminal
+interface on `crossterm` (`ratatui` + `tui-textarea`).
+
+- The outputs and errors of each input scroll above the input area.
+- Enter runs the whole input; Alt+Enter inserts a new line (the same in every
+  terminal; Ctrl+Enter is not reported by most of them).
+- ↑ on the first line of the input recalls the previous input, ↓ on the last
+  line the next one; Ctrl+↑ / Ctrl+↓ from anywhere. An input comes back whole,
+  to edit and run again; the history is kept between sessions.
+- Pasted text keeps its line breaks and does not run.
+- Ctrl+C clears the input (quits on an empty one), Ctrl+D quits on an empty
+  input, Ctrl+L clears the outputs.
+- Without a terminal, `startlang tui` stops with an error.
+
+Later, panels (proof state) and proofs in it.
 
 ## LSP
 

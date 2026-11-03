@@ -181,8 +181,6 @@ command_kind :=
 | keyword_help IDENTIFIER
 | keyword_eval expr
 | keyword_typeof expr
-| keyword_set variable
-| keyword_unset variable
 
 command := command_kind DOT
 ```

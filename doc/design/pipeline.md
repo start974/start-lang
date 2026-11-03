@@ -23,7 +23,7 @@ rest of the file ─► lex until "." ─► parse one command ─► type ─�
 - The file runner, the REPL and the LSP each implement the `Interpreter`
   trait, with the stdlib loading copied three times.
 
-This cannot survive v0.2.0-beta.2: without the final dot, the lexer cannot find the
+This cannot survive v0.2.0-beta.3: without the final dot, the lexer cannot find the
 end of a command alone.
 
 ## Since v0.2.0-beta.1
@@ -57,7 +57,7 @@ node at three stages, found at the same path in each module.
 | `sir` | *surface IR* | AST, untyped (new) | `lowering` (new) | the structure only: one node per construct, spans, documentation as text; aliases of a keyword merged, parentheses and comments dropped; every definition has a `DefId` and every use is resolved to it (`Identifier`, shown `a@0`) | checks, typing |
 | `kir` | *kernel IR* | `sir` without the dynamic grammar (v0.5) | `expand` (v0.5) | every notation of a `.synt` (operators `+`, `==`, `let*`, user notations) replaced by its definition (`a + b` → `add a b`); spans kept to point to the source | typing, proofs (v0.6), obligations (v0.7) |
 | `tir` | *typed IR* | typed AST (name kept) | `typing` | every expression has its type, every variable points to its unique definition (`a@0`) | VM, LSP hover, `lir` lowering |
-| `lir` | *low IR* | backend IR | `codegen` | backend-independent code ([backend](./backend.md)): a global per definition (`#0`), an item per `Eval` | VM, Cranelift (v0.2.0-beta.4) |
+| `lir` | *low IR* | backend IR | `codegen` | backend-independent code ([backend](./backend.md)): a global per definition (`#0`), an item per `Eval` | VM, Cranelift (v0.2.0-beta.5) |
 
 Naming rule: a representation is a module `ir::<letter>ir`; a pass going
 from one to the next is a module of the crate **`pass`**, named after the
@@ -81,14 +81,14 @@ are no notations: typing runs directly on `sir` and `kir` does not exist yet.
 
 | # | Phase | Input → output | Errors | Module of `pass` |
 |---|-------|----------------|--------|-------|
-| 0 | Load | path / REPL input → `Source` (id, content; `FileKind` in v0.2.0-beta.2) | unreadable file, unknown extension | `ir::location` |
+| 0 | Load | path / REPL input → `Source` (id, content; `FileKind` in v0.2.0-beta.3) | unreadable file, unknown extension | `ir::location` |
 | 1 | Lex | `Source` → all tokens, up to `EndOfInput` | bad characters, unclosed comments / literals; lexing continues after an error | `lexer` |
 | 2 | Parse | tokens → `pir::File` (every command) | syntax errors, one per broken command; resynchronizes on the next command start | `parser` |
 | 3 | Lower | `pir::File` → `sir::File` | an unknown name, or a name of the wrong kind (expression / type); the command is left out | `lowering` |
-| 4 | Check | `sir::File` → `sir::File` | rules of the file kind (v0.2.0-beta.2): commands only in `.snbx`, one `main` in `.scod` | `lowering` |
+| 4 | Check | `sir::File` → `sir::File` | rules of the file kind (v0.2.0-beta.3): commands only in `.snbx`, one `main` in `.scod` | `lowering` |
 | 5 | Type | `sir::File` + env → `tir::File` + env | all typing errors; a definition that fails is marked broken, and every definition or command that uses it is skipped silently: only the original error is shown | `typing` |
 | 6 | Codegen | `tir::File` + globals → `lir::File` + globals | internal errors only | `codegen` |
-| 7 | Run | `lir::File` + env → output, exit code | runtime errors | `vm` (Cranelift in v0.2.0-beta.4) |
+| 7 | Run | `lir::File` + env → output, exit code | runtime errors | `vm` (Cranelift in v0.2.0-beta.5) |
 
 Later versions insert their phases on `sir`, between *lower* and *type*:
 modules (v0.3); from v0.5, notations are read before
@@ -112,9 +112,9 @@ parsing and expanded after (`sir` → `kir`), and typing runs on `kir`.
 
 | Client | Phases | Last step |
 |--------|--------|-----------|
-| `startlang run` | 0–7 | prints, exits with the error code (`main` in v0.2.0-beta.2) |
+| `startlang run` | 0–7 | prints, exits with the error code (`main` in v0.2.0-beta.3) |
 | REPL | 1–7 per input | env (typer + VM) kept between inputs |
-| LSP | 0–7 | errors → diagnostics, `tir` → hover; *info* diagnostics: `TypeOf` / `Help` from typing, `Eval` by running, only in a sandbox (every `.st` in beta.1, `.snbx` from beta.2) and only if there is no error |
+| LSP | 0–7 | errors → diagnostics, `tir` → hover; *info* diagnostics: `TypeOf` / `Help` from typing, `Eval` by running, only in a sandbox (every `.st` in beta.1, `.snbx` from beta.3) and only if there is no error |
 | `startlang format` | 0–2 | prints the `pir::File` (the formatter never sees `sir`) |
 
 - The stdlib is loaded **once**, through the same phases, into the initial env
@@ -134,15 +134,17 @@ how that same file is lexed. Debug output becomes an option of the tools:
 ### Consequences
 
 - Error output changes: a pass with several errors now reports all of them,
-  so some `trycmd` snapshots change. These diffs are reviewed, as for v0.2.0-beta.2.
+  so some `trycmd` snapshots change. These diffs are reviewed, as for v0.2.0-beta.3.
 - The lexer drops the "until `.`" rule; the dot stays an ordinary token until
-  v0.2.0-beta.2 removes it, so v0.2.0-beta.1 does not change the syntax.
-- The REPL needs another rule to know an input is complete once the dot is
-  gone (v0.2.0-beta.2): empty line, or the parser says the input is complete.
+  v0.2.0-beta.3 removes it, so v0.2.0-beta.1 does not change the syntax.
+- The REPL needs another way to know an input is complete once the dot is
+  gone (v0.2.0-beta.3): the terminal UI of v0.2.0-beta.2 runs the input on
+  Enter, and a separate key inserts a new line.
 
 ## Open questions
 
 - [ ] Typing errors found on `kir`: shown in the expanded form (`add a b`)
       or mapped back to the notation the user wrote (`a + b`)?
-- [ ] REPL: end of input without the final dot (empty line, or `;;`-like
-      terminator)?
+- [x] REPL: end of input without the final dot: the user decides. In the
+      terminal UI (v0.2.0-beta.2), Enter runs the whole input and a separate
+      key inserts a new line.

@@ -2,8 +2,8 @@
 
 [← Home](../Home.md)
 
-> Describes v0.1.0. The syntax changes in v0.2.0-beta.2, see the
-> [changelog](../changelog/v0.2.0.md#v020-beta2--cleanup).
+> Describes v0.1.0. The syntax changes in v0.2.0-beta.3, see the
+> [changelog](../changelog/v0.2.0.md#v020-beta3--cleanup).
 
 ## Install
 

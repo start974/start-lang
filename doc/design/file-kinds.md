@@ -6,8 +6,8 @@ Each file kind is named after what it adds to a module.
 
 | Extension | `FileKind` | Kind in `use` | Content                       | Introduced |
 |-----------|------------|---------------|-------------------------------|------------|
-| `.scod`   | `Code`     | `code`        | Executable code               | v0.2.0-beta.2     |
-| `.snbx`   | `Sandbox`  | —             | Sandbox, never importable     | v0.2.0-beta.2     |
+| `.scod`   | `Code`     | `code`        | Executable code               | v0.2.0-beta.3     |
+| `.snbx`   | `Sandbox`  | —             | Sandbox, never importable     | v0.2.0-beta.3     |
 | `.synt`   | `Syntax`   | `synt`        | Syntax, notations and tactics | v0.5       |
 | `.sprp`   | `Prop`     | `prop`        | Propositions and logic        | v0.6.0-beta.1     |
 | `.sprf`   | `Proof`    | `proof`       | Proofs                        | v0.6.0-beta.2     |
@@ -40,8 +40,8 @@ pub struct Source {
 ## Sandbox `.snbx`
 
 - Can import everything except proofs; never importable.
-- The only place (with the REPL) where commands (`eval`, `typeof`, `help`,
-  `set`, `unset`) are allowed.
+- The only place (with the REPL) where commands (`eval`, `typeof`, `help`)
+  are allowed.
 - Holds unit tests (see [tooling](./tooling.md)).
 - Relaxed rules: `admit` and holes allowed (warnings in `check`).
 
