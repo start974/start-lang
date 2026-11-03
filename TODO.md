@@ -13,8 +13,9 @@ Source ─► lex ─► tokens ─► parse ─► pir ─► lower ─► sir 
 - [ ] `cargo test --workspace` passes; the `trycmd` outputs that change (several
       errors reported instead of one) are reviewed in the diff, not only
       regenerated with `TRYCMD=overwrite`.
-- [ ] A file with a lexing error, a parsing error and a typing error reports the
-      three errors, in source order, and runs nothing.
+- [ ] A file with a lexing error, a parsing error and a typing error reports
+      only the lexing error (the first failing pass stops the chain), and runs
+      nothing; a file with two typing errors reports both, in source order.
 - [ ] The lexer is called once per file.
 - [ ] `typing` and `ir::tir` no longer use `ir::pir`.
 
@@ -114,10 +115,6 @@ Each step below ends with the tests passing.
       error (`Checked` or `Partial`, `?` keeps the errors).
 - [x] Nothing runs if any phase before *run* has an error (the first pass with
       errors stops the chain).
-- [ ] Errors of **several** phases in one report (`pipeline.md`: parsing runs
-      on the tokens around a lexing error, typing on the commands that
-      parsed); each pass already returns its partial result, but the tools
-      stop at the first failing pass.
 - [x] `ir::errors`: sort errors by position (`Errors::sorted`) before printing.
 - [x] Stdlib loaded **once** (`pass::stdlib::Stdlib::load`): the state of
       the lowerer, typer, codegen and vm the tools start from;
@@ -133,6 +130,8 @@ Each step below ends with the tests passing.
       `startlang/src/printer.rs` prints the outputs on a terminal (`run`,
       REPL).
 
+- [ ] The recovery is ugly in the report (`Note: Recovery: the command is
+      left out.`): find a better presentation.
 - [ ] Errors also advise how to fix them (a `help` next to `recovery` in
       `errors::Error`, ariadne `with_help`).
 
@@ -148,7 +147,8 @@ Each step below ends with the tests passing.
 
 - [ ] Unit tests: `lowering` (one test per `pir` construct), lexer and parser
       recovery, typing without cascade, error sorting.
-- [ ] CLI test: one file with a lexing, a parsing and a typing error.
+- [ ] CLI test: one file with a lexing, a parsing and a typing error (only the
+      lexing error is reported).
 - [ ] Review every changed `.trycmd` in `git diff startlang/tests/cmd`.
 
 ## 8. Documentation and release

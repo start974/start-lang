@@ -94,9 +94,10 @@ parsing and expanded after (`sir` → `kir`), and typing runs on `kir`.
 ### Rules
 
 - **A phase never stops at its first error**: it reports every error it can
-  find, then the next phase still runs if it has something to work on
-  (parsing runs on the tokens around a lexing error, typing on the commands
-  that parsed).
+  find, each with its recovery (and later a hint).
+- **Phases are independent**: a phase runs only if the phase before has no
+  error (its result is `Checked`); a file with a lexing error reports only
+  the lexing errors.
 - **Nothing runs if any error was found** before phase 6: no `eval` output
   from a file that does not type-check (already the case today for the VM).
 - **Errors are sorted by position** before printing, whatever the phase.
@@ -126,7 +127,7 @@ how that same file is lexed. Debug output becomes an option of the tools:
 
 ### Consequences
 
-- Error output changes: a file with several errors now reports all of them,
+- Error output changes: a pass with several errors now reports all of them,
   so some `trycmd` snapshots change. These diffs are reviewed, as for v0.2.0-beta.2.
 - The lexer drops the "until `.`" rule; the dot stays an ordinary token until
   v0.2.0-beta.2 removes it, so v0.2.0-beta.1 does not change the syntax.
