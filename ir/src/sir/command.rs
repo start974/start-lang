@@ -1,18 +1,18 @@
 use crate::location::{Span, Spanned};
-use crate::sir::{Expression, ExpressionDefinition, TypeDefinition, Variable};
+use crate::sir::{DefId, Expression, ExpressionDefinition, Node, TypeDefinition};
 
 // ============================================================================
 // Command Kind
 // ============================================================================
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CommandKind {
     ExpressionDefinition(Box<ExpressionDefinition>),
     TypeDefinition(TypeDefinition),
     Eval(Expression),
     TypeOf(Expression),
-    Help(Variable),
-    Set(Variable),
-    UnSet(Variable),
+    /// the definition asked for
+    Help(Node<DefId>),
 }
 
 // ============================================================================
@@ -24,13 +24,7 @@ pub enum CommandKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Command {
     pub kind: CommandKind,
-    span: Span,
-}
-
-impl Command {
-    pub fn new(kind: CommandKind, span: Span) -> Self {
-        Self { kind, span }
-    }
+    pub span: Span,
 }
 
 impl Spanned for Command {

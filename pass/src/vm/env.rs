@@ -1,40 +1,44 @@
-use crate::Partial;
 use crate::vm::{Value, error};
+use crate::{Checked, CheckedResult, Partial};
 use errors::Message;
 use ir::lir::{Expression, File, Global, GlobalId, Item};
 
 /// runs the files one after the other: the values of the globals of the
 /// previous files (stdlib, REPL inputs) are kept, indexed by `GlobalId`
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Vm {
     globals: Vec<Option<Value>>,
 }
 
 impl Vm {
-    pub fn builder() -> VmBuilder {
-        VmBuilder
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// run every item of `file`: the value of each `Eval` it could compute,
     /// in order, and every (internal) error
-    pub fn run(&mut self, file: &File) -> Partial<Vec<Value>> {
-        let mut values = Vec::new();
-        let mut errors = Vec::new();
-        for item in file.items() {
-            match item {
-                Item::Global(global) => {
-                    if self.define(global).is_none() {
-                        errors.push(error::undefined(&global.symbol));
-                    }
-                }
-                Item::Eval(expr) => match self.eval(expr) {
-                    Some(value) => values.push(value),
-                    None => errors.push(error::undefined("eval")),
+    pub fn run(&mut self, file: &Checked<File>) -> CheckedResult<Vec<Value>> {
+        let not_computed = |err: errors::Error| {
+            Partial::ok(None)
+                .with_error(err.with_recovery(Message::text("the value is not computed.")))
+        };
+        let values: Partial<Vec<_>> = file
+            .items()
+            .iter()
+            .map(|item| match item {
+                Item::Global(global) => match self.define(global) {
+                    Some(_) => Partial::ok(None),
+                    None => not_computed(error::undefined(&global.symbol)),
                 },
-            }
-        }
-        let recovery = || Message::text("the value is not computed.");
-        Partial::ok(values).with_errors(errors.into_iter().map(|err| err.with_recovery(recovery())))
+                Item::Eval(expr) => match self.eval(expr) {
+                    Some(value) => Partial::ok(Some(value)),
+                    None => not_computed(error::undefined("eval")),
+                },
+            })
+            .collect();
+        values
+            .map(|values| values.into_iter().flatten().collect())
+            .check()
     }
 
     /// value of a global, `None` if it was never defined
@@ -60,16 +64,6 @@ impl Vm {
         }
         self.globals[index] = Some(value);
         self.globals[index].as_ref()
-    }
-}
-
-/// arguments of a `Vm` (none yet)
-#[derive(Debug, Default, Clone, Copy)]
-pub struct VmBuilder;
-
-impl VmBuilder {
-    pub fn build(self) -> Vm {
-        Vm::default()
     }
 }
 

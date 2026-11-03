@@ -1,4 +1,5 @@
 use errors::{Error, Errors};
+use std::ops::Deref;
 
 // ============================================================================
 // Partial
@@ -33,6 +34,17 @@ impl<T> Partial<T> {
     /// no error
     pub fn is_ok(&self) -> bool {
         self.errors.is_empty()
+    }
+
+    /// the value if there is no error, else `self` (the value as far as it
+    /// was built, and its errors); private to this crate: outside, a
+    /// `Checked` comes only from a pass that succeeded
+    pub(crate) fn check(self) -> CheckedResult<T> {
+        if self.is_ok() {
+            Ok(Checked(self.value))
+        } else {
+            Err(self)
+        }
     }
 
     /// add an error
@@ -74,20 +86,12 @@ impl<T> Partial<T> {
         }
         .with_errors(other.errors)
     }
-
-    /// the value if there is no error, else the errors
-    pub fn into_result(self) -> Result<T, Errors> {
-        self.into()
-    }
 }
 
-impl<T> From<Partial<T>> for Result<T, Errors> {
+/// the errors only, to stop at a failed pass with `?`
+impl<T> From<Partial<T>> for Errors {
     fn from(partial: Partial<T>) -> Self {
-        if partial.is_ok() {
-            Ok(partial.value)
-        } else {
-            Err(partial.errors)
-        }
+        partial.errors
     }
 }
 
@@ -121,6 +125,49 @@ where
     }
 }
 
+// ============================================================================
+// Checked
+// ============================================================================
+
+/// a value its pass built without any error; only `Partial::check`, private to
+/// this crate, makes one: outside, a `Checked` comes only from a pass that
+/// succeeded, so a pass that takes one runs only after the passes before it
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Checked<T>(T);
+
+impl<T> Checked<T> {
+    /// the value
+    pub fn into_inner(self) -> T {
+        self.0
+    }
+}
+
+impl<T> AsRef<T> for Checked<T> {
+    fn as_ref(&self) -> &T {
+        &self.0
+    }
+}
+
+impl<T> Deref for Checked<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.0
+    }
+}
+
+/// result of a pass: its value `Checked` (no error), or the `Partial` value
+/// with its errors
+pub type CheckedResult<T> = Result<Checked<T>, Partial<T>>;
+
+/// back to a `Partial`, without error if it was checked: the opposite of
+/// `Partial::check`
+impl<T> From<CheckedResult<T>> for Partial<T> {
+    fn from(result: CheckedResult<T>) -> Self {
+        result.map_or_else(|partial| partial, |checked| Partial::ok(checked.0))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -139,14 +186,14 @@ mod tests {
         let partial = Partial::ok(vec![1, 2]).with_error(error(1));
         assert!(!partial.is_ok());
         assert_eq!(partial.value, [1, 2]);
-        assert_eq!(partial.into_result().err().map(|errs| errs.len()), Some(1));
+        assert_eq!(partial.check().err().map(|p| p.errors.len()), Some(1));
     }
 
     #[test]
     fn ok_without_error() {
         let partial = Partial::ok("value");
         assert!(partial.is_ok());
-        assert_eq!(partial.into_result().ok(), Some("value"));
+        assert_eq!(partial.check().ok().map(Checked::into_inner), Some("value"));
         assert!(Partial::new().is_ok());
     }
 
@@ -189,6 +236,15 @@ mod tests {
             .collect();
         assert_eq!(partial.value, [1, 2, 3]);
         assert_eq!(codes(&partial), [2]);
+    }
+
+    #[test]
+    fn check_and_back() {
+        let checked = Partial::ok(1).check().ok().unwrap();
+        assert_eq!(*checked, 1);
+        assert_eq!(checked.as_ref(), &1);
+        let failed = Partial::ok(2).with_error(error(5)).check();
+        assert_eq!(codes(&Partial::from(failed)), [5]);
     }
 
     #[test]

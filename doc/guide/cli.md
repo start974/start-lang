@@ -39,6 +39,5 @@ Errors print a code, the source excerpt and labels:
 
 ## Debugging
 
-Inside a file or the REPL, `Set DebugLexer.`, `Set DebugParser.` and
-`Set DebugTyper.` print the tokens, the parsed command and the typed command.
-See the [language tour](./language-tour.md#debug-flags).
+The `Set` / `Unset` debug commands are removed; the debug output comes back
+as a command line option, `startlang run --debug lexer,parser,typer <file>`.

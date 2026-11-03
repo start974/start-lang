@@ -1,5 +1,5 @@
 use crate::location::{Span, Spanned};
-use crate::sir::{Constant, Type, Variable};
+use crate::sir::{Constant, DefId, Node, Type};
 
 pub mod constant;
 pub mod definition;
@@ -8,10 +8,11 @@ pub mod pattern;
 // ============================================================================
 // Expression
 // ============================================================================
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ExpressionKind {
-    /// variable
-    Variable(Variable),
+    /// use of a definition, resolved by the lowering
+    Variable(Node<DefId>),
 
     /// constant
     Constant(Constant),
@@ -25,41 +26,11 @@ pub enum ExpressionKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Expression {
     pub kind: ExpressionKind,
-    span: Span,
-}
-
-impl Expression {
-    pub fn new(kind: ExpressionKind, span: Span) -> Self {
-        Self { kind, span }
-    }
+    pub span: Span,
 }
 
 impl Spanned for Expression {
     fn span(&self) -> Span {
         self.span
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::sir::ty;
-
-    #[test]
-    fn expression_keeps_its_span() {
-        // `(a : Nat)`: the span includes the parentheses,
-        // the variable keeps its own span
-        let var = Variable::new("a".to_string(), Span::new(1, 2));
-        let inner = Expression::new(ExpressionKind::Variable(var.clone()), Span::new(1, 2));
-        let ty = Type::Builtin(ty::Builtin::new(ty::BuiltinType::Nat, Span::new(5, 8)));
-        let expr = Expression::new(
-            ExpressionKind::Typed {
-                expr: Box::new(inner),
-                ty,
-            },
-            Span::new(0, 9),
-        );
-        assert_eq!(expr.span(), Span::new(0, 9));
-        assert_eq!(var.span(), Span::new(1, 2));
     }
 }

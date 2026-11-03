@@ -282,6 +282,11 @@ impl TokenStream {
         self.tokens.last().map_or_else(Span::default, Spanned::span)
     }
 
+    /// the tokens, in order
+    pub fn iter(&self) -> std::slice::Iter<'_, Token<TokenKind>> {
+        self.tokens.iter()
+    }
+
     /// end of the last token
     pub fn last_offset(&self) -> usize {
         self.last_span().end()

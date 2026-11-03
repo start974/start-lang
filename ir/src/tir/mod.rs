@@ -20,5 +20,5 @@ pub use expression::constant::{Constant, ConstantKind, NConst};
 pub use expression::definition::ExpressionDefinition;
 pub use expression::pattern::{Pattern, PatternVar};
 pub use file::File;
-pub use identifier::{Identifier, IdentifierBuilder};
+pub use identifier::Identifier;
 pub use ty::{Type, Typed, TypedMut};

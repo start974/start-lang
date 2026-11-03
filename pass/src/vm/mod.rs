@@ -4,5 +4,5 @@ pub mod env;
 mod error;
 pub mod value;
 
-pub use env::{Vm, VmBuilder};
+pub use env::Vm;
 pub use value::Value;

@@ -27,5 +27,3 @@ Type (* comment 1 *) N1 (* comment 2 *) :=
 
 TypeOf (* type of a *) a.
 
-   Set (* comment set *)    DebugTyper.
-   Unset (* comment unset *) DebugTyper        .

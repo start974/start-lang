@@ -3,30 +3,18 @@ use crate::sir::Node;
 use num_bigint::BigUint;
 
 // ============================================================================
-// Number
-// ============================================================================
-pub type Number = Node<BigUint>;
-
-// ============================================================================
-// Character
-// ============================================================================
-pub type Character = Node<char>;
-
-// ============================================================================
 // Builtin
 // ============================================================================
 pub use crate::common::BuiltinConstant;
-
-pub type Builtin = Node<BuiltinConstant>;
 
 // ============================================================================
 // Constant
 // ============================================================================
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Constant {
-    Builtin(Builtin),
-    Number(Number),
-    Character(Character),
+    Builtin(Node<BuiltinConstant>),
+    Number(Node<BigUint>),
+    Character(Node<char>),
 }
 
 impl Spanned for Constant {

@@ -48,16 +48,6 @@ Aliases are unfolded when types are compared.
 | `TypeOf e.` | `?: e.` | the type of `e` |
 | `Help x.` | `? x.` | the type or definition of `x`, and its documentation |
 
-## Debug flags
-
-```
-Set DebugParser.
-Eval a.
-Unset DebugParser.
-```
-
-Flags: `DebugLexer`, `DebugParser`, `DebugTyper`.
-
 ## Comments and documentation
 
 ```

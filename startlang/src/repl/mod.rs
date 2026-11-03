@@ -3,7 +3,7 @@
 
 pub mod summary;
 
-use crate::compile::compile;
+use crate::compile::outputs;
 use crate::printer::Printer;
 use ir::location::SourceId;
 use pass::stdlib::Stdlib;
@@ -35,10 +35,8 @@ impl Session {
         self.all_content.push_str(input);
         self.printer.set_content(self.all_content.clone());
         self.printer.reset_code();
-        match compile(&mut self.state, SourceId::Repl, input, offset) {
-            Ok(compiled) => compiled
-                .outputs()
-                .for_each(|output| self.printer.output(&output)),
+        match self.state.run(SourceId::Repl, input, offset) {
+            Ok(compiled) => outputs(&compiled).for_each(|output| self.printer.output(&output)),
             Err(errs) => self.printer.errors(errs),
         }
     }

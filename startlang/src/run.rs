@@ -1,6 +1,6 @@
 //! `startlang run <file>`: every pass on the file.
 
-use crate::compile::compile;
+use crate::compile::outputs;
 use crate::error;
 use crate::printer::Printer;
 use ir::location::SourceId;
@@ -18,10 +18,8 @@ pub fn run(path: &Path) -> i32 {
     };
     printer.set_content(content.clone());
 
-    match compile(&mut Stdlib::load(), source, &content, 0) {
-        Ok(compiled) => compiled
-            .outputs()
-            .for_each(|output| printer.output(&output)),
+    match Stdlib::load().run(source, &content, 0) {
+        Ok(compiled) => outputs(&compiled).for_each(|output| printer.output(&output)),
         Err(errs) => printer.errors(errs),
     }
     printer.code()

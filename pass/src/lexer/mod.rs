@@ -3,7 +3,7 @@
 pub mod error;
 pub mod lexing;
 
-use crate::Partial;
+use crate::{CheckedResult, Partial};
 use ir::token::TokenStream;
 
 pub use lexing::lexer;
@@ -23,11 +23,12 @@ impl Lexer {
     }
 
     /// lex the whole text: the tokens it could read, and every lexing error
-    pub fn run(&self, text: &str) -> Partial<TokenStream> {
+    pub fn run(&self, text: &str) -> CheckedResult<TokenStream> {
         use chumsky::Parser as _;
         let (tokens, errs) = lexer(self.offset).parse(text).into_output_errors();
         Partial::ok(TokenStream::from(tokens.unwrap_or_default()))
             .with_errors(errs.iter().map(|err| error::error_lexing(err, self.offset)))
+            .check()
     }
 }
 
@@ -63,8 +64,8 @@ mod tests {
         Lexer::builder()
             .build()
             .run(text)
-            .into_result()
             .unwrap_or_else(|_| panic!("lexing error in {text}"))
+            .into_inner()
             .into_iter()
             .map(|token| token.value)
             .collect()
@@ -85,15 +86,14 @@ mod tests {
             .offset(10)
             .build()
             .run("Eval 1.")
-            .into_result()
             .ok()
             .unwrap();
-        assert_eq!(tokens.into_iter().next().unwrap().span().start(), 10);
+        assert_eq!(tokens.iter().next().unwrap().span().start(), 10);
     }
 
     #[test]
     fn every_lexing_error_is_reported() {
-        let lexed = Lexer::builder().build().run("Eval 1 # 2.\nEval 3 ~ 4.");
+        let lexed = Partial::from(Lexer::builder().build().run("Eval 1 # 2.\nEval 3 ~ 4."));
         assert_eq!(lexed.errors.len(), 2);
         // each error says how it was corrected
         for err in &lexed.errors {

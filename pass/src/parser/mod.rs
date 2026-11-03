@@ -3,8 +3,8 @@
 mod error;
 mod parsing;
 
-use crate::Partial;
-use ir::location::Spanned;
+use crate::{Checked, CheckedResult, Partial};
+use ir::location::{SourceId, Spanned};
 use ir::pir;
 use ir::token::{Token, TokenKind, TokenStream};
 
@@ -12,43 +12,64 @@ pub use parsing::file;
 
 pub type ErrorChumsky<'tokens> = chumsky::error::Rich<'tokens, Token<TokenKind>>;
 
-/// parser of a token stream
-#[derive(Debug, Default, Clone, Copy)]
-pub struct Parser;
+/// parser of the token stream of one source
+#[derive(Debug, Default, Clone)]
+pub struct Parser {
+    /// source of the tokens, kept in the `pir::File`
+    source: SourceId,
+}
 
 impl Parser {
     pub fn builder() -> ParserBuilder {
-        ParserBuilder
+        ParserBuilder::default()
     }
 
     /// parse the whole token stream: the commands it could read, and every
     /// parsing error
-    pub fn run(&self, tokens: TokenStream) -> Partial<pir::File> {
+    // both variants hold the whole file: boxing the error saves nothing
+    #[allow(clippy::result_large_err)]
+    pub fn run(&self, tokens: &Checked<TokenStream>) -> CheckedResult<pir::File> {
         use chumsky::prelude::*;
 
         let last = tokens.last_span();
         let eoi = SimpleSpan::from(last.start()..last.end());
         let tokens = tokens
-            .into_iter()
+            .iter()
             .map(|token| {
                 let span = token.span();
-                (token, SimpleSpan::from(span.start()..span.end()))
+                (token.clone(), SimpleSpan::from(span.start()..span.end()))
             })
             .collect::<Vec<_>>();
         let input = tokens.map(eoi, |(token, span)| (token, span));
 
         let (file, errs) = file().parse(input).into_output_errors();
-        Partial::ok(file.unwrap_or_default()).with_errors(errs.iter().map(error::error_parsing))
+        let file = pir::File {
+            source: self.source.clone(),
+            ..file.unwrap_or_default()
+        };
+        Partial::ok(file)
+            .with_errors(errs.iter().map(error::error_parsing))
+            .check()
     }
 }
 
-/// arguments of a `Parser` (none yet)
-#[derive(Debug, Default, Clone, Copy)]
-pub struct ParserBuilder;
+/// arguments of a `Parser`
+#[derive(Debug, Default, Clone)]
+pub struct ParserBuilder {
+    source: SourceId,
+}
 
 impl ParserBuilder {
+    /// source of the tokens
+    pub fn source(mut self, source: SourceId) -> Self {
+        self.source = source;
+        self
+    }
+
     pub fn build(self) -> Parser {
-        Parser
+        Parser {
+            source: self.source,
+        }
     }
 }
 
@@ -62,9 +83,8 @@ mod tests {
         let tokens = Lexer::builder()
             .build()
             .run(text)
-            .into_result()
             .unwrap_or_else(|_| panic!("lexing error in {text}"));
-        Parser::builder().build().run(tokens)
+        Parser::builder().build().run(&tokens).into()
     }
 
     #[test]

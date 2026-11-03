@@ -1,7 +1,3 @@
-Set DebugLexer.
-Set DebugParser.
-Unset DebugLexer.
-Set DebugTyper.
 
 (** doc of N *)
 Type N := Nat.

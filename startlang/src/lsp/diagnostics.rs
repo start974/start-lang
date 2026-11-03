@@ -3,7 +3,7 @@
 //! diagnostics at their place.
 
 use super::{backend::Backend, position_memo::PositionMemo};
-use crate::compile::{Output, compile};
+use crate::compile::{Output, outputs};
 use errors::Error;
 use ir::location::{SourceId, Span, Spanned};
 use pass::stdlib::Stdlib;
@@ -16,9 +16,8 @@ use tower_lsp::lsp_types::{
 pub fn diagnostics(url: &Url, content: String) -> Vec<Diagnostic> {
     let mut position_memo = PositionMemo::new(content.clone());
     let source = SourceId::Url(url.to_string());
-    match compile(&mut Stdlib::load(), source, &content, 0) {
-        Ok(compiled) => compiled
-            .outputs()
+    match Stdlib::load().run(source, &content, 0) {
+        Ok(compiled) => outputs(&compiled)
             .filter_map(|output| match output {
                 Output::Defined(_) => None,
                 Output::Value(value, span) => Some(info(&mut position_memo, span, &value)),

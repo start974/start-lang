@@ -1,16 +1,15 @@
 use crate::location::{Span, Spanned};
-use crate::sir::{DefId, Variable, ty};
+use crate::sir::{DefId, Node, ty};
 
 // ============================================================================
 // Type Definition
 // ============================================================================
 
-/// `name := ty`; its kind and documentation are in the `DefTable` of the
-/// file, under `id`
+/// `name := ty`, the definition `id`
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeDefinition {
     pub id: DefId,
-    pub name: Variable,
+    pub name: Node<String>,
     pub ty: ty::Type,
 }
 

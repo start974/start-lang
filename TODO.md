@@ -35,7 +35,7 @@ Each step below ends with the tests passing.
   - [x] one `Expression` (a span + one `ExpressionKind` enum, no `Expression0` /
         `Expression1`), no parentheses;
   - [x] one node per command (`Definition`, `TypeDefinition`, `Eval`, `TypeOf`,
-        `Help`, `Set`, `Unset`), no keyword variants (`Def` / `Definition`,
+        `Help`), no keyword variants (`Def` / `Definition`,
         `Eval` / `$`, …);
   - [x] documentation as text, no comments, no `Meta`;
   - [x] a `DefId` on every expression and type definition, given by
@@ -50,6 +50,15 @@ Each step below ends with the tests passing.
       built, so the command-by-command loop can lower one command at a time.
 - [x] `ir::tir`: stop re-exporting `pir::Documentation` (`ir/src/tir/mod.rs`),
       use the documentation of `sir`; `ir::tir` no longer uses `ir::pir`.
+- [x] `Lowerer`: one for the whole project (stdlib, files, REPL inputs); it
+      gives each definition a `DefId` and resolves every use to it
+      (`sir::Reference`, error 301 for an unknown name or one of the wrong
+      kind); it keeps the table `SourceId` ↔ `FileId`. `pir::File` carries its
+      source (`Parser::builder().source(…)`).
+- [x] `Partial::check(self) -> pass::CheckedResult<T>` (`Result<Checked<T>,
+      Partial<T>>`), private to `pass`, the only way to make a `Checked<T>`: every `run` returns it and takes the
+      `Checked` file of the pass before (the typer a `Checked<sir::File>`, and
+      works by `DefId`).
 - [x] `typing`: take `sir` instead of `cst` (`expression`, `ty`, `pattern`,
       `definition`, `type_definition`, `help` in `pass/src/typing.rs`); `typing`
       no longer uses `ir::pir`.
@@ -95,13 +104,14 @@ Each step below ends with the tests passing.
       `errors` stay crates (`ir` → `pp`, `errors` → `ir`): `tir` errors are
       data, their diagnostics are made in `pass::typing`.
 - [x] No driver object and no events: each pass is a type built by its
-      builder (`Lexer::builder()…build()`) with one entry point, `run`, taking
+      builder (`Lexer::builder()…build()`, or `new` when it takes no argument)
+      with one entry point, `run`, taking
       a whole file and returning a `pass::Partial`: what it could build and
       **all** its errors; each error says how the pass corrected it to go on
       (`Error::with_recovery`: character skipped, command skipped up to the
       next `.`, command left out); the tools call the passes one after the other
-      (`startlang/src/compile.rs`) and go to the next pass only if there is no
-      error (`Partial::into_result()?`).
+      (`pass::stdlib::Stdlib::run`) and go to the next pass only if there is no
+      error (`Checked` or `Partial`, `?` keeps the errors).
 - [x] Nothing runs if any phase before *run* has an error (the first pass with
       errors stops the chain).
 - [ ] Errors of **several** phases in one report (`pipeline.md`: parsing runs
@@ -110,7 +120,8 @@ Each step below ends with the tests passing.
       stop at the first failing pass.
 - [ ] `ir::errors`: sort errors by position (`Errors::sorted`) before printing.
 - [x] Stdlib loaded **once** (`pass::stdlib::Stdlib::load`): the state of
-      the typer, codegen and vm the tools start from.
+      the lowerer, typer, codegen and vm the tools start from;
+      `Stdlib::run` runs every pass on a text (rollback on error).
 - [x] Tools:
   - [x] `startlang run`: every pass, exit code (`startlang/src/run.rs`);
   - [x] REPL: every pass per input, typer + codegen + vm kept between
@@ -129,10 +140,8 @@ Each step below ends with the tests passing.
 
 - [ ] `startlang run --debug lexer,parser,typer <file>` (also `lowering` to
       print `sir`).
-- [ ] REPL: `Set DebugParser.` applies to the **next** inputs.
-- [ ] In a file, a debug `Set` is ignored with a warning pointing to `--debug`
-      (an error from beta.2). For now, `Set DebugLexer/Parser/Typer` are
-      accepted and have no effect.
+- [x] `Set` / `Unset` removed from the language (lexer keywords, parser,
+      `pir`, `sir`, tests).
 - [ ] Port `startlang/tests/cmd/{lexer,parser,typer}/debug*.in` to `--debug`.
 
 ## 7. Tests

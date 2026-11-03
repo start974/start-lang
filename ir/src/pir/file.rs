@@ -1,4 +1,5 @@
 use super::Command;
+use crate::location::SourceId;
 use crate::token::Token;
 use pp::pretty::*;
 
@@ -21,6 +22,8 @@ impl Pretty for EndOfInput {
 /// commands of a file, and the comments before its end; empty by default
 #[derive(Debug, Default)]
 pub struct File {
+    /// where the file comes from
+    pub source: SourceId,
     pub commands: Vec<Command>,
     /// `None` when the file could not be parsed up to its end
     pub end: Option<Token<EndOfInput>>,
