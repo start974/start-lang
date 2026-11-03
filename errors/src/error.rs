@@ -158,6 +158,13 @@ impl Errors {
         self
     }
 
+    /// errors in source order (stable: same place keeps the pass order)
+    pub fn sorted(mut self) -> Self {
+        self.errs
+            .sort_by_key(|err| (err.span.start(), err.span.end()));
+        self
+    }
+
     /// print all errors on stderr
     pub fn eprint(&self, theme: &Theme, cache: &mut impl Cache<SourceId>) {
         for err in &self.errs {
@@ -300,6 +307,18 @@ mod tests {
 
         assert_eq!(combined.code(), 1);
         assert_eq!(combined.len(), 2);
+    }
+
+    #[test]
+    fn sorted() {
+        let at = |code, start| {
+            Error::new(code, Message::text("H")).with_span(Span::new(start, start + 1))
+        };
+        let errs: Errors = vec![at(3, 8), at(1, 2), at(2, 8), at(0, 0)]
+            .into_iter()
+            .collect();
+        let codes: Vec<i32> = errs.sorted().into_iter().map(|err| err.code()).collect();
+        assert_eq!(codes, vec![0, 1, 3, 2]);
     }
 
     #[test]
