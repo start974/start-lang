@@ -8,6 +8,9 @@ use ir::tir;
 /// variable whose definition was never generated
 pub fn unknown_identifier(var: &tir::Node<tir::Identifier>) -> Error {
     Error::new(901, Message::text("Internal error."))
+        .with_help(Message::text(
+            "this is a bug of startlang, please report it",
+        ))
         .with_span(var.span)
         .with_text(Message::text(format!(
             "codegen: unknown identifier `{}`",

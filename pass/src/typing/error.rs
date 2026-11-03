@@ -21,6 +21,12 @@ pub fn unexpected_type(expected: &tir::Type, found: &tir::Type, span: Span) -> E
                 .append(Message::of_pretty(expected).important())
                 .with_line()
                 .with_text("Found    : ")
+                .append(found.clone()),
+        )
+        .with_help(
+            Message::text("change this expression so that its type is ")
+                .append(Message::of_pretty(expected).important())
+                .with_text(", not ")
                 .append(found),
         )
 }

@@ -10,6 +10,8 @@ $ startlang run no_space.st
    │ ───┬───  
    │    ╰───── Parsing expect "command".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : "command"
    │       Found    : "TypeOf1".
    │       
@@ -28,6 +30,8 @@ $ startlang run just_keyword.st
    │       ┬  
    │       ╰── Parsing expect "expression".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : "expression"
    │       Found    : ".".
    │       
@@ -39,6 +43,8 @@ $ startlang run just_keyword.st
  2 │ ?:.
    │   ┬  
    │   ╰── Parsing expect "expression".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : "expression"
    │       Found    : ".".

@@ -10,6 +10,8 @@ $ startlang run not_end.st
    │        │ 
    │        ╰─ Parsing expect ":=".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : ":="
    │       Found    : "end of input".
    │       
@@ -26,6 +28,8 @@ $ startlang run no_eq_def.st
  1 │ Type N Nat.
    │        ─┬─  
    │         ╰─── Parsing expect ":=".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : ":="
    │       Found    : "Nat".
@@ -44,6 +48,8 @@ $ startlang run no_space.st
  1 │ TypeN := Nat.
    │ ──┬──  
    │   ╰──── Parsing expect "command".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : "command"
    │       Found    : "TypeN".
@@ -64,6 +70,8 @@ $ startlang run wrong_name.st
    │      ┬  
    │      ╰── Parsing expect "type variable".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : "type variable"
    │       Found    : "1".
    │       
@@ -82,6 +90,8 @@ $ startlang run just_keyword.st
    │     ┬  
    │     ╰── Parsing expect "type variable".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : "type variable"
    │       Found    : ".".
    │       
@@ -93,6 +103,8 @@ $ startlang run just_keyword.st
  2 │ Ty.
    │   ┬  
    │   ╰── Parsing expect "type variable".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : "type variable"
    │       Found    : ".".

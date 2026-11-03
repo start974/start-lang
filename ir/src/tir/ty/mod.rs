@@ -16,7 +16,10 @@ pub use crate::common::BuiltinType;
 pub enum Type {
     Builtin(BuiltinType),
     /// use of a type definition, with the type it stands for
-    Alias { name: Identifier, ty: Box<Type> },
+    Alias {
+        name: Identifier,
+        ty: Box<Type>,
+    },
 }
 
 impl Type {

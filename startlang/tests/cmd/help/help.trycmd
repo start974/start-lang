@@ -39,6 +39,8 @@ $ startlang run error.st
    │   ─────┬────  
    │        ╰────── Variable Not_exists not found.
    │ 
+   │ Help: define Not_exists before this use, or check its spelling
+   │ 
    │ Note: (the command is left out)
 ───╯
 

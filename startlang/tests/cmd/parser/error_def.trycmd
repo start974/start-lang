@@ -9,6 +9,8 @@ $ startlang run no_expression.st
    │                 │ 
    │                 ╰─ Parsing expect "expression".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : "expression"
    │       Found    : "end of input".
    │       
@@ -25,6 +27,8 @@ $ startlang run stop_ident.st
  1 │ Definition a
    │              │ 
    │              ╰─ Parsing expect ":" or ":=".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : ":", ":="
    │       Found    : "end of input".
@@ -44,6 +48,8 @@ $ startlang run def_not_space.st
    │ ──┬─  
    │   ╰─── Parsing expect "command".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : "command"
    │       Found    : "Defa".
    │       
@@ -61,6 +67,8 @@ $ startlang run no_eq_def.st
  1 │ Definition a 1.
    │              ┬  
    │              ╰── Parsing expect ":" or ":=".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : ":", ":="
    │       Found    : "1".
@@ -80,6 +88,8 @@ $ startlang run wrong_name.st
    │            ┬  
    │            ╰── Parsing expect "pattern".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : "pattern"
    │       Found    : "1".
    │       
@@ -97,6 +107,8 @@ $ startlang run wrong_ty.st
  1 │ Definition a : 1 := 1.
    │                ┬  
    │                ╰── Parsing expect "type".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : "type"
    │       Found    : "1".
@@ -116,6 +128,8 @@ $ startlang run just_keyword.st
    │           ┬  
    │           ╰── Parsing expect "pattern".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : "pattern"
    │       Found    : ".".
    │       
@@ -127,6 +141,8 @@ $ startlang run just_keyword.st
  2 │ Def.
    │    ┬  
    │    ╰── Parsing expect "pattern".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : "pattern"
    │       Found    : ".".

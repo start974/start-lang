@@ -10,6 +10,8 @@ $ startlang run no_space.st
    │ ──┬──  
    │   ╰──── Parsing expect "command".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : "command"
    │       Found    : "Eval1".
    │       
@@ -30,6 +32,8 @@ $ startlang run parent_unclosed1.st
    │        ┬  
    │        ╰── Parsing expect ":" or ")".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : ":", ")"
    │       Found    : ".".
    │       
@@ -49,6 +53,8 @@ $ startlang run parent_unclosed2.st
    │        ┬  
    │        ╰── Parsing expect ":" or ")".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : ":", ")"
    │       Found    : ".".
    │       
@@ -67,6 +73,8 @@ $ startlang run just_keyword.st
    │     ┬  
    │     ╰── Parsing expect "expression".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : "expression"
    │       Found    : ".".
    │       
@@ -78,6 +86,8 @@ $ startlang run just_keyword.st
  2 │ $.
    │  ┬  
    │  ╰── Parsing expect "expression".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : "expression"
    │       Found    : ".".
@@ -96,6 +106,8 @@ $ startlang run not_end.st
  1 │ Eval 1
    │        │ 
    │        ╰─ Parsing expect ":" or ".".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : ":", "."
    │       Found    : "end of input".

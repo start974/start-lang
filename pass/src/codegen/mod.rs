@@ -120,7 +120,9 @@ mod tests {
         let mut codegen = Codegen::default();
         let def_a = tir::ExpressionDefinition {
             pattern: tir::Pattern::Variable(var("a", 0)),
-            body: expr(tir::ExpressionKind::Constant(tir::Constant::Nat(3u8.into()))),
+            body: expr(tir::ExpressionKind::Constant(tir::Constant::Nat(
+                3u8.into(),
+            ))),
         };
         let global_a = codegen.definition(&def_a).unwrap();
         let def_b = tir::ExpressionDefinition {

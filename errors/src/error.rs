@@ -12,6 +12,8 @@ pub struct Error {
     note: Option<Message>,
     /// how the pass corrected the error to go on
     recovery: Option<Message>,
+    /// how the user can fix the error
+    help: Option<Message>,
 }
 
 impl Error {
@@ -24,6 +26,7 @@ impl Error {
             text: None,
             note: None,
             recovery: None,
+            help: None,
         }
     }
 
@@ -45,6 +48,10 @@ impl Error {
 
     pub fn recovery(&self) -> Option<&Message> {
         self.recovery.as_ref()
+    }
+
+    pub fn help(&self) -> Option<&Message> {
+        self.help.as_ref()
     }
 
     /// add text to error
@@ -71,6 +78,14 @@ impl Error {
         self
     }
 
+    /// advise the user how to fix the error
+    pub fn with_help(mut self, help: Message) -> Self {
+        if !help.is_nil() {
+            self.help = Some(help);
+        }
+        self
+    }
+
     /// add span to error
     pub fn with_span(mut self, span: Span) -> Self {
         self.span = span;
@@ -93,11 +108,10 @@ impl Error {
             report_builder.add_label(label)
         }
         // one note, so that ariadne does not number them
-        let recovery = self.recovery.as_ref().map(|recovery| {
-            Message::text("(")
-                .append(recovery.clone())
-                .with_text(")")
-        });
+        let recovery = self
+            .recovery
+            .as_ref()
+            .map(|recovery| Message::text("(").append(recovery.clone()).with_text(")"));
         let note = match (&self.note, recovery) {
             (Some(note), Some(recovery)) => {
                 Some(note.clone().with_line().with_line().append(recovery))
@@ -106,6 +120,9 @@ impl Error {
         };
         if let Some(note) = note {
             report_builder.add_note(note.make_string(&theme.error.note));
+        }
+        if let Some(help) = &self.help {
+            report_builder.add_help(help.make_string(&theme.error.note));
         }
         report_builder.finish()
     }
@@ -259,7 +276,8 @@ mod tests {
         let error = Error::new(1001, Message::text("Test error"))
             .with_span(Span::new(0, 5))
             .with_text(Message::text("This is a test error message."))
-            .with_note(Message::text("This is a note."));
+            .with_note(Message::text("This is a note."))
+            .with_help(Message::text("This is a help."));
         assert_eq!(error.code(), 1001);
         assert_eq!(error.header().make_string(&theme), "Test error");
         assert_eq!(
@@ -267,6 +285,7 @@ mod tests {
             "This is a test error message."
         );
         assert_eq!(error.note().unwrap().make_string(&theme), "This is a note.");
+        assert_eq!(error.help().unwrap().make_string(&theme), "This is a help.");
         assert_eq!(error.span(), Span::new(0, 5));
     }
 
