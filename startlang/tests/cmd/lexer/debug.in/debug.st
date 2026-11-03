@@ -1,4 +1,3 @@
-Set DebugLexer.
 
 Def a := 3.
 

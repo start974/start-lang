@@ -1,5 +1,6 @@
 use chumsky::input::ValueInput;
 use chumsky::prelude::*;
+use ir::location::SourceId;
 use ir::token::{Operator, Token, TokenKind};
 
 use ir::pir;
@@ -353,29 +354,6 @@ where
     }
 }
 
-fn keyword_set<'tokens, I>()
--> impl Parser<'tokens, I, Token<pir::command::keyword::SetKeyword>, Extra<'tokens>>
-where
-    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
-{
-    use pir::command::keyword::SetKeyword;
-    select! {
-        ref token @ Token{value: TokenKind::Identifier(ref id), ..} if id == "Set" =>
-                token.with_value(SetKeyword),
-    }
-}
-
-fn keyword_unset<'tokens, I>()
--> impl Parser<'tokens, I, Token<pir::command::keyword::UnsetKeyword>, Extra<'tokens>>
-where
-    I: ValueInput<'tokens, Token = Token<TokenKind>, Span = SimpleSpan>,
-{
-    use pir::command::keyword::UnsetKeyword;
-    select! {
-        ref token @ Token{value: TokenKind::Identifier(ref id), ..} if id == "Unset" =>
-                token.with_value(UnsetKeyword),
-    }
-}
 /// parse command
 /// ```ebfn
 /// command_kind :=
@@ -383,8 +361,7 @@ where
 /// | keyword_type type_definition
 /// | keyword_eval expr
 /// | keyword_typeof expr
-/// | keyword_set variable
-/// | keyword_unset variable
+/// | keyword_help variable
 ///```
 pub fn command_kind<'tokens, I>() -> impl Parser<'tokens, I, pir::CommandKind, Extra<'tokens>>
 where
@@ -408,12 +385,6 @@ where
         keyword_help()
             .then(help_variable())
             .map(|(keyword, var)| CommandKind::Help { keyword, var }),
-        keyword_set()
-            .then(variable())
-            .map(|(keyword, var)| CommandKind::Set { keyword, var }),
-        keyword_unset()
-            .then(variable())
-            .map(|(keyword, var)| CommandKind::UnSet { keyword, var }),
     ))
 }
 
@@ -477,6 +448,7 @@ where
         .collect::<Vec<_>>()
         .then(end_of_input())
         .map(|(commands, end)| pir::File {
+            source: SourceId::default(),
             commands: commands.into_iter().flatten().collect(),
             end: Some(end),
         })

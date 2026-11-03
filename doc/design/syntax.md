@@ -27,7 +27,6 @@ All keywords are lowercase with short names, no long aliases.
 | `Eval`               | `eval`          |
 | `TypeOf`             | `typeof`        |
 | `Help`               | `help`          |
-| `Set` / `Unset`      | `set` / `unset` |
 
 | Role         | Keywords                                                                                       | Kind       |
 |--------------|------------------------------------------------------------------------------------------------|------------|

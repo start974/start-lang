@@ -33,14 +33,6 @@ pub enum CommandKind {
         keyword: Token<HelpKeyword>,
         var: Variable,
     },
-    Set {
-        keyword: Token<SetKeyword>,
-        var: Variable,
-    },
-    UnSet {
-        keyword: Token<UnsetKeyword>,
-        var: Variable,
-    },
 }
 
 impl Pretty for CommandKind {
@@ -51,17 +43,13 @@ impl Pretty for CommandKind {
             CommandKind::Eval { keyword, .. } => keyword.pretty(theme),
             CommandKind::TypeOf { keyword, .. } => keyword.pretty(theme),
             CommandKind::Help { keyword, .. } => keyword.pretty(theme),
-            CommandKind::Set { keyword, .. } => keyword.pretty(theme),
-            CommandKind::UnSet { keyword, .. } => keyword.pretty(theme),
         };
         let doc_content = match self {
             CommandKind::ExpressionDefinition { def, .. } => def.pretty(theme),
             CommandKind::TypeDefinition { def, .. } => def.pretty(theme),
             CommandKind::Eval { expr, .. } => expr.pretty(theme),
             CommandKind::TypeOf { expr, .. } => expr.pretty(theme),
-            CommandKind::Help { var, .. }
-            | CommandKind::Set { var, .. }
-            | CommandKind::UnSet { var, .. } => var.pretty_with(theme, theme.expr_var(&var.value)),
+            CommandKind::Help { var, .. } => var.pretty_with(theme, theme.expr_var(&var.value)),
         };
 
         Doc::nil()
@@ -79,8 +67,6 @@ impl Spanned for CommandKind {
             CommandKind::Eval { keyword, .. } => keyword.span(),
             CommandKind::TypeOf { keyword, .. } => keyword.span(),
             CommandKind::Help { keyword, .. } => keyword.span(),
-            CommandKind::Set { keyword, .. } => keyword.span(),
-            CommandKind::UnSet { keyword, .. } => keyword.span(),
         };
         let span_content = match self {
             CommandKind::ExpressionDefinition { def, .. } => def.span(),
@@ -88,8 +74,6 @@ impl Spanned for CommandKind {
             CommandKind::Eval { expr, .. } => expr.span(),
             CommandKind::TypeOf { expr, .. } => expr.span(),
             CommandKind::Help { var, .. } => var.span(),
-            CommandKind::Set { var, .. } => var.span(),
-            CommandKind::UnSet { var, .. } => var.span(),
         };
         span_keyword.union(span_content)
     }

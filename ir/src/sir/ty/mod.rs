@@ -1,21 +1,23 @@
 use crate::location::{Span, Spanned};
-use crate::sir::{Node, Variable};
+use crate::sir::{DefId, Node};
 
 pub mod definition;
 
 // ============================================================================
 // Builtin
 // ============================================================================
+
 pub use crate::common::BuiltinType;
-pub type Builtin = Node<BuiltinType>;
 
 // ============================================================================
 // Type
 // ============================================================================
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Type {
-    Builtin(Builtin),
-    Variable(Variable),
+    Builtin(Node<BuiltinType>),
+    /// use of a type definition, resolved by the lowering
+    Variable(Node<DefId>),
 }
 
 impl Spanned for Type {

@@ -1,12 +1,13 @@
 use crate::location::{Span, Spanned};
-use crate::sir::Variable;
+use crate::sir::{DefId, Node};
 
 // ============================================================================
 // Pattern
 // ============================================================================
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Pattern {
-    Variable(Variable),
+    /// the name defined
+    Variable(Node<DefId>),
 }
 
 impl Spanned for Pattern {

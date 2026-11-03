@@ -1,4 +1,3 @@
-Set DebugTyper.
 
 Type N1 := ℕ.
 

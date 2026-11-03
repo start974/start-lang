@@ -24,7 +24,3 @@ Type (* comment 1 *)
 
 TypeOf (* type of a *)
   a.
-
-Set (* comment set *)
-  DebugTyper.
-Unset (* comment unset *) DebugTyper.

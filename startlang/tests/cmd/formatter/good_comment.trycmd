@@ -33,10 +33,6 @@ Type (* comment 1 *)
 
 TypeOf (* type of a *)
   a.
-
-Set (* comment set *)
-  DebugTyper.
-Unset (* comment unset *) DebugTyper.
 ```
 
 # Format diff
@@ -69,9 +65,5 @@ $ startlang format --diff good_comment.st
   24   24 | 
   25   25 | TypeOf (* type of a *)
   26   26 |   a.
-  27   27 | 
-  28   28 | Set (* comment set *)
-  29   29 |   DebugTyper.
-  30   30 | Unset (* comment unset *) DebugTyper.
 
 ```

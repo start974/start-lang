@@ -1,7 +1,7 @@
 use super::{Mode, diff::print_diff};
 use crate::error;
 use ariadne::Source;
-use errors::Error;
+use errors::{Error, Errors};
 use ir::location::SourceId;
 use ir::pir;
 use pass::lexer::Lexer;
@@ -52,10 +52,10 @@ impl Formatter {
         let parsed = Lexer::builder()
             .build()
             .run(&self.content)
-            .into_result()
-            .and_then(|tokens| Parser::builder().build().run(tokens).into_result());
+            .map_err(Errors::from)
+            .and_then(|tokens| Parser::builder().build().run(&tokens).map_err(Errors::from));
         match parsed {
-            Ok(file) => Some(file),
+            Ok(file) => Some(file.into_inner()),
             Err(errs) => {
                 for err in errs {
                     self.fail(err);

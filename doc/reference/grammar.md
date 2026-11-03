@@ -171,16 +171,6 @@ keyword_help :=
 ```
 
 ```ebnf
-keyword_set :=
-| "Set"                  display as keyword
-```
-
-```ebnf
-keyword_unset :=
-| "Unset"                display as keyword
-```
-
-```ebnf
 dot := DOT               display as operator
 ```
 

@@ -89,27 +89,3 @@ impl Pretty for HelpKeyword {
         }
     }
 }
-
-// ============================================================================
-// Set Keyword
-// ============================================================================
-#[derive(Debug)]
-pub struct SetKeyword;
-
-impl Pretty for SetKeyword {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        theme.keyword(&"Set")
-    }
-}
-
-// ============================================================================
-// Unset Keyword
-// ============================================================================
-#[derive(Debug)]
-pub struct UnsetKeyword;
-
-impl Pretty for UnsetKeyword {
-    fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        theme.keyword(&"Unset")
-    }
-}

@@ -1,4 +1,3 @@
-Set DebugParser.
 
 Type N1 := ℕ.
 
@@ -25,5 +24,3 @@ Def b := true.
 
 Def c := '\\'.
 
-Set DebugTyper.
-Unset DebugParser.

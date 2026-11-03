@@ -5,11 +5,7 @@ status.code = 0
 stdin = """
 Type N1 := Nat.
 Def a : N1 := 3.
-Set DebugParser.
-Set DebugTyper.
 Eval a.
-Unset DebugParser.
-Unset DebugTyper.
 TypeOf a.
 """
 

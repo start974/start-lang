@@ -4,7 +4,7 @@
 //! The state is kept between calls, so the REPL can generate one command at a
 //! time.
 
-use crate::Partial;
+use crate::{Checked, CheckedResult, Partial};
 use errors::{Error, Message};
 use ir::tir::Typed as _;
 use ir::{lir, tir};
@@ -18,38 +18,39 @@ mod error;
 
 /// generates the files one after the other: the globals of the previous
 /// files (stdlib, REPL inputs) are kept
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Codegen {
     /// global of every generated definition
     globals: HashMap<tir::Identifier, lir::GlobalId>,
 }
 
 impl Codegen {
-    pub fn builder() -> CodegenBuilder {
-        CodegenBuilder
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// code of a typed file: a global per definition, an item per `Eval`;
     /// the items it could generate, and every (internal) error
-    pub fn run(&mut self, file: &tir::File) -> Partial<lir::File> {
-        let mut items = Vec::new();
-        let mut errors = Vec::new();
-        for cmd in file.commands() {
-            let item = match &cmd.kind {
+    pub fn run(&mut self, file: &Checked<tir::File>) -> CheckedResult<lir::File> {
+        let items: Partial<Vec<_>> = file
+            .commands()
+            .iter()
+            .filter_map(|cmd| match &cmd.kind {
                 tir::CommandKind::ExpressionDefinition(def) => {
-                    self.definition(def).map(lir::Item::Global)
+                    Some(self.definition(def).map(lir::Item::Global))
                 }
-                tir::CommandKind::Eval(expr) => self.expression(expr).map(lir::Item::Eval),
-                tir::CommandKind::TypeOf(_) | tir::CommandKind::Help(_) => continue,
-            };
-            match item {
-                Ok(item) => items.push(item),
-                Err(err) => {
-                    errors.push(err.with_recovery(Message::text("the command is left out.")));
-                }
-            }
-        }
-        Partial::ok(items.into_iter().collect()).with_errors(errors)
+                tir::CommandKind::Eval(expr) => Some(self.expression(expr).map(lir::Item::Eval)),
+                tir::CommandKind::TypeOf(_) | tir::CommandKind::Help(_) => None,
+            })
+            .map(|item| match item {
+                Ok(item) => Partial::ok(Some(item)),
+                Err(err) => Partial::ok(None)
+                    .with_error(err.with_recovery(Message::text("the command is left out."))),
+            })
+            .collect();
+        items
+            .map(|items| items.into_iter().flatten().collect())
+            .check()
     }
 
     /// run-time type: aliases resolved
@@ -99,31 +100,29 @@ impl Codegen {
     }
 }
 
-/// arguments of a `Codegen` (none yet)
-#[derive(Debug, Default, Clone, Copy)]
-pub struct CodegenBuilder;
-
-impl CodegenBuilder {
-    pub fn build(self) -> Codegen {
-        Codegen::default()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use ir::location::Span;
-    use ir::tir::{Env, IdentifierBuilder, PatternVar};
+    use ir::sir::DefId;
+    use ir::tir::{Env, Identifier, PatternVar};
+    use std::rc::Rc;
+
+    fn ident(name: &str, id: usize) -> Rc<Identifier> {
+        Rc::new(Identifier {
+            name: name.to_string(),
+            id: DefId(id),
+        })
+    }
 
     /// `a := 3` then `b := a`, through the typing environment
     #[test]
     fn definitions_become_dense_globals() {
-        let mut ids = IdentifierBuilder::default();
         let mut env = Env::default();
         let mut codegen = Codegen::default();
         let nat = tir::Type::Builtin(tir::ty::Builtin::nat());
 
-        let a = ids.build("a");
+        let a = ident("a", 0);
         let def_a = tir::ExpressionDefinition::new(
             tir::Pattern::Variable(PatternVar::from(a.clone())),
             tir::Expression::Constant(tir::Constant::nat(3u8.into())),
@@ -131,7 +130,7 @@ mod tests {
         let global_a = codegen.definition(&def_a).unwrap();
         env.add_expr_def(a.clone(), nat, Span::default());
 
-        let b = ids.build("b");
+        let b = ident("b", 1);
         let use_a = env.expr_var(&a, Span::default()).unwrap();
         let def_b = tir::ExpressionDefinition::new(
             tir::Pattern::Variable(PatternVar::from(b)),
@@ -152,9 +151,8 @@ mod tests {
 
     #[test]
     fn unknown_identifier_is_an_error() {
-        let mut ids = IdentifierBuilder::default();
         let mut env = Env::default();
-        let a = ids.build("a");
+        let a = ident("a", 0);
         env.add_expr_def(
             a.clone(),
             tir::Type::Builtin(tir::ty::Builtin::bool()),
@@ -171,9 +169,8 @@ mod tests {
 
     #[test]
     fn alias_is_resolved() {
-        let mut ids = IdentifierBuilder::default();
         let mut env = Env::default();
-        let t = ids.build("T");
+        let t = ident("T", 0);
         env.add_type_def(
             t.clone(),
             tir::Type::Builtin(tir::ty::Builtin::char()),

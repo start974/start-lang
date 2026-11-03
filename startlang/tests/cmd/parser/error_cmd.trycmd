@@ -20,23 +20,6 @@ For more information, try '--help'.
 
 ```
 
-## Option not found
-
-```
-$ startlang run option.st
-? 103
-[103] Error: Option unknown.
-   ╭─[ option.st:1:5 ]
-   │
- 1 │ Set UknownOption.
-   │     ──────┬─────  
-   │           ╰─────── Option "UknownOption" is unknown.
-   │ 
-   │ Note: Recovery: the command is left out.
-───╯
-
-```
-
 ## Error on command unknown
 ```
 $ startlang run command.st
