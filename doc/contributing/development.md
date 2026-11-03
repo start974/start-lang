@@ -8,7 +8,7 @@ One branch per pre-release or release, named `v<version>--<name>`:
 
 ```
 v0.2.0-beta.1--compilation-phases
-v0.2.0-beta.2--cleanup
+v0.2.0-beta.2--tui
 v0.2.0-rc.1--release-candidate
 v0.2.1--fix-lsp-hover
 ```

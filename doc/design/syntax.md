@@ -10,7 +10,7 @@
   type Nat := ℕ
   def two : Nat := 2
   ```
-- Commands (`eval`, `typeof`, `help`, `set`, `unset`) are only allowed in
+- Commands (`eval`, `typeof`, `help`) are only allowed in
   `.snbx` files and in the REPL; the other kinds only contain declarations.
 - The operator shortcuts (`$` for `eval`, and those of `typeof` and `help`)
   are removed, freeing these symbols for `.synt` notations.
@@ -34,7 +34,7 @@ All keywords are lowercase with short names, no long aliases.
 | Imports      | `use`                                                                                          | reserved   |
 | Visibility   | `pub`                                                                                          | reserved   |
 | Expressions  | `let`, `in`, `if`, `then`, `else`, `match`, `with`, `where`, `assert`, `copy`, `free`, `panic` | reserved   |
-| Commands     | `eval`, `typeof`, `help`, `set`, `unset`                                                       | reserved   |
+| Commands     | `eval`, `typeof`, `help`                                                                       | reserved   |
 | File kinds   | `synt`, `code`, `prop` (`proof` is already reserved)                                           | contextual |
 | Path roots   | `lib`, `super`, `self`                                                                         | contextual |
 | Renaming     | `as`                                                                                           | contextual |
