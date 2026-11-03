@@ -4,7 +4,7 @@
 //!   (the span of the expression keeps them), comments dropped;
 //! - every expression and type definition gets a `DefId`, unique in the
 //!   project, and every use is resolved to the definition it refers to: the
-//!   last one with that name, before it;
+//!   last one with that name, before it.
 
 mod error;
 
@@ -25,8 +25,6 @@ type Result<T> = std::result::Result<T, Errors>;
 /// definitions and the names visible after it
 #[derive(Debug, Default, Clone)]
 pub struct Lowerer {
-    /// source of each file, indexed by `FileId`
-    sources: Vec<SourceId>,
     /// file of each source
     files: HashMap<SourceId, sir::FileId>,
     /// every definition, indexed by `DefId`
@@ -40,19 +38,9 @@ impl Lowerer {
         Self::default()
     }
 
-    /// source of the file `file`
-    pub fn source(&self, file: sir::FileId) -> &SourceId {
-        &self.sources[file.0 as usize]
-    }
-
     /// the definition `id`
     pub fn def(&self, id: sir::DefId) -> &sir::DefInfo {
         &self.defs[id.0]
-    }
-
-    /// every definition of the project, in order
-    pub fn defs(&self) -> &[sir::DefInfo] {
-        &self.defs
     }
 
     /// lower every command of `file`; a command with an unknown name is left
@@ -89,8 +77,7 @@ impl Lowerer {
         if let Some(id) = self.files.get(source) {
             return *id;
         }
-        let id = sir::FileId(self.sources.len() as u32);
-        self.sources.push(source.clone());
+        let id = sir::FileId(self.files.len() as u32);
         self.files.insert(source.clone(), id);
         id
     }
@@ -109,14 +96,17 @@ impl Lowerer {
         var: &pir::Variable,
         kind: Option<sir::DefKind>,
     ) -> Result<sir::Node<sir::DefId>> {
-        self.scope
-            .get(&var.value)
-            .filter(|id| kind.is_none_or(|kind| self.def(**id).kind == kind))
-            .map(|id| sir::Node {
+        match self.scope.get(&var.value) {
+            Some(id) if kind.is_none_or(|kind| self.def(*id).kind == kind) => Ok(sir::Node {
                 value: *id,
                 span: var.span(),
-            })
-            .ok_or_else(|| error::variable_not_found(&var.value, kind, var.span()).into())
+            }),
+            // one scope for both kinds: a definition of the other kind hides it
+            found => {
+                let hidden_by = found.map(|id| self.def(*id).kind);
+                Err(error::variable_not_found(&var.value, kind, hidden_by, var.span()).into())
+            }
+        }
     }
 
     /// lower one command
@@ -482,6 +472,20 @@ mod tests {
     }
 
     #[test]
+    fn name_hidden_by_the_other_kind() {
+        let lowered = lower_in(
+            &mut Lowerer::new(),
+            SourceId::Repl,
+            "Type N := __Type_Nat__.\nDef N := 1.\nDef x : N := 2.",
+        );
+        let text = (&lowered.errors)
+            .into_iter()
+            .map(|err| format!("{err:?}"))
+            .collect::<String>();
+        assert!(text.contains("hidden by an expression"), "{text}");
+    }
+
+    #[test]
     fn the_project_grows_with_each_file() {
         let mut lowerer = Lowerer::new();
         let stdlib = SourceId::File(PathBuf::from("stdlib.st"));
@@ -492,8 +496,6 @@ mod tests {
         assert!(first.is_ok() && second.is_ok() && third.is_ok());
         assert_ne!(first.value.file, second.value.file);
         assert_eq!(second.value.file, third.value.file);
-        assert_eq!(lowerer.source(first.value.file), &stdlib);
-        assert_eq!(lowerer.defs().len(), 2);
         assert_eq!(lowerer.def(sir::DefId(1)).name.value, "b");
         assert_eq!(lowerer.def(sir::DefId(1)).file, second.value.file);
         // each file only has its own definitions

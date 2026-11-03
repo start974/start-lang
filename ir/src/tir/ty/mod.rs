@@ -1,89 +1,44 @@
-use crate::location::{Span, Spanned, SpannedSet};
-use crate::tir::error::Error;
-pub use alias::Alias;
-pub use builtin::Builtin;
+use crate::tir::Identifier;
 use pp::pretty::*;
 
-pub mod alias;
-pub mod builtin;
+// ============================================================================
+// Builtin
+// ============================================================================
 
-#[derive(Debug, Clone)]
+pub use crate::common::BuiltinType;
+
+// ============================================================================
+// Type
+// ============================================================================
+
+/// a type, without span: the span of a typed node is the span of the node
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Type {
-    Builtin(Builtin),
-    Alias(Alias),
+    Builtin(BuiltinType),
+    /// use of a type definition, with the type it stands for
+    Alias { name: Identifier, ty: Box<Type> },
 }
 
 impl Type {
-    /// type is compatible with another type
+    /// the builtin type, aliases unfolded
+    pub fn builtin(&self) -> BuiltinType {
+        match self {
+            Type::Builtin(builtin) => *builtin,
+            Type::Alias { ty, .. } => ty.builtin(),
+        }
+    }
+
+    /// same type once aliases are unfolded
     pub fn is_compatible(&self, other: &Self) -> bool {
-        *self == *other
+        self.builtin() == other.builtin()
     }
 }
 
 impl Pretty for Type {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         match self {
-            Type::Builtin(builtin) => builtin.pretty(theme),
-            Type::Alias(alias) => alias.pretty(theme),
-        }
-    }
-}
-
-impl Spanned for Type {
-    fn span(&self) -> Span {
-        match self {
-            Type::Builtin(builtin) => builtin.span(),
-            Type::Alias(alias) => alias.span(),
-        }
-    }
-}
-
-impl SpannedSet for Type {
-    fn set_span(&mut self, span: Span) {
-        match self {
-            Type::Builtin(builtin) => builtin.set_span(span),
-            Type::Alias(alias) => alias.set_span(span),
-        }
-    }
-}
-
-impl PartialEq for Type {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Type::Builtin(b1), Type::Builtin(b2)) => b1 == b2,
-            (Type::Alias(a), ty) | (ty, Type::Alias(a)) => a.ty() == ty,
-        }
-    }
-}
-
-impl Eq for Type {}
-
-// ==========================================================================
-// Typed Trait
-// ==========================================================================
-pub trait TypedMut {
-    /// get the type
-    fn ty_mut(&mut self) -> &mut Type;
-}
-
-pub trait Typed {
-    /// get the type
-    fn ty(&self) -> &Type;
-
-    /// restrict object type to other type
-    fn restrict_ty(mut self, ty: Type) -> Result<Self, Error>
-    where
-        Self: Sized + TypedMut,
-    {
-        if self.ty().is_compatible(&ty) {
-            *self.ty_mut() = ty;
-            Ok(self)
-        } else {
-            Err(Error::UnexpectedType {
-                found: Box::new(self.ty().clone()),
-                span: ty.span(),
-                expected: Box::new(ty),
-            })
+            Type::Builtin(builtin) => theme.ty_var(&builtin.symbol()),
+            Type::Alias { name, .. } => theme.ty_var(&name.name),
         }
     }
 }

@@ -1,39 +1,16 @@
-//! Diagnostics of the typing errors (codes 3xx).
+//! Diagnostics of the typing errors (codes 3xx; 301, an unknown name, is
+//! found by the lowering).
 
 use errors::{Error, Message};
-use ir::location::Spanned as _;
+use ir::location::Span;
 use ir::tir;
-use ir::tir::env::IdentifierKind;
 
-/// diagnostic of an error found while building `tir`
-pub fn diagnostic(err: tir::error::Error) -> Error {
-    let span = err.span();
-    match err {
-        tir::error::Error::VariableNotFound {
-            identifier, kind, ..
-        } => variable_not_found(&identifier, kind),
-        tir::error::Error::UnexpectedType {
-            expected, found, ..
-        } => unexpected_type(&expected, &found),
-    }
-    .with_span(span)
-}
-
-fn variable_not_found(identifier: &tir::Identifier, kind: IdentifierKind) -> Error {
-    Error::new(301, Message::text("Variable not found.")).with_text(
-        match kind {
-            IdentifierKind::Type => Message::text("Type variable "),
-            IdentifierKind::Expr => Message::text("Expression variable "),
-            IdentifierKind::Unknown => Message::text("Variable "),
-        }
-        .append(Message::text(identifier.name()).important())
-        .with_text(" not found."),
-    )
-}
-
-fn unexpected_type(expected: &tir::Type, found: &tir::Type) -> Error {
+/// the type `found` was restricted to the incompatible type `expected`,
+/// written at `span`
+pub fn unexpected_type(expected: &tir::Type, found: &tir::Type, span: Span) -> Error {
     let found = Message::of_pretty(found).important();
     Error::new(302, Message::text("Type mismatch."))
+        .with_span(span)
         .with_text(
             Message::text("Found type ")
                 .append(found.clone())

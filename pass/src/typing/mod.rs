@@ -6,20 +6,20 @@ use errors::{Errors, Message, ResultErrors as _};
 
 mod error;
 
-use ir::location::{Spanned as _, SpannedSet as _};
-use ir::tir::{Typed, env::Env};
+use ir::location::{Span, Spanned as _};
 use ir::{sir, tir};
 use std::collections::{BTreeMap, HashMap};
-use std::rc::Rc;
 
-/// types the files one after the other: the environment keeps the
-/// definitions of the previous files (stdlib, REPL inputs), by `DefId`
+/// definitions of a file, from the lowering
+type Defs = BTreeMap<sir::DefId, sir::DefInfo>;
+
+/// types the files one after the other: the definitions of the previous
+/// files (stdlib, REPL inputs) are kept, by `DefId`
 #[derive(Debug, Default, Clone)]
 pub struct Typer {
-    env: Env,
-    /// the identifier of each definition typed, to name its uses; a use of a
-    /// definition missing here is a use of one whose typing failed
-    identifiers: HashMap<sir::DefId, Rc<tir::Identifier>>,
+    /// every definition typed; a use of a definition missing here is a use of
+    /// one whose typing failed
+    defs: HashMap<sir::DefId, tir::DefInfo>,
 }
 
 type Result<T, E = Errors> = std::result::Result<T, E>;
@@ -29,197 +29,169 @@ impl Typer {
         Self::default()
     }
 
-    /// get environment
-    pub fn env(&self) -> &Env {
-        &self.env
+    /// every definition typed, in no order
+    pub fn defs(&self) -> impl Iterator<Item = &tir::DefInfo> {
+        self.defs.values()
     }
 
     /// type every command of the file: the commands that typed, and every
-    /// error; on error, the environment is left as it was before
+    /// error; going back to the state before a file with errors is up to the
+    /// caller (`Stdlib::run`), as for the lowerer
     pub fn run(&mut self, file: &Checked<sir::File>) -> CheckedResult<tir::File> {
-        let before = self.clone();
         let typed: Partial<Vec<_>> = file
             .commands
             .iter()
             .map(|cmd| match self.command(cmd, &file.defs) {
-                Ok(kind) => Partial::ok(kind.map(|kind| tir::Command::new(kind, cmd.span()))),
+                Ok(kind) => Partial::ok(kind.map(|kind| tir::Command {
+                    kind,
+                    span: cmd.span,
+                })),
                 Err(errs) => Partial::ok(None).with_errors(
                     errs.into_iter()
                         .map(|err| err.with_recovery(Message::text("the command is left out."))),
                 ),
             })
             .collect();
-        // a failed command always comes with an error: the silent ones use a
-        // definition that failed before
-        if !typed.is_ok() {
-            *self = before;
-        }
         typed
-            .map(|commands| commands.into_iter().flatten().collect())
+            .map(|commands| tir::File {
+                commands: commands.into_iter().flatten().collect(),
+            })
             .check()
     }
 
     /// type one command; `None` for a command that leaves nothing to run
-    fn command(
-        &mut self,
-        cmd: &sir::Command,
-        defs: &BTreeMap<sir::DefId, sir::DefInfo>,
-    ) -> Result<Option<tir::CommandKind>> {
+    fn command(&mut self, cmd: &sir::Command, defs: &Defs) -> Result<Option<tir::CommandKind>> {
         Ok(match &cmd.kind {
             sir::CommandKind::ExpressionDefinition(def) => Some(
-                tir::CommandKind::ExpressionDefinition(self.definition(def, defs)?),
+                tir::CommandKind::ExpressionDefinition(Box::new(self.definition(def, defs)?)),
             ),
             sir::CommandKind::TypeDefinition(def) => {
-                self.type_definition(def, defs[&def.id].doc.as_ref())?;
+                let ty = self.ty(&def.ty)?;
+                self.bind(def.id, ty, defs);
                 None
             }
             sir::CommandKind::Eval(expr) => Some(tir::CommandKind::Eval(self.expression(expr)?)),
             sir::CommandKind::TypeOf(expr) => {
                 Some(tir::CommandKind::TypeOf(self.expression(expr)?))
             }
-            sir::CommandKind::Help(var) => Some(tir::CommandKind::Help(self.help(var)?)),
+            sir::CommandKind::Help(var) => Some(tir::CommandKind::Help(tir::Help {
+                def: self.def(var)?.clone(),
+                span: var.span,
+            })),
         })
     }
 
-    /// diagnostics of an error of `tir`; none for a definition missing from
-    /// the environment: the lowering resolved every name, so its typing
-    /// failed and was already reported
-    fn error(&self, err: tir::error::Error) -> Errors {
-        match err {
-            tir::error::Error::VariableNotFound { .. } => std::iter::empty().collect(),
-            err => Errors::from(error::diagnostic(err)),
-        }
-    }
-
-    /// the identifier of the definition a use refers to; none, silently, for
-    /// a definition whose typing failed (already reported)
-    fn identifier(&self, var: &sir::Node<sir::DefId>) -> Result<Rc<tir::Identifier>> {
-        self.identifiers
+    /// the definition a use refers to; none, silently, for a definition whose
+    /// typing failed (already reported): the lowering resolved every name
+    fn def(&self, var: &sir::Node<sir::DefId>) -> Result<&tir::DefInfo> {
+        self.defs
             .get(&var.value)
-            .cloned()
             .ok_or_else(|| std::iter::empty().collect())
     }
 
-    /// the identifier of the definition `id` of `name`
-    fn bind(&mut self, name: &str, id: sir::DefId) -> Rc<tir::Identifier> {
-        let identifier = Rc::new(tir::Identifier {
-            name: name.to_string(),
+    /// add the definition `id` of `defs`, of type `ty`, with its documentation
+    fn bind(&mut self, id: sir::DefId, ty: tir::Type, defs: &Defs) -> tir::Identifier {
+        let info = &defs[&id];
+        let identifier = tir::Identifier {
+            name: info.name.value.clone(),
             id,
-        });
-        self.identifiers.insert(id, Rc::clone(&identifier));
+        };
+        self.defs.insert(
+            id,
+            tir::DefInfo {
+                id: identifier.clone(),
+                kind: info.kind,
+                ty,
+                doc: info.doc.clone(),
+            },
+        );
         identifier
+    }
+
+    /// `expr` restricted to `ty`, written at `span`
+    fn restrict(expr: tir::Expression, ty: tir::Type, span: Span) -> Result<tir::Expression> {
+        if expr.ty.is_compatible(&ty) {
+            Ok(tir::Expression { ty, ..expr })
+        } else {
+            Err(error::unexpected_type(&ty, &expr.ty, span).into())
+        }
     }
 
     /// convert constant
     fn constant(constant: &sir::Constant) -> tir::Constant {
         match constant {
-            sir::Constant::Number(n) => tir::Constant::nat(n.value.clone()),
-            sir::Constant::Character(c) => tir::Constant::character(c.value),
-            sir::Constant::Builtin(builtin) => tir::Constant::boolean(builtin.value.value()),
+            sir::Constant::Number(n) => tir::Constant::Nat(n.value.clone()),
+            sir::Constant::Character(c) => tir::Constant::Char(c.value),
+            sir::Constant::Builtin(builtin) => tir::Constant::Bool(builtin.value.value()),
         }
-        .with_spanned(constant)
     }
 
     /// convert expression
-    fn expression(&mut self, expression: &sir::Expression) -> Result<tir::Expression> {
-        match &expression.kind {
-            sir::ExpressionKind::Constant(c) => Ok(tir::Expression::Constant(Self::constant(c))),
+    fn expression(&self, expression: &sir::Expression) -> Result<tir::Expression> {
+        let (kind, ty) = match &expression.kind {
+            sir::ExpressionKind::Constant(c) => {
+                let c = Self::constant(c);
+                let ty = c.ty();
+                (tir::ExpressionKind::Constant(c), ty)
+            }
             sir::ExpressionKind::Variable(var) => {
-                let id = self.identifier(var)?;
-                let var = self
-                    .env
-                    .expr_var(&id, var.span)
-                    .map_err(|err| self.error(err))?;
-                Ok(tir::Expression::Variable(var))
-            }
-            sir::ExpressionKind::Typed { expr, ty } => {
-                let (expr, ty) = {
-                    let expr_res = self.expression(expr);
-                    let ty_res = self.ty(ty);
-                    expr_res.combine(ty_res)?
+                let def = self.def(var)?;
+                let var = tir::Node {
+                    value: def.id.clone(),
+                    span: var.span,
                 };
-                expr.restrict_ty(ty).map_err(|err| self.error(err))
+                (tir::ExpressionKind::Variable(var), def.ty.clone())
             }
-        }
-        .map(|expr| expr.with_spanned(expression))
+            sir::ExpressionKind::Typed { expr, ty: sir_ty } => {
+                let (expr, ty) = self.expression(expr).combine(self.ty(sir_ty))?;
+                let expr = Self::restrict(expr, ty, sir_ty.span())?;
+                (expr.kind, expr.ty)
+            }
+        };
+        Ok(tir::Expression {
+            kind,
+            ty,
+            span: expression.span,
+        })
     }
 
     /// convert type
-    fn ty(&mut self, ty: &sir::Type) -> Result<tir::Type> {
+    fn ty(&self, ty: &sir::Type) -> Result<tir::Type> {
         match ty {
-            sir::Type::Builtin(builtin) => Ok(tir::Type::Builtin(builtin.value.into())),
-            sir::Type::Variable(ty_var) => {
-                let id = self.identifier(ty_var)?;
-                let alias = self
-                    .env
-                    .type_alias(&id, ty_var.span)
-                    .map_err(|err| self.error(err))?;
-                Ok(tir::Type::Alias(alias))
-            }
-        }
-        .map(|ty_f| ty_f.with_spanned(ty))
-    }
-
-    /// the pattern of a definition, named in `defs`
-    fn pattern(
-        &mut self,
-        pattern: &sir::Pattern,
-        ty: &tir::Type,
-        defs: &BTreeMap<sir::DefId, sir::DefInfo>,
-    ) -> tir::Pattern {
-        match pattern {
-            sir::Pattern::Variable(var) => {
-                let id = self.bind(&defs[&var.value].name.value, var.value);
-                self.env.add_expr_def(id.clone(), ty.clone(), var.span());
-                tir::Pattern::Variable(tir::PatternVar::from(id).with_spanned(var))
+            sir::Type::Builtin(builtin) => Ok(tir::Type::Builtin(builtin.value)),
+            sir::Type::Variable(var) => {
+                let def = self.def(var)?;
+                Ok(tir::Type::Alias {
+                    name: def.id.clone(),
+                    ty: Box::new(def.ty.clone()),
+                })
             }
         }
     }
 
-    /// type an expression definition and add it to the environment, with its
-    /// documentation
+    /// type an expression definition and add it, with its documentation;
+    /// a definition that fails is not added
     fn definition(
         &mut self,
         def: &sir::ExpressionDefinition,
-        defs: &BTreeMap<sir::DefId, sir::DefInfo>,
+        defs: &Defs,
     ) -> Result<tir::ExpressionDefinition> {
         let (body, ty) = self
             .expression(&def.body)
             .combine(def.ty.as_ref().map(|ty| self.ty(ty)).transpose())?;
-        let pattern = self.pattern(&def.pattern, ty.as_ref().unwrap_or(body.ty()), defs);
-        let body = match ty {
-            Some(ty) => body.restrict_ty(ty).map_err(|err| self.error(err))?,
+        let body = match ty.zip(def.ty.as_ref()) {
+            Some((ty, sir_ty)) => Self::restrict(body, ty, sir_ty.span())?,
             None => body,
         };
         let sir::Pattern::Variable(var) = &def.pattern;
-        if let Some(doc) = &defs[&var.value].doc {
-            for id in pattern.names() {
-                self.env.set_doc(id, doc.clone());
-            }
-        }
-        Ok(tir::ExpressionDefinition::new(pattern, body))
-    }
-
-    /// type a type definition and add it to the environment, with its
-    /// documentation
-    fn type_definition(
-        &mut self,
-        def: &sir::TypeDefinition,
-        doc: Option<&tir::Documentation>,
-    ) -> Result<()> {
-        let ty = self.ty(&def.ty)?;
-        let id = self.bind(&def.name.value, def.id);
-        self.env.add_type_def(id.clone(), ty, def.name.span());
-        if let Some(doc) = doc {
-            self.env.set_doc(&id, doc.clone());
-        }
-        Ok(())
-    }
-
-    /// convert help variable
-    fn help(&mut self, var: &sir::Node<sir::DefId>) -> Result<tir::Help> {
-        let id = self.identifier(var)?;
-        self.env.help(&id, var.span).map_err(|err| self.error(err))
+        let id = self.bind(var.value, body.ty.clone(), defs);
+        Ok(tir::ExpressionDefinition {
+            pattern: tir::Pattern::Variable(tir::Node {
+                value: id,
+                span: var.span,
+            }),
+            body,
+        })
     }
 }
 
@@ -228,6 +200,7 @@ mod tests {
     use super::*;
     use crate::{lexer::Lexer, lowering::Lowerer, parser::Parser};
     use ir::location::SourceId;
+    use ir::tir::ty::BuiltinType;
 
     /// the passes up to typing, on the inputs of one project; an input with
     /// errors is forgotten, as `compile` does
@@ -247,14 +220,14 @@ mod tests {
             }
             typed
                 .map(|file| {
-                    file.commands()
+                    file.commands
                         .iter()
                         .map(|cmd| match &cmd.kind {
                             tir::CommandKind::ExpressionDefinition(def) => {
-                                format!("{:?}", def.ty())
+                                format!("{:?}", def.body.ty)
                             }
                             tir::CommandKind::Eval(expr) | tir::CommandKind::TypeOf(expr) => {
-                                format!("{:?}", expr.ty())
+                                format!("{:?}", expr.ty)
                             }
                             tir::CommandKind::Help(_) => "help".to_string(),
                         })
@@ -278,15 +251,8 @@ mod tests {
         Session::default().run(src)
     }
 
-    fn builtin(kind: &str) -> String {
-        format!(
-            "{:?}",
-            tir::Type::Builtin(match kind {
-                "nat" => tir::ty::Builtin::nat(),
-                "bool" => tir::ty::Builtin::bool(),
-                _ => tir::ty::Builtin::char(),
-            })
-        )
+    fn builtin(kind: BuiltinType) -> String {
+        format!("{:?}", tir::Type::Builtin(kind))
     }
 
     #[test]
@@ -294,10 +260,10 @@ mod tests {
         assert_eq!(
             type_source("Def a := 3.\nEval a.\nEval 'c'.\nEval __Constant_true__."),
             Ok(vec![
-                builtin("nat"),
-                builtin("nat"),
-                builtin("char"),
-                builtin("bool")
+                builtin(BuiltinType::Nat),
+                builtin(BuiltinType::Nat),
+                builtin(BuiltinType::Char),
+                builtin(BuiltinType::Bool)
             ])
         );
     }
@@ -306,6 +272,22 @@ mod tests {
     fn type_definitions_leave_no_command() {
         let types = type_source("Type T := __Type_Char__.\nDef c : T := 'x'.\nEval (c : T).");
         assert_eq!(types.map(|types| types.len()), Ok(2));
+    }
+
+    #[test]
+    fn restriction_keeps_the_alias_and_the_span() {
+        let mut session = Session::default();
+        let file = session
+            .typed("Type T := __Type_Char__.\nEval ('x' : T).")
+            .ok()
+            .unwrap();
+        let tir::CommandKind::Eval(expr) = &file.commands[0].kind else {
+            panic!("an Eval");
+        };
+        assert!(matches!(&expr.ty, tir::Type::Alias { name, .. } if name.name == "T"));
+        assert_eq!(expr.ty.builtin(), BuiltinType::Char);
+        // parentheses included
+        assert_eq!((expr.span.start(), expr.span.end()), (30, 39));
     }
 
     #[test]
@@ -334,7 +316,7 @@ mod tests {
         // `a` was not kept: the input had an error
         assert_eq!(session.run("Eval a."), Err(vec![301]));
         assert!(session.run("Def a := 1.").is_ok());
-        assert_eq!(session.run("Eval a."), Ok(vec![builtin("nat")]));
+        assert_eq!(session.run("Eval a."), Ok(vec![builtin(BuiltinType::Nat)]));
     }
 
     #[test]
@@ -347,9 +329,8 @@ mod tests {
         );
         let info = session
             .typer
-            .env()
-            .iter()
-            .find(|info| info.id.name() == "a")
+            .defs()
+            .find(|info| info.id.name == "a")
             .unwrap();
         assert_eq!(
             info.doc.as_ref().map(|doc| doc.lines().to_vec()),
@@ -371,7 +352,7 @@ mod tests {
         let sir = session.lowerer.run(&pir).ok().unwrap();
         let typed = Partial::from(session.typer.run(&sir));
         assert_eq!(typed.errors.len(), 1);
-        assert_eq!(typed.value.commands().len(), 2);
+        assert_eq!(typed.value.commands.len(), 2);
         let recovery = (&typed.errors)
             .into_iter()
             .next()

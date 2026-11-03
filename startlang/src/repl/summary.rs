@@ -1,4 +1,4 @@
-use ir::tir::{ExpressionDefinition, Pattern, Typed};
+use ir::tir::{ExpressionDefinition, Pattern};
 use pp::pretty::*;
 
 pub struct SummaryDefinition<'a>(&'a ExpressionDefinition);
@@ -11,7 +11,7 @@ impl<'a> From<&'a ExpressionDefinition> for SummaryDefinition<'a> {
 
 fn pretty_pattern<'a>(pat: &Pattern, theme: &Theme) -> Doc<'a> {
     match pat {
-        Pattern::Variable(var) => theme.def_var(&var.identifier().name()),
+        Pattern::Variable(var) => theme.def_var(&var.value.name),
     }
 }
 
@@ -19,10 +19,10 @@ impl Pretty for SummaryDefinition<'_> {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
         let def = self.0;
         Doc::nil()
-            .append(pretty_pattern(self.0.pattern(), theme))
+            .append(pretty_pattern(&def.pattern, theme))
             .append(Doc::space())
             .append(theme.operator(&":"))
             .append(Doc::space())
-            .append(def.ty().pretty(theme))
+            .append(def.body.ty.pretty(theme))
     }
 }

@@ -1,63 +1,44 @@
-use crate::location::{Span, Spanned, SpannedSet};
-use crate::tir::{Constant, Type, Typed, TypedMut};
+use crate::location::{Span, Spanned};
+use crate::tir::{Constant, Identifier, Node, Type};
 use pp::pretty::*;
-pub use variable::Variable;
 
 pub mod constant;
 pub mod definition;
 pub mod pattern;
-pub mod variable;
 
-// ==========================================================================
+// ============================================================================
 // Expression
-// ==========================================================================
+// ============================================================================
 
-pub enum Expression {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ExpressionKind {
+    /// use of a definition
+    Variable(Node<Identifier>),
+
+    /// constant
     Constant(Constant),
-    Variable(Variable),
 }
 
-impl TypedMut for Expression {
-    fn ty_mut(&mut self) -> &mut Type {
-        match self {
-            Expression::Constant(c) => c.ty_mut(),
-            Expression::Variable(v) => v.ty_mut(),
-        }
-    }
-}
-
-impl Typed for Expression {
-    fn ty(&self) -> &Type {
-        match self {
-            Expression::Constant(c) => c.ty(),
-            Expression::Variable(v) => v.ty(),
-        }
-    }
+/// typed expression, with the span of the source it comes from
+/// (parentheses included); `e : ty` leaves `e` with the type `ty`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Expression {
+    pub kind: ExpressionKind,
+    pub ty: Type,
+    pub span: Span,
 }
 
 impl Spanned for Expression {
     fn span(&self) -> Span {
-        match self {
-            Expression::Constant(c) => c.span(),
-            Expression::Variable(v) => v.span(),
-        }
-    }
-}
-
-impl SpannedSet for Expression {
-    fn set_span(&mut self, span: Span) {
-        match self {
-            Expression::Constant(c) => c.set_span(span),
-            Expression::Variable(v) => v.set_span(span),
-        }
+        self.span
     }
 }
 
 impl Pretty for Expression {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        match self {
-            Expression::Constant(c) => c.pretty(theme),
-            Expression::Variable(v) => v.pretty(theme),
+        match &self.kind {
+            ExpressionKind::Constant(c) => c.pretty(theme),
+            ExpressionKind::Variable(var) => theme.expr_var(&var.value),
         }
     }
 }

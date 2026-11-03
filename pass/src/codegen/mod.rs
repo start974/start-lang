@@ -6,7 +6,6 @@
 
 use crate::{Checked, CheckedResult, Partial};
 use errors::{Error, Message};
-use ir::tir::Typed as _;
 use ir::{lir, tir};
 use std::collections::HashMap;
 
@@ -21,7 +20,7 @@ mod error;
 #[derive(Debug, Default, Clone)]
 pub struct Codegen {
     /// global of every generated definition
-    globals: HashMap<tir::Identifier, lir::GlobalId>,
+    globals: HashMap<tir::DefId, lir::GlobalId>,
 }
 
 impl Codegen {
@@ -33,7 +32,7 @@ impl Codegen {
     /// the items it could generate, and every (internal) error
     pub fn run(&mut self, file: &Checked<tir::File>) -> CheckedResult<lir::File> {
         let items: Partial<Vec<_>> = file
-            .commands()
+            .commands
             .iter()
             .filter_map(|cmd| match &cmd.kind {
                 tir::CommandKind::ExpressionDefinition(def) => {
@@ -53,30 +52,22 @@ impl Codegen {
             .check()
     }
 
-    /// run-time type: aliases resolved
-    pub fn ty(ty: &tir::Type) -> lir::Type {
-        match ty {
-            tir::Type::Builtin(builtin) => builtin.kind(),
-            tir::Type::Alias(alias) => Self::ty(alias.ty()),
-        }
-    }
-
     /// constant
     pub fn constant(constant: &tir::Constant) -> lir::Constant {
-        match constant.kind() {
-            tir::ConstantKind::Nat(n) => lir::Constant::Nat(n.clone()),
-            tir::ConstantKind::Bool(b) => lir::Constant::Bool(*b),
-            tir::ConstantKind::Char(c) => lir::Constant::Char(*c),
+        match constant {
+            tir::Constant::Nat(n) => lir::Constant::Nat(n.clone()),
+            tir::Constant::Bool(b) => lir::Constant::Bool(*b),
+            tir::Constant::Char(c) => lir::Constant::Char(*c),
         }
     }
 
     /// expression
     pub fn expression(&self, expr: &tir::Expression) -> Result<lir::Expression, Error> {
-        match expr {
-            tir::Expression::Constant(c) => Ok(lir::Expression::Constant(Self::constant(c))),
-            tir::Expression::Variable(var) => self
+        match &expr.kind {
+            tir::ExpressionKind::Constant(c) => Ok(lir::Expression::Constant(Self::constant(c))),
+            tir::ExpressionKind::Variable(var) => self
                 .globals
-                .get(var.identifier())
+                .get(&var.value.id)
                 .map(|id| lir::Expression::Global(*id))
                 .ok_or_else(|| error::unknown_identifier(var)),
         }
@@ -84,19 +75,16 @@ impl Codegen {
 
     /// definition: a new global
     pub fn definition(&mut self, def: &tir::ExpressionDefinition) -> Result<lir::Global, Error> {
-        let init = self.expression(def.body())?;
-        match def.pattern() {
-            tir::Pattern::Variable(var) => {
-                let id = lir::GlobalId::new(self.globals.len());
-                self.globals.insert(var.identifier().clone(), id);
-                Ok(lir::Global {
-                    id,
-                    symbol: var.identifier().to_string(),
-                    ty: Self::ty(def.ty()),
-                    init,
-                })
-            }
-        }
+        let init = self.expression(&def.body)?;
+        let tir::Pattern::Variable(var) = &def.pattern;
+        let id = lir::GlobalId::new(self.globals.len());
+        self.globals.insert(var.value.id, id);
+        Ok(lir::Global {
+            id,
+            symbol: var.value.to_string(),
+            ty: def.body.ty.builtin(),
+            init,
+        })
     }
 }
 
@@ -104,38 +92,39 @@ impl Codegen {
 mod tests {
     use super::*;
     use ir::location::Span;
-    use ir::sir::DefId;
-    use ir::tir::{Env, Identifier, PatternVar};
-    use std::rc::Rc;
+    use ir::tir::ty::BuiltinType;
 
-    fn ident(name: &str, id: usize) -> Rc<Identifier> {
-        Rc::new(Identifier {
-            name: name.to_string(),
-            id: DefId(id),
-        })
+    fn var(name: &str, id: usize) -> tir::Node<tir::Identifier> {
+        tir::Node {
+            value: tir::Identifier {
+                name: name.to_string(),
+                id: tir::DefId(id),
+            },
+            span: Span::default(),
+        }
     }
 
-    /// `a := 3` then `b := a`, through the typing environment
+    fn expr(kind: tir::ExpressionKind) -> tir::Expression {
+        tir::Expression {
+            kind,
+            ty: tir::Type::Builtin(BuiltinType::Nat),
+            span: Span::default(),
+        }
+    }
+
+    /// `a := 3` then `b := a`
     #[test]
     fn definitions_become_dense_globals() {
-        let mut env = Env::default();
         let mut codegen = Codegen::default();
-        let nat = tir::Type::Builtin(tir::ty::Builtin::nat());
-
-        let a = ident("a", 0);
-        let def_a = tir::ExpressionDefinition::new(
-            tir::Pattern::Variable(PatternVar::from(a.clone())),
-            tir::Expression::Constant(tir::Constant::nat(3u8.into())),
-        );
+        let def_a = tir::ExpressionDefinition {
+            pattern: tir::Pattern::Variable(var("a", 0)),
+            body: expr(tir::ExpressionKind::Constant(tir::Constant::Nat(3u8.into()))),
+        };
         let global_a = codegen.definition(&def_a).unwrap();
-        env.add_expr_def(a.clone(), nat, Span::default());
-
-        let b = ident("b", 1);
-        let use_a = env.expr_var(&a, Span::default()).unwrap();
-        let def_b = tir::ExpressionDefinition::new(
-            tir::Pattern::Variable(PatternVar::from(b)),
-            tir::Expression::Variable(use_a),
-        );
+        let def_b = tir::ExpressionDefinition {
+            pattern: tir::Pattern::Variable(var("b", 1)),
+            body: expr(tir::ExpressionKind::Variable(var("a", 0))),
+        };
         let global_b = codegen.definition(&def_b).unwrap();
 
         assert_eq!(global_a.id, lir::GlobalId::new(0));
@@ -151,32 +140,29 @@ mod tests {
 
     #[test]
     fn unknown_identifier_is_an_error() {
-        let mut env = Env::default();
-        let a = ident("a", 0);
-        env.add_expr_def(
-            a.clone(),
-            tir::Type::Builtin(tir::ty::Builtin::bool()),
-            Span::default(),
-        );
-        let use_a = tir::Expression::Variable(env.expr_var(&a, Span::default()).unwrap());
-
-        let codegen = Codegen::default();
+        let use_a = expr(tir::ExpressionKind::Variable(var("a", 0)));
         assert_eq!(
-            codegen.expression(&use_a).map_err(|err| err.code()),
+            Codegen::default()
+                .expression(&use_a)
+                .map_err(|err| err.code()),
             Err(901)
         );
     }
 
     #[test]
     fn alias_is_resolved() {
-        let mut env = Env::default();
-        let t = ident("T", 0);
-        env.add_type_def(
-            t.clone(),
-            tir::Type::Builtin(tir::ty::Builtin::char()),
-            Span::default(),
-        );
-        let alias = tir::Type::Alias(env.type_alias(&t, Span::default()).unwrap());
-        assert_eq!(Codegen::ty(&alias), lir::Type::Char);
+        let mut codegen = Codegen::default();
+        let def = tir::ExpressionDefinition {
+            pattern: tir::Pattern::Variable(var("c", 1)),
+            body: tir::Expression {
+                kind: tir::ExpressionKind::Constant(tir::Constant::Char('x')),
+                ty: tir::Type::Alias {
+                    name: var("T", 0).value,
+                    ty: Box::new(tir::Type::Builtin(BuiltinType::Char)),
+                },
+                span: Span::default(),
+            },
+        };
+        assert_eq!(codegen.definition(&def).unwrap().ty, lir::Type::Char);
     }
 }

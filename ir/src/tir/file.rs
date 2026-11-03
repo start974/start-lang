@@ -5,22 +5,7 @@ use crate::tir::Command;
 // ============================================================================
 
 /// typed commands of a file, in source order
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct File {
-    commands: Vec<Command>,
-}
-
-impl File {
-    /// get commands
-    pub fn commands(&self) -> &[Command] {
-        &self.commands
-    }
-}
-
-impl FromIterator<Command> for File {
-    fn from_iter<I: IntoIterator<Item = Command>>(iter: I) -> Self {
-        Self {
-            commands: iter.into_iter().collect(),
-        }
-    }
+    pub commands: Vec<Command>,
 }

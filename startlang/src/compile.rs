@@ -20,7 +20,7 @@ pub fn outputs(compiled: &Compiled) -> impl Iterator<Item = Output<'_>> {
     let mut values = compiled.values.iter().cloned();
     compiled
         .tir
-        .commands()
+        .commands
         .iter()
         .map(move |cmd| match &cmd.kind {
             tir::CommandKind::ExpressionDefinition(def) => Output::Defined(def),
@@ -28,7 +28,7 @@ pub fn outputs(compiled: &Compiled) -> impl Iterator<Item = Output<'_>> {
                 values.next().expect("the vm computes a value per Eval"),
                 expr.span(),
             ),
-            tir::CommandKind::TypeOf(expr) => Output::Type(tir::Typed::ty(expr), cmd.span()),
+            tir::CommandKind::TypeOf(expr) => Output::Type(&expr.ty, cmd.span),
             tir::CommandKind::Help(help) => Output::Help(help),
         })
 }
