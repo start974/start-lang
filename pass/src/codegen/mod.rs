@@ -48,7 +48,9 @@ impl Codegen {
             })
             .collect();
         items
-            .map(|items| items.into_iter().flatten().collect())
+            .map(|items| lir::File {
+                items: items.into_iter().flatten().collect(),
+            })
             .check()
     }
 
@@ -77,7 +79,7 @@ impl Codegen {
     pub fn definition(&mut self, def: &tir::ExpressionDefinition) -> Result<lir::Global, Error> {
         let init = self.expression(&def.body)?;
         let tir::Pattern::Variable(var) = &def.pattern;
-        let id = lir::GlobalId::new(self.globals.len());
+        let id = lir::GlobalId(self.globals.len());
         self.globals.insert(var.value.id, id);
         Ok(lir::Global {
             id,
@@ -127,14 +129,14 @@ mod tests {
         };
         let global_b = codegen.definition(&def_b).unwrap();
 
-        assert_eq!(global_a.id, lir::GlobalId::new(0));
+        assert_eq!(global_a.id, lir::GlobalId(0));
         assert_eq!(global_a.symbol, "a__0");
         assert_eq!(global_a.ty, lir::Type::Nat);
         assert_eq!(
             global_a.init,
             lir::Expression::Constant(lir::Constant::Nat(3u8.into()))
         );
-        assert_eq!(global_b.id, lir::GlobalId::new(1));
+        assert_eq!(global_b.id, lir::GlobalId(1));
         assert_eq!(global_b.init, lir::Expression::Global(global_a.id));
     }
 
