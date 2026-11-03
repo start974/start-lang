@@ -21,11 +21,34 @@ mod error;
 pub struct Codegen {
     /// global of every generated definition
     globals: HashMap<tir::DefId, lir::GlobalId>,
+    /// print the `lir`; set again by `Stdlib::debug` once the stdlib is loaded
+    pub(crate) debug: bool,
+}
+
+/// arguments of a `Codegen`
+#[derive(Debug, Default, Clone, Copy)]
+pub struct CodegenBuilder {
+    debug: bool,
+}
+
+impl CodegenBuilder {
+    /// print the `lir`
+    pub fn debug(mut self, debug: bool) -> Self {
+        self.debug = debug;
+        self
+    }
+
+    pub fn build(self) -> Codegen {
+        Codegen {
+            debug: self.debug,
+            ..Codegen::default()
+        }
+    }
 }
 
 impl Codegen {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn builder() -> CodegenBuilder {
+        CodegenBuilder::default()
     }
 
     /// code of a typed file: a global per definition, an item per `Eval`;
@@ -51,7 +74,7 @@ impl Codegen {
             .map(|items| lir::File {
                 items: items.into_iter().flatten().collect(),
             })
-            .check()
+            .check_debug(self.debug)
     }
 
     /// constant
@@ -132,7 +155,7 @@ mod tests {
         let global_b = codegen.definition(&def_b).unwrap();
 
         assert_eq!(global_a.id, lir::GlobalId(0));
-        assert_eq!(global_a.symbol, "a__0");
+        assert_eq!(global_a.symbol, "a@0");
         assert_eq!(global_a.ty, lir::Type::Nat);
         assert_eq!(
             global_a.init,

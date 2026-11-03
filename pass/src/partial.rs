@@ -1,4 +1,5 @@
 use errors::{Error, Errors};
+use pp::{Pretty, Theme};
 use std::ops::Deref;
 
 // ============================================================================
@@ -45,6 +46,19 @@ impl<T> Partial<T> {
         } else {
             Err(self)
         }
+    }
+
+    /// `check`, and print the value on stdout if `debug` and there is no
+    /// error (`startlang run --debug`)
+    pub(crate) fn check_debug(self, debug: bool) -> CheckedResult<T>
+    where
+        T: Pretty,
+    {
+        let checked = self.check();
+        if let (true, Ok(value)) = (debug, &checked) {
+            println!("{}", value.make_string(&Theme::colored()));
+        }
+        checked
     }
 
     /// add an error

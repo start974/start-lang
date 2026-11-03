@@ -17,6 +17,8 @@ pub type ErrorChumsky<'tokens> = chumsky::error::Rich<'tokens, Token<TokenKind>>
 pub struct Parser {
     /// source of the tokens, kept in the `pir::File`
     source: SourceId,
+    /// print the `pir`
+    debug: bool,
 }
 
 impl Parser {
@@ -49,7 +51,7 @@ impl Parser {
         };
         Partial::ok(file)
             .with_errors(errs.iter().map(error::error_parsing))
-            .check()
+            .check_debug(self.debug)
     }
 }
 
@@ -57,6 +59,7 @@ impl Parser {
 #[derive(Debug, Default, Clone)]
 pub struct ParserBuilder {
     source: SourceId,
+    debug: bool,
 }
 
 impl ParserBuilder {
@@ -66,9 +69,16 @@ impl ParserBuilder {
         self
     }
 
+    /// print the `pir`
+    pub fn debug(mut self, debug: bool) -> Self {
+        self.debug = debug;
+        self
+    }
+
     pub fn build(self) -> Parser {
         Parser {
             source: self.source,
+            debug: self.debug,
         }
     }
 }

@@ -137,11 +137,13 @@ Each step below ends with the tests passing.
 
 ## 6. Debug output
 
-- [ ] `startlang run --debug lexer,parser,typer <file>` (also `lowering` to
-      print `sir`).
+- [x] `startlang run --debug lexer,parser,lowering,typer,codegen <file>`: each phase
+      prints the IR it built.
 - [x] `Set` / `Unset` removed from the language (lexer keywords, parser,
       `pir`, `sir`, tests).
-- [ ] Port `startlang/tests/cmd/{lexer,parser,typer}/debug*.in` to `--debug`.
+- [x] Port `startlang/tests/cmd/{lexer,parser,typer}/debug*.in` to `--debug`
+      (`lexer`, `parser`, `typer`); `lowering`, `codegen`, several phases,
+      errors in `startlang/tests/cmd/run/debug.trycmd`.
 
 ## 7. Tests
 

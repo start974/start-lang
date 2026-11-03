@@ -1,0 +1,87 @@
+# `--debug`: each phase prints the IR it built
+
+## `lowering`: `sir`
+
+```
+$ startlang run --debug lowering sir.st
+Type N@7 := Nat@1.
+(** the answer *)
+Definition a@8 : N@7 := (42 : Nat@1).
+Definition b@9 := true@4.
+Definition c@10 := 'c'.
+Eval a@8.
+TypeOf b@9.
+Help a@8.
+42
+𝔹
+a : N
+  the answer
+
+```
+
+## `codegen`: `lir`
+
+```
+$ startlang run --debug codegen ok.st
+global #2 a@7 : ℕ := 1
+eval #2
+1
+
+```
+
+## Several phases, in pass order whatever the order given
+
+```
+$ startlang run --debug codegen,lexer,typer ok.st
+IDENTIFIER(Def)
+IDENTIFIER(a)
+OPERATOR(:=)
+NUMBER(1)
+OPERATOR(.)
+IDENTIFIER(Eval)
+IDENTIFIER(a)
+OPERATOR(.)
+END_OF_INPUT
+Definition a@7 : ℕ := 1.
+Eval a@7.
+global #2 a@7 : ℕ := 1
+eval #2
+1
+
+```
+
+## Only the phases without error
+
+The lowering fails: the parser prints its IR, the lowering and the typer
+print nothing.
+
+```
+$ startlang run --debug parser,lowering,typer error.st
+? 45
+Def a := 1.
+Eval b.
+[301] Error: Variable not found.
+   ╭─[ error.st:2:6 ]
+   │
+ 2 │ Eval b.
+   │      ┬  
+   │      ╰── Expression variable b not found.
+   │ 
+   │ Help: define b before this use, or check its spelling
+   │ 
+   │ Note: (the command is left out)
+───╯
+
+```
+
+## Not a phase
+
+```
+$ startlang run --debug tokens ok.st
+? 2
+error: invalid value 'tokens' for '--debug <DEBUG>'
+  [possible values: lexer, parser, lowering, typer, codegen]
+
+For more information, try '--help'.
+
+```

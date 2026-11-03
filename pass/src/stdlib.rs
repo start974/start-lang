@@ -23,6 +23,17 @@ pub struct Compiled {
     pub values: Checked<Vec<Value>>,
 }
 
+/// the passes that print the IR they built on stdout, when a text goes
+/// through them (`startlang run --debug`)
+#[derive(Debug, Default, Clone, Copy)]
+pub struct Debug {
+    pub lexer: bool,
+    pub parser: bool,
+    pub lowering: bool,
+    pub typer: bool,
+    pub codegen: bool,
+}
+
 /// state of a project, with the stdlib loaded; a clone is a snapshot, to go
 /// back to after a text with errors
 #[derive(Clone)]
@@ -31,6 +42,8 @@ pub struct Stdlib {
     pub typer: Typer,
     pub codegen: Codegen,
     pub vm: Vm,
+    /// flags of the lexer and the parser, built for each text
+    debug: Debug,
 }
 
 impl Stdlib {
@@ -40,16 +53,27 @@ impl Stdlib {
     /// if the stdlib has an error: it is part of the compiler
     pub fn load() -> Self {
         let mut stdlib = Stdlib {
-            lowerer: Lowerer::new(),
-            typer: Typer::new(),
-            codegen: Codegen::new(),
+            lowerer: Lowerer::builder().build(),
+            typer: Typer::builder().build(),
+            codegen: Codegen::builder().build(),
             vm: Vm::new(),
+            debug: Debug::default(),
         };
         let source = SourceId::File(PathBuf::from("stdlib.st"));
         stdlib
             .run(source, SOURCE, 0)
             .expect("the stdlib has no error");
         stdlib
+    }
+
+    /// the passes in `debug` print their IR for the next texts (not for the
+    /// stdlib)
+    pub fn debug(mut self, debug: Debug) -> Self {
+        self.lowerer.debug = debug.lowering;
+        self.typer.debug = debug.typer;
+        self.codegen.debug = debug.codegen;
+        self.debug = debug;
+        self
     }
 
     /// every pass on `text`, whose first byte is at `offset` in `source`;
@@ -65,8 +89,16 @@ impl Stdlib {
     }
 
     fn passes(&mut self, source: SourceId, text: &str, offset: usize) -> Result<Compiled, Errors> {
-        let tokens = Lexer::builder().offset(offset).build().run(text)?;
-        let pir = Parser::builder().source(source).build().run(&tokens)?;
+        let tokens = Lexer::builder()
+            .offset(offset)
+            .debug(self.debug.lexer)
+            .build()
+            .run(text)?;
+        let pir = Parser::builder()
+            .source(source)
+            .debug(self.debug.parser)
+            .build()
+            .run(&tokens)?;
         let sir = self.lowerer.run(&pir)?;
         let tir = self.typer.run(&sir)?;
         let lir = self.codegen.run(&tir)?;

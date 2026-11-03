@@ -22,20 +22,16 @@ impl Spanned for ExpressionDefinition {
 
 impl Pretty for ExpressionDefinition {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        Doc::nil()
-            .append(theme.keyword(&"Definition"))
-            .append(Doc::space())
-            .append(self.pattern.pretty(theme))
-            .append(Doc::group(
-                Doc::nil().append(
-                    Doc::line()
-                        .append(theme.operator(&":"))
-                        .append(Doc::space())
-                        .append(self.body.ty.pretty(theme))
-                        .group()
-                        .nest(4),
-                ),
-            ))
+        self.pattern
+            .pretty(theme)
+            .append(
+                Doc::line()
+                    .append(theme.operator(&":"))
+                    .append(Doc::space())
+                    .append(self.body.ty.pretty(theme))
+                    .nest(4)
+                    .group(),
+            )
             .append(Doc::space())
             .append(theme.operator(&":="))
             .append(Doc::line().append(self.body.pretty(theme).group()).nest(2))

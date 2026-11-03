@@ -31,11 +31,34 @@ pub struct Lowerer {
     defs: Vec<sir::DefInfo>,
     /// the definition each name refers to at this point: the last one
     scope: HashMap<String, sir::DefId>,
+    /// print the `sir`; set again by `Stdlib::debug` once the stdlib is loaded
+    pub(crate) debug: bool,
+}
+
+/// arguments of a `Lowerer`
+#[derive(Debug, Default, Clone, Copy)]
+pub struct LowererBuilder {
+    debug: bool,
+}
+
+impl LowererBuilder {
+    /// print the `sir`
+    pub fn debug(mut self, debug: bool) -> Self {
+        self.debug = debug;
+        self
+    }
+
+    pub fn build(self) -> Lowerer {
+        Lowerer {
+            debug: self.debug,
+            ..Lowerer::default()
+        }
+    }
 }
 
 impl Lowerer {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn builder() -> LowererBuilder {
+        LowererBuilder::default()
     }
 
     /// the definition `id`
@@ -69,7 +92,7 @@ impl Lowerer {
                 commands: commands.into_iter().flatten().collect(),
                 defs,
             })
-            .check()
+            .check_debug(self.debug)
     }
 
     /// the `FileId` of `source`, given the first time it is seen
@@ -95,10 +118,13 @@ impl Lowerer {
         &self,
         var: &pir::Variable,
         kind: Option<sir::DefKind>,
-    ) -> Result<sir::Node<sir::DefId>> {
+    ) -> Result<sir::Node<sir::Identifier>> {
         match self.scope.get(&var.value) {
             Some(id) if kind.is_none_or(|kind| self.def(*id).kind == kind) => Ok(sir::Node {
-                value: *id,
+                value: sir::Identifier {
+                    name: var.value.clone(),
+                    id: *id,
+                },
                 span: var.span(),
             }),
             // one scope for both kinds: a definition of the other kind hides it
@@ -149,7 +175,7 @@ impl Lowerer {
         let name = Self::node(var);
         let span = name.span;
         let id = self.define(sir::DefInfo {
-            name,
+            name: name.clone(),
             kind: sir::DefKind::Expression,
             file,
             span: def.span(),
@@ -157,7 +183,13 @@ impl Lowerer {
         });
         let (body, ty) = body?;
         Ok(sir::ExpressionDefinition {
-            pattern: sir::Pattern::Variable(sir::Node { value: id, span }),
+            pattern: sir::Pattern::Variable(sir::Node {
+                value: sir::Identifier {
+                    name: name.value,
+                    id,
+                },
+                span,
+            }),
             ty,
             body,
         })
@@ -283,9 +315,12 @@ mod tests {
     }
 
     /// a use of `name` at `start`, resolved to the definition `id`
-    fn reference(name: &str, id: usize, start: usize) -> sir::Node<sir::DefId> {
+    fn reference(name: &str, id: usize, start: usize) -> sir::Node<sir::Identifier> {
         sir::Node {
-            value: sir::DefId(id),
+            value: sir::Identifier {
+                name: name.to_string(),
+                id: sir::DefId(id),
+            },
             span: Span::new(start, start + name.len()),
         }
     }
@@ -474,7 +509,7 @@ mod tests {
     #[test]
     fn name_hidden_by_the_other_kind() {
         let lowered = lower_in(
-            &mut Lowerer::new(),
+            &mut Lowerer::builder().build(),
             SourceId::Repl,
             "Type N := __Type_Nat__.\nDef N := 1.\nDef x : N := 2.",
         );
@@ -487,7 +522,7 @@ mod tests {
 
     #[test]
     fn the_project_grows_with_each_file() {
-        let mut lowerer = Lowerer::new();
+        let mut lowerer = Lowerer::builder().build();
         let stdlib = SourceId::File(PathBuf::from("stdlib.st"));
         let first = lower_in(&mut lowerer, stdlib.clone(), "Def a := 1.");
         let second = lower_in(&mut lowerer, SourceId::Repl, "Def b := a.");

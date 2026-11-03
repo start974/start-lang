@@ -1,5 +1,6 @@
 use crate::location::{Span, Spanned};
-use crate::sir::{DefId, Node};
+use crate::sir::{Identifier, Node};
+use pp::pretty::*;
 
 pub mod definition;
 
@@ -17,7 +18,16 @@ pub use crate::common::BuiltinType;
 pub enum Type {
     Builtin(Node<BuiltinType>),
     /// use of a type definition, resolved by the lowering
-    Variable(Node<DefId>),
+    Variable(Node<Identifier>),
+}
+
+impl Pretty for Type {
+    fn pretty(&self, theme: &Theme) -> Doc<'_> {
+        match self {
+            Type::Builtin(builtin) => builtin.value.pretty(theme),
+            Type::Variable(var) => theme.ty_var(&var.value),
+        }
+    }
 }
 
 impl Spanned for Type {

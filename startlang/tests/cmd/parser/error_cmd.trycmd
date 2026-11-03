@@ -14,7 +14,7 @@ $ startlang run file1 file2
 ? 2
 error: unexpected argument 'file2' found
 
-Usage: startlang run <PATH>
+Usage: startlang run [OPTIONS] <PATH>
 
 For more information, try '--help'.
 

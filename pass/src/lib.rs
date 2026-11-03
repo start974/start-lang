@@ -7,7 +7,7 @@
 //! ```
 //!
 //! Each pass is built with its builder when it takes arguments
-//! (`Lexer::builder().offset(n).build()`), else with `new` (`Typer::new()`); its
+//! (`Lexer::builder().offset(n).build()`), else with `new` (`Vm::new()`); its
 //! `run` takes the `Checked` file of the pass before and returns, through
 //! `Partial::check`, either the next representation, `Checked` (no error), or a
 //! `Partial`: the representation as far as it could be built, and every

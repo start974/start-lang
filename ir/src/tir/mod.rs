@@ -2,7 +2,7 @@
 //!
 //! Built from `sir` by `typing`: same layout as `sir`, a span on every node,
 //! every expression has its type, and every use names its definition
-//! (`Identifier`, shown `a__0`). Type definitions leave no command: they only
+//! (`Identifier`, shown `a@0`). Type definitions leave no command: they only
 //! give a type to their name.
 
 pub mod command;

@@ -2,7 +2,7 @@
 //!
 //! Built from `pir` by the lowering: one node per construct, a span on every
 //! node, no comments, no parentheses and no keyword variants. Every
-//! definition gets a `DefId`, and every use is resolved to it (`Node<DefId>`).
+//! definition gets a `DefId`, and every use is resolved to it (`Node<Identifier>`, shown `a@3`).
 
 pub mod command;
 pub mod definition;
@@ -14,7 +14,7 @@ pub mod ty;
 pub use crate::common::Documentation;
 pub use command::Command;
 pub use command::CommandKind;
-pub use definition::{DefId, DefInfo, DefKind, FileId};
+pub use definition::{DefId, DefInfo, DefKind, FileId, Identifier};
 pub use expression::Expression;
 pub use expression::ExpressionKind;
 pub use expression::constant::Constant;
