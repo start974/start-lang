@@ -23,7 +23,7 @@ impl Vm {
                 .with_error(err.with_recovery(Message::text("the value is not computed.")))
         };
         let values: Partial<Vec<_>> = file
-            .items()
+            .items
             .iter()
             .map(|item| match item {
                 Item::Global(global) => match self.define(global) {
@@ -43,7 +43,7 @@ impl Vm {
 
     /// value of a global, `None` if it was never defined
     pub fn get(&self, id: GlobalId) -> Option<&Value> {
-        self.globals.get(id.index()).and_then(Option::as_ref)
+        self.globals.get(id.0).and_then(Option::as_ref)
     }
 
     /// evaluate an expression; `None` if it reads an undefined global
@@ -58,7 +58,7 @@ impl Vm {
     /// value reads an undefined global
     pub fn define(&mut self, global: &Global) -> Option<&Value> {
         let value = self.eval(&global.init)?;
-        let index = global.id.index();
+        let index = global.id.0;
         if self.globals.len() <= index {
             self.globals.resize(index + 1, None);
         }
@@ -74,7 +74,7 @@ mod tests {
 
     fn global(index: usize, ty: Type, init: Expression) -> Global {
         Global {
-            id: GlobalId::new(index),
+            id: GlobalId(index),
             symbol: format!("g{index}"),
             ty,
             init,
@@ -106,8 +106,8 @@ mod tests {
     #[test]
     fn undefined_global() {
         let mut vm = Vm::default();
-        let b = global(1, Type::Bool, Expression::Global(GlobalId::new(0)));
+        let b = global(1, Type::Bool, Expression::Global(GlobalId(0)));
         assert_eq!(vm.define(&b), None);
-        assert_eq!(vm.eval(&Expression::Global(GlobalId::new(5))), None);
+        assert_eq!(vm.eval(&Expression::Global(GlobalId(5))), None);
     }
 }

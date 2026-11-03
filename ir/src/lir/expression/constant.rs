@@ -1,4 +1,3 @@
-use crate::lir::Type;
 use num_bigint::BigUint;
 use pp::pretty::*;
 
@@ -13,17 +12,6 @@ pub enum Constant {
     Nat(Nat),
     Bool(bool),
     Char(char),
-}
-
-impl Constant {
-    /// type of the constant
-    pub fn ty(&self) -> Type {
-        match self {
-            Constant::Nat(_) => Type::Nat,
-            Constant::Bool(_) => Type::Bool,
-            Constant::Char(_) => Type::Char,
-        }
-    }
 }
 
 impl Pretty for Constant {

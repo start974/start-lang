@@ -9,18 +9,7 @@ use std::fmt;
 /// identifier of a global, dense: the `n`-th global defined gets `n`, so a
 /// backend can store the globals in a vector
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct GlobalId(usize);
-
-impl GlobalId {
-    pub fn new(index: usize) -> Self {
-        Self(index)
-    }
-
-    /// index of the global
-    pub fn index(self) -> usize {
-        self.0
-    }
-}
+pub struct GlobalId(pub usize);
 
 impl fmt::Display for GlobalId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -70,7 +59,7 @@ mod tests {
     #[test]
     fn global_pretty() {
         let global = Global {
-            id: GlobalId::new(0),
+            id: GlobalId(0),
             symbol: "a__0".to_string(),
             ty: Type::Nat,
             init: Expression::Constant(Constant::Nat(3u8.into())),
