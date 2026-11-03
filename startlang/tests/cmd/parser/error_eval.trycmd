@@ -12,7 +12,8 @@ $ startlang run no_space.st
    │ 
    │ Note: Expected : "command"
    │       Found    : "Eval1".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -31,7 +32,8 @@ $ startlang run parent_unclosed1.st
    │ 
    │ Note: Expected : ":", ")"
    │       Found    : ".".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -49,7 +51,8 @@ $ startlang run parent_unclosed2.st
    │ 
    │ Note: Expected : ":", ")"
    │       Found    : ".".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -66,7 +69,8 @@ $ startlang run just_keyword.st
    │ 
    │ Note: Expected : "expression"
    │       Found    : ".".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 [202] Error: Parsing error
    ╭─[ just_keyword.st:2:2 ]
@@ -77,7 +81,8 @@ $ startlang run just_keyword.st
    │ 
    │ Note: Expected : "expression"
    │       Found    : ".".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -94,7 +99,8 @@ $ startlang run not_end.st
    │ 
    │ Note: Expected : ":", "."
    │       Found    : "end of input".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```

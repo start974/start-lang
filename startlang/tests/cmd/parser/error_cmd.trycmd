@@ -33,7 +33,8 @@ $ startlang run command.st
    │ 
    │ Note: Expected : "command"
    │       Found    : "3".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```
@@ -50,7 +51,8 @@ $ startlang run last_command.st
    │ 
    │ Note: Expected : "command"
    │       Found    : "a".
-   │       Recovery: the command is skipped up to the next ".".
+   │       
+   │       (the command is skipped up to the next ".")
 ───╯
 
 ```

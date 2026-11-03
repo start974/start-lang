@@ -114,7 +114,7 @@ mod tests {
                 .map(|msg| msg.make_string(&MessageTheme::default()));
             assert_eq!(
                 recovery.as_deref(),
-                Some("the command is skipped up to the next \".\".")
+                Some("the command is skipped up to the next \".\"")
             );
         }
     }

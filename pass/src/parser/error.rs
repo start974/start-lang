@@ -36,6 +36,6 @@ pub fn error_parsing(err: &ErrorChumsky<'_>) -> Error {
             }),
         ))
         .with_recovery(Message::text(
-            "the command is skipped up to the next \".\".",
+            "the command is skipped up to the next \".\"",
         ))
 }

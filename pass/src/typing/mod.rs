@@ -48,7 +48,7 @@ impl Typer {
                 })),
                 Err(errs) => Partial::ok(None).with_errors(
                     errs.into_iter()
-                        .map(|err| err.with_recovery(Message::text("the command is left out."))),
+                        .map(|err| err.with_recovery(Message::text("the command is left out"))),
                 ),
             })
             .collect();
@@ -359,7 +359,7 @@ mod tests {
             .and_then(|err| err.recovery());
         assert_eq!(
             recovery.map(|msg| msg.make_string(&pp::MessageTheme::default())),
-            Some("the command is left out.".to_string())
+            Some("the command is left out".to_string())
         );
     }
 }

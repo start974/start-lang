@@ -11,7 +11,7 @@ $ startlang run def_expr_type_not_found.st
    │         ─────┬─────  
    │              ╰─────── Type variable Not_defined not found.
    │ 
-   │ Note: Recovery: the command is left out.
+   │ Note: (the command is left out)
 ───╯
 
 ```
@@ -28,7 +28,7 @@ $ startlang run var_not_found.st
    │      ─────┬─────  
    │           ╰─────── Expression variable not_defined not found.
    │ 
-   │ Note: Recovery: the command is left out.
+   │ Note: (the command is left out)
 ───╯
 
 ```
@@ -44,7 +44,7 @@ $ startlang run def_type_not_found.st
    │           ──────┬─────  
    │                 ╰─────── Type variable Not_definied not found.
    │ 
-   │ Note: Recovery: the command is left out.
+   │ Note: (the command is left out)
 ───╯
 
 ```
@@ -63,7 +63,8 @@ $ startlang run type_mismatch.st
    │ 
    │ Note: Expected : ℕ
    │       Found    : 𝔹
-   │       Recovery: the command is left out.
+   │       
+   │       (the command is left out)
 ───╯
 [302] Error: Type mismatch.
    ╭─[ type_mismatch.st:7:20 ]
@@ -74,7 +75,8 @@ $ startlang run type_mismatch.st
    │ 
    │ Note: Expected : Bool
    │       Found    : ℕ
-   │       Recovery: the command is left out.
+   │       
+   │       (the command is left out)
 ───╯
 
 ```
@@ -89,7 +91,7 @@ $ startlang run many_error_def.st
    │         ───────┬──────  
    │                ╰──────── Type variable Type_not_exist not found.
    │ 
-   │ Note: Recovery: the command is left out.
+   │ Note: (the command is left out)
 ───╯
 [301] Error: Variable not found.
    ╭─[ many_error_def.st:1:40 ]
@@ -98,7 +100,7 @@ $ startlang run many_error_def.st
    │                                        ─────────┬─────────  
    │                                                 ╰─────────── Type variable Type_not_exist_also not found.
    │ 
-   │ Note: Recovery: the command is left out.
+   │ Note: (the command is left out)
 ───╯
 
 ```
