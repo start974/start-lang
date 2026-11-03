@@ -6,7 +6,7 @@ Goal: a functional language with a proof assistant, built step by step from
 the current single-file language. Each version is small and ends in a
 working state.
 
-Current version: **v0.1.0**
+Current version: **v0.2.0-beta.1**
 
 The decisions (syntax, modules, visibility, memory, proofs, …) are in
 [doc/design](../design/README.md); this roadmap only says *when* each part

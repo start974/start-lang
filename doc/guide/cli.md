@@ -2,7 +2,7 @@
 
 [← Home](../Home.md)
 
-> Describes v0.1.0. The target CLI is in [design/tooling](../design/tooling.md).
+> Describes v0.2.0-beta.1. The target CLI is in [design/tooling](../design/tooling.md).
 
 ```
 startlang <COMMAND>
@@ -10,7 +10,7 @@ startlang <COMMAND>
 
 | Command | Description |
 |---------|-------------|
-| `run <path>` | Interprets a file. Exit code `0` on success, non-zero on error |
+| `run [--debug <phases>] <path>` | Interprets a file. Exit code `0` on success, non-zero on error |
 | `repl` | Starts the interactive session |
 | `format <path>` | Formats a file (see below) |
 | `lsp` | Starts the language server on stdio |
@@ -39,5 +39,27 @@ Errors print a code, the source excerpt and labels:
 
 ## Debugging
 
-The `Set` / `Unset` debug commands are removed; the debug output comes back
-as a command line option, `startlang run --debug lexer,parser,lowering,typer,codegen <file>`.
+`--debug` takes a comma-separated list of phases; each one prints the
+representation it built, before the outputs of the file:
+
+| Phase | Prints |
+|-------|--------|
+| `lexer` | the tokens, one per line |
+| `parser` | `pir`: the file as written |
+| `lowering` | `sir`: one node per construct, every name shown `name@id` |
+| `typer` | `tir`: every definition with its type |
+| `codegen` | `lir`: a global per definition (`global #2 a@7 : ℕ := 1`), an `eval` per `Eval` |
+
+The phases print in pipeline order, whatever the order given. A phase with
+errors prints nothing, and the phases after it do not run:
+
+```
+$ startlang run --debug lowering,typer file.st
+Definition a@7 := 1.
+Eval a@7.
+Definition a@7 : ℕ := 1.
+Eval a@7.
+1
+```
+
+The `Set` / `Unset` debug commands of v0.1 are removed.

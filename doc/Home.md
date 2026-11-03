@@ -4,7 +4,7 @@ startlang is a functional language with a proof assistant, built step by step.
 This wiki is the documentation of the project: how to use it, how the language
 is defined, where it is going and what changed.
 
-Current version: **v0.1.0** — see the [changelog](./changelog/README.md).
+Current version: **v0.2.0-beta.1** — see the [changelog](./changelog/README.md).
 
 ## Guide
 
