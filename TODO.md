@@ -147,11 +147,12 @@ Each step below ends with the tests passing.
 
 ## 7. Tests
 
-- [ ] Unit tests: `lowering` (one test per `pir` construct), lexer and parser
+- [x] Unit tests: `lowering` (one test per `pir` construct), lexer and parser
       recovery, typing without cascade, error sorting.
-- [ ] CLI test: one file with a lexing, a parsing and a typing error (only the
-      lexing error is reported).
-- [ ] Review every changed `.trycmd` in `git diff startlang/tests/cmd`.
+- [x] CLI test: one file with a lexing, a parsing and a typing error (only the
+      lexing error is reported): `startlang/tests/cmd/run/phases.trycmd`.
+- [x] Review every changed `.trycmd` in `git diff startlang/tests/cmd`; a
+      type mismatch is now shown on the expression, not on the type.
 
 ## 8. Documentation and release
 
