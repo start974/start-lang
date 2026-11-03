@@ -1,0 +1,60 @@
+# The first phase with errors stops the chain
+
+## A lexing, a parsing and a typing error
+
+Only the lexing error is reported, and nothing runs.
+
+```
+$ startlang run three.st
+? 201
+[201] Error: Lexing error
+   ╭─[ three.st:1:12 ]
+   │
+ 1 │ Def a := 1 # 2.
+   │            ┬  
+   │            ╰── Lexer unknow token "#".
+   │ 
+   │ Help: remove or replace this character
+   │ 
+   │ Note: (the character is skipped)
+───╯
+
+```
+
+## Two typing errors
+
+Both are reported, in source order, and nothing runs (not even `Eval 2.`).
+
+```
+$ startlang run two_typing.st
+? 1
+[302] Error: Type mismatch.
+   ╭─[ two_typing.st:1:26 ]
+   │
+ 1 │ Def a : __Type_Bool__ := 1.
+   │                          ┬  
+   │                          ╰── Found type ℕ.
+   │ 
+   │ Help: change this expression so that its type is 𝔹, not ℕ
+   │ 
+   │ Note: Expected : 𝔹
+   │       Found    : ℕ
+   │       
+   │       (the command is left out)
+───╯
+[302] Error: Type mismatch.
+   ╭─[ two_typing.st:3:26 ]
+   │
+ 3 │ Def b : __Type_Bool__ := 3.
+   │                          ┬  
+   │                          ╰── Found type ℕ.
+   │ 
+   │ Help: change this expression so that its type is 𝔹, not ℕ
+   │ 
+   │ Note: Expected : 𝔹
+   │       Found    : ℕ
+   │       
+   │       (the command is left out)
+───╯
+
+```

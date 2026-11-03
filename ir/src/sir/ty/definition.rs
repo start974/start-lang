@@ -24,7 +24,11 @@ impl Pretty for TypeDefinition {
             .ty_var(&name)
             .append(Doc::space())
             .append(theme.operator(&":="))
-            .append(Doc::softline().append(self.ty.pretty(theme).group()).nest(2))
+            .append(
+                Doc::softline()
+                    .append(self.ty.pretty(theme).group())
+                    .nest(2),
+            )
     }
 }
 

@@ -376,6 +376,14 @@ mod tests {
                 span: Span::new(5, 22)
             }))
         );
+        let character = eval("Eval 'c'.");
+        assert_eq!(
+            character.kind,
+            sir::ExpressionKind::Constant(sir::Constant::Character(sir::Node {
+                value: 'c',
+                span: Span::new(5, 8)
+            }))
+        );
     }
 
     #[test]
@@ -405,8 +413,32 @@ mod tests {
     #[test]
     fn keywords_merged() {
         assert!(matches!(last("$ 1."), sir::CommandKind::Eval(_)));
+        assert!(matches!(last("?: 1."), sir::CommandKind::TypeOf(_)));
+        assert!(matches!(
+            last("Def x := 1.\n? x."),
+            sir::CommandKind::Help(_)
+        ));
+        assert!(matches!(
+            last("Ty T := __Type_Nat__."),
+            sir::CommandKind::TypeDefinition(_)
+        ));
         let file = lower("Def a := 1.\nDefinition b := 2.");
         assert_eq!(file.commands.len(), 2);
+    }
+
+    #[test]
+    fn comments_dropped() {
+        let commented = eval("Eval (* one *) 1 (* still one *).");
+        assert_eq!(
+            commented.kind,
+            sir::ExpressionKind::Constant(sir::Constant::Number(sir::Node {
+                value: 1u8.into(),
+                span: Span::new(15, 16)
+            }))
+        );
+        // a comment is not documentation
+        let file = lower("(* not a doc *)\nDef a := 1.");
+        assert_eq!(file.defs[&sir::DefId(0)].doc, None);
     }
 
     #[test]

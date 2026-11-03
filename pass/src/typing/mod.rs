@@ -6,7 +6,6 @@ use errors::{Errors, Message, ResultErrors as _};
 
 mod error;
 
-use ir::location::{Span, Spanned as _};
 use ir::{sir, tir};
 use std::collections::{BTreeMap, HashMap};
 
@@ -131,12 +130,13 @@ impl Typer {
         identifier
     }
 
-    /// `expr` restricted to `ty`, written at `span`
-    fn restrict(expr: tir::Expression, ty: tir::Type, span: Span) -> Result<tir::Expression> {
+    /// `expr` restricted to `ty`; a mismatch is reported on `expr`, the thing
+    /// to change
+    fn restrict(expr: tir::Expression, ty: tir::Type) -> Result<tir::Expression> {
         if expr.ty.is_compatible(&ty) {
             Ok(tir::Expression { ty, ..expr })
         } else {
-            Err(error::unexpected_type(&ty, &expr.ty, span).into())
+            Err(error::unexpected_type(&ty, &expr.ty, expr.span).into())
         }
     }
 
@@ -167,7 +167,7 @@ impl Typer {
             }
             sir::ExpressionKind::Typed { expr, ty: sir_ty } => {
                 let (expr, ty) = self.expression(expr).combine(self.ty(sir_ty))?;
-                let expr = Self::restrict(expr, ty, sir_ty.span())?;
+                let expr = Self::restrict(expr, ty)?;
                 (expr.kind, expr.ty)
             }
         };
@@ -202,8 +202,8 @@ impl Typer {
         let (body, ty) = self
             .expression(&def.body)
             .combine(def.ty.as_ref().map(|ty| self.ty(ty)).transpose())?;
-        let body = match ty.zip(def.ty.as_ref()) {
-            Some((ty, sir_ty)) => Self::restrict(body, ty, sir_ty.span())?,
+        let body = match ty {
+            Some(ty) => Self::restrict(body, ty)?,
             None => body,
         };
         let sir::Pattern::Variable(var) = &def.pattern;

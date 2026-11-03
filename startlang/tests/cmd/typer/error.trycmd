@@ -61,11 +61,11 @@ $ startlang run def_type_not_found.st
 $ startlang run type_mismatch.st
 ? 1
 [302] Error: Type mismatch.
-   ╭─[ type_mismatch.st:5:9 ]
+   ╭─[ type_mismatch.st:5:14 ]
    │
  5 │ Def c : ℕ := b.
-   │         ┬  
-   │         ╰── Found type 𝔹.
+   │              ┬  
+   │              ╰── Found type 𝔹.
    │ 
    │ Help: change this expression so that its type is ℕ, not 𝔹
    │ 
@@ -75,11 +75,11 @@ $ startlang run type_mismatch.st
    │       (the command is left out)
 ───╯
 [302] Error: Type mismatch.
-   ╭─[ type_mismatch.st:7:20 ]
+   ╭─[ type_mismatch.st:7:16 ]
    │
  7 │ Def c' : 𝔹 := (a : Bool).
-   │                    ──┬─  
-   │                      ╰─── Found type ℕ.
+   │                ┬  
+   │                ╰── Found type ℕ.
    │ 
    │ Help: change this expression so that its type is Bool, not ℕ
    │ 
