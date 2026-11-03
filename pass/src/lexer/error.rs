@@ -23,4 +23,5 @@ pub fn error_lexing(err: &ErrorChumsky<'_>, offset: usize) -> Error {
             .with_text(".")
         })
         .with_recovery(Message::text("the character is skipped"))
+        .with_help(Message::text("remove or replace this character"))
 }

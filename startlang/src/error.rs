@@ -8,6 +8,9 @@ pub fn read_file(path: &Path) -> Error {
             .append(Message::quoted(path.to_string_lossy()).important())
             .with_text("."),
     )
+    .with_help(Message::text(
+        "check that the file exists and that you can read it",
+    ))
 }
 
 pub fn write_file(path: &Path) -> Error {
@@ -17,4 +20,7 @@ pub fn write_file(path: &Path) -> Error {
             .append(Message::quoted(path.to_string_lossy()).important())
             .with_text("."),
     )
+    .with_help(Message::text(
+        "check that the directory exists and that you can write in it",
+    ))
 }

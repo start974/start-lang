@@ -132,7 +132,7 @@ Each step below ends with the tests passing.
 
 - [x] The recovery is ugly in the report (`Note: Recovery: the command is
       left out.`): shown in parentheses on its own line of the note.
-- [ ] Errors also advise how to fix them (a `help` next to `recovery` in
+- [x] Errors also advise how to fix them (a `help` next to `recovery` in
       `errors::Error`, ariadne `with_help`).
 
 ## 6. Debug output

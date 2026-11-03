@@ -11,6 +11,8 @@ $ startlang run def_expr_type_not_found.st
    │         ─────┬─────  
    │              ╰─────── Type variable Not_defined not found.
    │ 
+   │ Help: define Not_defined before this use, or check its spelling
+   │ 
    │ Note: (the command is left out)
 ───╯
 
@@ -28,6 +30,8 @@ $ startlang run var_not_found.st
    │      ─────┬─────  
    │           ╰─────── Expression variable not_defined not found.
    │ 
+   │ Help: define not_defined before this use, or check its spelling
+   │ 
    │ Note: (the command is left out)
 ───╯
 
@@ -43,6 +47,8 @@ $ startlang run def_type_not_found.st
  1 │ Type T := Not_definied.
    │           ──────┬─────  
    │                 ╰─────── Type variable Not_definied not found.
+   │ 
+   │ Help: define Not_definied before this use, or check its spelling
    │ 
    │ Note: (the command is left out)
 ───╯
@@ -61,6 +67,8 @@ $ startlang run type_mismatch.st
    │         ┬  
    │         ╰── Found type 𝔹.
    │ 
+   │ Help: change this expression so that its type is ℕ, not 𝔹
+   │ 
    │ Note: Expected : ℕ
    │       Found    : 𝔹
    │       
@@ -72,6 +80,8 @@ $ startlang run type_mismatch.st
  7 │ Def c' : 𝔹 := (a : Bool).
    │                    ──┬─  
    │                      ╰─── Found type ℕ.
+   │ 
+   │ Help: change this expression so that its type is Bool, not ℕ
    │ 
    │ Note: Expected : Bool
    │       Found    : ℕ
@@ -91,6 +101,8 @@ $ startlang run many_error_def.st
    │         ───────┬──────  
    │                ╰──────── Type variable Type_not_exist not found.
    │ 
+   │ Help: define Type_not_exist before this use, or check its spelling
+   │ 
    │ Note: (the command is left out)
 ───╯
 [301] Error: Variable not found.
@@ -99,6 +111,8 @@ $ startlang run many_error_def.st
  1 │ Def a : Type_not_exist := (1 : Bool) : Type_not_exist_also.
    │                                        ─────────┬─────────  
    │                                                 ╰─────────── Type variable Type_not_exist_also not found.
+   │ 
+   │ Help: define Type_not_exist_also before this use, or check its spelling
    │ 
    │ Note: (the command is left out)
 ───╯

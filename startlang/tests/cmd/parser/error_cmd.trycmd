@@ -31,6 +31,8 @@ $ startlang run command.st
    │ ┬  
    │ ╰── Parsing expect "command".
    │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
+   │ 
    │ Note: Expected : "command"
    │       Found    : "3".
    │       
@@ -48,6 +50,8 @@ $ startlang run last_command.st
  5 │ a.
    │ ┬  
    │ ╰── Parsing expect "command".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : "command"
    │       Found    : "a".

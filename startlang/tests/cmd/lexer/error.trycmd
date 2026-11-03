@@ -11,6 +11,8 @@ $ startlang run char_unclosed1.st
    │        ┬  
    │        ╰── Lexer expected "'", found ".".
    │ 
+   │ Help: remove or replace this character
+   │ 
    │ Note: (the character is skipped)
 ───╯
 
@@ -25,6 +27,8 @@ $ startlang run char_unclosed2.st
  1 │ Eval 1'.
    │         ┬  
    │         ╰── Lexer expected "'", found "/n".
+   │ 
+   │ Help: remove or replace this character
    │ 
    │ Note: (the character is skipped)
 ───╯

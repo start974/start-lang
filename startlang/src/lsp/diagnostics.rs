@@ -50,15 +50,19 @@ fn error(position_memo: &mut PositionMemo, url: &Url, err: &Error) -> Diagnostic
         .text()
         .unwrap_or_else(|| err.header())
         .make_string(&theme);
-    let related_information = err.note().map(|note| {
-        vec![DiagnosticRelatedInformation {
+    let related_information: Vec<_> = err
+        .note()
+        .into_iter()
+        .chain(err.help())
+        .map(|message| DiagnosticRelatedInformation {
             location: Location {
                 uri: url.clone(),
                 range,
             },
-            message: note.make_string(&theme),
-        }]
-    });
+            message: message.make_string(&theme),
+        })
+        .collect();
+    let related_information = (!related_information.is_empty()).then_some(related_information);
     Diagnostic {
         range,
         message,

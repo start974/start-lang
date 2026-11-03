@@ -29,4 +29,10 @@ pub fn variable_not_found(
                 None => " not found.",
             }),
         )
+        .with_help(match hidden_by {
+            Some(_) => Message::text("rename one of the two definitions"),
+            None => Message::text("define ")
+                .append(Message::text(name).important())
+                .with_text(" before this use, or check its spelling"),
+        })
 }

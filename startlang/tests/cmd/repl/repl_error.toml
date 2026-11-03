@@ -20,6 +20,8 @@ stderr = """
    │                  ────┬────  
    │                      ╰────── Expression variable not_exits not found.
    │ 
+   │ Help: define not_exits before this use, or check its spelling
+   │ 
    │ Note: (the command is left out)
 ───╯
 [301] Error: Variable not found.
@@ -28,6 +30,8 @@ stderr = """
  2 │ Eval a.
    │      ┬  
    │      ╰── Expression variable a not found.
+   │ 
+   │ Help: define a before this use, or check its spelling
    │ 
    │ Note: (the command is left out)
 ───╯

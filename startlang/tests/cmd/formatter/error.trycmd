@@ -9,6 +9,8 @@ $ startlang format lexer.st
    │        ┬  
    │        ╰── Lexer expected "'", found ".".
    │ 
+   │ Help: remove or replace this character
+   │ 
    │ Note: (the character is skipped)
 ───╯
 
@@ -23,6 +25,8 @@ $ startlang format parser.st
  1 │ Definition a
    │              │ 
    │              ╰─ Parsing expect ":" or ":=".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : ":", ":="
    │       Found    : "end of input".
@@ -44,6 +48,8 @@ $ startlang format --print lexer.st
    │        ┬  
    │        ╰── Lexer expected "'", found ".".
    │ 
+   │ Help: remove or replace this character
+   │ 
    │ Note: (the character is skipped)
 ───╯
 
@@ -58,6 +64,8 @@ $ startlang format --print parser.st
  1 │ Definition a
    │              │ 
    │              ╰─ Parsing expect ":" or ":=".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : ":", ":="
    │       Found    : "end of input".
@@ -78,6 +86,8 @@ $ startlang format --diff lexer.st
    │        ┬  
    │        ╰── Lexer expected "'", found ".".
    │ 
+   │ Help: remove or replace this character
+   │ 
    │ Note: (the character is skipped)
 ───╯
 
@@ -92,6 +102,8 @@ $ startlang format --diff parser.st
  1 │ Definition a
    │              │ 
    │              ╰─ Parsing expect ":" or ":=".
+   │ 
+   │ Help: write one of the expected tokens here, or end the command before with "."
    │ 
    │ Note: Expected : ":", ":="
    │       Found    : "end of input".

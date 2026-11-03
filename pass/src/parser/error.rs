@@ -35,7 +35,8 @@ pub fn error_parsing(err: &ErrorChumsky<'_>) -> Error {
                     .with_text(".")
             }),
         ))
-        .with_recovery(Message::text(
-            "the command is skipped up to the next \".\"",
+        .with_recovery(Message::text("the command is skipped up to the next \".\""))
+        .with_help(Message::text(
+            "write one of the expected tokens here, or end the command before with \".\"",
         ))
 }
