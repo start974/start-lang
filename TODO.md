@@ -118,7 +118,7 @@ Each step below ends with the tests passing.
       on the tokens around a lexing error, typing on the commands that
       parsed); each pass already returns its partial result, but the tools
       stop at the first failing pass.
-- [ ] `ir::errors`: sort errors by position (`Errors::sorted`) before printing.
+- [x] `ir::errors`: sort errors by position (`Errors::sorted`) before printing.
 - [x] Stdlib loaded **once** (`pass::stdlib::Stdlib::load`): the state of
       the lowerer, typer, codegen and vm the tools start from;
       `Stdlib::run` runs every pass on a text (rollback on error).

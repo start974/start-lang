@@ -72,7 +72,7 @@ impl Printer {
 
     /// print every error
     pub fn errors(&mut self, errs: Errors) {
-        for err in errs {
+        for err in errs.sorted() {
             self.fail(&err);
         }
     }
