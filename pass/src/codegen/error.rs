@@ -3,15 +3,14 @@
 //! compiler.
 
 use errors::{Error, Message};
-use ir::location::Spanned as _;
 use ir::tir;
 
 /// variable whose definition was never generated
-pub fn unknown_identifier(var: &tir::expression::Variable) -> Error {
+pub fn unknown_identifier(var: &tir::Node<tir::Identifier>) -> Error {
     Error::new(901, Message::text("Internal error."))
-        .with_span(var.span())
+        .with_span(var.span)
         .with_text(Message::text(format!(
             "codegen: unknown identifier `{}`",
-            var.identifier()
+            var.value
         )))
 }

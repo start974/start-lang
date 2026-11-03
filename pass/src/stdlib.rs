@@ -84,9 +84,8 @@ mod tests {
         let stdlib = Stdlib::load();
         let names: Vec<_> = stdlib
             .typer
-            .env()
-            .iter()
-            .map(|info| info.id.name())
+            .defs()
+            .map(|info| info.id.name.as_str())
             .collect();
         assert!(names.contains(&"true") && names.contains(&"ℕ"));
     }

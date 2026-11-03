@@ -1,85 +1,37 @@
-use crate::location::{Span, Spanned, SpannedSet};
-use crate::tir::ty::Builtin;
-use crate::tir::{Type, Typed, TypedMut};
+use crate::tir::Type;
+use crate::tir::ty::BuiltinType;
 use num_bigint::BigUint;
 use pp::pretty::*;
 
-pub type NConst = BigUint;
+// ============================================================================
+// Constant
+// ============================================================================
 
-pub enum ConstantKind {
-    Nat(NConst),
+/// constant, the builtin ones evaluated (`__Constant_true__` is `Bool(true)`)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Constant {
+    Nat(BigUint),
     Bool(bool),
     Char(char),
 }
 
-pub struct Constant {
-    /// kind of the constant
-    kind: ConstantKind,
-    /// type of constant
-    ty: Type,
-    /// span of the constant
-    span: Span,
-}
-
 impl Constant {
-    fn new(kind: ConstantKind, ty: Type) -> Self {
-        Self {
-            kind,
-            ty,
-            span: Span::default(),
-        }
-    }
-    /// create natural number constant
-    pub fn nat(v: NConst) -> Self {
-        Self::new(ConstantKind::Nat(v), Type::Builtin(Builtin::nat()))
-    }
-
-    /// create boolean constant
-    pub fn boolean(b: bool) -> Self {
-        Self::new(ConstantKind::Bool(b), Type::Builtin(Builtin::bool()))
-    }
-
-    /// create a character constant
-    pub fn character(c: char) -> Self {
-        Self::new(ConstantKind::Char(c), Type::Builtin(Builtin::char()))
-    }
-
-    /// get kind of the constant
-    pub fn kind(&self) -> &ConstantKind {
-        &self.kind
-    }
-}
-
-impl Spanned for Constant {
-    fn span(&self) -> Span {
-        self.span
-    }
-}
-
-impl SpannedSet for Constant {
-    fn set_span(&mut self, span: Span) {
-        self.span = span;
+    /// type of the constant
+    pub fn ty(&self) -> Type {
+        Type::Builtin(match self {
+            Constant::Nat(_) => BuiltinType::Nat,
+            Constant::Bool(_) => BuiltinType::Bool,
+            Constant::Char(_) => BuiltinType::Char,
+        })
     }
 }
 
 impl Pretty for Constant {
     fn pretty(&self, theme: &Theme) -> Doc<'_> {
-        match &self.kind() {
-            ConstantKind::Nat(n) => theme.number(n),
-            ConstantKind::Bool(b) => theme.boolean(*b),
-            ConstantKind::Char(c) => theme.character(*c),
+        match self {
+            Constant::Nat(n) => theme.number(n),
+            Constant::Bool(b) => theme.boolean(*b),
+            Constant::Char(c) => theme.character(*c),
         }
-    }
-}
-
-impl TypedMut for Constant {
-    fn ty_mut(&mut self) -> &mut Type {
-        &mut self.ty
-    }
-}
-
-impl Typed for Constant {
-    fn ty(&self) -> &Type {
-        &self.ty
     }
 }
