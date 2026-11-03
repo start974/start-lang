@@ -5,7 +5,7 @@
 //! time.
 
 use crate::{Checked, CheckedResult, Partial};
-use errors::{Error, Message};
+use errors::{Errors, Message};
 use ir::{lir, tir};
 use std::collections::HashMap;
 
@@ -66,8 +66,10 @@ impl Codegen {
             })
             .map(|item| match item {
                 Ok(item) => Partial::ok(Some(item)),
-                Err(err) => Partial::ok(None)
-                    .with_error(err.with_recovery(Message::text("the command is left out"))),
+                Err(errs) => Partial::ok(None).with_errors(
+                    errs.into_iter()
+                        .map(|err| err.with_recovery(Message::text("the command is left out"))),
+                ),
             })
             .collect();
         items
@@ -87,19 +89,19 @@ impl Codegen {
     }
 
     /// expression
-    pub fn expression(&self, expr: &tir::Expression) -> Result<lir::Expression, Error> {
+    pub fn expression(&self, expr: &tir::Expression) -> Result<lir::Expression, Errors> {
         match &expr.kind {
             tir::ExpressionKind::Constant(c) => Ok(lir::Expression::Constant(Self::constant(c))),
             tir::ExpressionKind::Variable(var) => self
                 .globals
                 .get(&var.value.id)
                 .map(|id| lir::Expression::Global(*id))
-                .ok_or_else(|| error::unknown_identifier(var)),
+                .ok_or_else(|| error::unknown_identifier(var).into()),
         }
     }
 
     /// definition: a new global
-    pub fn definition(&mut self, def: &tir::ExpressionDefinition) -> Result<lir::Global, Error> {
+    pub fn definition(&mut self, def: &tir::ExpressionDefinition) -> Result<lir::Global, Errors> {
         let init = self.expression(&def.body)?;
         let tir::Pattern::Variable(var) = &def.pattern;
         let id = lir::GlobalId(self.globals.len());

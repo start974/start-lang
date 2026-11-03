@@ -20,6 +20,18 @@ v0.2.1--fix-lsp-hover
 - The task list of the branch is its `TODO.md`, removed before merging into
   `main`.
 
+## Workspace
+
+| Crate | Contains |
+|-------|----------|
+| `ir` | every representation, one module each: `token`, `pir`, `sir`, `tir`, `lir`; `location` (sources, spans); `common` (shared by several) |
+| `pass` | every pass, one module each: `lexer`, `parser`, `lowering`, `typing`, `codegen`, `vm`; `stdlib` (the state the tools start from, every pass on a text) |
+| `errors` | diagnostics: `Error`, `Errors`, `Message` |
+| `pp` | pretty printing: `Pretty`, `Theme` |
+| `startlang` | the binary: `run`, `repl`, `format`, `lsp` |
+
+See [compilation phases](../design/pipeline.md) for how they fit together.
+
 ## Test
 run test with *nextest*
 ```sh
