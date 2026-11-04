@@ -25,25 +25,38 @@
 //! ```
 
 use super::editor::{Action, Editor, History, KEYS};
-use super::output::Output;
+use super::output::{NUMBERS, Output};
 use super::session::Session;
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEventKind};
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Color, Style, Stylize};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Clear, Paragraph, Widget};
+use std::cell::Cell;
 
 // ============================================================================
 // App
 // ============================================================================
+
+/// lines scrolled by a notch of the mouse wheel
+const WHEEL: u16 = 3;
+
+/// the main keys, on the status line (all of them in the help)
+const HINT: &str = "Enter run · Shift+Enter / Alt+Enter new line · ↑ ↓ history · \
+                    PageUp / PageDown scroll · F1 / Alt+H help · Ctrl+D quit";
 
 /// the TUI: a session, its outputs, the input area, the help
 pub struct App {
     session: Session,
     editor: Editor,
     outputs: Vec<Output>,
+    /// lines the outputs are scrolled up from the newest (0: at the bottom)
+    scroll: u16,
+    /// the height of the output area and how far it can scroll, as last
+    /// drawn: the step and the limit of PageUp / PageDown
+    view: Cell<(u16, u16)>,
     /// the help is shown over the rest
     help: bool,
     quit: bool,
@@ -55,6 +68,8 @@ impl App {
             session: Session::default(),
             editor: Editor::from(history),
             outputs: Vec::new(),
+            scroll: 0,
+            view: Cell::new((0, 0)),
             help: false,
             quit: false,
         }
@@ -75,6 +90,12 @@ impl App {
         match event {
             Event::Key(key) => self.key(key),
             Event::Paste(text) if !self.help => self.editor.paste(&text),
+            // the wheel scrolls the outputs, wherever the mouse is
+            Event::Mouse(mouse) => match mouse.kind {
+                MouseEventKind::ScrollUp => self.scroll_up(WHEEL),
+                MouseEventKind::ScrollDown => self.scroll_down(WHEEL),
+                _ => {}
+            },
             _ => {}
         }
     }
@@ -91,19 +112,37 @@ impl App {
             KeyCode::Esc if self.help => self.help = false,
             // the help is over the input: keys do not reach it
             _ if self.help => {}
+            // half the output area at a time
+            KeyCode::PageUp => self.scroll_up((self.view.get().0 / 2).max(1)),
+            KeyCode::PageDown => self.scroll_down((self.view.get().0 / 2).max(1)),
             _ => match self.editor.key(key) {
                 Action::None => {}
                 Action::Run(input) => self.run(&input),
                 Action::Quit => self.quit = true,
-                Action::ClearOutputs => self.outputs.clear(),
+                Action::ClearOutputs => {
+                    self.outputs.clear();
+                    self.scroll = 0;
+                }
             },
         }
+    }
+
+    /// scroll the outputs up by `lines`, up to the oldest
+    fn scroll_up(&mut self, lines: u16) {
+        self.scroll = (self.scroll + lines).min(self.view.get().1);
+    }
+
+    /// scroll the outputs down by `lines`, down to the newest
+    fn scroll_down(&mut self, lines: u16) {
+        self.scroll = self.scroll.saturating_sub(lines);
     }
 
     /// run `input`: its frame, with each command and its summary, or its
     /// errors
     fn run(&mut self, input: &str) {
         self.outputs.push(self.session.run(input));
+        // back to the newest
+        self.scroll = 0;
     }
 
     /// draw the whole TUI in `frame`
@@ -117,22 +156,38 @@ impl App {
         ])
         .areas(frame.area());
         self.draw_outputs(outputs, frame.buffer_mut());
-        let block = Block::bordered().title(" input ");
-        frame.render_widget(self.editor.textarea(), block.inner(input));
-        frame.render_widget(block, input);
-        let hint = "Enter run · Shift+Enter / Alt+Enter new line · ↑ ↓ history · F1 / Alt+H help · Ctrl+D quit";
-        frame.render_widget(Line::from(hint).dim(), status);
+        self.draw_input(input, frame);
+        frame.render_widget(Line::from(HINT).dim(), status);
         if self.help {
             self.draw_help(frame);
         }
     }
 
-    /// the outputs, the newest at the bottom: drawn whole in a buffer of
-    /// their height, then its bottom copied (a block cut at the top is
-    /// still drawn right)
+    /// the input area: the text area, its line numbers with a separator
+    /// (`   1 │ `) on the left, following its scrolling
+    fn draw_input(&self, area: Rect, frame: &mut Frame) {
+        let block = Block::bordered().title(" input ");
+        let [numbers, text] = Layout::horizontal([Constraint::Length(NUMBERS), Constraint::Min(1)])
+            .areas(block.inner(area));
+        frame.render_widget(block, area);
+        let textarea = self.editor.textarea();
+        frame.render_widget(textarea, text);
+        // the first line shown, known once the text area is drawn
+        let (top, _) = textarea.scroll_offset();
+        let count = textarea.lines().len();
+        let lines: Vec<Line> = (usize::from(top)..count)
+            .take(usize::from(numbers.height))
+            .map(|row| Line::from(format!("{:>4} │ ", row + 1)).dim())
+            .collect();
+        frame.render_widget(Paragraph::new(lines), numbers);
+    }
+
+    /// the outputs, the newest at the bottom, scrolled up by `scroll`: drawn
+    /// whole in a buffer of their height, then the lines shown copied (a
+    /// block cut at the top is still drawn right)
     fn draw_outputs(&self, area: Rect, buf: &mut Buffer) {
-        // shortcut: no scrolling back and no wrapping of long lines; add
-        // PageUp / PageDown and a wrapped height if outputs get long
+        // shortcut: no wrapping of long lines; add a wrapped height if
+        // outputs get long lines
         let height: u16 = self.outputs.iter().map(Output::height).sum();
         let all = Rect::new(0, 0, area.width, height);
         let mut drawn = Buffer::empty(all);
@@ -143,9 +198,12 @@ impl App {
             y += output.height();
         }
         let shown = height.min(area.height);
+        let max = height - shown;
+        self.view.set((area.height, max));
+        let first = max - self.scroll.min(max);
         for row in 0..shown {
             for col in 0..area.width {
-                let cell = drawn[(col, height - shown + row)].clone();
+                let cell = drawn[(col, first + row)].clone();
                 buf[(area.x + col, area.y + row)] = cell;
             }
         }
@@ -185,7 +243,6 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tui::output::NUMBERS;
     use ratatui::Terminal;
     use ratatui::backend::TestBackend;
 
@@ -355,6 +412,87 @@ mod tests {
         let top = lines.iter().find(|line| line.contains("┌ help ")).unwrap();
         let frame = top.trim().chars().count();
         assert_eq!(frame, keys + 2 + widest + 2, "{lines:#?}");
+    }
+
+    #[test]
+    fn input_line_numbers_with_a_separator() {
+        let mut app = app();
+        app.event(Event::Paste("Def a := 1.\nEval a.".to_string()));
+        let lines = screen(&app, 40, 12);
+        assert!(lines[8].starts_with("│   1 │ Def a := 1."), "{lines:#?}");
+        assert!(lines[9].starts_with("│   2 │ Eval a."), "{lines:#?}");
+    }
+
+    #[test]
+    fn input_line_numbers_follow_its_scrolling() {
+        let mut app = app();
+        // 10 lines in an input area of 4 (half the screen, less its borders)
+        let input: Vec<_> = (1..=10).map(|i| format!("Eval {i}.")).collect();
+        app.event(Event::Paste(input.join("\n")));
+        let lines = screen(&app, 40, 12);
+        // the cursor on the last line: the last lines shown, numbered
+        assert!(
+            lines
+                .iter()
+                .any(|line| line.starts_with("│  10 │ Eval 10.")),
+            "{lines:#?}"
+        );
+        assert!(
+            !lines.iter().any(|line| line.contains("│   1 │")),
+            "{lines:#?}"
+        );
+    }
+
+    #[test]
+    fn page_up_and_down_scroll_the_outputs() {
+        let mut app = app();
+        for i in 0..10 {
+            run(&mut app, &format!("Eval {i}."));
+        }
+        let shows =
+            |app: &App, text: &str| screen(app, 30, 12).iter().any(|line| line.contains(text));
+        assert!(shows(&app, "input 10") && !shows(&app, "input 1 "));
+        // up to the oldest, and no further
+        for _ in 0..20 {
+            press(&mut app, KeyCode::PageUp, KeyModifiers::NONE);
+            screen(&app, 30, 12);
+        }
+        assert!(shows(&app, "input 1 ") && !shows(&app, "input 10"));
+        // down to the newest, and no further
+        for _ in 0..20 {
+            press(&mut app, KeyCode::PageDown, KeyModifiers::NONE);
+        }
+        assert_eq!(app.scroll, 0);
+        assert!(shows(&app, "input 10"));
+        // a new input brings the view back to the newest
+        press(&mut app, KeyCode::PageUp, KeyModifiers::NONE);
+        assert!(app.scroll > 0);
+        run(&mut app, "Eval 11.");
+        assert_eq!(app.scroll, 0);
+    }
+
+    #[test]
+    fn the_wheel_scrolls_the_outputs_not_the_history() {
+        use crossterm::event::MouseEvent;
+        let mut app = app();
+        for i in 0..10 {
+            run(&mut app, &format!("Eval {i}."));
+        }
+        screen(&app, 30, 12);
+        let wheel = |kind| {
+            Event::Mouse(MouseEvent {
+                kind,
+                column: 0,
+                row: 0,
+                modifiers: KeyModifiers::NONE,
+            })
+        };
+        app.event(wheel(MouseEventKind::ScrollUp));
+        assert_eq!(app.scroll, WHEEL);
+        // the input is left as it is
+        assert_eq!(app.editor.input(), "");
+        app.event(wheel(MouseEventKind::ScrollDown));
+        assert_eq!(app.scroll, 0);
     }
 
     #[test]

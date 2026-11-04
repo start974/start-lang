@@ -1,10 +1,10 @@
 //! The terminal of `startlang tui`: alternate screen, raw mode, bracketed
-//! paste and keyboard enhancement while the TUI runs; the terminal is
+//! paste, mouse capture and keyboard enhancement while the TUI runs; the terminal is
 //! restored when it stops, and on panic.
 
 use crossterm::event::{
-    DisableBracketedPaste, EnableBracketedPaste, KeyboardEnhancementFlags,
-    PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
+    DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
+    KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
 };
 use crossterm::execute;
 use crossterm::terminal::supports_keyboard_enhancement;
@@ -22,7 +22,9 @@ impl Terminal {
         // raw mode, alternate screen, and a panic hook that leaves them
         let inner = ratatui::try_init()?;
         set_panic_hook();
-        execute!(stdout(), EnableBracketedPaste)?;
+        // the mouse wheel as mouse events, to scroll the outputs: without it,
+        // the terminal sends it as ↑ / ↓, which go through the history
+        execute!(stdout(), EnableBracketedPaste, EnableMouseCapture)?;
         // Shift+Enter is only reported with the keyboard enhancement (kitty
         // protocol); without it, Alt+Enter inserts a new line
         if supports_keyboard_enhancement().unwrap_or(false) {
@@ -42,11 +44,17 @@ impl Drop for Terminal {
     }
 }
 
-/// leave what `ratatui::restore` does not: bracketed paste and keyboard
-/// enhancement (popping flags never pushed is ignored by the terminal)
+/// leave what `ratatui::restore` does not: bracketed paste, mouse capture
+/// and keyboard enhancement (popping flags never pushed is ignored by the
+/// terminal)
 fn leave_modes() {
     // nothing more to do if the terminal does not answer
-    let _ = execute!(stdout(), PopKeyboardEnhancementFlags, DisableBracketedPaste);
+    let _ = execute!(
+        stdout(),
+        PopKeyboardEnhancementFlags,
+        DisableMouseCapture,
+        DisableBracketedPaste
+    );
 }
 
 /// on panic, leave the modes, then the hook of `ratatui` restores the rest
