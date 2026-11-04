@@ -41,14 +41,16 @@ answer : Nat
   the answer
 ```
 
-## REPL
+## Interactive session
 
 ```sh
-startlang repl
+startlang tui
 ```
 
-Type commands ending with `.`; a command can span several lines. `Ctrl-D`
-quits. History is kept in `.start-history.txt`.
+A full-screen session in the terminal: type commands (ending with `.`, over
+several lines if you want: Shift+Enter or Alt+Enter), run them with Enter, and
+see under each command what it gave. ↑ brings back the previous input, F1 or
+Alt+H shows the keys, Ctrl+D quits. See [TUI](./tui.md).
 
 ## Editor
 
@@ -58,4 +60,5 @@ quits. History is kept in `.start-history.txt`.
 ## Next
 
 - [Language tour](./language-tour.md)
+- [Interactive session (TUI)](./tui.md)
 - [Command line](./cli.md)

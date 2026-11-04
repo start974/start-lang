@@ -3,6 +3,7 @@
 **Guide**
 - [Getting started](./guide/getting-started.md)
 - [Language tour](./guide/language-tour.md)
+- [Interactive session (TUI)](./guide/tui.md)
 - [Command line](./guide/cli.md)
 - [Theme](./guide/theme.md)
 

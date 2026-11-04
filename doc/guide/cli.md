@@ -2,7 +2,7 @@
 
 [← Home](../Home.md)
 
-> Describes v0.2.0-beta.1. The target CLI is in [design/tooling](../design/tooling.md).
+> Describes v0.2.0-beta.2. The target CLI is in [design/tooling](../design/tooling.md).
 
 ```
 startlang <COMMAND>
@@ -11,7 +11,7 @@ startlang <COMMAND>
 | Command | Description |
 |---------|-------------|
 | `run [--debug <phases>] <path>` | Interprets a file. Exit code `0` on success, non-zero on error |
-| `repl` | Starts the interactive session |
+| `tui` | Starts the interactive session in a terminal UI (see [TUI](./tui.md)); needs a terminal (error 103 otherwise) |
 | `format <path>` | Formats a file (see below) |
 | `lsp` | Starts the language server on stdio |
 | `--help`, `--version` | |

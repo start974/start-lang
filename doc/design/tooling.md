@@ -67,7 +67,7 @@ Documentation is part of the tooling and evolves at every version:
 ## REPL
 
 `startlang tui` (v0.2.0-beta.2) replaces the REPL: a full-screen terminal
-interface on `crossterm` (`ratatui` + `tui-textarea`).
+interface on `crossterm` (`ratatui` + `ratatui-textarea`).
 
 - The outputs and errors of each input scroll above the input area.
 - The keys are those of a classic shell (readline): Ctrl+A / Ctrl+E, Ctrl+U /
@@ -85,7 +85,17 @@ interface on `crossterm` (`ratatui` + `tui-textarea`).
   shows the keys.
 - Without a terminal, `startlang tui` stops with an error.
 
-Later, panels (proof state) and proofs in it.
+Later:
+
+- Completion on Tab: the keywords, and the names visible at the cursor (the
+  definitions of the stdlib and of the previous inputs, from the scope of
+  the lowering), with their kind and type; a list to choose from when
+  several match.
+- Search in the history on Ctrl+R, as in readline: an incremental search
+  through the previous inputs, the match shown whole in the input area, Enter
+  to keep it, Ctrl+R again for an older one (Ctrl+R is "redo" in the text area
+  until then).
+- Panels (proof state) and proofs in it.
 
 ## LSP
 

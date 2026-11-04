@@ -12,7 +12,7 @@ Documentation is a wiki in [`doc/`](./doc/Home.md):
 ## Included
 - cli
 - expressive errors
-- repl
+- interactive session in a terminal UI (`startlang tui`)
 - formatter
 - interpreter
 - lsp

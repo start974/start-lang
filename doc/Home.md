@@ -4,7 +4,7 @@ startlang is a functional language with a proof assistant, built step by step.
 This wiki is the documentation of the project: how to use it, how the language
 is defined, where it is going and what changed.
 
-Current version: **v0.2.0-beta.1** — see the [changelog](./changelog/README.md).
+Current version: **v0.2.0-beta.2** — see the [changelog](./changelog/README.md).
 
 ## Guide
 
@@ -12,9 +12,10 @@ How to use startlang today.
 
 | Page | Content |
 |------|---------|
-| [Getting started](./guide/getting-started.md) | Install, first file, first REPL session |
+| [Getting started](./guide/getting-started.md) | Install, first file, first interactive session |
+| [Interactive session (TUI)](./guide/tui.md) | `startlang tui`: what an input gives, keys, history, scrolling |
 | [Language tour](./guide/language-tour.md) | Commands, types, literals, comments and documentation |
-| [Command line](./guide/cli.md) | `run`, `repl`, `format`, `lsp`, debug flags |
+| [Command line](./guide/cli.md) | `run`, `tui`, `format`, `lsp`, debug flags |
 | [Theme](./guide/theme.md) | Colors used when printing programs |
 
 ## Reference
