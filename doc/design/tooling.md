@@ -70,15 +70,17 @@ Documentation is part of the tooling and evolves at every version:
 interface on `crossterm` (`ratatui` + `tui-textarea`).
 
 - The outputs and errors of each input scroll above the input area.
-- Enter runs the whole input; Ctrl+Enter inserts a new line where the
-  terminal reports it (keyboard enhancement, the kitty protocol), Ctrl+U in
+- The keys are those of a classic shell (readline): Ctrl+A / Ctrl+E, Ctrl+U /
+  Ctrl+K, Ctrl+W, Ctrl+Y, Alt+← / Alt+→ (or Alt+B / Alt+F), Ctrl+P / Ctrl+N.
+- Enter runs the whole input; Shift+Enter inserts a new line where the
+  terminal reports it (keyboard enhancement, the kitty protocol), Alt+Enter in
   every terminal.
-- ↑ on the first line of the input recalls the previous input, ↓ on the last
-  line the next one; Ctrl+↑ / Ctrl+↓ from anywhere. An input comes back whole,
-  to edit and run again; the history is kept between sessions.
+- ↑ on the first line of the input (or Ctrl+P) recalls the previous input, ↓
+  on the last line (or Ctrl+N) the next one. An input comes back whole, to
+  edit and run again; the history is kept between sessions.
 - Pasted text keeps its line breaks and does not run.
 - Ctrl+C clears the input (quits on an empty one), Ctrl+D quits on an empty
-  input, Ctrl+L clears the outputs.
+  input, Ctrl+L clears the outputs; F1 or Alt+H shows the keys.
 - Without a terminal, `startlang tui` stops with an error.
 
 Later, panels (proof state) and proofs in it.

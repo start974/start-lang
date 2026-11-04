@@ -1,17 +1,23 @@
 //! The input area of `startlang tui`, without terminal: a text area edited
 //! over several lines, the keys of the TUI, and the history of the inputs.
+//! The keys are those of a classic shell (readline):
 //!
-//! | key                  | action                                         |
-//! |----------------------|------------------------------------------------|
-//! | Enter                | run the whole input                            |
-//! | Ctrl+Enter, Ctrl+U   | new line (Ctrl+U in every terminal)            |
-//! | ↑ on the first line  | previous input (Ctrl+↑ anywhere)               |
-//! | ↓ on the last line   | next input (Ctrl+↓ anywhere)                   |
-//! | Ctrl+C               | clear the input; quit on an empty one          |
-//! | Ctrl+D               | quit on an empty input                         |
-//! | Ctrl+L               | clear the outputs                              |
-//! | F1                   | help, in the TUI (F1 or Esc closes it)         |
-//! | others               | edit the text (`ratatui_textarea`)             |
+//! | key                     | action                                       |
+//! |-------------------------|----------------------------------------------|
+//! | Enter                   | run the whole input                          |
+//! | Shift+Enter, Alt+Enter  | new line (Alt+Enter in every terminal)       |
+//! | ↑ / Ctrl+P              | previous input (↑ on the first line)         |
+//! | ↓ / Ctrl+N              | next input (↓ on the last line)              |
+//! | Ctrl+A / Ctrl+E         | start / end of the line                      |
+//! | Ctrl+U / Ctrl+K         | delete to the start / end of the line        |
+//! | Ctrl+W                  | delete the word before                       |
+//! | Alt+← / Alt+→ (or B / F)| word back / forward (Ctrl+← / Ctrl+→ too)    |
+//! | Ctrl+Y                  | paste what was deleted                       |
+//! | Ctrl+C                  | clear the input; quit on an empty one        |
+//! | Ctrl+D                  | quit on an empty input                       |
+//! | Ctrl+L                  | clear the outputs                            |
+//! | F1, Alt+H               | help, in the TUI (the same key or Esc closes) |
+//! | others                  | edit the text (`ratatui_textarea`)           |
 
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::style::Style;
@@ -22,13 +28,18 @@ use std::path::Path;
 /// the keys of the TUI and what they do, for the help
 pub const KEYS: &[(&str, &str)] = &[
     ("Enter", "run the whole input"),
-    ("Ctrl+Enter, Ctrl+U", "new line"),
-    ("↑ / ↓", "previous / next input (on the first / last line)"),
-    ("Ctrl+↑ / Ctrl+↓", "previous / next input"),
+    ("Shift+Enter, Alt+Enter", "new line"),
+    ("↑ / Ctrl+P", "previous input (↑ on the first line)"),
+    ("↓ / Ctrl+N", "next input (↓ on the last line)"),
+    ("Ctrl+A / Ctrl+E", "start / end of the line"),
+    ("Ctrl+U / Ctrl+K", "delete to the start / end of the line"),
+    ("Ctrl+W", "delete the word before"),
+    ("Alt+← / Alt+→", "word back / forward (also Alt+B / Alt+F)"),
+    ("Ctrl+Y", "paste what was deleted"),
     ("Ctrl+C", "clear the input; quit on an empty one"),
     ("Ctrl+D", "quit on an empty input"),
     ("Ctrl+L", "clear the outputs"),
-    ("F1", "this help (F1 or Esc to close)"),
+    ("F1, Alt+H", "this help (the same key or Esc to close)"),
 ];
 
 // ============================================================================
@@ -89,14 +100,28 @@ impl Editor {
             return Action::None;
         }
         let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
+        let alt = key.modifiers.contains(KeyModifiers::ALT);
+        let shift = key.modifiers.contains(KeyModifiers::SHIFT);
         let (row, last) = (self.textarea.cursor().0, self.textarea.lines().len() - 1);
+        // the keys of the text area are those of readline (Ctrl+A, Ctrl+E,
+        // Ctrl+K, Ctrl+W, Ctrl+Y, Alt+B, Alt+F), but for these
         match key.code {
-            // Ctrl+Enter only if the terminal reports it (keyboard
-            // enhancement); Ctrl+U everywhere (it is "undo" in the text area)
-            KeyCode::Enter | KeyCode::Char('u') if ctrl => self.textarea.insert_newline(),
+            // Shift+Enter only if the terminal reports it (keyboard
+            // enhancement); Alt+Enter everywhere
+            KeyCode::Enter if shift || alt => self.textarea.insert_newline(),
             KeyCode::Enter => return self.run(),
+            // words: Alt+B / Alt+F in the text area, not the arrows
+            KeyCode::Left if alt || ctrl => self.textarea.move_cursor(CursorMove::WordBack),
+            KeyCode::Right if alt || ctrl => self.textarea.move_cursor(CursorMove::WordForward),
             KeyCode::Up if ctrl || row == 0 => self.previous(),
             KeyCode::Down if ctrl || row == last => self.next(),
+            // history, not cursor moves as in the text area
+            KeyCode::Char('p') if ctrl => self.previous(),
+            KeyCode::Char('n') if ctrl => self.next(),
+            // delete to the start of the line, not "undo" as in the text area
+            KeyCode::Char('u') if ctrl => {
+                self.textarea.delete_line_by_head();
+            }
             KeyCode::Char('c') if ctrl => {
                 if self.textarea.is_empty() {
                     return Action::Quit;
@@ -292,7 +317,7 @@ mod tests {
     fn enter_runs_the_whole_input() {
         let mut editor = editor();
         type_text(&mut editor, "Def a := 1.");
-        editor.key(key(KeyCode::Enter, KeyModifiers::CONTROL));
+        editor.key(key(KeyCode::Enter, KeyModifiers::SHIFT));
         type_text(&mut editor, "Eval a.");
         assert_eq!(
             editor.key(plain(KeyCode::Enter)),
@@ -305,12 +330,43 @@ mod tests {
     }
 
     #[test]
-    fn ctrl_u_is_a_new_line_too() {
+    fn alt_enter_is_a_new_line_too() {
         let mut editor = editor();
         type_text(&mut editor, "Def a := 1.");
-        editor.key(key(KeyCode::Char('u'), KeyModifiers::CONTROL));
+        editor.key(key(KeyCode::Enter, KeyModifiers::ALT));
         type_text(&mut editor, "Eval a.");
         assert_eq!(editor.input(), "Def a := 1.\nEval a.");
+    }
+
+    #[test]
+    fn keys_of_a_shell() {
+        let mut editor = Editor::from(History::from(vec!["Eval 1.".to_string()]));
+        let ctrl = |c| key(KeyCode::Char(c), KeyModifiers::CONTROL);
+        type_text(&mut editor, "Def a := 2.");
+        // Ctrl+U deletes to the start of the line, Ctrl+Y pastes it back
+        editor.key(ctrl('u'));
+        assert_eq!(editor.input(), "");
+        editor.key(ctrl('y'));
+        assert_eq!(editor.input(), "Def a := 2.");
+        // Ctrl+A / Ctrl+E: start / end of the line
+        editor.key(ctrl('a'));
+        assert_eq!(editor.textarea().cursor().1, 0);
+        editor.key(ctrl('e'));
+        assert_eq!(editor.textarea().cursor().1, 11);
+        // Alt+← / Alt+→: a word back / forward (the `.` is a word of its own)
+        editor.key(key(KeyCode::Left, KeyModifiers::ALT));
+        assert_eq!(editor.textarea().cursor().1, 10);
+        editor.key(key(KeyCode::Right, KeyModifiers::ALT));
+        assert_eq!(editor.textarea().cursor().1, 11);
+        // Ctrl+W deletes the word before (here the `.`: punctuation is a word
+        // of its own in the text area)
+        editor.key(ctrl('w'));
+        assert_eq!(editor.input(), "Def a := 2");
+        // Ctrl+P / Ctrl+N: the history
+        editor.key(ctrl('p'));
+        assert_eq!(editor.input(), "Eval 1.");
+        editor.key(ctrl('n'));
+        assert_eq!(editor.input(), "Def a := 2");
     }
 
     #[test]
@@ -350,11 +406,11 @@ mod tests {
     fn arrows_move_the_cursor_inside_an_input() {
         let mut editor = editor();
         type_text(&mut editor, "Def a := 1.");
-        editor.key(key(KeyCode::Enter, KeyModifiers::CONTROL));
+        editor.key(key(KeyCode::Enter, KeyModifiers::SHIFT));
         type_text(&mut editor, "Eval a.");
         editor.key(plain(KeyCode::Enter));
         type_text(&mut editor, "x");
-        editor.key(key(KeyCode::Enter, KeyModifiers::CONTROL));
+        editor.key(key(KeyCode::Enter, KeyModifiers::SHIFT));
         type_text(&mut editor, "y");
         // on the second line: ↑ moves to the first one
         editor.key(plain(KeyCode::Up));
