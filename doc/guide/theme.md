@@ -6,7 +6,7 @@
 > exist; the default theme is built into the `pp` crate. See
 > [known issues](../changelog/v0.1.0.md#known-issues).
 
-When **debug flags** or **repl** display program a theme is used.
+When **debug flags** or the **TUI** display program a theme is used.
 By default is use the theme `assets/theme.yml`.
 To change this theme use flag `--theme <theme.yml>`
 

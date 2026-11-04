@@ -28,7 +28,7 @@ v0.2.1--fix-lsp-hover
 | `pass` | every pass, one module each: `lexer`, `parser`, `lowering`, `typing`, `codegen`, `vm`; `stdlib` (the state the tools start from, every pass on a text) |
 | `errors` | diagnostics: `Error`, `Errors`, `Message` |
 | `pp` | pretty printing: `Pretty`, `Theme` |
-| `startlang` | the binary: `run`, `repl`, `format`, `lsp` |
+| `startlang` | the binary: `run`, `tui`, `format`, `lsp` |
 
 See [compilation phases](../design/pipeline.md) for how they fit together.
 
