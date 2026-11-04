@@ -16,6 +16,7 @@
 //! | Ctrl+C                  | clear the input; quit on an empty one        |
 //! | Ctrl+D                  | quit on an empty input                       |
 //! | Ctrl+L                  | clear the outputs                            |
+//! | PageUp / PageDown, wheel| scroll the outputs, in the TUI               |
 //! | F1, Alt+H               | help, in the TUI (the same key or Esc closes) |
 //! | others                  | edit the text (`ratatui_textarea`)           |
 
@@ -39,6 +40,7 @@ pub const KEYS: &[(&str, &str)] = &[
     ("Ctrl+C", "clear the input; quit on an empty one"),
     ("Ctrl+D", "quit on an empty input"),
     ("Ctrl+L", "clear the outputs"),
+    ("PageUp / PageDown, wheel", "scroll the outputs"),
     ("F1, Alt+H", "this help (the same key or Esc to close)"),
 ];
 
@@ -178,10 +180,10 @@ impl Editor {
     }
 }
 
-/// a text area with `lines`, line numbers, no underlined cursor line
+/// a text area with `lines`, no underlined cursor line (its line numbers are
+/// drawn by the TUI, with a separator)
 fn new_textarea(lines: Vec<String>) -> TextArea<'static> {
     let mut textarea = TextArea::new(lines);
-    textarea.set_line_number_style(Style::new().dim());
     textarea.set_cursor_line_style(Style::new());
     textarea
 }

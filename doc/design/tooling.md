@@ -80,7 +80,9 @@ interface on `crossterm` (`ratatui` + `tui-textarea`).
   edit and run again; the history is kept between sessions.
 - Pasted text keeps its line breaks and does not run.
 - Ctrl+C clears the input (quits on an empty one), Ctrl+D quits on an empty
-  input, Ctrl+L clears the outputs; F1 or Alt+H shows the keys.
+  input, Ctrl+L clears the outputs, PageUp / PageDown and the mouse wheel
+  scroll them (the mouse is captured: Shift+drag selects text); F1 or Alt+H
+  shows the keys.
 - Without a terminal, `startlang tui` stops with an error.
 
 Later, panels (proof state) and proofs in it.
