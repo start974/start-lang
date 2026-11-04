@@ -57,7 +57,7 @@ node at three stages, found at the same path in each module.
 | `sir` | *surface IR* | AST, untyped (new) | `lowering` (new) | the structure only: one node per construct, spans, documentation as text; aliases of a keyword merged, parentheses and comments dropped; every definition has a `DefId` and every use is resolved to it (`Identifier`, shown `a@0`) | checks, typing |
 | `kir` | *kernel IR* | `sir` without the dynamic grammar (v0.5) | `expand` (v0.5) | every notation of a `.synt` (operators `+`, `==`, `let*`, user notations) replaced by its definition (`a + b` → `add a b`); spans kept to point to the source | typing, proofs (v0.6), obligations (v0.7) |
 | `tir` | *typed IR* | typed AST (name kept) | `typing` | every expression has its type, every variable points to its unique definition (`a@0`) | VM, LSP hover, `lir` lowering |
-| `lir` | *low IR* | backend IR | `codegen` | backend-independent code ([backend](./backend.md)): a global per definition (`#0`), an item per `Eval` | VM, Cranelift (v0.2.0-beta.5) |
+| `lir` | *low IR* | backend IR | `codegen` | backend-independent code ([backend](./backend.md)): the definitions only, a global each (`#0`) with its type; an `Eval` is an expression of `lir` evaluated from the globals | VM, Cranelift (v0.2.0-beta.5) |
 
 Naming rule: a representation is a module `ir::<letter>ir`; a pass going
 from one to the next is a module of the crate **`pass`**, named after the
@@ -87,8 +87,8 @@ are no notations: typing runs directly on `sir` and `kir` does not exist yet.
 | 3 | Lower | `pir::File` → `sir::File` | an unknown name, or a name of the wrong kind (expression / type); the command is left out | `lowering` |
 | 4 | Check | `sir::File` → `sir::File` | rules of the file kind (v0.2.0-beta.3): commands only in `.snbx`, one `main` in `.scod` | `lowering` |
 | 5 | Type | `sir::File` + env → `tir::File` + env | all typing errors; a definition that fails is marked broken, and every definition or command that uses it is skipped silently: only the original error is shown | `typing` |
-| 6 | Codegen | `tir::File` + globals → `lir::File` + globals | internal errors only | `codegen` |
-| 7 | Run | `lir::File` + env → output, exit code | runtime errors | `vm` (Cranelift in v0.2.0-beta.5) |
+| 6 | Codegen | `tir::File` + globals → `lir::File` (the globals) + globals; each `Eval` → an expression of `lir` | internal errors only | `codegen` |
+| 7 | Run | `lir::File` + env → env (globals defined); each `Eval` evaluated from them → output, exit code | runtime errors | `vm` (Cranelift in v0.2.0-beta.5) |
 
 Later versions insert their phases on `sir`, between *lower* and *type*:
 modules (v0.3); from v0.5, notations are read before

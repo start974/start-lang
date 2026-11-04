@@ -9,6 +9,11 @@ mod lsp;
 mod printer;
 mod repl;
 mod run;
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "used by the terminal UI (TODO step 3)")
+)]
+mod tui;
 
 #[derive(Parser)]
 #[command(version)]
