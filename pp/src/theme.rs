@@ -2,6 +2,7 @@ use crate::{ColorInfo, Doc, ErrorTheme, MessageTheme};
 use colored::Color;
 use num_bigint::BigUint;
 
+#[derive(Clone)]
 pub struct Theme {
     /// limit to try to align
     pub width: usize,

@@ -10,12 +10,26 @@
 //! | Ctrl+C               | clear the input; quit on an empty one          |
 //! | Ctrl+D               | quit on an empty input                         |
 //! | Ctrl+L               | clear the outputs                              |
+//! | F1                   | help, in the TUI (F1 or Esc closes it)         |
 //! | others               | edit the text (`ratatui_textarea`)             |
 
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use ratatui::style::Style;
 use ratatui_textarea::{CursorMove, TextArea};
 use std::io;
 use std::path::Path;
+
+/// the keys of the TUI and what they do, for the help
+pub const KEYS: &[(&str, &str)] = &[
+    ("Enter", "run the whole input"),
+    ("Ctrl+Enter, Ctrl+U", "new line"),
+    ("↑ / ↓", "previous / next input (on the first / last line)"),
+    ("Ctrl+↑ / Ctrl+↓", "previous / next input"),
+    ("Ctrl+C", "clear the input; quit on an empty one"),
+    ("Ctrl+D", "quit on an empty input"),
+    ("Ctrl+L", "clear the outputs"),
+    ("F1", "this help (F1 or Esc to close)"),
+];
 
 // ============================================================================
 // Action
@@ -42,14 +56,17 @@ pub struct Editor {
     history: History,
 }
 
-impl Editor {
-    pub fn new(history: History) -> Self {
+/// an empty input, after the previous inputs `history`
+impl From<History> for Editor {
+    fn from(history: History) -> Self {
         Self {
-            textarea: TextArea::default(),
+            textarea: new_textarea(vec![String::new()]),
             history,
         }
     }
+}
 
+impl Editor {
     /// the input area, to draw it
     pub fn textarea(&self) -> &TextArea<'static> {
         &self.textarea
@@ -130,10 +147,18 @@ impl Editor {
 
     /// replace the input; the cursor at the end of the line `line` goes to
     fn set_input(&mut self, input: &str, line: CursorMove) {
-        self.textarea = TextArea::new(input.split('\n').map(str::to_string).collect());
+        self.textarea = new_textarea(input.split('\n').map(str::to_string).collect());
         self.textarea.move_cursor(line);
         self.textarea.move_cursor(CursorMove::End);
     }
+}
+
+/// a text area with `lines`, line numbers, no underlined cursor line
+fn new_textarea(lines: Vec<String>) -> TextArea<'static> {
+    let mut textarea = TextArea::new(lines);
+    textarea.set_line_number_style(Style::new().dim());
+    textarea.set_cursor_line_style(Style::new());
+    textarea
 }
 
 // ============================================================================
@@ -152,14 +177,17 @@ pub struct History {
     draft: String,
 }
 
-impl History {
-    pub fn new(inputs: Vec<String>) -> Self {
+/// the inputs, oldest first
+impl From<Vec<String>> for History {
+    fn from(inputs: Vec<String>) -> Self {
         Self {
             inputs,
             ..Self::default()
         }
     }
+}
 
+impl History {
     /// an input just run; the same one twice in a row is kept once
     pub fn push(&mut self, input: String) {
         if self.inputs.last() != Some(&input) {
@@ -205,7 +233,7 @@ impl History {
     /// the history saved in `path`; empty if there is none
     pub fn load(path: &Path) -> Self {
         let text = std::fs::read_to_string(path).unwrap_or_default();
-        Self::new(text.lines().map(decode).collect())
+        Self::from(text.lines().map(decode).collect::<Vec<_>>())
     }
 
     /// save the history in `path`, one input per line
@@ -257,7 +285,7 @@ mod tests {
     }
 
     fn editor() -> Editor {
-        Editor::new(History::default())
+        Editor::from(History::default())
     }
 
     #[test]
@@ -296,7 +324,7 @@ mod tests {
 
     #[test]
     fn up_and_down_through_the_history() {
-        let mut editor = Editor::new(History::new(vec![
+        let mut editor = Editor::from(History::from(vec![
             "Eval 1.".to_string(),
             "Def a := 2.\nEval a.".to_string(),
         ]));
@@ -340,7 +368,7 @@ mod tests {
 
     #[test]
     fn a_recalled_input_is_a_copy() {
-        let mut editor = Editor::new(History::new(vec!["Eval 1.".to_string()]));
+        let mut editor = Editor::from(History::from(vec!["Eval 1.".to_string()]));
         editor.key(plain(KeyCode::Up));
         editor.key(plain(KeyCode::Backspace));
         type_text(&mut editor, " 2.");
@@ -351,7 +379,7 @@ mod tests {
         // the old input is still there, the new one after it
         assert_eq!(
             editor.history(),
-            &History::new(vec!["Eval 1.".to_string(), "Eval 1 2.".to_string()])
+            &History::from(vec!["Eval 1.".to_string(), "Eval 1 2.".to_string()])
         );
         editor.key(plain(KeyCode::Up));
         assert_eq!(editor.input(), "Eval 1 2.");
@@ -404,7 +432,7 @@ mod tests {
         let dir = std::env::temp_dir().join("startlang_history_test");
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("history.txt");
-        let history = History::new(vec![
+        let history = History::from(vec![
             "Eval 1.".to_string(),
             "Def a := 1.\nEval a.".to_string(),
         ]);

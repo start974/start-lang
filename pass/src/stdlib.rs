@@ -10,7 +10,7 @@ use crate::vm::{Value, Vm};
 use crate::{Checked, CheckedResult, Partial};
 use errors::{Errors, Message};
 use ir::location::SourceId;
-use ir::tir;
+use ir::{pir, tir};
 use std::path::PathBuf;
 
 /// source of the stdlib
@@ -18,6 +18,8 @@ pub const SOURCE: &str = include_str!("../../assets/stdlib.st");
 
 /// a text that went through every pass
 pub struct Compiled {
+    /// the commands as written (to format them), in source order
+    pub pir: Checked<pir::File>,
     pub tir: Checked<tir::File>,
     /// value of each `Eval`, in order
     pub values: Checked<Vec<Value>>,
@@ -104,7 +106,7 @@ impl Stdlib {
         let lir = self.codegen.run(&tir)?;
         self.vm.run(&lir)?;
         let values = self.evaluate(&tir)?;
-        Ok(Compiled { tir, values })
+        Ok(Compiled { pir, tir, values })
     }
 
     /// the value of each `Eval` of `tir`, in order: generated, then evaluated

@@ -9,7 +9,8 @@ use pass::vm::Value;
 
 /// what the user asked for, in command order
 pub enum Output<'a> {
-    Defined(&'a tir::ExpressionDefinition),
+    /// an expression definition: nothing to show
+    Defined,
     Value(Value, Span),
     Type(&'a tir::Type, Span),
     Help(&'a tir::Help),
@@ -23,7 +24,7 @@ pub fn outputs(compiled: &Compiled) -> impl Iterator<Item = Output<'_>> {
         .commands
         .iter()
         .map(move |cmd| match &cmd.kind {
-            tir::CommandKind::ExpressionDefinition(def) => Output::Defined(def),
+            tir::CommandKind::ExpressionDefinition(_) => Output::Defined,
             tir::CommandKind::Eval(expr) => Output::Value(
                 values.next().expect("the vm computes a value per Eval"),
                 expr.span(),

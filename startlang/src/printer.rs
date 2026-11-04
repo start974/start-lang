@@ -1,8 +1,8 @@
 //! Prints on a terminal: outputs on stdout, errors on stderr with their
-//! place in the source; used by `startlang run` and the REPL.
+//! place in the source (`startlang run`); gives the text of an error (the
+//! TUI).
 
 use crate::compile::Output;
-use crate::repl::summary::SummaryDefinition;
 use ariadne::Source;
 use errors::{Error, Errors};
 use ir::location::SourceId;
@@ -13,8 +13,6 @@ pub struct Printer {
     /// whole text of the source, to show the errors in it
     content: String,
     theme: Theme,
-    /// print the summary of each definition (REPL)
-    summary: bool,
     /// exit code so far: the code of the only error, `1` for several
     code: i32,
 }
@@ -25,24 +23,13 @@ impl Printer {
             source,
             content: String::new(),
             theme: Theme::colored(),
-            summary: false,
             code: 0,
         }
     }
 
     /// colors of the outputs and errors
-    #[cfg_attr(
-        not(test),
-        expect(dead_code, reason = "used by the terminal UI (TODO step 3)")
-    )]
     pub fn with_theme(mut self, theme: Theme) -> Self {
         self.theme = theme;
-        self
-    }
-
-    /// print the summary of each definition
-    pub fn with_summary(mut self, summary: bool) -> Self {
-        self.summary = summary;
         self
     }
 
@@ -56,20 +43,9 @@ impl Printer {
         self.code
     }
 
-    /// forget the errors before (next REPL input)
-    pub fn reset_code(&mut self) {
-        self.code = 0;
-    }
-
     pub fn output(&self, output: &Output<'_>) {
         match output {
-            Output::Defined(def) if self.summary => {
-                println!(
-                    "       {}",
-                    SummaryDefinition::from(*def).make_string(&self.theme)
-                );
-            }
-            Output::Defined(_) => {}
+            Output::Defined => {}
             Output::Value(value, _) => self.print(value),
             Output::Type(ty, _) => self.print(*ty),
             Output::Help(help) => self.print(*help),
@@ -81,10 +57,6 @@ impl Printer {
     }
 
     /// text of an error, with its place in the source
-    #[cfg_attr(
-        not(test),
-        expect(dead_code, reason = "used by the terminal UI (TODO step 3)")
-    )]
     pub fn render_error(&self, err: &Error) -> String {
         let cache = (self.source.clone(), Source::from(&self.content));
         let mut text = Vec::new();

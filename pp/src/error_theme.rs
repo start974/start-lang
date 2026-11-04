@@ -1,6 +1,6 @@
 use crate::MessageTheme;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct ErrorTheme {
     /// error message
     pub head: MessageTheme,
