@@ -20,6 +20,9 @@ colored = "3.0.0"
 similar = "2.7.0"
 tower-lsp = "0.20.0"
 rustyline = "17.0.2"
+ratatui = "0.30"
+ratatui-textarea = "0.9"
+crossterm = "0.29"
 
 [dev-dependencies]
 trycmd = "0.15.11"

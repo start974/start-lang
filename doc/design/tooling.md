@@ -70,8 +70,9 @@ Documentation is part of the tooling and evolves at every version:
 interface on `crossterm` (`ratatui` + `tui-textarea`).
 
 - The outputs and errors of each input scroll above the input area.
-- Enter runs the whole input; Alt+Enter inserts a new line (the same in every
-  terminal; Ctrl+Enter is not reported by most of them).
+- Enter runs the whole input; Ctrl+Enter inserts a new line where the
+  terminal reports it (keyboard enhancement, the kitty protocol), Ctrl+U in
+  every terminal.
 - ↑ on the first line of the input recalls the previous input, ↓ on the last
   line the next one; Ctrl+↑ / Ctrl+↓ from anywhere. An input comes back whole,
   to edit and run again; the history is kept between sessions.
