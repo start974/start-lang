@@ -23,8 +23,8 @@ impl Terminal {
         let inner = ratatui::try_init()?;
         set_panic_hook();
         execute!(stdout(), EnableBracketedPaste)?;
-        // Ctrl+Enter is only reported with the keyboard enhancement (kitty
-        // protocol); without it, Ctrl+U inserts a new line
+        // Shift+Enter is only reported with the keyboard enhancement (kitty
+        // protocol); without it, Alt+Enter inserts a new line
         if supports_keyboard_enhancement().unwrap_or(false) {
             execute!(
                 stdout(),

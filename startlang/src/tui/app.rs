@@ -21,18 +21,18 @@
 //! ┌ input ───────────────────────────┐
 //! │ 1 Def c := 'c'.                  │  ← the input area
 //! └──────────────────────────────────┘
-//!  Enter run · Ctrl+Enter / Ctrl+U new line · ↑ ↓ history · F1 help
+//!  Enter run · Shift+Enter / Alt+Enter new line · ↑ ↓ history · Alt+H help
 //! ```
 
 use super::editor::{Action, Editor, History, KEYS};
 use super::output::Output;
 use super::session::Session;
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Color, Style, Stylize};
-use ratatui::text::Line;
+use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Clear, Paragraph, Widget};
 
 // ============================================================================
@@ -83,8 +83,11 @@ impl App {
         if key.kind == KeyEventKind::Release {
             return;
         }
+        let alt = key.modifiers.contains(KeyModifiers::ALT);
         match key.code {
+            // F1 is kept by some terminals (GNOME Terminal): Alt+H too
             KeyCode::F(1) => self.help = !self.help,
+            KeyCode::Char('h') if alt => self.help = !self.help,
             KeyCode::Esc if self.help => self.help = false,
             // the help is over the input: keys do not reach it
             _ if self.help => {}
@@ -117,7 +120,7 @@ impl App {
         let block = Block::bordered().title(" input ");
         frame.render_widget(self.editor.textarea(), block.inner(input));
         frame.render_widget(block, input);
-        let hint = "Enter run · Ctrl+Enter / Ctrl+U new line · ↑ ↓ history · F1 help · Ctrl+D quit";
+        let hint = "Enter run · Shift+Enter / Alt+Enter new line · ↑ ↓ history · F1 / Alt+H help · Ctrl+D quit";
         frame.render_widget(Line::from(hint).dim(), status);
         if self.help {
             self.draw_help(frame);
@@ -148,16 +151,29 @@ impl App {
         }
     }
 
-    /// the keys, over the rest
+    /// the keys, over the rest: a column of keys, a column of actions, each
+    /// as wide as its longest entry
     fn draw_help(&self, frame: &mut Frame) {
+        let width = |text: &str| Span::raw(text).width();
+        let keys = KEYS.iter().map(|(key, _)| width(key)).max().unwrap_or(0);
+        let actions = KEYS
+            .iter()
+            .map(|(_, action)| width(action))
+            .max()
+            .unwrap_or(0);
         let lines: Vec<Line> = KEYS
             .iter()
-            .map(|(key, action)| Line::from(vec![format!("{key:<20}").bold(), (*action).into()]))
+            .map(|(key, action)| {
+                let key = format!("{key}{}", " ".repeat(keys + 2 - width(key)));
+                Line::from(vec![key.bold(), (*action).into()])
+            })
             .collect();
-        let height = lines.len() as u16 + 2;
-        let area = frame
-            .area()
-            .centered(Constraint::Length(72), Constraint::Length(height));
+        // the two columns, two spaces apart, and the borders
+        let size = |n: usize| u16::try_from(n).unwrap_or(u16::MAX);
+        let area = frame.area().centered(
+            Constraint::Length(size(keys + 2 + actions + 2)),
+            Constraint::Length(size(KEYS.len() + 2)),
+        );
         frame.render_widget(Clear, area);
         let block = Block::bordered()
             .title(" help ")
@@ -170,7 +186,6 @@ impl App {
 mod tests {
     use super::*;
     use crate::tui::output::NUMBERS;
-    use crossterm::event::KeyModifiers;
     use ratatui::Terminal;
     use ratatui::backend::TestBackend;
 
@@ -271,20 +286,75 @@ mod tests {
     }
 
     #[test]
-    fn help_with_f1() {
+    fn help_with_f1_or_alt_h() {
+        for (code, modifiers) in [
+            (KeyCode::F(1), KeyModifiers::NONE),
+            (KeyCode::Char('h'), KeyModifiers::ALT),
+        ] {
+            let mut app = app();
+            press(&mut app, code, modifiers);
+            let lines = screen(&app, 80, 24);
+            // the popup: its title and the keys
+            assert!(
+                lines.iter().any(|line| line.contains("┌ help ")),
+                "{lines:#?}"
+            );
+            assert!(
+                lines
+                    .iter()
+                    .any(|line| line.contains("Shift+Enter, Alt+Enter")),
+                "{lines:#?}"
+            );
+            // the keys do not reach the input while the help is shown
+            press(&mut app, KeyCode::Char('x'), KeyModifiers::NONE);
+            assert_eq!(app.editor.input(), "");
+            // the same key closes it
+            press(&mut app, code, modifiers);
+            assert!(!app.help);
+        }
+        // Esc closes it too
         let mut app = app();
         press(&mut app, KeyCode::F(1), KeyModifiers::NONE);
-        let lines = screen(&app, 80, 24);
-        assert!(lines.iter().any(|line| line.contains("help")), "{lines:#?}");
-        assert!(
-            lines.iter().any(|line| line.contains("Ctrl+Enter, Ctrl+U")),
-            "{lines:#?}"
-        );
-        // the keys do not reach the input while the help is shown
-        press(&mut app, KeyCode::Char('x'), KeyModifiers::NONE);
-        assert_eq!(app.editor.input(), "");
         press(&mut app, KeyCode::Esc, KeyModifiers::NONE);
         assert!(!app.help);
+    }
+
+    #[test]
+    fn help_two_columns_sized_by_the_keys() {
+        let mut app = app();
+        press(&mut app, KeyCode::F(1), KeyModifiers::NONE);
+        let lines = screen(&app, 100, 30);
+        // the column (in characters) of `text` on the line of `key`
+        let column = |key: &str, text: &str| {
+            let line = lines
+                .iter()
+                .find(|line| line.contains(&format!("│{key} ")))
+                .unwrap_or_else(|| panic!("{key}: {lines:#?}"));
+            let byte = line.find(text).unwrap();
+            line[..byte].chars().count()
+        };
+        // every action starts in the same column
+        let actions: Vec<_> = KEYS
+            .iter()
+            .map(|(key, action)| column(key, action))
+            .collect();
+        assert!(actions.iter().all(|c| *c == actions[0]), "{lines:#?}");
+        // two spaces after the longest key
+        let keys = KEYS
+            .iter()
+            .map(|(key, _)| key.chars().count())
+            .max()
+            .unwrap();
+        assert_eq!(actions[0] - column(KEYS[0].0, KEYS[0].0), keys + 2);
+        // the frame as wide as the two columns and its borders
+        let widest = KEYS
+            .iter()
+            .map(|(_, action)| action.chars().count())
+            .max()
+            .unwrap();
+        let top = lines.iter().find(|line| line.contains("┌ help ")).unwrap();
+        let frame = top.trim().chars().count();
+        assert_eq!(frame, keys + 2 + widest + 2, "{lines:#?}");
     }
 
     #[test]
