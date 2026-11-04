@@ -13,6 +13,13 @@ pub fn read_file(path: &Path) -> Error {
     ))
 }
 
+/// `startlang tui` started without a terminal (stdin or stdout redirected)
+pub fn no_terminal() -> Error {
+    Error::new(103, Message::text("The TUI needs a terminal.")).with_help(Message::text(
+        "run `startlang tui` in a terminal, without redirecting its input or output",
+    ))
+}
+
 pub fn write_file(path: &Path) -> Error {
     Error::new(
         102,

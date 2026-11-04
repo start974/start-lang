@@ -1,0 +1,8 @@
+# `startlang tui` needs a terminal
+
+```
+$ startlang tui
+? 103
+[103] Error: The TUI needs a terminal.
+
+```

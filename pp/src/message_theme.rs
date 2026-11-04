@@ -1,5 +1,6 @@
 use crate::{ColorInfo, Doc};
 
+#[derive(Clone)]
 pub struct MessageTheme {
     /// limit to try to align
     pub width: usize,

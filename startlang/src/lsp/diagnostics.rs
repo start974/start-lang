@@ -19,7 +19,7 @@ pub fn diagnostics(url: &Url, content: String) -> Vec<Diagnostic> {
     match Stdlib::load().run(source, &content, 0) {
         Ok(compiled) => outputs(&compiled)
             .filter_map(|output| match output {
-                Output::Defined(_) => None,
+                Output::Defined => None,
                 Output::Value(value, span) => Some(info(&mut position_memo, span, &value)),
                 Output::Type(ty, span) => Some(info(&mut position_memo, span, ty)),
                 Output::Help(help) => Some(info(&mut position_memo, help.span(), help)),

@@ -7,12 +7,7 @@ mod error;
 mod format;
 mod lsp;
 mod printer;
-mod repl;
 mod run;
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "used by the terminal UI (TODO step 3)")
-)]
 mod tui;
 
 #[derive(Parser)]
@@ -24,8 +19,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// run repl
-    Repl,
+    /// interactive session in a terminal UI
+    Tui,
     /// interpret a file
     Run {
         path: PathBuf,
@@ -66,10 +61,7 @@ async fn main() {
     let cli = Cli::parse();
 
     let code = match cli.command {
-        Commands::Repl => {
-            repl::run();
-            0
-        }
+        Commands::Tui => tui::run(),
         Commands::Run { path, debug } => run::run(&path, &debug),
         Commands::Format {
             path,
