@@ -51,30 +51,30 @@ impl Codegen {
         CodegenBuilder::default()
     }
 
-    /// code of a typed file: a global per definition, an item per `Eval`;
-    /// the items it could generate, and every (internal) error
+    /// code of a typed file: a global per definition, in order; the
+    /// globals it could generate, and every (internal) error; the commands
+    /// are generated apart (`expression`)
     pub fn run(&mut self, file: &Checked<tir::File>) -> CheckedResult<lir::File> {
-        let items: Partial<Vec<_>> = file
+        let globals: Partial<Vec<_>> = file
             .commands
             .iter()
             .filter_map(|cmd| match &cmd.kind {
-                tir::CommandKind::ExpressionDefinition(def) => {
-                    Some(self.definition(def).map(lir::Item::Global))
-                }
-                tir::CommandKind::Eval(expr) => Some(self.expression(expr).map(lir::Item::Eval)),
-                tir::CommandKind::TypeOf(_) | tir::CommandKind::Help(_) => None,
+                tir::CommandKind::ExpressionDefinition(def) => Some(self.definition(def)),
+                tir::CommandKind::Eval(_)
+                | tir::CommandKind::TypeOf(_)
+                | tir::CommandKind::Help(_) => None,
             })
-            .map(|item| match item {
-                Ok(item) => Partial::ok(Some(item)),
+            .map(|global| match global {
+                Ok(global) => Partial::ok(Some(global)),
                 Err(errs) => Partial::ok(None).with_errors(
                     errs.into_iter()
                         .map(|err| err.with_recovery(Message::text("the command is left out"))),
                 ),
             })
             .collect();
-        items
-            .map(|items| lir::File {
-                items: items.into_iter().flatten().collect(),
+        globals
+            .map(|globals| lir::File {
+                globals: globals.into_iter().flatten().collect(),
             })
             .check_debug(self.debug)
     }

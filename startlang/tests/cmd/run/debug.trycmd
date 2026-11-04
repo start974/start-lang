@@ -24,7 +24,6 @@ a : N
 ```
 $ startlang run --debug codegen ok.st
 global #2 a@7 : ℕ := 1
-eval #2
 1
 
 ```
@@ -45,7 +44,6 @@ END_OF_INPUT
 Definition a@7 : ℕ := 1.
 Eval a@7.
 global #2 a@7 : ℕ := 1
-eval #2
 1
 
 ```

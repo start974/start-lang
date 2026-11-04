@@ -1,7 +1,7 @@
 use crate::vm::{Value, error};
 use crate::{Checked, CheckedResult, Partial};
-use errors::Message;
-use ir::lir::{Expression, File, Global, GlobalId, Item};
+use errors::{Errors, Message};
+use ir::lir::{Expression, File, Global, GlobalId};
 
 /// runs the files one after the other: the values of the globals of the
 /// previous files (stdlib, REPL inputs) are kept, indexed by `GlobalId`
@@ -15,30 +15,23 @@ impl Vm {
         Self::default()
     }
 
-    /// run every item of `file`: the value of each `Eval` it could compute,
-    /// in order, and every (internal) error
-    pub fn run(&mut self, file: &Checked<File>) -> CheckedResult<Vec<Value>> {
-        let not_computed = |err: errors::Error| {
-            Partial::ok(None)
-                .with_error(err.with_recovery(Message::text("the value is not computed")))
-        };
-        let values: Partial<Vec<_>> = file
-            .items
+    /// define every global of `file`, in order; every (internal) error
+    pub fn run(&mut self, file: &Checked<File>) -> CheckedResult<()> {
+        let defined: Partial<()> = file
+            .globals
             .iter()
-            .map(|item| match item {
-                Item::Global(global) => match self.define(global) {
-                    Some(_) => Partial::ok(None),
-                    None => not_computed(error::undefined(&global.symbol)),
-                },
-                Item::Eval(expr) => match self.eval(expr) {
-                    Some(value) => Partial::ok(Some(value)),
-                    None => not_computed(error::undefined("eval")),
-                },
+            .map(|global| match self.define(global) {
+                Some(_) => Partial::new(),
+                None => not_computed(error::undefined(&global.symbol)),
             })
             .collect();
-        values
-            .map(|values| values.into_iter().flatten().collect())
-            .check()
+        defined.check()
+    }
+
+    /// the value of a command (`Eval`), from the globals defined so far
+    pub fn evaluate(&self, expr: &Expression) -> Result<Value, Errors> {
+        self.eval(expr)
+            .ok_or_else(|| not_computed(error::undefined("eval")).errors)
     }
 
     /// value of a global, `None` if it was never defined
@@ -65,6 +58,11 @@ impl Vm {
         self.globals[index] = Some(value);
         self.globals[index].as_ref()
     }
+}
+
+/// an internal error of the vm, with its recovery
+fn not_computed(err: errors::Error) -> Partial<()> {
+    Partial::new().with_error(err.with_recovery(Message::text("the value is not computed")))
 }
 
 #[cfg(test)]
@@ -109,5 +107,29 @@ mod tests {
         let b = global(1, Type::Bool, Expression::Global(GlobalId(0)));
         assert_eq!(vm.define(&b), None);
         assert_eq!(vm.eval(&Expression::Global(GlobalId(5))), None);
+    }
+
+    #[test]
+    fn run_defines_then_evaluate_from_the_globals() {
+        let mut vm = Vm::default();
+        let a = global(
+            0,
+            Type::Nat,
+            Expression::Constant(Constant::Nat(3u8.into())),
+        );
+        let file = Partial::ok(File { globals: vec![a] }).check().ok().unwrap();
+        assert!(vm.run(&file).is_ok());
+        assert_eq!(
+            vm.evaluate(&Expression::Global(GlobalId(0))).ok(),
+            Some(Value::Nat(3u8.into()))
+        );
+        // an undefined global: an internal error, with its recovery
+        let errs = vm.evaluate(&Expression::Global(GlobalId(1))).unwrap_err();
+        assert_eq!(errs.code(), 902);
+        let recovery = (&errs).into_iter().next().and_then(|err| err.recovery());
+        assert_eq!(
+            recovery.map(|msg| msg.make_string(&pp::MessageTheme::default())),
+            Some("the value is not computed".to_string())
+        );
     }
 }

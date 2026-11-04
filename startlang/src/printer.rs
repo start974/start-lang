@@ -30,6 +30,16 @@ impl Printer {
         }
     }
 
+    /// colors of the outputs and errors
+    #[cfg_attr(
+        not(test),
+        expect(dead_code, reason = "used by the terminal UI (TODO step 3)")
+    )]
+    pub fn with_theme(mut self, theme: Theme) -> Self {
+        self.theme = theme;
+        self
+    }
+
     /// print the summary of each definition
     pub fn with_summary(mut self, summary: bool) -> Self {
         self.summary = summary;
@@ -68,6 +78,20 @@ impl Printer {
 
     fn print(&self, doc: &impl Pretty) {
         println!("{}", doc.make_string(&self.theme));
+    }
+
+    /// text of an error, with its place in the source
+    #[cfg_attr(
+        not(test),
+        expect(dead_code, reason = "used by the terminal UI (TODO step 3)")
+    )]
+    pub fn render_error(&self, err: &Error) -> String {
+        let cache = (self.source.clone(), Source::from(&self.content));
+        let mut text = Vec::new();
+        err.report(&self.source, &self.theme)
+            .write(cache, &mut text)
+            .expect("writing to memory does not fail");
+        String::from_utf8(text).expect("ariadne writes UTF-8")
     }
 
     /// print every error

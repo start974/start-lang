@@ -1,14 +1,14 @@
 //! The state of a project: the passes that keep one (stdlib, files, REPL
 //! inputs), and every pass on a text from that state.
 
-use crate::Checked;
 use crate::codegen::Codegen;
 use crate::lexer::Lexer;
 use crate::lowering::Lowerer;
 use crate::parser::Parser;
 use crate::typing::Typer;
 use crate::vm::{Value, Vm};
-use errors::Errors;
+use crate::{Checked, CheckedResult, Partial};
+use errors::{Errors, Message};
 use ir::location::SourceId;
 use ir::tir;
 use std::path::PathBuf;
@@ -102,8 +102,40 @@ impl Stdlib {
         let sir = self.lowerer.run(&pir)?;
         let tir = self.typer.run(&sir)?;
         let lir = self.codegen.run(&tir)?;
-        let values = self.vm.run(&lir)?;
+        self.vm.run(&lir)?;
+        let values = self.evaluate(&tir)?;
         Ok(Compiled { tir, values })
+    }
+
+    /// the value of each `Eval` of `tir`, in order: generated, then evaluated
+    /// by the vm from the globals
+    fn evaluate(&self, tir: &tir::File) -> CheckedResult<Vec<Value>> {
+        let values: Partial<Vec<_>> = tir
+            .commands
+            .iter()
+            .filter_map(|cmd| match &cmd.kind {
+                tir::CommandKind::Eval(expr) => Some(expr),
+                _ => None,
+            })
+            .map(|expr| {
+                let value = self
+                    .codegen
+                    .expression(expr)
+                    .map_err(|errs| {
+                        errs.into_iter()
+                            .map(|err| err.with_recovery(Message::text("the command is left out")))
+                            .collect()
+                    })
+                    .and_then(|expr| self.vm.evaluate(&expr));
+                match value {
+                    Ok(value) => Partial::ok(Some(value)),
+                    Err(errs) => Partial::ok(None).with_errors(errs),
+                }
+            })
+            .collect();
+        values
+            .map(|values| values.into_iter().flatten().collect())
+            .check()
     }
 }
 
