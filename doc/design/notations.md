@@ -14,9 +14,18 @@ forbidden, since a notation may use another notation to be parsed.
 3. Resolve names everywhere (`+` → `add`), cycles allowed.
 
 After parsing, the notations stay in `sir` (as written, for the LSP and
-messages), then `expand` replaces each one by its definition: `kir` has no
-trace of the dynamic grammar, and typing and proofs run on it (see
-[compilation phases](./pipeline.md#representations)).
+messages); the resolution resolves the notations like the names (the body
+of a notation in the scope where it is defined: hygiene for free), then the
+`elaboration` (`kir` →* `kir`) replaces each one by its definition, looped
+until none is left: each node of `kir` keeps its origin (the notation it
+comes from), so that the errors found by typing and proofs speak of the
+notation the user wrote (see [compilation phases](./pipeline.md#representations)).
+
+- **Errors on the fly**: a notation can raise its own errors during its
+  elaboration, and rewrite the errors found on its expansion in its own
+  words.
+- **No sugar in the compiler**: after the dynamic grammar, every sugar is a
+  notation; the compiler only knows the kernel.
 
 ```
 (* std/nat.synt *)
@@ -35,3 +44,5 @@ pub def double : ℕ -> ℕ := x => x + x
 - [ ] Notation scope: file, module, global?
 - [ ] Parsing algorithm (Pratt, Earley, GLR…)?
 - [ ] Can a notation be used inside the `.synt` that defines it?
+- [ ] Syntax of the errors of a notation: how it raises an error and
+      rewrites the errors on its expansion.

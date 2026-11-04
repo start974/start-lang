@@ -35,11 +35,18 @@ its errors:
 Source ─► 1. lex ─► tokens ─► 2. parse ─► pir ─► 3. lower ─► sir ─► 4. check ─► 5. type ─► tir ─► 6. codegen ─► lir ─► 7. run
 ```
 
+From v0.2.0-beta.3, a kernel IR `kir` sits between `sir` and `tir`, and
+the types are inferred, then checked, in two passes:
+
+```
+pir ─lowering─► sir ─resolution─► kir ─inference─► kir ─typing─► tir ─codegen─► lir ─vm─► lir (eval values filled)
+```
+
 ### Representations
 
 Every representation is named `<letter>ir`, the letter saying the stage, and
 is a module of the single crate **`ir`**: `ir::token`, `ir::pir`, `ir::sir`,
-`ir::tir`, `ir::lir` (later `ir::kir`); what several of them share is in the
+`ir::kir` (v0.2.0-beta.3), `ir::tir`, `ir::lir`; what several of them share is in the
 private module `ir::common`, re-exported by each. `ir` also holds
 `ir::location` (sources, spans). Pretty printing (`pp`) and diagnostics
 (`errors`) are separate crates: the passes build their diagnostics themselves
@@ -54,10 +61,10 @@ node at three stages, found at the same path in each module.
 |------|------------|----|----------|----------|---------|
 | `token` | tokens | tokens | `lexer` | tokens, comments attached to them | parser |
 | `pir` | *parse IR* | CST, concrete syntax tree (renamed from `cst`) | `parser` | everything written: keywords as spelled (`Def` / `Definition`), parentheses, comments, documentation, operators | formatter, LSP (positions, comments) |
-| `sir` | *surface IR* | AST, untyped (new) | `lowering` (new) | the structure only: one node per construct, spans, documentation as text; aliases of a keyword merged, parentheses and comments dropped; every definition has a `DefId` and every use is resolved to it (`Identifier`, shown `a@0`) | checks, typing |
-| `kir` | *kernel IR* | `sir` without the dynamic grammar (v0.5) | `expand` (v0.5) | every notation of a `.synt` (operators `+`, `==`, `let*`, user notations) replaced by its definition (`a + b` → `add a b`); spans kept to point to the source | typing, proofs (v0.6), obligations (v0.7) |
-| `tir` | *typed IR* | typed AST (name kept) | `typing` | every expression has its type, every variable points to its unique definition (`a@0`) | VM, LSP hover, `lir` lowering |
-| `lir` | *low IR* | backend IR | `codegen` | backend-independent code ([backend](./backend.md)): the definitions only, a global each (`#0`) with its type; an `Eval` is an expression of `lir` evaluated from the globals | VM, Cranelift (v0.2.0-beta.5) |
+| `sir` | *surface IR* | AST, untyped | `lowering` | `pir` without its artefacts (keyword variants, parentheses, comments, trivia): the surface, sugar included, commands in source order, documentation as text; no name resolved (a use is its name and its span); construction API for code with sugar, names as text | resolution |
+| `kir` | *kernel IR* (v0.2.0-beta.3) | kernel, untyped | `resolution` (the first pass between `sir` and `kir`) | names resolved, in one namespace for types and expressions (shadowing of a `.snbx` / the TUI, forward references of a `.scod`); ids are a path from the root (package, tree of modules, definition), separate for types (`TypeId`) and expressions (`ExprId`); few kinds of nodes, rich in information: no sugar nor notation node (the `elaboration`, v0.5, `kir` →* `kir`, replaces the notations by kernel nodes annotated with their origin); a graph of definitions without order plus the ordered commands; environments (name, span, documentation, optional type), module documentation; robust construction API (only valid `kir` can be built); each node keeps its span (its origin, written or desugared from a construct, with the first sugar in v0.2.0-beta.4) | inference, typing, proofs (v0.6), obligations (v0.7) |
+| `tir` | *typed IR* | typed AST | `typing` | the information of `kir`, checked; every expression has its type on its node; its own environments | codegen, LSP hover |
+| `lir` | *low IR* | backend IR | `codegen` | an executable part ([backend](./backend.md)): a global per definition (`#0`) with its type, loaded as is by the vm / the JIT; the ordered commands, each with its span and answer (`eval`: expression, type and value, filled at compile time by the vm; `typeof`: type; `help`: the definition); the previous information kept on the side | VM, Cranelift (v0.2.0-beta.5), TUI, `run`, LSP |
 
 Naming rule: a representation is a module `ir::<letter>ir`; a pass going
 from one to the next is a module of the crate **`pass`**, named after the
@@ -72,10 +79,13 @@ had no error. The lowerer, the typer, the codegen and the vm keep their state
 between files (stdlib, REPL inputs); every builder has a `debug` flag that
 prints the representation the pass built (`--debug`).
 
-`sir` keeps the notations as the user wrote them, for the LSP (hover, go to
-the notation) and for messages; `kir` has no trace of the dynamic grammar, so
-typing and proofs never depend on the notations in scope. Until v0.5 there
-are no notations: typing runs directly on `sir` and `kir` does not exist yet.
+`sir` keeps the sugar and the notations as the user wrote them, for the LSP
+(hover, go to the notation) and for messages; `kir` is the kernel, so
+inference, typing and proofs never depend on the sugar or the notations in
+scope, but each node keeps where it comes from so that the errors speak of
+what the user wrote. In v0.2.0-beta.3 there is no sugar nor notation yet,
+so there is no elaboration yet: it comes in v0.5, on `kir`, after the
+resolution.
 
 ### Phases
 
@@ -90,9 +100,14 @@ are no notations: typing runs directly on `sir` and `kir` does not exist yet.
 | 6 | Codegen | `tir::File` + globals → `lir::File` (the globals) + globals; each `Eval` → an expression of `lir` | internal errors only | `codegen` |
 | 7 | Run | `lir::File` + env → env (globals defined); each `Eval` evaluated from them → output, exit code | runtime errors | `vm` (Cranelift in v0.2.0-beta.5) |
 
-Later versions insert their phases on `sir`, between *lower* and *type*:
-modules (v0.3); from v0.5, notations are read before
-parsing and expanded after (`sir` → `kir`), and typing runs on `kir`.
+From v0.2.0-beta.3, *lower* only drops the artefacts of `pir`, and *type*
+is split: `resolution` (`sir` → `kir`, names resolved, ids),
+`inference` (`kir` → `kir`, fills the optional types, shown by the LSP even
+if the checking fails), `typing` (`kir` → `tir`, checks, in the order of the
+dependency graph; a cycle is an error); *run* fills the values of the
+`eval` in `lir`. Modules (v0.3) extend the resolution (`use`, paths); the
+notations (v0.5) bring the `elaboration` (`kir` →* `kir`, between
+*resolution* and *inference*).
 
 ### Rules
 
@@ -143,8 +158,17 @@ how that same file is lexed. Debug output becomes an option of the tools:
 
 ## Open questions
 
-- [ ] Typing errors found on `kir`: shown in the expanded form (`add a b`)
-      or mapped back to the notation the user wrote (`a + b`)?
+- [x] Place of the `elaboration` (v0.5): on `kir`, after the resolution
+      (`kir<NotationUse>` →* `kir<Infallible>`, looped until no notation is
+      left). The body of a notation is resolved where it is defined
+      (hygiene for free), one resolution finds the names and the notations,
+      and inference and typing only accept `kir<Infallible>`: no notation
+      left, guaranteed by the Rust types. After the dynamic grammar, no sugar
+      is defined in the compiler: every sugar is a notation.
+- [x] Typing errors found on `kir`: mapped back to the sugar the user wrote
+      (`a + b`, `let (a, b) := …`): each node of `kir` keeps its origin
+      (written, or desugared from a construct); a notation can give its own
+      error messages (v0.5).
 - [x] REPL: end of input without the final dot: the user decides. In the
       terminal UI (v0.2.0-beta.2), Enter runs the whole input and a separate
       key inserts a new line.

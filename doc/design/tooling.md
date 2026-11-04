@@ -27,11 +27,12 @@ startlang lsp
 The entry point is declared with the `main` keyword in a `.scod`.
 
 - First version (v0.2.0-beta.3): `main` takes no argument and returns an integer
-  used as the exit code (`main : i32 := 0`).
+  used as the exit code (`main : u8 := 0`): `u8`, so that every value is
+  an exit code on every system (0 to 255).
 - v0.4.0-beta.4 (functions, with `string` and arrays from v0.4.0-beta.3): `main` receives
   the arguments as an array (its size gives the count),
-  `main : array string -> i32`.
-- v0.4.0-beta.7 (I/O): `main : array string -> IO i32` (see
+  `main : array string -> u8`.
+- v0.4.0-beta.7 (I/O): `main : array string -> IO u8` (see
   [I/O](./io.md)).
 - `projet.toml` declares the executables with `[[bin]]` (several allowed),
   each one naming the module that holds its `main`.
