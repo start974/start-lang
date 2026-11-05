@@ -15,7 +15,7 @@ provable).
   (`IO α ≈ world -> world * α`), with `pure` and `bind`.
 
 ```
-main : array string -> IO i32 :=
+main : array string -> IO u8 :=
   args =>
     bind (print "a") (_ =>
     bind (print "b") (_ =>
@@ -25,7 +25,7 @@ main : array string -> IO i32 :=
 With `let*` (v0.5, see [syntax](./syntax.md#monadic-let)):
 
 ```
-main : array string -> IO i32 :=
+main : array string -> IO u8 :=
   args =>
     let* _ := print "a" in
     let* _ := print "b" in
@@ -37,7 +37,7 @@ main : array string -> IO i32 :=
 | world token and I/O primitives (internal) | v0.4.0-beta.4 |
 | `IO α`, `pure`, `bind` | v0.4.0-beta.5 (polymorphism) |
 | `IO` instance of a `Monad` class | v0.4.0-beta.6 (type classes) |
-| I/O functions in the stdlib, `main : array string -> IO i32` | v0.4.0-beta.7 |
+| I/O functions in the stdlib, `main : array string -> IO u8` | v0.4.0-beta.7 |
 | `let*` notation for `bind` | v0.5 |
 | `IO` re-expressed as an algebraic effect, same user code | v0.9.0-beta.1 |
 

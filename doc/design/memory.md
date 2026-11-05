@@ -65,9 +65,11 @@ with a warning (no warning if it is named `_`).
 
 ### `const`
 
-`const T` only appears on function parameters: the function only reads the
+On a function parameter, `const T` means the function only reads the
 value, never stores nor returns it, and the caller keeps it (like `&T` in
-Rust, but no lifetimes are needed). A parameter that is only read gets a
+Rust, but no lifetimes are needed). `const` is also the type of a global
+that never changes (`def n : const u16 := 10`), scalars included: it marks
+what can be computed at compile time (see below). A parameter that is only read gets a
 `const` type by inference; a `pub` function has an explicit type, so its
 `const` parameters are always written.
 
@@ -91,7 +93,7 @@ def head : const list i32 -> i32 :=
 
 ### Globals and scalars
 
-- Global definitions are never consumed (they never change). Passed to a
+- Global definitions are never consumed (a `const` global never changes). Passed to a
   `const` parameter, they are read; passed to a consuming parameter, they
   are implicitly copied.
 - Scalars (integers, floats, `𝔹`, `Char`, `unit`) are copied freely; `const`
@@ -107,13 +109,40 @@ def g : unit -> string := () => push greeting '!'   (* implicit copy *)
   classes).
 - The code generation emits the copies and frees.
 
-## No mutable references
+## Compile time
 
-There are no mutable references; state is threaded through a state monad,
-updated in place thanks to the affine typing. See [State](./state.md).
+No keyword: a function whose arguments are all `const` and which changes
+no global (no `[ref …]` marker, see below) has no side effect; applied to
+`const` globals, it is computed at compile time and its result written in
+the program.
+
+```
+pub def length : const string -> usize := …
+def s : const string := "hello"
+def n : const usize := length s      (* computed at compile time *)
+```
+
+## Mutable references (later, design subject to change)
+
+For now, state is threaded through a state monad, updated in place thanks
+to the affine typing (see [State](./state.md)). Mutable references come
+later: `ref` parameters, and `ref` globals changed only by the functions
+that name them in their signature:
+
+```
+def counter : ref u16 := 0
+def incr [ref counter] : unit -> unit :=
+  counter <- counter + 1
+```
 
 ## Open questions
 
+- [ ] `const` on a global: written, or the default when neither `const` nor
+      `ref` is written?
+- [ ] Compile time: limit (steps, time) for a computation that does not
+      terminate; a `panic` during it is a compilation error.
+- [ ] Mutable references: version, syntax (`ref`, `[ref x]`, `<-`), and
+      how the proofs (v0.6, v0.7) reason about the `ref` globals.
 - [ ] Integer overflow: runtime error, wrapping, or proof obligation?
 - [ ] A match never consumes, so a consumed list cannot be reused in place
       (e.g. by `map`): accepted cost, or later optimization?

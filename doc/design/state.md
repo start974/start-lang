@@ -2,14 +2,17 @@
 
 [← Design](./README.md)
 
-## No mutable references
+## Mutable references come later
 
-The language has **no mutable references** (`ref`, `:=` on a cell, `!r`).
-A mutable cell shared between two places breaks purity: a function could
-return different results for the same arguments, the compiler could no longer
-reorder or merge calls, and the proofs would have to reason about a heap.
+The first versions have **no mutable references**: a mutable cell shared
+between two places breaks purity (a function could return different results
+for the same arguments, the compiler could no longer reorder or merge calls,
+and the proofs would have to reason about a heap). They come later, limited
+to `ref` parameters and `ref` globals named in the signature of the
+functions that change them (design subject to change, see
+[memory](./memory.md#mutable-references-later-design-subject-to-change)).
 
-Code that updates a state is written with a **state monad** instead: the
+Until then, code that updates a state is written with a **state monad**: the
 state is passed explicitly, but hidden behind `bind`, like the world token of
 [`IO`](./io.md).
 
